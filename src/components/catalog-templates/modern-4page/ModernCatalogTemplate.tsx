@@ -24,6 +24,7 @@ interface ModernCatalogTemplateProps {
   fontCustomization?: any
   spacingCustomization?: any
   advancedStyles?: any
+  smartSortEnabled?: boolean
 }
 
 const DEFAULT_COLORS: ColorCustomization = {
@@ -56,7 +57,8 @@ export function ModernCatalogTemplate({
   customColors = DEFAULT_COLORS,
   fontCustomization,
   spacingCustomization,
-  advancedStyles
+  advancedStyles,
+  smartSortEnabled = false
 }: ModernCatalogTemplateProps) {
 
 
@@ -104,6 +106,7 @@ export function ModernCatalogTemplate({
           catalogueId={catalogueId}
           onProductsReorder={onProductsReorder}
           onProductUpdate={onProductUpdate}
+          useSmartSort={smartSortEnabled}
         />
       </div>
 

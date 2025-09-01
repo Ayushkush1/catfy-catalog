@@ -22,6 +22,7 @@ export interface CatalogTemplateProps {
   fontCustomization?: any
   spacingCustomization?: any
   advancedStyles?: any
+  smartSortEnabled?: boolean
 }
 
 // Template configuration interface

@@ -608,7 +608,7 @@ export default function CataloguePreviewPage() {
             >
               {TemplateComponent && templateConfig ? (
                 <TemplateComponent 
-                  key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}`}
+                  key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}-${smartSortEnabled}`}
                   catalogue={{
                     ...catalogue,
                     status: 'PUBLISHED',
@@ -635,6 +635,7 @@ export default function CataloguePreviewPage() {
                   fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
                   spacingCustomization={spacingCustomization}
                   advancedStyles={advancedStyles}
+                  smartSortEnabled={smartSortEnabled}
                 />
               ) : (
                 <div className="min-h-screen flex items-center justify-center">
@@ -663,6 +664,9 @@ export default function CataloguePreviewPage() {
                 onSpacingChange={handleSpacingChange}
                 advancedStyles={advancedStyles}
                 onAdvancedStylesChange={handleAdvancedStylesChange}
+                smartSortEnabled={smartSortEnabled}
+                onSmartSortToggle={setSmartSortEnabled}
+                productTags={catalogue?.products?.flatMap(p => p.tags || []) || []}
               />
             </div>
           </div>

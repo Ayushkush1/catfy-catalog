@@ -104,6 +104,9 @@ interface StyleCustomizerProps {
   onSpacingChange?: (spacing: SpacingCustomization) => void
   advancedStyles?: AdvancedStyleCustomization
   onAdvancedStylesChange?: (styles: AdvancedStyleCustomization) => void
+  smartSortEnabled?: boolean
+  onSmartSortToggle?: (enabled: boolean) => void
+  productTags?: string[]
 }
 
 const DEFAULT_FONT_CUSTOMIZATION: FontCustomization = {
@@ -239,12 +242,13 @@ export function StyleCustomizer({
   spacingCustomization = DEFAULT_SPACING_CUSTOMIZATION,
   onSpacingChange,
   advancedStyles = DEFAULT_ADVANCED_STYLES,
-  onAdvancedStylesChange
+  onAdvancedStylesChange,
+  smartSortEnabled = false,
+  onSmartSortToggle,
+  productTags = []
 }: StyleCustomizerProps) {
   const [selectedColorElement, setSelectedColorElement] = useState<string | null>(null)
   const [showFontDialog, setShowFontDialog] = useState(false)
-  const [smartSortEnabled, setSmartSortEnabled] = useState(true)
-  const allTags: string[] = [] // Collect tags dynamically if needed
 
   const ColorPicker = ({ 
     label, 
@@ -863,8 +867,8 @@ export function StyleCustomizer({
               <div className="mb-6">
                 <SmartProductSortButton
                   enabled={smartSortEnabled}
-                  onToggle={setSmartSortEnabled}
-                  productTags={allTags}
+                  onToggle={onSmartSortToggle || (() => {})}
+                  productTags={productTags}
                 />
               </div>
 
