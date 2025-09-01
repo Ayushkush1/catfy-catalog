@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
 // DELETE endpoint to remove uploaded files
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     const supabaseAdmin = createServiceRoleClient()
     const { data: { user } } = await supabase.auth.getUser()
 

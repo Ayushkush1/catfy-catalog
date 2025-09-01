@@ -1,8 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { Database } from '@/types/supabase'
+import { getSupabaseConfig } from '@/lib/env'
+
 // Note: Prisma cannot be used in middleware due to Edge Runtime limitations
-// import { PrismaClient } from '@prisma/client'
-// const prisma = new PrismaClient()
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -13,9 +14,11 @@ export async function middleware(request: NextRequest) {
 
   // No bypass authentication - all users must authenticate properly
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  try {
+    const { url, anonKey } = getSupabaseConfig()
+    const supabase = createServerClient(
+      url,
+      anonKey,
     {
       cookies: {
         get(name: string) {
@@ -154,6 +157,11 @@ export async function middleware(request: NextRequest) {
   */
 
   return response
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // Return response without authentication checks if environment validation fails
+    return response
+  }
 }
 
 export const config = {

@@ -1,13 +1,15 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/supabase'
+import { getSupabaseConfig } from '@/lib/env'
 
-export function createClient() {
-  const cookieStore = cookies()
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
+  const { url, anonKey } = getSupabaseConfig()
 
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    url,
+    anonKey,
     {
       cookies: {
         get(name: string) {
@@ -38,9 +40,15 @@ export function createClient() {
 
 // Service role client for admin operations
 export function createServiceRoleClient() {
+  const { url, serviceRoleKey } = getSupabaseConfig()
+
+  if (!serviceRoleKey) {
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
+  }
+
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    url,
+    serviceRoleKey,
     {
       cookies: {
         get() {
@@ -56,3 +64,6 @@ export function createServiceRoleClient() {
     }
   )
 }
+
+// Legacy export for backward compatibility
+export const createClient = createServerSupabaseClient
