@@ -1609,7 +1609,7 @@ export default function EditCataloguePage() {
                     type="button"
                     variant="outline"
                     size="xs"
-                    className="w-fit text-xs"
+                    className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"  
                     disabled={isGeneratingDescription || !productForm.name.trim()}
                     onClick={async () => {
                       if (!productForm.name.trim()) {
@@ -1662,7 +1662,7 @@ export default function EditCataloguePage() {
                       </>
                     ) : (
                       <>
-                        🤖 AI Generate Description
+                        <Sparkles className="w-3 h-3 mr-1" /> AI Generate
                       </>
                     )}
                   </Button>
@@ -1771,8 +1771,8 @@ export default function EditCataloguePage() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      size="sm" 
-                      className="text-xs"
+                      size="xs" 
+                      className="text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
                       disabled={!productForm.name || !productForm.description}
                       onClick={async () => {
                         try {
@@ -1811,7 +1811,7 @@ export default function EditCataloguePage() {
                         </>
                       ) : (
                         <>
-                          🤖 Suggest Category
+                         <Sparkles className="w-3 h-3 mr-1" /> Suggest Category
                         </>
                       )}
                     </Button>

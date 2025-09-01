@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Generate a short, engaging, and SEO-friendly product description (max 80 words) for:
+    const prompt = `Generate a short, engaging, and SEO-friendly product description (max 25 words) for:
       Product: ${productName}
       ${category ? `Category: ${category}` : ''}
       ${tags?.length ? `Tags: ${tags.join(', ')}` : ''}
