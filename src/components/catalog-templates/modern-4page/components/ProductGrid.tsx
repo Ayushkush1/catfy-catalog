@@ -1,28 +1,29 @@
-import React, { useState, useCallback } from 'react'
-import { Product, Category } from '@prisma/client'
-import { Decimal } from '@prisma/client/runtime/library'
-import Image from 'next/image'
-import { ColorCustomization } from '../types/ColorCustomization'
-import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from './StyleCustomizer'
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core'
 import {
   arrayMove,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  rectSortingStrategy,
   useSortable,
 } from '@dnd-kit/sortable'
 import {
   CSS,
 } from '@dnd-kit/utilities'
+import { Category, Product } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
+import Image from 'next/image'
+import React, { useCallback, useState } from 'react'
+import { ColorCustomization } from '../types/ColorCustomization'
+import { AdvancedStyleCustomization, FontCustomization, SpacingCustomization } from './StyleCustomizer'
+import { smartSort } from '@/lib/sorting'
 
 interface ProductGridProps {
   products: (Product & { category: Category | null })[]
@@ -214,6 +215,7 @@ function SortableProductItem({
               onBlur={() => handleFieldSave('name')}
               className="w-full font-bold text-gray-900 text-lg leading-tight bg-white border-2 border-blue-500 rounded px-2 py-1 focus:outline-none"
               autoFocus
+              placeholder="Product Name"
             />
             <div className="flex gap-2">
               <button
@@ -261,6 +263,8 @@ function SortableProductItem({
               className="w-full text-gray-600 text-sm bg-white border-2 border-blue-500 rounded px-2 py-1 focus:outline-none resize-none"
               rows={3}
               autoFocus
+              placeholder="Product Description"
+              title="Edit product description"
             />
             <div className="flex gap-2">
               <button
@@ -341,8 +345,9 @@ export function ProductGrid({
   isEditMode = false, 
   catalogueId, 
   onProductsReorder,
-  onProductUpdate 
-}: ProductGridProps) {
+  onProductUpdate,
+  useSmartSort = true
+}: ProductGridProps & { useSmartSort?: boolean }) {
   const [localProducts, setLocalProducts] = useState(products)
   
   const sensors = useSensors(
@@ -355,11 +360,18 @@ export function ProductGrid({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-
+  // Update local products when props change
   // Update local products when props change
   React.useEffect(() => {
-    setLocalProducts(products)
-  }, [products])
+    let updatedProducts = [...products];
+    
+    if (useSmartSort) {
+      // Apply smart sorting if enabled
+      updatedProducts = smartSort(updatedProducts as any) as typeof products
+    }
+    
+    setLocalProducts(updatedProducts)
+  }, [products, useSmartSort])
 
   // Group products by category
   const productsByCategory = categories.map(category => ({

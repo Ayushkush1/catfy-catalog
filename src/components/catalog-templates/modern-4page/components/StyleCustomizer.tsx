@@ -1,23 +1,20 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { SmartProductSortButton } from '@/components/catalog/SmartProductSortButton'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
-import { 
-  Palette, 
-  Type, 
-  Layout, 
-  Sparkles,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  X
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+    Layout,
+    Palette,
+    RotateCcw,
+    Sparkles,
+    Type
 } from 'lucide-react'
+import { useState } from 'react'
 import { ColorCustomization } from '../types/ColorCustomization'
 
 interface FontCustomization {
@@ -246,6 +243,8 @@ export function StyleCustomizer({
 }: StyleCustomizerProps) {
   const [selectedColorElement, setSelectedColorElement] = useState<string | null>(null)
   const [showFontDialog, setShowFontDialog] = useState(false)
+  const [smartSortEnabled, setSmartSortEnabled] = useState(true)
+  const allTags: string[] = [] // Collect tags dynamically if needed
 
   const ColorPicker = ({ 
     label, 
@@ -279,8 +278,9 @@ export function StyleCustomizer({
           {PRESET_COLORS.map((color) => (
             <button
               key={color}
-              className="w-7 h-7 rounded-md border border-gray-200 hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md"
-              style={{ backgroundColor: color }}
+              className={`w-7 h-7 rounded-md border border-gray-200 hover:scale-110 transition-all duration-200 shadow-sm hover:shadow-md color-picker-swatch`}
+              data-color={color}
+              title={`Select color ${color}`}
               onClick={() => {
                 onChange(color)
                 setSelectedColorElement(null)
@@ -338,25 +338,29 @@ export function StyleCustomizer({
   }
 
   const handleAdvancedStyleChange = (property: string, value: any) => {
-    if (!onAdvancedStylesChange) return
-    
-    const keys = property.split('.')
+    if (!onAdvancedStylesChange) return;
+  
+    const keys = property.split('.');
     if (keys.length === 3) {
-      const [section, subsection, prop] = keys
+      const [section, subsection, prop] = keys as [
+        keyof AdvancedStyleCustomization,
+        'productCard' | 'buttons',
+        string
+      ];
       if (section === 'borders' || section === 'shadows') {
         onAdvancedStylesChange({
           ...advancedStyles,
           [section]: {
             ...advancedStyles[section],
             [subsection]: {
-              ...advancedStyles[section][subsection as keyof typeof advancedStyles[typeof section]],
+              ...advancedStyles[section][subsection],
               [prop]: value
             }
           }
-        })
+        });
       }
     } else if (keys.length === 2) {
-      const [section, prop] = keys
+      const [section, prop] = keys as [keyof AdvancedStyleCustomization, string];
       if (section === 'borders' || section === 'shadows') {
         onAdvancedStylesChange({
           ...advancedStyles,
@@ -364,7 +368,7 @@ export function StyleCustomizer({
             ...advancedStyles[section],
             [prop]: value
           }
-        })
+        });
       }
     }
   }
@@ -855,6 +859,15 @@ export function StyleCustomizer({
 
           <TabsContent value="advanced" className="space-y-3">
             <div className="space-y-4">
+              {/* Smart Product Sorting */}
+              <div className="mb-6">
+                <SmartProductSortButton
+                  enabled={smartSortEnabled}
+                  onToggle={setSmartSortEnabled}
+                  productTags={allTags}
+                />
+              </div>
+
               <div className="space-y-3">
                 <h3 className="text-xs font-semibold text-gray-700">Borders</h3>
                 <div>
@@ -915,5 +928,5 @@ export function StyleCustomizer({
 }
 
 export default StyleCustomizer
-export { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES }
-export type { FontCustomization, SpacingCustomization, AdvancedStyleCustomization }
+export { DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION }
+export type { AdvancedStyleCustomization, FontCustomization, SpacingCustomization }

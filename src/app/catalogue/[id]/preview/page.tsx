@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { getTemplateComponent, getTemplateById } from '@/components/catalog-templates'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Edit, Share2, Download, AlertTriangle } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
-import Link from 'next/link'
-import { StyleCustomizer, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES, FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/catalog-templates/modern-4page/components/StyleCustomizer'
+import { getTemplateById, getTemplateComponent } from '@/components/catalog-templates'
+import { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, FontCustomization, SpacingCustomization, StyleCustomizer } from '@/components/catalog-templates/modern-4page/components/StyleCustomizer'
 import { ColorCustomization } from '@/components/catalog-templates/modern-4page/types/ColorCustomization'
-import { Catalogue as PrismaCatalogue, Product as PrismaProduct, Category as PrismaCategory } from '@prisma/client'
-import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
+import { AlertTriangle, ArrowLeft, Download, Edit, Share2 } from 'lucide-react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 
 type Catalogue = PrismaCatalogue & {
   categories: PrismaCategory[]
@@ -58,6 +58,7 @@ export default function CataloguePreviewPage() {
   const [fontCustomization, setFontCustomization] = useState<FontCustomization | null>(null)
   const [spacingCustomization, setSpacingCustomization] = useState<SpacingCustomization>(DEFAULT_SPACING_CUSTOMIZATION)
   const [advancedStyles, setAdvancedStyles] = useState<AdvancedStyleCustomization>(DEFAULT_ADVANCED_STYLES)
+  const [smartSortEnabled, setSmartSortEnabled] = useState(true)
   
   const params = useParams()
   const catalogueId = params.id as string
@@ -650,7 +651,7 @@ export default function CataloguePreviewPage() {
         {/* Right Sidebar - StyleCustomizer */}
         {isEditMode && (
           <div className="fixed right-0 top-[69px] h-[calc(100vh-69px)] w-96 bg-white shadow-xl border-l border-gray-200 z-10 overflow-y-auto">
-            <div className="p-4">
+            <div className="p-4 space-y-6">
               <StyleCustomizer
                 isVisible={true}
                 onToggle={() => {}}

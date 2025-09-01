@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Catalogue, Product, Category, Profile } from '@prisma/client'
-import { CatalogCover, TableOfContents, ProductGrid, ContactPage } from './components'
+import { Catalogue, Category, Product, Profile } from '@prisma/client'
+import { CatalogCover, ContactPage, ProductGrid, TableOfContents } from './components'
 import { ColorCustomization } from './types/ColorCustomization'
 
 interface ModernCatalogTemplateProps {
@@ -60,10 +59,10 @@ export function ModernCatalogTemplate({
   advancedStyles
 }: ModernCatalogTemplateProps) {
 
+
+
   return (
-    <div 
-      className="bg-white catalog-template"
-    >
+    <div className="bg-white catalog-template">
       {/* Page 1: Cover */}
       <div className="min-h-screen flex items-center justify-center p-8 page-break">
         <CatalogCover 
