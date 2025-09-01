@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { signOut, isClientAdmin } from '@/lib/client-auth'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -148,7 +149,22 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard' 
             )}
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4"> 
+            {/* Plan Badge */}
+            <Badge 
+              variant={profile?.subscriptionPlan?.toLowerCase() === 'free' ? 'secondary' : 'default'}
+              className="flex items-center space-x-1 text-xs"
+            >
+              {(profile?.subscriptionPlan && profile.subscriptionPlan.toLowerCase() !== 'free') && (
+                <Crown className={`h-3 w-3 ${getPlanBadgeColor(profile.subscriptionPlan)}`} />
+              )}
+              <span>
+                {profile?.subscriptionPlan 
+                  ? profile.subscriptionPlan.charAt(0).toUpperCase() + profile.subscriptionPlan.slice(1)
+                  : 'Free'
+                }
+              </span>
+            </Badge>
             {/* Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

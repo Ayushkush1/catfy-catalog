@@ -700,14 +700,14 @@ export default function EditCataloguePage() {
   return (
     <>
       <Header title="Edit Catalogue" />
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-6 px-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-start gap-6">
-            <Button variant="ghost" size="sm" className="mt-1" asChild>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start ">
+            <Button variant="ghost" size="sm" className="mt-1 absolute left-8" asChild>
               <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
+               
               </Link>
             </Button>
 

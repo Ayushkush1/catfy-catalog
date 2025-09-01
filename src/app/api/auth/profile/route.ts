@@ -14,7 +14,6 @@ const updateProfileSchema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   postalCode: z.string().optional(),
-  timezone: z.string().optional(),
 })
 
 // GET - Retrieve user profile
@@ -68,7 +67,6 @@ export async function GET() {
         state: profile.state,
         country: profile.country,
         postalCode: profile.postalCode,
-        timezone: profile.timezone,
         avatarUrl: profile.avatarUrl,
         createdAt: profile.createdAt,
         updatedAt: profile.updatedAt,
@@ -127,7 +125,6 @@ export async function PUT(request: NextRequest) {
         state: updatedProfile.state,
         country: updatedProfile.country,
         postalCode: updatedProfile.postalCode,
-        timezone: updatedProfile.timezone,
         avatarUrl: updatedProfile.avatarUrl,
         updatedAt: updatedProfile.updatedAt,
       },
