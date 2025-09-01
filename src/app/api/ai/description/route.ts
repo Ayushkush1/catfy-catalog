@@ -1,96 +1,83 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createPrompt } from '@/lib/ai/prompts'
-import { generateDescription, getApiStatus } from '@/lib/ai/huggingface'
+import { generateWithGemini } from "@/lib/gemini";
+import { NextRequest, NextResponse } from "next/server";
+
+interface RequestBody {
+  productName: string;
+  category?: string;
+  tags?: string[];
+  price?: number;
+}
 
 export async function POST(request: NextRequest) {
   const DEBUG = process.env.NODE_ENV === 'development';
   
   try {
-    const body = await request.json()
-    const { productName, category, tags, price } = body
-    
-    if (DEBUG) {
-      console.log('🚀 AI Description API called with:', {
-        productName,
-        category,
-        tags,
-        price
-      });
-    }
+    const body: RequestBody = await request.json();
+    const { productName, category, tags, price } = body;
 
-    // Validate required fields
     if (!productName || typeof productName !== 'string' || productName.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Product name is required and must be a non-empty string' },
+        { success: false, error: 'Product name is required' },
         { status: 400 }
-      )
+      );
     }
 
-    // Sanitize inputs
-    const sanitizedName = productName.trim().substring(0, 100)
-    const sanitizedCategory = category?.trim()?.substring(0, 50)
-    const sanitizedTags = Array.isArray(tags) 
-      ? tags.filter(tag => typeof tag === 'string').map(tag => tag.trim()).slice(0, 10)
-      : []
-    const sanitizedPrice = typeof price === 'number' && price > 0 ? price : undefined
+    const prompt = `Generate a short, engaging, and SEO-friendly product description (max 80 words) for:
+      Product: ${productName}
+      ${category ? `Category: ${category}` : ''}
+      ${tags?.length ? `Tags: ${tags.join(', ')}` : ''}
+      ${price ? `Price: $${price}` : ''}
+      
+      Make it professional, engaging, and focused on key features and benefits.
+      Important: Return plain text only. Do not use markdown, asterisks (*), underscores (_), hashtags (#), or any other special formatting characters.`;
 
-    // Create the prompt
-    const prompt = createPrompt(sanitizedName, sanitizedCategory, sanitizedTags, sanitizedPrice)
-
-    if (DEBUG) {
-      console.log('📝 Generated prompt:', prompt);
-    }
-
-    // Generate description using AI
-    const description = await generateDescription(
-      prompt, 
-      sanitizedName, 
-      sanitizedCategory
-    )
+    let description = await generateWithGemini(prompt);
     
-    if (DEBUG) {
-      console.log('✅ Final description:', description);
+    // Clean and validate the generated description
+    description = description.trim().replace(/[*_#]/g, '');
+    if (!description) {
+      throw new Error('Generated description is empty');
     }
 
-    // Get API status for debugging
-    const apiStatus = getApiStatus()
+    // Ensure description isn't too long (optional)
+    if (description.length > 500) {
+      description = description.slice(0, 497) + '...';
+    }
 
+    // Return in the exact format expected by the frontend
     return NextResponse.json({
       success: true,
       description,
       metadata: {
-        productName: sanitizedName,
-        category: sanitizedCategory,
-        tags: sanitizedTags,
-        price: sanitizedPrice,
-        promptLength: prompt.length,
-        apiStatus
+        model: 'gemini-2.0-flash',
+        promptLength: prompt.length
       }
-    })
+    });
 
   } catch (error) {
-    console.error('❌ AI Description API Error:', error)
-    
-    if (DEBUG) {
-      console.log('🔍 API Error Details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
-      });
-    }
-    
+    console.error('Description generation error:', error);
     return NextResponse.json(
       { 
-        error: 'Failed to generate description', 
-        details: error instanceof Error ? error.message : 'Unknown error'
+        success: false, 
+        error: "Failed to generate description",
+        description: '' // Ensure consistent response format
       },
       { status: 500 }
-    )
+    );
   }
+}
+
+function getApiStatus() {
+  return {
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString(),
+    aiProvider: 'OpenAI'
+  };
 }
 
 export async function GET() {
   // Health check endpoint
-  const apiStatus = getApiStatus()
+  const apiStatus = getApiStatus();
   
   return NextResponse.json({
     status: 'AI Description Generator API',
@@ -99,5 +86,5 @@ export async function GET() {
     endpoints: {
       generate: 'POST /api/ai/description'
     }
-  })
+  });
 }
