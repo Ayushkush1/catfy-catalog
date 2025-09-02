@@ -22,7 +22,7 @@ import { Decimal } from '@prisma/client/runtime/library'
 import Image from 'next/image'
 import React, { useCallback, useState } from 'react'
 import { ColorCustomization } from '../types/ColorCustomization'
-import { AdvancedStyleCustomization, FontCustomization, SpacingCustomization } from './StyleCustomizer'
+import { AdvancedStyleCustomization, FontCustomization, SpacingCustomization } from '@/components/shared/StyleCustomizer'
 import { smartSort } from '@/lib/sorting'
 
 interface ProductGridProps {
@@ -75,41 +75,7 @@ function SortableProductItem({
     isDragging,
   } = useSortable({ id: product.id })
 
-  const [editingField, setEditingField] = useState<string | null>(null)
-  const [editValues, setEditValues] = useState({
-    name: product.name,
-    description: product.description || ''
-  })
-
-  const handleFieldEdit = (field: string) => {
-    if (isEditMode) {
-      setEditingField(field)
-    }
-  }
-
-  const handleFieldSave = (field: string) => {
-    if (onProductUpdate) {
-      onProductUpdate(product.id, { [field]: editValues[field as keyof typeof editValues] })
-    }
-    setEditingField(null)
-  }
-
-  const handleFieldCancel = () => {
-    setEditValues({
-      name: product.name,
-      description: product.description || ''
-    })
-    setEditingField(null)
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent, field: string) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleFieldSave(field)
-    } else if (e.key === 'Escape') {
-      handleFieldCancel()
-    }
-  }
+  // Removed inline editing functionality - content is now managed centrally in StyleCustomizer
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -204,103 +170,32 @@ function SortableProductItem({
           </div>
         )}
         
-        {/* Editable Product Name */}
-        {editingField === 'name' ? (
-          <div className="space-y-2">
-            <input
-              type="text"
-              value={editValues.name}
-              onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
-              onKeyDown={(e) => handleKeyPress(e, 'name')}
-              onBlur={() => handleFieldSave('name')}
-              className="w-full font-bold text-gray-900 text-lg leading-tight bg-white border-2 border-blue-500 rounded px-2 py-1 focus:outline-none"
-              autoFocus
-              placeholder="Product Name"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleFieldSave('name')}
-                className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleFieldCancel}
-                className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <h4 
-            className={`font-bold text-lg leading-tight ${
-              isEditMode ? 'cursor-pointer hover:bg-gray-100 rounded px-1 py-1' : ''
-            }`}
-            style={{ 
-              color: customColors?.textColors.productName || '#111827',
-              fontFamily: fontCustomization?.fontFamily?.productName || 'Inter, sans-serif',
-              fontSize: `${fontCustomization?.fontSize?.productName || 18}px`,
-              fontWeight: fontCustomization?.fontWeight?.productName || 'bold'
-            }}
-            onClick={() => handleFieldEdit('name')}
-          >
-            {product.name}
-            {isEditMode && (
-              <span className="ml-2 text-xs text-blue-500">✏️</span>
-            )}
-          </h4>
-        )}
+        {/* Product Name */}
+        <h4 
+          className="font-bold text-lg leading-tight"
+          style={{ 
+            color: customColors?.textColors.productName || '#111827',
+            fontFamily: fontCustomization?.fontFamily?.productName || 'Inter, sans-serif',
+            fontSize: `${fontCustomization?.fontSize?.productName || 18}px`,
+            fontWeight: fontCustomization?.fontWeight?.productName || 'bold'
+          }}
+        >
+          {product.name}
+        </h4>
         
-        {/* Editable Product Description */}
-        {editingField === 'description' ? (
-          <div className="space-y-2">
-            <textarea
-              value={editValues.description}
-              onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
-              onKeyDown={(e) => handleKeyPress(e, 'description')}
-              onBlur={() => handleFieldSave('description')}
-              className="w-full text-gray-600 text-sm bg-white border-2 border-blue-500 rounded px-2 py-1 focus:outline-none resize-none"
-              rows={3}
-              autoFocus
-              placeholder="Product Description"
-              title="Edit product description"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleFieldSave('description')}
-                className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-              >
-                Save
-              </button>
-              <button
-                onClick={handleFieldCancel}
-                className="px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          (product.description || isEditMode) && (
-            <p 
-              className={`text-sm line-clamp-2 ${
-                isEditMode ? 'cursor-pointer hover:bg-gray-100 rounded px-1 py-1 min-h-[2rem]' : ''
-              }`}
-              style={{ 
-                color: customColors?.textColors.productDescription || '#4b5563',
-                fontFamily: fontCustomization?.fontFamily?.productDescription || 'Inter, sans-serif',
-                fontSize: `${fontCustomization?.fontSize?.productDescription || 14}px`,
-                fontWeight: fontCustomization?.fontWeight?.productDescription || 'normal'
-              }}
-              onClick={() => handleFieldEdit('description')}
-            >
-              {product.description || (isEditMode ? 'Click to add description...' : '')}
-              {isEditMode && (
-                <span className="ml-2 text-xs text-blue-500">✏️</span>
-              )}
-            </p>
-          )
+        {/* Product Description */}
+        {product.description && (
+          <p 
+            className="text-sm line-clamp-2"
+            style={{ 
+              color: customColors?.textColors.productDescription || '#4b5563',
+              fontFamily: fontCustomization?.fontFamily?.productDescription || 'Inter, sans-serif',
+              fontSize: `${fontCustomization?.fontSize?.productDescription || 14}px`,
+              fontWeight: fontCustomization?.fontWeight?.productDescription || 'normal'
+            }}
+          >
+            {product.description}
+          </p>
         )}
         
         {/* Price and SKU */}

@@ -3,6 +3,9 @@
 import { Catalogue, Category, Product, Profile } from '@prisma/client'
 import { CatalogCover, ContactPage, ProductGrid, TableOfContents } from './components'
 import { ColorCustomization } from './types/ColorCustomization'
+import { ContentMapper } from '@/lib/content-schema'
+import { TemplateComponentProps } from '@/lib/template-registry'
+import { useEffect, useMemo } from 'react'
 
 interface ModernCatalogTemplateProps {
   catalogue: Catalogue & {
@@ -25,6 +28,7 @@ interface ModernCatalogTemplateProps {
   spacingCustomization?: any
   advancedStyles?: any
   smartSortEnabled?: boolean
+  themeId?: string
 }
 
 const DEFAULT_COLORS: ColorCustomization = {
@@ -58,10 +62,32 @@ export function ModernCatalogTemplate({
   fontCustomization,
   spacingCustomization,
   advancedStyles,
-  smartSortEnabled = false
+  smartSortEnabled = false,
+  themeId
 }: ModernCatalogTemplateProps) {
+  // Convert raw data to standardized format
+  const standardizedContent = useMemo(() => {
+    return ContentMapper.mapToStandardized({
+      ...catalogue,
+      products: catalogue.products,
+      categories: catalogue.categories
+    }, profile)
+  }, [catalogue, profile])
 
+  // Register template and theme if provided
+  useEffect(() => {
+    // Templates are now registered statically, no loading needed
+  }, [])
 
+  // Validate content structure
+  useEffect(() => {
+    try {
+      // This will throw if content doesn't match schema
+      ContentMapper.validate(standardizedContent)
+    } catch (error) {
+      console.warn('Content validation warning:', error)
+    }
+  }, [standardizedContent])
 
   return (
     <div className="bg-white catalog-template">
@@ -146,4 +172,86 @@ export function ModernCatalogTemplate({
   )
 }
 
-export default ModernCatalogTemplate
+// Wrapper component that implements TemplateComponentProps interface
+export function ModernCatalogTemplateWrapper({ content, theme, isEditMode, onContentUpdate, customProps }: TemplateComponentProps) {
+  // Convert standardized content to ModernCatalogTemplate props
+  const catalogue = {
+    id: content.catalogue?.id || '',
+    name: content.catalogue?.name || '',
+    description: content.catalogue?.description || null,
+    theme: content.catalogue?.theme || 'modern',
+    isPublic: content.catalogue?.isPublic || false,
+    slug: null,
+    status: 'DRAFT' as const,
+    settings: content.catalogue?.settings || null,
+    createdAt: content.catalogue?.createdAt || new Date(),
+    updatedAt: content.catalogue?.updatedAt || new Date(),
+    profileId: content.catalogue?.profileId || '',
+    publishedAt: null,
+    customDomain: null,
+    exportCount: 0,
+    seoDescription: null,
+    seoTitle: null,
+    viewCount: 0,
+    products: (content.products || []).map(product => ({
+      ...product,
+      price: product.price || null,
+      priceDisplay: product.priceDisplay || '',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      catalogueId: content.catalogue?.id || '',
+      imageUrl: product.images?.[0] || null,
+      category: product.category ? {
+        ...product.category,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        catalogueId: content.catalogue?.id || ''
+      } : null
+    })),
+    categories: (content.categories || []).map(category => ({
+      ...category,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      catalogueId: content.catalogue?.id || ''
+    }))
+  }
+
+  const profile = {
+    id: content.profile?.id || '',
+    email: content.profile?.email || '',
+    fullName: content.profile?.fullName || null,
+    firstName: null,
+    lastName: null,
+    avatarUrl: null,
+    accountType: 'INDIVIDUAL' as const,
+    companyName: content.profile?.companyName || null,
+    phone: content.profile?.phone || null,
+    website: content.profile?.website || null,
+    address: content.profile?.address || null,
+    city: content.profile?.city || null,
+    state: content.profile?.state || null,
+    country: content.profile?.country || null,
+    postalCode: null,
+    stripeCustomerId: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+
+  const themeColors = {
+    primary: theme.colors.primary,
+    secondary: theme.colors.secondary,
+    accent: theme.colors.accent
+  }
+
+  return (
+    <ModernCatalogTemplate
+      catalogue={catalogue}
+      profile={profile}
+      themeColors={themeColors}
+      isEditMode={isEditMode}
+      {...customProps}
+    />
+  )
+}
+
+export default ModernCatalogTemplateWrapper

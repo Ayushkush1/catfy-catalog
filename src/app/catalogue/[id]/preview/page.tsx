@@ -1,7 +1,7 @@
 'use client'
 
 import { getTemplateById, getTemplateComponent } from '@/components/catalog-templates'
-import { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, FontCustomization, SpacingCustomization, StyleCustomizer } from '@/components/catalog-templates/modern-4page/components/StyleCustomizer'
+import StyleCustomizer, { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, FontCustomization, SpacingCustomization } from '@/components/shared/StyleCustomizer'
 import { ColorCustomization } from '@/components/catalog-templates/modern-4page/types/ColorCustomization'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -257,6 +257,18 @@ export default function CataloguePreviewPage() {
     }
   }
 
+  const handleContentChange = async (field: string, value: string) => {
+    if (!catalogue?.id) return
+    
+    try {
+      await handleCatalogueUpdate(catalogue.id, {
+        [field]: value
+      })
+    } catch (error) {
+      console.error('Error updating catalogue content:', error)
+    }
+  }
+
   const handleProductUpdate = async (productId: string, updates: Partial<PrismaProduct>) => {
     try {
       const response = await fetch(`/api/catalogues/${catalogueId}/products/${productId}`, {
@@ -291,9 +303,18 @@ export default function CataloguePreviewPage() {
     }
   }
 
-  const handleColorChange = async (colors: ColorCustomization) => {
-    console.log('🎨 handleColorChange called with:', colors)
-    setCustomColors(colors)
+  const handleColorChange = async (type: string, colors: any) => {
+    console.log('🎨 handleColorChange called with type:', type, 'colors:', colors)
+    
+    // Convert to the template's ColorCustomization format
+    const updatedColors = { ...customColors }
+    if (type === 'textColors') {
+      updatedColors.textColors = { ...updatedColors.textColors, ...colors }
+    } else if (type === 'backgroundColors') {
+      updatedColors.backgroundColors = { ...updatedColors.backgroundColors, ...colors }
+    }
+    
+    setCustomColors(updatedColors)
     
     // Save to database
     if (catalogue?.id) {
@@ -301,7 +322,7 @@ export default function CataloguePreviewPage() {
       await handleCatalogueUpdate(catalogue.id, {
         settings: {
           ...(catalogue.settings as object || {}),
-          customColors: colors
+          customColors: updatedColors
         } as any
       })
       console.log('✅ Color changes saved successfully')
@@ -330,8 +351,15 @@ export default function CataloguePreviewPage() {
     })
   }
 
-  const handleFontChange = async (newFontCustomization: FontCustomization) => {
-    console.log('🔤 handleFontChange called with:', newFontCustomization)
+  const handleFontChange = async (path: string, value: any) => {
+    console.log('🔤 handleFontChange called with path:', path, 'value:', value)
+    const newFontCustomization = { ...(fontCustomization || DEFAULT_FONT_CUSTOMIZATION) }
+    const pathParts = path.split('.')
+    let current: any = newFontCustomization
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      current = current[pathParts[i]]
+    }
+    current[pathParts[pathParts.length - 1]] = value
     setFontCustomization(newFontCustomization)
     
     // Save to database
@@ -349,29 +377,43 @@ export default function CataloguePreviewPage() {
     }
   }
 
-  const handleSpacingChange = async (spacingCustomization: SpacingCustomization) => {
-    setSpacingCustomization(spacingCustomization)
+  const handleSpacingChange = async (path: string, value: number) => {
+    const newSpacingCustomization = { ...(spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION) }
+    const pathParts = path.split('.')
+    let current: any = newSpacingCustomization
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      current = current[pathParts[i]]
+    }
+    current[pathParts[pathParts.length - 1]] = value
+    setSpacingCustomization(newSpacingCustomization)
     
     // Save to database
     if (catalogue?.id) {
       await handleCatalogueUpdate(catalogue.id, {
         settings: {
           ...(catalogue.settings as object || {}),
-          spacingCustomization
+          spacingCustomization: newSpacingCustomization
         } as any
       })
     }
   }
 
-  const handleAdvancedStylesChange = async (advancedStyles: AdvancedStyleCustomization) => {
-    setAdvancedStyles(advancedStyles)
+  const handleAdvancedStylesChange = async (path: string, value: any) => {
+    const newAdvancedStyles = { ...(advancedStyles || DEFAULT_ADVANCED_STYLES) }
+    const pathParts = path.split('.')
+    let current: any = newAdvancedStyles
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      current = current[pathParts[i]]
+    }
+    current[pathParts[pathParts.length - 1]] = value
+    setAdvancedStyles(newAdvancedStyles)
     
     // Save to database
     if (catalogue?.id) {
       await handleCatalogueUpdate(catalogue.id, {
         settings: {
           ...(catalogue.settings as object || {}),
-          advancedStyles
+          advancedStyles: newAdvancedStyles
         } as any
       })
     }
@@ -631,6 +673,7 @@ export default function CataloguePreviewPage() {
                   onProductsReorder={handleProductsReorder}
                   onCatalogueUpdate={handleCatalogueUpdate}
                   onProductUpdate={handleProductUpdate}
+                  onContentChange={handleContentChange}
                   customColors={customColors}
                   fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
                   spacingCustomization={spacingCustomization}
@@ -654,19 +697,32 @@ export default function CataloguePreviewPage() {
           <div className="fixed right-0 top-[69px] h-[calc(100vh-69px)] w-96 bg-white shadow-xl border-l border-gray-200 z-10 overflow-y-auto">
             <div className="p-4 space-y-6">
               <StyleCustomizer
-                isVisible={true}
-                onToggle={() => {}}
-                customColors={customColors}
-                onColorsChange={handleColorChange}
                 fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
+                spacingCustomization={spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION}
+                advancedStyleCustomization={advancedStyles || DEFAULT_ADVANCED_STYLES}
+                customColors={{
+                  primary: '#3b82f6',
+                  secondary: '#64748b',
+                  accent: '#f59e0b',
+                  background: customColors?.backgroundColors?.main || '#ffffff',
+                  surface: customColors?.backgroundColors?.productCard || '#f8fafc',
+                  textColors: {
+                    primary: customColors?.textColors?.title || '#1f2937',
+                    secondary: customColors?.textColors?.description || '#6b7280',
+                    accent: '#3b82f6',
+                    price: customColors?.textColors?.productPrice || '#059669',
+                    productDescription: customColors?.textColors?.productDescription || '#6b7280',
+                    companyName: customColors?.textColors?.companyName || '#1f2937',
+                    title: customColors?.textColors?.title || '#1f2937',
+                    description: customColors?.textColors?.description || '#6b7280',
+                  }
+                }}
+                content={catalogue}
                 onFontChange={handleFontChange}
-                spacingCustomization={spacingCustomization}
                 onSpacingChange={handleSpacingChange}
-                advancedStyles={advancedStyles}
-                onAdvancedStylesChange={handleAdvancedStylesChange}
-                smartSortEnabled={smartSortEnabled}
-                onSmartSortToggle={setSmartSortEnabled}
-                productTags={catalogue?.products?.flatMap(p => p.tags || []) || []}
+                onAdvancedStyleChange={handleAdvancedStylesChange}
+                onColorChange={handleColorChange}
+                onContentChange={handleContentChange}
               />
             </div>
           </div>

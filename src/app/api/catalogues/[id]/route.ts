@@ -12,6 +12,7 @@ const updateCatalogueSchema = z.object({
   theme: z.string().optional(),
   isPublic: z.boolean().optional(),
   settings: z.object({
+    templateId: z.string().optional(),
     showPrices: z.boolean().optional(),
     showCategories: z.boolean().optional(),
     showDescription: z.boolean().optional(),
@@ -364,10 +365,13 @@ export async function PUT(
 
     console.log('Updated settings to save:', updatedSettings)
 
+    // Extract only the fields that exist in the database schema
+    const { settings: _, ...dbFields } = validatedData
+    
     const updatedCatalogue = await prisma.catalogue.update({
       where: { id: params.id },
       data: {
-        ...validatedData,
+        ...dbFields,
         settings: updatedSettings,
         updatedAt: new Date()
       },

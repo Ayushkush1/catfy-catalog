@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Mail, Phone, Globe, ExternalLink, Facebook, Twitter, Instagram, Linkedin, MapPin } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { getTemplateComponent, getTemplateById } from '@/components/catalog-templates'
-import { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES } from '@/components/catalog-templates/modern-4page/components/StyleCustomizer'
+import { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES } from '@/components/shared/StyleCustomizer'
 
 interface PreviewPageProps {
   params: {

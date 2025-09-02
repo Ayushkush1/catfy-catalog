@@ -2,7 +2,7 @@ import React from 'react'
 import { Product, Category } from '@prisma/client'
 import Image from 'next/image'
 import { ColorCustomization } from '../types/ColorCustomization'
-import { FontCustomization } from './StyleCustomizer'
+import { FontCustomization } from '@/components/shared/StyleCustomizer'
 
 interface TableOfContentsProps {
   categories: Category[]

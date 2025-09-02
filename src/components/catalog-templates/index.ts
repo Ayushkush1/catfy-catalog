@@ -1,5 +1,8 @@
 import { Catalogue, Product, Category, Profile } from '@prisma/client'
 import { ModernCatalogTemplate } from './modern-4page/ModernCatalogTemplate'
+import { ProductShowcaseTemplate } from './product-showcase/ProductShowcaseTemplate'
+import { TemplateRegistry, type TemplateConfig as RegistryTemplateConfig } from '@/lib/template-registry'
+import { ContentMapper, type StandardizedContent } from '@/lib/content-schema'
 
 // Template interface that all catalog templates must implement
 export interface CatalogTemplateProps {
@@ -18,19 +21,22 @@ export interface CatalogTemplateProps {
   onProductsReorder?: (products: (Product & { category: Category | null })[]) => void
   onCatalogueUpdate?: (catalogueId: string, updates: Partial<Catalogue>) => void
   onProductUpdate?: (productId: string, updates: Partial<Product>) => void
+  onContentChange?: (field: string, value: string) => void
   customColors?: any
   fontCustomization?: any
   spacingCustomization?: any
   advancedStyles?: any
   smartSortEnabled?: boolean
+  themeId?: string
+  standardizedContent?: StandardizedContent
 }
 
-// Template configuration interface
+// Legacy template configuration interface (for backward compatibility)
 export interface TemplateConfig {
   id: string
   name: string
   description: string
-  category: 'modern' | 'classic' | 'minimal' | 'creative'
+  category: 'modern' | 'classic' | 'minimal' | 'creative' | 'product'
   isPremium: boolean
   previewImage: string
   component: React.ComponentType<CatalogTemplateProps>
@@ -42,6 +48,9 @@ export interface TemplateConfig {
     profile: string[]
   }
 }
+
+// Re-export registry types for convenience
+export type { RegistryTemplateConfig }
 
 // Available catalog templates
 export const CATALOG_TEMPLATES: TemplateConfig[] = [
@@ -60,6 +69,31 @@ export const CATALOG_TEMPLATES: TemplateConfig[] = [
       'Contact information',
       'Responsive grid',
       'Print-optimized'
+    ],
+    pageCount: 4,
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay'],
+      categories: ['name', 'description', 'color'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+    }
+  },
+  {
+    id: 'product-showcase',
+    name: 'Product Showcase',
+    description: 'A modern 4-page template designed for showcasing products with elegant layouts and professional presentation',
+    category: 'product',
+    isPremium: false,
+    previewImage: '/templates/product-showcase-preview.svg',
+    component: ProductShowcaseTemplate,
+    features: [
+      'Product catalog display',
+      'Category organization',
+      'New collection highlights',
+      'Contact information',
+      'Professional layout',
+      'Theme color integration',
+      'Responsive design',
+      'Print optimization'
     ],
     pageCount: 4,
     supportedFields: {
@@ -109,5 +143,68 @@ export function getPremiumTemplates(): TemplateConfig[] {
   return CATALOG_TEMPLATES.filter(template => template.isPremium)
 }
 
-// Export the modern template for backward compatibility
-export { ModernCatalogTemplate }
+// Registry integration functions
+export function initializeTemplateRegistry(): TemplateRegistry {
+  const registry = TemplateRegistry.getInstance()
+  return registry
+}
+
+export function getRegistryTemplateById(templateId: string): RegistryTemplateConfig | null {
+  const registry = TemplateRegistry.getInstance()
+  return registry.getTemplate(templateId) || null
+}
+
+export function getAllRegistryTemplates(): RegistryTemplateConfig[] {
+  const registry = TemplateRegistry.getInstance()
+  return registry.getAllTemplates()
+}
+
+export function validateTemplateCompatibility(templateId: string, themeId: string): boolean {
+  const registry = TemplateRegistry.getInstance()
+  return registry.isTemplateThemeCompatible(templateId, themeId)
+}
+
+// Content standardization helpers
+export function createStandardizedContent(
+  catalogue: Catalogue & {
+    products: (Product & { category: Category | null })[]
+    categories: Category[]
+  },
+  profile: Profile
+): StandardizedContent {
+  return ContentMapper.mapToStandardized({
+    ...catalogue,
+    products: catalogue.products.map(product => ({
+      ...product,
+      price: product.price || null,
+      priceDisplay: product.priceDisplay || '',
+      createdAt: product.createdAt || new Date(),
+      updatedAt: product.updatedAt || new Date(),
+      catalogueId: product.catalogueId || catalogue.id,
+      imageUrl: product.imageUrl || product.images?.[0] || null,
+      category: product.category ? {
+        ...product.category,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        catalogueId: catalogue.id
+      } : null
+    })),
+    categories: catalogue.categories.map(category => ({
+      ...category,
+      createdAt: category.createdAt || new Date(),
+      updatedAt: category.updatedAt || new Date(),
+      catalogueId: category.catalogueId || catalogue.id
+    }))
+  }, profile)
+}
+
+export function validateContentStructure(content: StandardizedContent): boolean {
+  try {
+    ContentMapper.validate(content)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export { ModernCatalogTemplate, ProductShowcaseTemplate }

@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Catalogue, Profile } from '@prisma/client'
 import Image from 'next/image'
 import { ColorCustomization } from '../types/ColorCustomization'
-import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from './StyleCustomizer'
+import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer'
 
 interface CatalogCoverProps {
   catalogue: Catalogue
@@ -31,46 +31,7 @@ export function CatalogCover({
   isEditMode = false, 
   onCatalogueUpdate 
 }: CatalogCoverProps) {
-  const [editingField, setEditingField] = useState<string | null>(null)
-  const [editValues, setEditValues] = useState({
-    name: catalogue.name,
-    description: catalogue.description || ''
-  })
-
-  const handleFieldEdit = (field: string) => {
-    if (!isEditMode) return
-    setEditingField(field)
-    setEditValues({
-      name: catalogue.name,
-      description: catalogue.description || ''
-    })
-  }
-
-  const handleFieldSave = (field: string) => {
-    if (onCatalogueUpdate) {
-      onCatalogueUpdate(catalogue.id, {
-        [field]: editValues[field as keyof typeof editValues]
-      })
-    }
-    setEditingField(null)
-  }
-
-  const handleFieldCancel = () => {
-    setEditingField(null)
-    setEditValues({
-      name: catalogue.name,
-      description: catalogue.description || ''
-    })
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent, field: string) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleFieldSave(field)
-    } else if (e.key === 'Escape') {
-      handleFieldCancel()
-    }
-  }
+  // Removed inline editing functionality - content is now managed centrally in StyleCustomizer
   const currentYear = new Date().getFullYear()
   
   return (
@@ -159,99 +120,31 @@ export function CatalogCover({
           >
             CATALOG
           </h1>
-          {/* Editable Catalog Name */}
-          {editingField === 'name' ? (
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={editValues.name}
-                onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
-                onKeyDown={(e) => handleKeyPress(e, 'name')}
-                onBlur={() => handleFieldSave('name')}
-                className="text-3xl font-light text-gray-700 uppercase tracking-wider bg-white border-2 border-blue-500 rounded px-3 py-2 focus:outline-none text-center w-full max-w-2xl mx-auto"
-                autoFocus
-              />
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => handleFieldSave('name')}
-                  className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={handleFieldCancel}
-                  className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <h2 
-              className={`uppercase tracking-wider ${
-                isEditMode ? 'cursor-pointer hover:bg-gray-100 rounded px-3 py-2' : ''
-              }`}
-              style={{ 
-                color: customColors?.textColors.title || '#1f2937',
-                fontFamily: fontCustomization?.fontFamily?.title || 'Inter, sans-serif',
-                fontSize: `${fontCustomization?.fontSize?.title || 24}px`,
-                fontWeight: fontCustomization?.fontWeight?.title || '600'
-              }}
-              onClick={() => handleFieldEdit('name')}
-            >
-              {catalogue.name}
-              {isEditMode && (
-                <span className="ml-2 text-sm text-blue-500">✏️</span>
-              )}
-            </h2>
-          )}
+          {/* Catalog Name */}
+          <h2 
+            className="uppercase tracking-wider"
+            style={{ 
+              color: customColors?.textColors.title || '#1f2937',
+              fontFamily: fontCustomization?.fontFamily?.title || 'Inter, sans-serif',
+              fontSize: `${fontCustomization?.fontSize?.title || 24}px`,
+              fontWeight: fontCustomization?.fontWeight?.title || '600'
+            }}
+          >
+            {catalogue.name}
+          </h2>
           
-          {/* Editable Catalog Description */}
-          {editingField === 'description' ? (
-            <div className="space-y-2">
-              <textarea
-                value={editValues.description}
-                onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
-                onKeyDown={(e) => handleKeyPress(e, 'description')}
-                onBlur={() => handleFieldSave('description')}
-                className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed bg-white border-2 border-blue-500 rounded px-3 py-2 focus:outline-none text-center w-full resize-none"
-                rows={3}
-                autoFocus
-              />
-              <div className="flex gap-2 justify-center">
-                <button
-                  onClick={() => handleFieldSave('description')}
-                  className="px-3 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={handleFieldCancel}
-                  className="px-3 py-1 bg-gray-500 text-white text-sm rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p 
-              className={`max-w-2xl mx-auto leading-relaxed ${
-                isEditMode ? 'cursor-pointer hover:bg-gray-100 rounded px-3 py-2 min-h-[3rem]' : ''
-              }`}
-              style={{ 
-                color: customColors?.textColors.description || '#6b7280',
-                fontFamily: fontCustomization?.fontFamily?.description || 'Inter, sans-serif',
-                fontSize: `${fontCustomization?.fontSize?.description || 16}px`,
-                fontWeight: fontCustomization?.fontWeight?.description || '400'
-              }}
-              onClick={() => handleFieldEdit('description')}
-            >
-              {catalogue.description || (isEditMode ? 'Click to add description...' : 'Modern • Unique • Products')}
-              {isEditMode && (
-                <span className="ml-2 text-sm text-blue-500">✏️</span>
-              )}
-            </p>
-          )}
+          {/* Catalog Description */}
+          <p 
+            className="max-w-2xl mx-auto leading-relaxed"
+            style={{ 
+              color: customColors?.textColors.description || '#6b7280',
+              fontFamily: fontCustomization?.fontFamily?.description || 'Inter, sans-serif',
+              fontSize: `${fontCustomization?.fontSize?.description || 16}px`,
+              fontWeight: fontCustomization?.fontWeight?.description || '400'
+            }}
+          >
+            {catalogue.description || 'Modern • Unique • Products'}
+          </p>
         </div>
 
         {/* Year */}

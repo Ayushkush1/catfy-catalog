@@ -28,17 +28,20 @@ import {
   CheckCircle,
   Image,
   Mail,
-  Share2
+  Share2,
+  Layout
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { ThemeSelector } from './ThemeSelector'
+import { TemplateSelector } from '@/components/ui/template-selector'
 
 interface CatalogueData {
   id?: string
   name: string
   description: string
+  templateId: string
   theme: string
   isPublic: boolean
   settings: {
@@ -46,6 +49,7 @@ interface CatalogueData {
     showCategories: boolean
     allowSearch: boolean
     showProductCodes: boolean
+    templateId: string
     companyInfo: {
       companyName: string
       companyDescription: string
@@ -88,6 +92,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const [data, setData] = useState<CatalogueData>({
     name: '',
     description: '',
+    templateId: 'modern-4page',
     theme: 'modern',
     isPublic: false,
     settings: {
@@ -95,6 +100,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
       showCategories: true,
       allowSearch: true,
       showProductCodes: false,
+      templateId: 'modern-4page',
       companyInfo: {
         companyName: '',
         companyDescription: '',
@@ -203,12 +209,15 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
         }
         break
       case 2:
-        // Theme selection is always valid as we have a default
+        // Template selection is always valid as we have a default
         break
       case 3:
-        // Branding step is optional
+        // Theme selection is always valid as we have a default
         break
       case 4:
+        // Branding step is optional
+        break
+      case 5:
         if (!canCreateCatalogue()) {
           setShowUpgradePrompt(true)
           return false
@@ -221,7 +230,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 4))
+      setCurrentStep(prev => Math.min(prev + 1, 5))
     }
   }
 
@@ -231,7 +240,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   }
 
   const saveCatalogue = async () => {
-    if (!validateStep(4)) return
+    if (!validateStep(5)) return
     
     setSaving(true)
     setError('')
@@ -283,7 +292,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 Create New Catalogue
               </h1>
               <p className="text-gray-600 mt-2 text-lg">
-                Step {currentStep} of 4
+                Step {currentStep} of 5
               </p>
             </div>
             
@@ -300,7 +309,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           
           {/* Progress Bar */}
           <div className="flex items-center justify-center space-x-4">
-            {[1, 2, 3, 4].map((step) => (
+            {[1, 2, 3, 4, 5].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`flex items-center justify-center w-12 h-12 rounded-full border-3 transition-all duration-300 ${
                   step < currentStep 
@@ -315,7 +324,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <span className="text-lg font-bold">{step}</span>
                   )}
                 </div>
-                {step < 4 && (
+                {step < 5 && (
                   <div className={`w-20 h-2 mx-3 rounded-full transition-all duration-300 ${
                     step < currentStep ? 'bg-gradient-to-r from-green-500 to-green-600' : 'bg-gray-200'
                   }`} />
@@ -325,7 +334,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           </div>
           
           {/* Step Labels */}
-          <div className="flex justify-center mt-6 space-x-8">
+          <div className="flex justify-center mt-6 space-x-6">
             <div className="text-center">
               <span className={`text-sm font-medium transition-colors duration-300 ${
                 currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'
@@ -337,19 +346,26 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               <span className={`text-sm font-medium transition-colors duration-300 ${
                 currentStep >= 2 ? 'text-blue-600' : 'text-gray-500'
               }`}>
-                Choose Theme
+                Template
               </span>
             </div>
             <div className="text-center">
               <span className={`text-sm font-medium transition-colors duration-300 ${
                 currentStep >= 3 ? 'text-blue-600' : 'text-gray-500'
               }`}>
-                Branding
+                Theme
               </span>
             </div>
             <div className="text-center">
               <span className={`text-sm font-medium transition-colors duration-300 ${
                 currentStep >= 4 ? 'text-blue-600' : 'text-gray-500'
+              }`}>
+                Branding
+              </span>
+            </div>
+            <div className="text-center">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
+                currentStep >= 5 ? 'text-blue-600' : 'text-gray-500'
               }`}>
                 Configuration
               </span>
@@ -425,6 +441,31 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
                 <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
+                  <Layout className="h-6 w-6" />
+                  Choose Your Template
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Select a template layout that best fits your catalogue needs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <TemplateSelector
+                  selectedTemplateId={data.templateId}
+                  onTemplateSelect={(templateId) => {
+                    updateData('templateId', templateId)
+                    updateData('settings.templateId', templateId)
+                  }}
+                  showPreview={true}
+                  className="mt-4"
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === 3 && (
+            <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-2 text-xl text-gray-800">
                   <Palette className="h-6 w-6" />
                   Choose Your Theme
                 </CardTitle>
@@ -444,7 +485,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             </Card>
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <div className="space-y-6">
               {/* Company Information */}
               <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
@@ -675,7 +716,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             </div>
           )}
 
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <div className="space-y-6">
               {/* Display Settings */}
               <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
@@ -804,7 +845,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               Previous
             </Button>
             
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <Button 
                 onClick={nextStep}
                 className="px-6 py-3 text-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"

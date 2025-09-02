@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 // import { formatDistanceToNow } from 'date-fns'
 import { Header } from '@/components/Header'
@@ -42,6 +43,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { smartSort } from '@/lib/sorting'
+import { templateRegistry } from '@/lib/template-registry'
+import { themeRegistry, getAllThemes } from '@/lib/theme-registry'
+import { initializeTemplateRegistry } from '@/templates'
+import { initializeThemeRegistry } from '@/themes'
 import { SubscriptionPlan } from '@prisma/client'
 import {
   AlertTriangle,
@@ -73,6 +78,7 @@ interface Catalogue {
   description: string | null
   isPublic: boolean
   theme: string
+  template?: string
   createdAt: string
   updatedAt: string
   categories: Category[]
@@ -133,6 +139,7 @@ export default function EditCataloguePage() {
   const params = useParams()
   const catalogueId = params?.id as string || ''
   const { currentPlan } = useSubscription()
+  const supabase = createClient()
 
   const [catalogue, setCatalogue] = useState<Catalogue | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -159,10 +166,13 @@ export default function EditCataloguePage() {
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [selectedThemeCategory, setSelectedThemeCategory] = useState('all')
   const [selectedTheme, setSelectedTheme] = useState('modern')
   const [products, setProducts] = useState<Product[]>([])
   const [smartSortEnabled, setSmartSortEnabled] = useState(false)
+  const [availableThemes, setAvailableThemes] = useState<any[]>([])
+  const [templateStep, setTemplateStep] = useState<'template' | 'theme'>('template')
 
   // Theme data matching the themes page
   const THEMES = [
@@ -275,9 +285,63 @@ export default function EditCataloguePage() {
     return theme.category === selectedThemeCategory
   })
 
+  // Get available templates and themes
+  const templates = templateRegistry.getAllTemplates()
+  const allThemes = getAllThemes()
+
+  // Handle template selection
+  const handleTemplateSelect = async (templateId: string) => {
+    setSelectedTemplate(templateId)
+    const compatibleThemes = themeRegistry.getCompatibleThemes(templateId)
+    setAvailableThemes(compatibleThemes)
+    setTemplateStep('theme')
+
+    // Update catalogue template
+    if (catalogue) {
+      setCatalogue(prev => prev ? { 
+        ...prev, 
+        settings: {
+          ...(prev.settings as Record<string, any> || {}),
+          templateId: templateId
+        } as any
+      } : null)
+
+      // Save to database immediately
+      try {
+        const response = await fetch(`/api/catalogues/${catalogueId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            settings: {
+              ...(catalogue.settings as object || {}),
+              templateId: templateId
+            }
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update template')
+        }
+
+        console.log('Template saved successfully:', templateId)
+      } catch (error: any) {
+        console.error('Error saving template:', error)
+        toast.error(error.message || 'Failed to save template')
+      }
+    }
+
+    // Save to localStorage
+    localStorage.setItem('selectedTemplate', templateId)
+
+    // Reset theme selection when template changes
+    setSelectedTheme('')
+  }
+
   // Handle theme selection
   const handleThemeSelect = async (themeId: string) => {
-    const theme = THEMES.find(t => t.id === themeId)
+    const theme = availableThemes.find(t => t.id === themeId) || THEMES.find(t => t.id === themeId)
     if (!theme) return
 
     // For now, assume user can only use free themes
@@ -335,6 +399,24 @@ export default function EditCataloguePage() {
     }
   }
 
+  // Initialize registries
+  useEffect(() => {
+    initializeTemplateRegistry()
+    initializeThemeRegistry()
+  }, [])
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
+    }
+    checkAuth()
+  }, [supabase, router])
+
   useEffect(() => {
     fetchCatalogue()
   }, [catalogueId])
@@ -350,6 +432,32 @@ export default function EditCataloguePage() {
       // If catalogue doesn't have a theme but localStorage does, update catalogue
       if (!catalogue.theme && savedTheme) {
         setCatalogue(prev => prev ? { ...prev, theme: savedTheme } : null)
+      }
+    }
+  }, [catalogue])
+
+  // Initialize template selection based on catalogue data
+  useEffect(() => {
+    if (catalogue) {
+      // Set selected template from catalogue data or default to first available template
+      const catalogueTemplate = catalogue.template || localStorage.getItem('selectedTemplate')
+      if (catalogueTemplate) {
+        setSelectedTemplate(catalogueTemplate)
+        // Update available themes based on selected template
+        const template = templateRegistry.getTemplate(catalogueTemplate)
+        if (template) {
+          const compatibleThemes = themeRegistry.getCompatibleThemes(catalogueTemplate)
+          setAvailableThemes(compatibleThemes)
+        }
+      } else {
+        // Default to first available template if none is set
+        const templates = templateRegistry.getAllTemplates()
+        if (templates.length > 0) {
+          const defaultTemplate = templates[0]
+          setSelectedTemplate(defaultTemplate.id)
+          const compatibleThemes = themeRegistry.getCompatibleThemes(defaultTemplate.id)
+          setAvailableThemes(compatibleThemes)
+        }
       }
     }
   }, [catalogue])
@@ -387,9 +495,8 @@ export default function EditCataloguePage() {
   const fetchCatalogue = async () => {
     try {
       setIsLoading(true)
-
       const response = await fetch(`/api/catalogues/${catalogueId}`)
-
+      
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to fetch catalogue')
@@ -703,11 +810,11 @@ export default function EditCataloguePage() {
       <div className="container mx-auto py-6 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <div className="flex items-start ">
+          <div className="flex items-start">
             <Button variant="ghost" size="sm" className="mt-1 absolute left-8" asChild>
               <Link href="/dashboard">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-               
+                
               </Link>
             </Button>
 
@@ -1380,57 +1487,207 @@ export default function EditCataloguePage() {
 
           {/* Theme Tab */}
           <TabsContent value="theme" className="space-y-6">
-            <div className="flex gap-6">
-              {/* Sidebar */}
-              <div className="w-64 space-y-4">
-                <div>
-                  <h3 className="font-medium text-sm text-gray-900 mb-3">Categories</h3>
-                  <div className="space-y-1">
-                    {[
-                      { id: 'all', label: 'All Themes', count: THEMES.length },
-                      { id: 'free', label: 'Free', count: THEMES.filter(t => !t.isPremium).length },
-                      { id: 'premium', label: 'Premium', count: THEMES.filter(t => t.isPremium).length },
-                      { id: 'modern', label: 'Modern', count: THEMES.filter(t => t.category === 'modern').length },
-                      { id: 'classic', label: 'Classic', count: THEMES.filter(t => t.category === 'classic').length },
-                      { id: 'minimal', label: 'Minimal', count: THEMES.filter(t => t.category === 'minimal').length },
-                      { id: 'bold', label: 'Bold', count: THEMES.filter(t => t.category === 'bold').length },
-                      { id: 'elegant', label: 'Elegant', count: THEMES.filter(t => t.category === 'elegant').length },
-                      { id: 'tech', label: 'Tech', count: THEMES.filter(t => t.category === 'tech').length }
-                    ].map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => setSelectedThemeCategory(category.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md text-left transition-colors ${selectedThemeCategory === category.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                      >
-                        <span>{category.label}</span>
-                        <span className="text-gray-500">{category.count}</span>
-                      </button>
-                    ))}
-                  </div>
+            {/* Step Navigation */}
+            <div className="flex items-center space-x-4 mb-6">
+              <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-blue-600' : selectedTemplate ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-blue-100 text-blue-600' :
+                    selectedTemplate ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                  {selectedTemplate ? '✓' : '1'}
+                </div>
+                <span className="font-medium">Choose Template</span>
+              </div>
+              <div className="flex-1 h-px bg-gray-200"></div>
+              <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-blue-600' : selectedTheme ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-blue-100 text-blue-600' :
+                    selectedTheme ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+                  }`}>
+                  {selectedTheme ? '✓' : '2'}
+                </div>
+                <span className="font-medium">Choose Theme</span>
+              </div>
+            </div>
+
+            {templateStep === 'template' ? (
+              /* Template Selection */
+              <div>
+                <div className="mb-6">
+                  <h3 className="font-medium text-lg">Select a Template</h3>
+                  <p className="text-sm text-gray-600">Choose a template structure for your catalogue</p>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-sm text-blue-900 mb-1">Current Plan</h4>
-                    <p className="text-xs text-blue-700">Free Plan</p>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {templates.map((template) => (
+                    <div
+                      key={template.id}
+                      onClick={() => handleTemplateSelect(template.id)}
+                      className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${selectedTemplate === template.id
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg ring-2 ring-blue-200'
+                          : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-blue-50'
+                        }`}
+                    >
+                      {/* Premium Badge */}
+                      {template.isPremium && (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                            <Crown className="h-3 w-3" />
+                            Premium
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Selection Indicator */}
+                      {selectedTemplate === template.id && (
+                        <div className="absolute top-4 right-4">
+                          <div className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full">
+                            <Check className="h-4 w-4 text-white" />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="space-y-5">
+                        {/* Preview Thumbnail */}
+                        <div className="mb-4 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
+                          <div className="aspect-video relative">
+                            {/* Template Preview SVG */}
+                            <svg viewBox="0 0 400 225" className="w-full h-full">
+                              {/* Background */}
+                              <rect width="400" height="225" fill="#f8fafc" />
+                              
+                              {/* Header */}
+                              <rect x="0" y="0" width="400" height="45" fill="#e2e8f0" />
+                              <rect x="20" y="15" width="80" height="15" rx="3" fill="#64748b" />
+                              <rect x="320" y="15" width="60" height="15" rx="3" fill="#3b82f6" />
+                              
+                              {/* Content based on template category */}
+                              {template.category === 'modern' && (
+                                <>
+                                  <rect x="20" y="70" width="360" height="40" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                  <rect x="40" y="85" width="120" height="10" rx="2" fill="#1f2937" />
+                                  <rect x="20" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                  <rect x="210" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                </>
+                              )}
+                              
+                              {template.category === 'classic' && (
+                                <>
+                                  <rect x="50" y="70" width="300" height="30" rx="4" fill="#ffffff" stroke="#d1d5db" />
+                                  <rect x="70" y="80" width="100" height="10" rx="2" fill="#374151" />
+                                  <rect x="50" y="120" width="300" height="80" rx="4" fill="#ffffff" stroke="#d1d5db" />
+                                  <rect x="70" y="140" width="260" height="8" rx="2" fill="#6b7280" />
+                                  <rect x="70" y="155" width="200" height="8" rx="2" fill="#6b7280" />
+                                </>
+                              )}
+                              
+                              {template.category === 'minimal' && (
+                                <>
+                                  <rect x="100" y="80" width="200" height="20" rx="2" fill="#1f2937" />
+                                  <rect x="150" y="120" width="100" height="60" rx="4" fill="#f3f4f6" stroke="#e5e7eb" />
+                                  <rect x="170" y="140" width="60" height="6" rx="1" fill="#9ca3af" />
+                                  <rect x="170" y="155" width="40" height="6" rx="1" fill="#9ca3af" />
+                                </>
+                              )}
+                              
+                              {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized') && (
+                                <>
+                                  <rect x="20" y="70" width="120" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                  <rect x="160" y="70" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
+                                  <rect x="160" y="140" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
+                                  <circle cx="80" cy="130" r="25" fill="#ddd6fe" />
+                                </>
+                              )}
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {/* Icon and Category */}
+                        <div className="flex items-center justify-between">
+                          <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${
+                            selectedTemplate === template.id 
+                              ? 'bg-blue-100 text-blue-600' 
+                              : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
+                          }`}>
+                            <Package className="h-7 w-7" />
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="secondary" className="text-xs font-medium capitalize">
+                              {template.category}
+                            </Badge>
+                          </div>
+                        </div>
+                        
+                        {/* Title and Description */}
+                        <div className="space-y-2">
+                          <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-blue-900 transition-colors">
+                            {template.name}
+                          </h4>
+                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                            {template.description}
+                          </p>
+                        </div>
+                        
+                        {/* Features */}
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
+                            <span className="text-xs text-gray-500">{(template.features || []).length} features</span>
+                          </div>
+                          <ul className="space-y-2">
+                            {(template.features || []).slice(0, 3).map((feature, index) => (
+                              <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
+                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                  selectedTemplate === template.id ? 'bg-blue-500' : 'bg-gray-400 group-hover:bg-blue-500'
+                                } transition-colors`} />
+                                <span className="font-medium">{feature}</span>
+                              </li>
+                            ))}
+                            {(template.features || []).length > 3 && (
+                              <li className="text-xs text-gray-500 flex items-center gap-3 italic">
+                                <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                                +{(template.features || []).length - 3} more features
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="pt-2 border-t border-gray-100">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Compatible themes: {template.compatibleThemes?.length || 0}</span>
+                            <span className={`font-semibold ${
+                              selectedTemplate === template.id ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
+                            } transition-colors`}>
+                              Select Template →
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Main Content */}
-              <div className="flex-1">
-                <div className="mb-6">
-                  <h3 className="font-medium text-lg capitalize">
-                    {selectedThemeCategory === 'all' ? 'All Themes' : selectedThemeCategory} ({filteredThemesForCategory.length})
-                  </h3>
-                  <p className="text-sm text-gray-600">Choose from our collection of professionally designed themes</p>
+            ) : (
+              /* Theme Selection */
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="font-medium text-lg">Choose Theme for {templates.find(t => t.id === selectedTemplate)?.name}</h3>
+                    <p className="text-sm text-gray-600">Select a color scheme and styling for your template</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setTemplateStep('template')
+                      setSelectedTemplate(null)
+                      setAvailableThemes([])
+                    }}
+                  >
+                    Change Template
+                  </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredThemesForCategory.map((theme) => {
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).map((theme) => {
                     const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
                     const isSelected = selectedTheme === theme.id
 
@@ -1438,73 +1695,109 @@ export default function EditCataloguePage() {
                       <div
                         key={theme.id}
                         onClick={() => handleThemeSelect(theme.id)}
-                        className={`relative border rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg group ${isSelected
-                          ? 'border-blue-500 bg-blue-50 shadow-md'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                        className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected
+                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg ring-2 ring-blue-200'
+                          : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-blue-50'
                           }`}
                       >
                         {/* Premium Badge */}
                         {theme.isPremium && (
-                          <div className="absolute top-4 right-4">
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                          <div className="absolute -top-2 -right-2 z-10">
+                            <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
                               <Crown className="h-3 w-3" />
                               Premium
                             </div>
                           </div>
                         )}
 
-                        {/* Selected Badge */}
+                        {/* Selection Indicator */}
                         {isSelected && (
                           <div className="absolute top-4 right-4">
-                            <div className="bg-blue-500 text-white rounded-full p-1.5">
-                              <Check className="h-4 w-4" />
+                            <div className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full">
+                              <Check className="h-4 w-4 text-white" />
                             </div>
                           </div>
                         )}
 
-                        <div className="space-y-4">
-                          {/* Theme Icon */}
-                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-gray-200 transition-colors">
-                            <IconComponent className="h-6 w-6 text-gray-600" />
+                        <div className="space-y-5">
+                          {/* Icon and Category */}
+                          <div className="flex items-center justify-between">
+                            <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${
+                              isSelected 
+                                ? 'bg-blue-100 text-blue-600' 
+                                : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
+                            }`}>
+                              <IconComponent className="h-7 w-7" />
+                            </div>
+                            <div className="text-right">
+                              <Badge variant="secondary" className="text-xs font-medium capitalize">
+                                {theme.category}
+                              </Badge>
+                            </div>
                           </div>
 
-                          {/* Theme Info */}
-                          <div>
-                            <h4 className="font-semibold text-lg text-gray-900">{theme.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{theme.description}</p>
+                          {/* Title and Description */}
+                          <div className="space-y-2">
+                            <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-blue-900 transition-colors">
+                              {theme.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                              {theme.description}
+                            </p>
                           </div>
 
                           {/* Color Palette */}
-                          <div>
-                            <p className="text-xs font-medium text-gray-700 mb-2">Color Palette</p>
-                            <div className="flex gap-2">
-                              {Object.values(theme.colors).map((color, index) => (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Color Palette</p>
+                              <span className="text-xs text-gray-500">{Object.keys(theme.colors || {}).length} colors</span>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              {Object.values(theme.colors || {}).map((color, index) => (
                                 <div
                                   key={index}
-                                  className="w-8 h-8 rounded-lg border-2 border-white shadow-sm"
-                                  style={{ backgroundColor: color }}
-                                  title={color}
+                                  className="w-10 h-10 rounded-xl border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer"
+                                  style={{ backgroundColor: color as string }}
+                                  title={color as string}
                                 />
                               ))}
                             </div>
                           </div>
 
                           {/* Features */}
-                          <div>
-                            <p className="text-xs font-medium text-gray-700 mb-2">Features</p>
-                            <ul className="space-y-1">
-                              {theme.features.slice(0, 3).map((feature, index) => (
-                                <li key={index} className="text-xs text-gray-600 flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
-                                  {feature}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
+                              <span className="text-xs text-gray-500">{theme.features?.length || 0} features</span>
+                            </div>
+                            <ul className="space-y-2">
+                              {theme.features?.slice(0, 3).map((feature: string, index: number) => (
+                                <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
+                                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                    isSelected ? 'bg-blue-500' : 'bg-gray-400 group-hover:bg-blue-500'
+                                  } transition-colors`} />
+                                  <span className="font-medium">{feature}</span>
                                 </li>
                               ))}
-                              {theme.features.length > 3 && (
-                                <li className="text-xs text-gray-500 italic">
-                                  +{theme.features.length - 3} more features
+                              {(theme.features?.length || 0) > 3 && (
+                                <li className="text-xs text-gray-500 flex items-center gap-3 italic">
+                                  <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                                  +{(theme.features?.length || 0) - 3} more features
                                 </li>
                               )}
                             </ul>
+                          </div>
+                          
+                          {/* Footer */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-500">Theme ID: {theme.id}</span>
+                              <span className={`font-semibold ${
+                                isSelected ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
+                              } transition-colors`}>
+                                Select Theme →
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1512,838 +1805,839 @@ export default function EditCataloguePage() {
                   })}
                 </div>
 
-                {filteredThemesForCategory.length === 0 && (
+                {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).length === 0 && (
                   <div className="text-center py-12">
                     <div className="text-gray-400 mb-2">
                       <Palette className="h-12 w-12 mx-auto" />
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
-                    <p className="text-gray-600">Try selecting a different category</p>
+                    <p className="text-gray-600">Try selecting a different template</p>
                   </div>
                 )}
               </div>
+              
+            )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Category Dialog */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? 'Edit Category' : 'Add Category'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCategory ? 'Update category information' : 'Create a new category for your products'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="categoryName">Category Name</Label>
+              <Input
+                id="categoryName"
+                value={categoryForm.name}
+                onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter category name"
+              />
             </div>
-          </TabsContent>
-        </Tabs>
 
-        {/* Category Dialog */}
-        <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? 'Edit Category' : 'Add Category'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingCategory ? 'Update category information' : 'Create a new category for your products'}
-              </DialogDescription>
-            </DialogHeader>
+            <div>
+              <Label htmlFor="categoryDescription">Description</Label>
+              <Textarea
+                id="categoryDescription"
+                value={categoryForm.description}
+                onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter category description"
+                rows={3}
+              />
+            </div>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="categoryName">Category Name</Label>
-                <Input
-                  id="categoryName"
-                  value={categoryForm.name}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter category name"
-                />
-              </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCategoryDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveCategory}>
+              {editingCategory ? 'Update' : 'Create'} Category
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              <div>
-                <Label htmlFor="categoryDescription">Description</Label>
+      {/* Product Dialog */}
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent className="max-w-2xl overflow-auto h-full max-h-[95vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProduct ? 'Edit Product' : 'Add Product'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? 'Update product information' : 'Add a new product to your catalogue'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="productName">Product Name</Label>
+              <Input
+                id="productName"
+                value={productForm.name}
+                onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter product name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="productDescription">Description</Label>
+              <div className="space-y-2">
                 <Textarea
-                  id="categoryDescription"
-                  value={categoryForm.description}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter category description"
+                  id="productDescription"
+                  value={productForm.description}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter product description"
                   rows={3}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                  disabled={isGeneratingDescription || !productForm.name.trim()}
+                  onClick={async () => {
+                    if (!productForm.name.trim()) {
+                      toast.error("Please enter a product name first");
+                      return;
+                    }
+
+                    setIsGeneratingDescription(true);
+
+                    try {
+                      const category = catalogue?.categories.find(cat => cat.id === productForm.categoryId);
+
+                      const response = await fetch('/api/ai/description', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          productName: productForm.name,
+                          category: category?.name,
+                          tags: productForm.tags,
+                          price: productForm.price > 0 ? productForm.price : undefined
+                        })
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(`Failed to generate description: ${response.status}`);
+                      }
+
+                      const data = await response.json();
+
+                      if (data.success && data.description) {
+                        setProductForm(prev => ({ ...prev, description: data.description }));
+                        toast.success("AI description generated successfully!");
+                      } else {
+                        throw new Error(data.error || 'Failed to generate description');
+                      }
+                    } catch (error) {
+                      console.error('AI Generation Error:', error);
+                      toast.error(error instanceof Error ? error.message : 'Failed to generate description');
+                    } finally {
+                      setIsGeneratingDescription(false);
+                    }
+                  }}
+                >
+                  {isGeneratingDescription ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 mr-1" /> AI Generate
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCategoryDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveCategory}>
-                {editingCategory ? 'Update' : 'Create'} Category
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Product Dialog */}
-        <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-          <DialogContent className="max-w-2xl overflow-auto h-full max-h-[95vh]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? 'Edit Product' : 'Add Product'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingProduct ? 'Update product information' : 'Add a new product to your catalogue'}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="productName">Product Name</Label>
-                <Input
-                  id="productName"
-                  value={productForm.name}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter product name"
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Product Image</Label>
+              {!productForm.imageUrl ? (
+                <FileUpload
+                  uploadType="product"
+                  catalogueId={catalogueId}
+                  productId={editingProduct?.id}
+                  maxFiles={1}
+                  accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                  onUpload={(files) => {
+                    if (files.length > 0) {
+                      setProductForm(prev => ({ ...prev, imageUrl: files[0].url }))
+                    }
+                  }}
+                  onError={(error) => {
+                    setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
+                  }}
+                  className="mt-2"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="productDescription">Description</Label>
-                <div className="space-y-2">
-                  <Textarea
-                    id="productDescription"
-                    value={productForm.description}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter product description"
-                    rows={3}
+              ) : (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-sm text-gray-600 mb-2">Current image:</p>
+                  <img
+                    src={productForm.imageUrl}
+                    alt="Product Image"
+                    className="w-20 h-20 object-cover border rounded"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    size="xs"
-                    className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"  
-                    disabled={isGeneratingDescription || !productForm.name.trim()}
-                    onClick={async () => {
-                      if (!productForm.name.trim()) {
-                        toast.error("Please enter a product name first");
-                        return;
-                      }
+                    size="sm"
+                    onClick={() => setProductForm(prev => ({ ...prev, imageUrl: '' }))}
+                    className="text-xs"
+                  >
+                    Change Image
+                  </Button>
+                </div>
+              )}
+            </div>
 
-                      setIsGeneratingDescription(true);
-                      
+            <div>
+              <Label htmlFor="productTags">Tags</Label>
+              <Input
+                id="productTags"
+                value={productForm.tags?.join(', ') || ''}
+                onChange={(e) => {
+                  const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+                  setProductForm(prev => ({ ...prev, tags: tagsArray }));
+                }}
+                placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productPrice">Price</Label>
+                <Input
+                  id="productPrice"
+                  type="number"
+                  value={productForm.price}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="productPriceDisplay">Price Display</Label>
+                <Select
+                  value={productForm.priceDisplay}
+                  onValueChange={(value: 'show' | 'hide' | 'contact') => setProductForm(prev => ({ ...prev, priceDisplay: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select price display" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="show">Show Price</SelectItem>
+                    <SelectItem value="hide">Hide Price</SelectItem>
+                    <SelectItem value="contact">Contact for Price</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productCategory">Category</Label>
+                <div className="flex items-center gap-2">
+                  <Select value={productForm.categoryId} onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalogue.categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                    disabled={!productForm.name || !productForm.description}
+                    onClick={async () => {
                       try {
-                        const category = catalogue?.categories.find(cat => cat.id === productForm.categoryId);
-                        
-                        const response = await fetch('/api/ai/description', {
+                        const response = await fetch('/api/ai/category', {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
                           },
                           body: JSON.stringify({
-                            productName: productForm.name,
-                            category: category?.name,
-                            tags: productForm.tags,
-                            price: productForm.price > 0 ? productForm.price : undefined
-                          })
+                            text: `${productForm.name} ${productForm.description}`,
+                            existingCategories: catalogue.categories
+                          }),
                         });
 
-                        if (!response.ok) {
-                          throw new Error(`Failed to generate description: ${response.status}`);
-                        }
-
                         const data = await response.json();
-                        
-                        if (data.success && data.description) {
-                          setProductForm(prev => ({ ...prev, description: data.description }));
-                          toast.success("AI description generated successfully!");
+
+                        if (data.success && data.category) {
+                          setProductForm(prev => ({
+                            ...prev,
+                            categoryId: data.category.id
+                          }));
+                          toast.success('Category suggested successfully!');
                         } else {
-                          throw new Error(data.error || 'Failed to generate description');
+                          throw new Error(data.error || 'Failed to suggest category');
                         }
                       } catch (error) {
-                        console.error('AI Generation Error:', error);
-                        toast.error(error instanceof Error ? error.message : 'Failed to generate description');
-                      } finally {
-                        setIsGeneratingDescription(false);
+                        console.error('AI Category Suggestion Error:', error);
+                        toast.error(error instanceof Error ? error.message : 'Failed to suggest category');
                       }
                     }}
                   >
                     {isGeneratingDescription ? (
                       <>
                         <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                        Generating...
+                        Suggesting...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3 h-3 mr-1" /> AI Generate
+                        <Sparkles className="w-3 h-3 mr-1" /> Suggest Category
                       </>
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter product name and description first for better category suggestions
+                </p>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Product Image</Label>
-                {!productForm.imageUrl ? (
-                  <FileUpload
-                    uploadType="product"
-                    catalogueId={catalogueId}
-                    productId={editingProduct?.id}
-                    maxFiles={1}
-                    accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                    onUpload={(files) => {
-                      if (files.length > 0) {
-                        setProductForm(prev => ({ ...prev, imageUrl: files[0].url }))
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="productActive"
+                  checked={productForm.isActive}
+                  onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
+                />
+                <Label htmlFor="productActive">Active</Label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowProductDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveProduct}>
+              {editingProduct ? 'Update' : 'Add'} Product
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Settings Dialog */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Settings</DialogTitle>
+            <DialogDescription>
+              Configure display and visibility settings for your catalogue
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Display Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Display Settings</h3>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Show Prices</Label>
+                  <p className="text-sm text-gray-600">Display product prices in the catalogue</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showPrices || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showPrices: checked
                       }
-                    }}
-                    onError={(error) => {
-                      setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
-                    }}
-                    className="mt-2"
-                  />
-                ) : (
-                  <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                    <p className="text-sm text-gray-600 mb-2">Current image:</p>
-                    <img
-                      src={productForm.imageUrl}
-                      alt="Product Image"
-                      className="w-20 h-20 object-cover border rounded"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setProductForm(prev => ({ ...prev, imageUrl: '' }))}
-                      className="text-xs"
-                    >
-                      Change Image
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="productTags">Tags</Label>
-                <Input
-                  id="productTags"
-                  value={productForm.tags?.join(', ') || ''}
-                  onChange={(e) => {
-                    const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-                    setProductForm(prev => ({ ...prev, tags: tagsArray }));
-                  }}
-                  placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
+                    }
+                  } : null)}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="productPrice">Price</Label>
-                  <Input
-                    id="productPrice"
-                    type="number"
-                    value={productForm.price}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0.00"
-                  />
+                  <Label className="text-base font-medium">Show Categories</Label>
+                  <p className="text-sm text-gray-600">Group products by categories</p>
                 </div>
-
-                <div>
-                  <Label htmlFor="productPriceDisplay">Price Display</Label>
-                  <Select
-                    value={productForm.priceDisplay}
-                    onValueChange={(value: 'show' | 'hide' | 'contact') => setProductForm(prev => ({ ...prev, priceDisplay: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select price display" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="show">Show Price</SelectItem>
-                      <SelectItem value="hide">Hide Price</SelectItem>
-                      <SelectItem value="contact">Contact for Price</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showCategories || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showCategories: checked
+                      }
+                    }
+                  } : null)}
+                />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="productCategory">Category</Label>
-                  <div className="flex items-center gap-2">
-                    <Select value={productForm.categoryId} onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalogue.categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="xs" 
-                      className="text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
-                      disabled={!productForm.name || !productForm.description}
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/ai/category', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              text: `${productForm.name} ${productForm.description}`,
-                              existingCategories: catalogue.categories
-                            }),
-                          });
+                  <Label className="text-base font-medium">Allow Search</Label>
+                  <p className="text-sm text-gray-600">Enable search functionality</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.allowSearch || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        allowSearch: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
 
-                          const data = await response.json();
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Show Product Codes</Label>
+                  <p className="text-sm text-gray-600">Display product SKU/codes</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showProductCodes || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showProductCodes: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
+            </div>
 
-                          if (data.success && data.category) {
-                            setProductForm(prev => ({ 
-                              ...prev, 
-                              categoryId: data.category.id 
-                            }));
-                            toast.success('Category suggested successfully!');
-                          } else {
-                            throw new Error(data.error || 'Failed to suggest category');
-                          }
-                        } catch (error) {
-                          console.error('AI Category Suggestion Error:', error);
-                          toast.error(error instanceof Error ? error.message : 'Failed to suggest category');
+            {/* Visibility Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Visibility Settings</h3>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Catalogue Visibility</Label>
+                  <p className="text-sm text-gray-600">Control who can see your catalogue</p>
+                </div>
+                <Switch
+                  checked={catalogue?.isPublic || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                />
+              </div>
+              <p className="text-sm text-gray-600">
+                {catalogue?.isPublic ? 'Public - Visible to everyone' : 'Private - Only visible to you'}
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowSettingsDialog(false)
+              saveCatalogue()
+            }}>
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Details Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Catalogue Details</DialogTitle>
+            <DialogDescription>
+              Update your catalogue branding and information
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Basic Information</h3>
+              <div>
+                <Label htmlFor="catalogueName">Catalogue Name</Label>
+                <Input
+                  id="catalogueName"
+                  value={catalogue?.name || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  placeholder="Enter catalogue name"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="catalogueDescription">Description</Label>
+                <Textarea
+                  id="catalogueDescription"
+                  value={catalogue?.description || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  placeholder="Describe your catalogue"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+
+
+            {/* Media & Assets */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Media & Assets</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Company Logo</Label>
+                  {!catalogue?.settings?.mediaAssets?.logoUrl ? (
+                    <FileUpload
+                      uploadType="catalogue"
+                      catalogueId={catalogueId}
+                      maxFiles={1}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      onUpload={(files) => {
+                        if (files.length > 0) {
+                          setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              mediaAssets: {
+                                ...prev.settings?.mediaAssets,
+                                logoUrl: files[0].url
+                              }
+                            }
+                          } : null)
                         }
                       }}
-                    >
-                      {isGeneratingDescription ? (
-                        <>
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Suggesting...
-                        </>
-                      ) : (
-                        <>
-                         <Sparkles className="w-3 h-3 mr-1" /> Suggest Category
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter product name and description first for better category suggestions
-                  </p>
+                      onError={(error) => {
+                        setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
+                      }}
+                      className="mt-2"
+                    />
+                  ) : (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <p className="text-sm text-gray-600 mb-2">Current logo:</p>
+                      <img
+                        src={catalogue.settings.mediaAssets.logoUrl}
+                        alt="Company Logo"
+                        className="w-20 h-20 object-contain border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCatalogue(prev => prev ? {
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            mediaAssets: {
+                              ...prev.settings?.mediaAssets,
+                              logoUrl: ''
+                            }
+                          }
+                        } : null)}
+                        className="text-xs"
+                      >
+                        Change Logo
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="productActive"
-                    checked={productForm.isActive}
-                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
-                  />
-                  <Label htmlFor="productActive">Active</Label>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowProductDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveProduct}>
-                {editingProduct ? 'Update' : 'Add'} Product
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Settings Dialog */}
-        <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Settings</DialogTitle>
-              <DialogDescription>
-                Configure display and visibility settings for your catalogue
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Display Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Display Settings</h3>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Prices</Label>
-                    <p className="text-sm text-gray-600">Display product prices in the catalogue</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showPrices || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showPrices: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Categories</Label>
-                    <p className="text-sm text-gray-600">Group products by categories</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showCategories || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showCategories: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Allow Search</Label>
-                    <p className="text-sm text-gray-600">Enable search functionality</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.allowSearch || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          allowSearch: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Product Codes</Label>
-                    <p className="text-sm text-gray-600">Display product SKU/codes</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showProductCodes || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showProductCodes: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-              </div>
-
-              {/* Visibility Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Visibility Settings</h3>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Catalogue Visibility</Label>
-                    <p className="text-sm text-gray-600">Control who can see your catalogue</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.isPublic || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
-                  />
-                </div>
-                <p className="text-sm text-gray-600">
-                  {catalogue?.isPublic ? 'Public - Visible to everyone' : 'Private - Only visible to you'}
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                setShowSettingsDialog(false)
-                saveCatalogue()
-              }}>
-                Save Settings
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Details Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Catalogue Details</DialogTitle>
-              <DialogDescription>
-                Update your catalogue branding and information
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Basic Information</h3>
                 <div>
-                  <Label htmlFor="catalogueName">Catalogue Name</Label>
+                  <Label className="text-sm font-medium mb-2 block">Cover Image</Label>
+                  {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
+                    <FileUpload
+                      uploadType="catalogue"
+                      catalogueId={catalogueId}
+                      maxFiles={1}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      onUpload={(files) => {
+                        if (files.length > 0) {
+                          setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              mediaAssets: {
+                                ...prev.settings?.mediaAssets,
+                                coverImageUrl: files[0].url
+                              }
+                            }
+                          } : null)
+                        }
+                      }}
+                      onError={(error) => {
+                        setErrorWithAutoDismiss(`Cover image upload failed: ${error}`)
+                      }}
+                      className="mt-2"
+                    />
+                  ) : (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <p className="text-sm text-gray-600 mb-2">Current cover image:</p>
+                      <img
+                        src={catalogue.settings.mediaAssets.coverImageUrl}
+                        alt="Cover Image"
+                        className="w-full h-32 object-cover border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCatalogue(prev => prev ? {
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            mediaAssets: {
+                              ...prev.settings?.mediaAssets,
+                              coverImageUrl: ''
+                            }
+                          }
+                        } : null)}
+                        className="text-xs"
+                      >
+                        Change Cover Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Company Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Company Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="companyName">Company Name</Label>
                   <Input
-                    id="catalogueName"
-                    value={catalogue?.name || ''}
-                    onChange={(e) => setCatalogue(prev => prev ? { ...prev, name: e.target.value } : null)}
-                    placeholder="Enter catalogue name"
+                    id="companyName"
+                    value={catalogue?.settings?.companyInfo?.companyName || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        companyInfo: {
+                          ...(prev.settings?.companyInfo || {}),
+                          companyName: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="Enter your company name"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="catalogueDescription">Description</Label>
+                  <Label htmlFor="companyDescription">Company Description</Label>
                   <Textarea
-                    id="catalogueDescription"
-                    value={catalogue?.description || ''}
-                    onChange={(e) => setCatalogue(prev => prev ? { ...prev, description: e.target.value } : null)}
-                    placeholder="Describe your catalogue"
+                    id="companyDescription"
+                    value={catalogue?.settings?.companyInfo?.companyDescription || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        companyInfo: {
+                          ...(prev.settings?.companyInfo || {}),
+                          companyDescription: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="Describe your company"
                     rows={3}
                   />
                 </div>
               </div>
+            </div>
 
-
-
-              {/* Media & Assets */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Media & Assets</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Company Logo</Label>
-                    {!catalogue?.settings?.mediaAssets?.logoUrl ? (
-                      <FileUpload
-                        uploadType="catalogue"
-                        catalogueId={catalogueId}
-                        maxFiles={1}
-                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                        onUpload={(files) => {
-                          if (files.length > 0) {
-                            setCatalogue(prev => prev ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                mediaAssets: {
-                                  ...prev.settings?.mediaAssets,
-                                  logoUrl: files[0].url
-                                }
-                              }
-                            } : null)
-                          }
-                        }}
-                        onError={(error) => {
-                          setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
-                        }}
-                        className="mt-2"
-                      />
-                    ) : (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                        <p className="text-sm text-gray-600 mb-2">Current logo:</p>
-                        <img
-                          src={catalogue.settings.mediaAssets.logoUrl}
-                          alt="Company Logo"
-                          className="w-20 h-20 object-contain border rounded"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCatalogue(prev => prev ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              mediaAssets: {
-                                ...prev.settings?.mediaAssets,
-                                logoUrl: ''
-                              }
-                            }
-                          } : null)}
-                          className="text-xs"
-                        >
-                          Change Logo
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Cover Image</Label>
-                    {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
-                      <FileUpload
-                        uploadType="catalogue"
-                        catalogueId={catalogueId}
-                        maxFiles={1}
-                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                        onUpload={(files) => {
-                          if (files.length > 0) {
-                            setCatalogue(prev => prev ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                mediaAssets: {
-                                  ...prev.settings?.mediaAssets,
-                                  coverImageUrl: files[0].url
-                                }
-                              }
-                            } : null)
-                          }
-                        }}
-                        onError={(error) => {
-                          setErrorWithAutoDismiss(`Cover image upload failed: ${error}`)
-                        }}
-                        className="mt-2"
-                      />
-                    ) : (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                        <p className="text-sm text-gray-600 mb-2">Current cover image:</p>
-                        <img
-                          src={catalogue.settings.mediaAssets.coverImageUrl}
-                          alt="Cover Image"
-                          className="w-full h-32 object-cover border rounded"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCatalogue(prev => prev ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              mediaAssets: {
-                                ...prev.settings?.mediaAssets,
-                                coverImageUrl: ''
-                              }
-                            }
-                          } : null)}
-                          className="text-xs"
-                        >
-                          Change Cover Image
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+            {/* Contact Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Contact Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="contactEmail">Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={catalogue?.settings?.contactDetails?.email || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          email: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="contact@company.com"
+                  />
                 </div>
-              </div>
 
-              {/* Company Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Company Information</h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <Input
-                      id="companyName"
-                      value={catalogue?.settings?.companyInfo?.companyName || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          companyInfo: {
-                            ...(prev.settings?.companyInfo || {}),
-                            companyName: e.target.value
-                          }
+                <div>
+                  <Label htmlFor="contactPhone">Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    value={catalogue?.settings?.contactDetails?.phone || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          phone: e.target.value
                         }
-                      } : null)}
-                      placeholder="Enter your company name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="companyDescription">Company Description</Label>
-                    <Textarea
-                      id="companyDescription"
-                      value={catalogue?.settings?.companyInfo?.companyDescription || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          companyInfo: {
-                            ...(prev.settings?.companyInfo || {}),
-                            companyDescription: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="Describe your company"
-                      rows={3}
-                    />
-                  </div>
+                      }
+                    } : null)}
+                    placeholder="+1 (555) 123-4567"
+                  />
                 </div>
-              </div>
 
-              {/* Contact Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Contact Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="contactEmail">Email</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={catalogue?.settings?.contactDetails?.email || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            email: e.target.value
-                          }
+                <div>
+                  <Label htmlFor="contactWebsite">Website</Label>
+                  <Input
+                    id="contactWebsite"
+                    value={catalogue?.settings?.contactDetails?.website || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          website: e.target.value
                         }
-                      } : null)}
-                      placeholder="contact@company.com"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactPhone">Phone</Label>
-                    <Input
-                      id="contactPhone"
-                      value={catalogue?.settings?.contactDetails?.phone || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            phone: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactWebsite">Website</Label>
-                    <Input
-                      id="contactWebsite"
-                      value={catalogue?.settings?.contactDetails?.website || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            website: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://www.company.com"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Media */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Social Media</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="socialFacebook">Facebook</Label>
-                    <Input
-                      id="socialFacebook"
-                      value={catalogue?.settings?.socialMedia?.facebook || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            facebook: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://facebook.com/yourpage"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialTwitter">Twitter</Label>
-                    <Input
-                      id="socialTwitter"
-                      value={catalogue?.settings?.socialMedia?.twitter || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            twitter: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://twitter.com/yourhandle"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialInstagram">Instagram</Label>
-                    <Input
-                      id="socialInstagram"
-                      value={catalogue?.settings?.socialMedia?.instagram || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            instagram: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://instagram.com/yourhandle"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialLinkedin">LinkedIn</Label>
-                    <Input
-                      id="socialLinkedin"
-                      value={catalogue?.settings?.socialMedia?.linkedin || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            linkedin: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://linkedin.com/company/yourcompany"
-                    />
-                  </div>
+                      }
+                    } : null)}
+                    placeholder="https://www.company.com"
+                  />
                 </div>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                setShowEditDialog(false)
-                saveCatalogue()
-              }}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            {/* Social Media */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Social Media</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="socialFacebook">Facebook</Label>
+                  <Input
+                    id="socialFacebook"
+                    value={catalogue?.settings?.socialMedia?.facebook || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          facebook: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
 
-        <UpgradePrompt
-          isOpen={showUpgradePrompt}
-          onClose={() => setShowUpgradePrompt(false)}
-          feature="product and category management"
-          currentPlan={currentPlan}
-        />
-      </div>
+                <div>
+                  <Label htmlFor="socialTwitter">Twitter</Label>
+                  <Input
+                    id="socialTwitter"
+                    value={catalogue?.settings?.socialMedia?.twitter || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          twitter: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://twitter.com/yourhandle"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Input
+                    id="socialInstagram"
+                    value={catalogue?.settings?.socialMedia?.instagram || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          instagram: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://instagram.com/yourhandle"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Input
+                    id="socialLinkedin"
+                    value={catalogue?.settings?.socialMedia?.linkedin || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          linkedin: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://linkedin.com/company/yourcompany"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowEditDialog(false)
+              saveCatalogue()
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        feature="product and category management"
+        currentPlan={currentPlan}
+      />
+    </div >
     </>
   )
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import { Profile, Catalogue } from '@prisma/client'
 import Image from 'next/image'
 import { ColorCustomization } from '../types/ColorCustomization'
-import { FontCustomization } from './StyleCustomizer'
+import { FontCustomization } from '@/components/shared/StyleCustomizer'
 
 interface ContactPageProps {
   profile: Profile
