@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Catalogue, Profile, Product, Category } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
@@ -36,28 +36,7 @@ export function NewCollectionPage({
   spacingCustomization,
   advancedStyles
 }: NewCollectionPageProps) {
-  const [editableTitle, setEditableTitle] = useState('New Collection')
-  const [editableDescription, setEditableDescription] = useState('Discover our latest products and innovations')
-
-  useEffect(() => {
-    // Initialize with content from props if available
-    if (content.catalogue.name) {
-      setEditableTitle(content.catalogue.name)
-    }
-    if (content.catalogue.description) {
-      setEditableDescription(content.catalogue.description)
-    }
-  }, [content.catalogue.name, content.catalogue.description])
-
-  const handleTitleChange = (value: string) => {
-    setEditableTitle(value)
-    onContentChange?.('collectionTitle', value)
-  }
-
-  const handleDescriptionChange = (value: string) => {
-    setEditableDescription(value)
-    onContentChange?.('collectionDescription', value)
-  }
+  // Remove inline editing - content is managed centrally in StyleCustomizer
   const primaryColor = themeColors?.primary || '#000000';
   const secondaryColor = themeColors?.secondary || '#666666';
   const backgroundColor = themeColors?.background || '#ffffff';
@@ -69,42 +48,27 @@ export function NewCollectionPage({
   return (
     <div 
       className="w-full min-h-screen p-8 print:break-after-page"
-      style={{ backgroundColor }}
+      style={{ 
+        backgroundColor,
+        transform: 'translateZ(0)', // Enable hardware acceleration
+        willChange: 'scroll-position' // Optimize for scrolling
+      }}
     >
       {/* Header */}
       <div className="mb-12">
-        {isEditMode ? (
-          <input
-            value={editableTitle}
-            onChange={(e) => handleTitleChange(e.target.value)}
-            className="text-4xl md:text-5xl font-bold mb-6 w-full p-2 border border-gray-300 rounded"
-            style={{ color: textColor }}
-          />
-        ) : (
-          <h1 
-            className="text-4xl md:text-5xl font-bold mb-6"
-            style={{ color: textColor }}
-          >
-            {editableTitle}
-          </h1>
-        )}
+        <h1 
+          className="text-4xl md:text-5xl font-bold mb-6"
+          style={{ color: textColor }}
+        >
+          {(content.catalogue.settings as any)?.newCollection?.title || 'New Collection'}
+        </h1>
         
-        {isEditMode ? (
-          <textarea
-            value={editableDescription}
-            onChange={(e) => handleDescriptionChange(e.target.value)}
-            className="text-lg max-w-3xl leading-relaxed w-full p-2 border border-gray-300 rounded resize-none"
-            style={{ color: secondaryColor }}
-            rows={2}
-          />
-        ) : (
-          <p 
-            className="text-lg max-w-3xl leading-relaxed"
-            style={{ color: secondaryColor }}
-          >
-            {editableDescription}
-          </p>
-        )}
+        <p 
+          className="text-lg max-w-3xl leading-relaxed"
+          style={{ color: secondaryColor }}
+        >
+          {(content.catalogue.settings as any)?.newCollection?.description || 'Discover our latest products and innovations'}
+        </p>
       </div>
 
       {/* Featured Products */}

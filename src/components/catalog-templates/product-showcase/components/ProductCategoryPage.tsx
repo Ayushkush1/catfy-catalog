@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Catalogue, Profile, Product, Category } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
@@ -57,9 +57,8 @@ export function ProductCategoryPage({
   spacingCustomization,
   advancedStyles
 }: ProductCategoryPageProps) {
-  const [editableCategoryName, setEditableCategoryName] = useState('Product Category')
-  const [editableCategoryDescription, setEditableCategoryDescription] = useState('')
   const [localProducts, setLocalProducts] = useState(catalogue.products || [])
+  // Remove inline editing - content is managed centrally in StyleCustomizer
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -72,15 +71,29 @@ export function ProductCategoryPage({
     })
   )
 
+  // Disable drag and drop during scrolling for better performance
+  const [isScrolling, setIsScrolling] = useState(false)
+  const scrollTimeoutRef = React.useRef<NodeJS.Timeout>()
+
   useEffect(() => {
-    const category = catalogue.categories[0]
-    if (category?.name) {
-      setEditableCategoryName(category.name)
+    const handleScroll = () => {
+      setIsScrolling(true)
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false)
+      }, 150)
     }
-    if (category?.description) {
-      setEditableCategoryDescription(category.description)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current)
+      }
     }
-  }, [catalogue.categories])
+  }, [])
 
   useEffect(() => {
     setLocalProducts(catalogue.products || [])
@@ -102,15 +115,7 @@ export function ProductCategoryPage({
     }
   }
 
-  const handleCategoryNameChange = (value: string) => {
-    setEditableCategoryName(value)
-    onContentChange?.('categoryName', value)
-  }
-
-  const handleCategoryDescriptionChange = (value: string) => {
-    setEditableCategoryDescription(value)
-    onContentChange?.('categoryDescription', value)
-  }
+  // Removed inline editing handlers - content is managed centrally
   const primaryColor = themeColors?.primary || '#000000';
   const secondaryColor = themeColors?.secondary || '#666666';
   const backgroundColor = themeColors?.background || '#ffffff';
@@ -202,71 +207,138 @@ export function ProductCategoryPage({
     )
   }
 
+  // Static Product Item Component (used during scrolling)
+  const StaticProductItem = ({ product, index, textColor, secondaryColor, primaryColor }: { 
+    product: Product, 
+    index: number,
+    textColor: string,
+    secondaryColor: string,
+    primaryColor: string
+  }) => {
+    return (
+      <div className="group">
+        {/* Product Image */}
+        <div className="aspect-square mb-4 overflow-hidden rounded-lg">
+          {product.imageUrl ? (
+            <img 
+              src={product.imageUrl} 
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: '#f5f5f5' }}
+            >
+              <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="space-y-2">
+          <h3 
+            className="text-lg font-semibold"
+            style={{ color: textColor }}
+          >
+            {product.name}
+          </h3>
+          
+          {product.description && (
+            <p 
+              className="text-sm"
+              style={{ color: secondaryColor }}
+            >
+              {product.description}
+            </p>
+          )}
+          
+          <div className="flex justify-between items-center">
+            <span 
+              className="text-xl font-bold"
+              style={{ color: primaryColor }}
+            >
+              ${product.price?.toString() || '0'}
+            </span>
+            
+            <span 
+              className="text-sm font-medium"
+              style={{ color: secondaryColor }}
+            >
+              #{String(index + 1).padStart(2, '0')}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div 
       className="w-full min-h-screen p-8 print:break-after-page"
-      style={{ backgroundColor }}
+      style={{ 
+        backgroundColor,
+        transform: 'translateZ(0)', // Enable hardware acceleration
+        willChange: 'scroll-position' // Optimize for scrolling
+      }}
     >
       {/* Header */}
       <div className="mb-12">
-        {isEditMode ? (
-          <input
-            value={editableCategoryName}
-            onChange={(e) => handleCategoryNameChange(e.target.value)}
-            className="text-4xl md:text-5xl font-bold mb-4 w-full p-2 border border-gray-300 rounded"
-            style={{ color: textColor }}
-          />
-        ) : (
-          <h1 
-            className="text-4xl md:text-5xl font-bold mb-4"
-            style={{ color: textColor }}
-          >
-            {editableCategoryName}
-          </h1>
-        )}
+        <h1 
+          className="text-4xl md:text-5xl font-bold mb-4"
+          style={{ color: textColor }}
+        >
+          {catalogue.categories[0]?.name || 'Product Category'}
+        </h1>
         
-        {isEditMode ? (
-          <textarea
-            value={editableCategoryDescription}
-            onChange={(e) => handleCategoryDescriptionChange(e.target.value)}
-            className="text-lg max-w-2xl w-full p-2 border border-gray-300 rounded resize-none"
+        {catalogue.categories[0]?.description && (
+          <p 
+            className="text-lg max-w-2xl"
             style={{ color: secondaryColor }}
-            rows={2}
-            placeholder="Category description..."
-          />
-        ) : (
-          editableCategoryDescription && (
-            <p 
-              className="text-lg max-w-2xl"
-              style={{ color: secondaryColor }}
-            >
-              {editableCategoryDescription}
-            </p>
-          )
+          >
+            {catalogue.categories[0].description}
+          </p>
         )}
       </div>
 
       {/* Products Grid */}
-      <DndContext 
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext 
-          items={products.slice(0, 6).map(p => p.id)}
-          strategy={verticalListSortingStrategy}
+      {isEditMode && !isScrolling ? (
+        <DndContext 
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products?.slice(0, 6).map((product, index) => (
-              <SortableProductItem 
-                key={product.id} 
-                product={product} 
-                index={index}
-              />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
+          <SortableContext 
+            items={products.slice(0, 6).map(p => p.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products?.slice(0, 6).map((product, index) => (
+                <SortableProductItem 
+                  key={product.id} 
+                  product={product} 
+                  index={index}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {products?.slice(0, 6).map((product, index) => (
+            <StaticProductItem 
+              key={product.id} 
+              product={product} 
+              index={index}
+              textColor={textColor}
+              secondaryColor={secondaryColor}
+              primaryColor={primaryColor}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Footer with Page Info */}
       <div className="mt-16 pt-8 border-t border-gray-200 flex justify-between items-center">

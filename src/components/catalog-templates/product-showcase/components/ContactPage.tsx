@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Catalogue, Profile } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
@@ -10,10 +10,7 @@ interface ContactPageProps {
   catalogue: Catalogue;
   profile: Profile;
   themeColors?: any;
-  isEditMode?: boolean;
   content: StandardizedContent;
-  onCatalogueUpdate?: (updates: Partial<Catalogue>) => void;
-  onContentChange?: (field: string, value: string) => void;
   customColors?: ColorCustomization;
   fontCustomization?: FontCustomization;
   spacingCustomization?: SpacingCustomization;
@@ -24,33 +21,12 @@ export function ContactPage({
   catalogue, 
   profile, 
   themeColors, 
-  isEditMode, 
   content,
-  onContentChange,
   customColors,
   fontCustomization,
   spacingCustomization,
   advancedStyles
 }: ContactPageProps) {
-  const [editableDescription, setEditableDescription] = useState('Get in touch with us for more information about our products')
-  const [editableStoreDescription, setEditableStoreDescription] = useState('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.')
-
-  useEffect(() => {
-    // Initialize with content from props if available
-    if (content.catalogue.description) {
-      setEditableDescription(content.catalogue.description)
-    }
-  }, [content.catalogue.description])
-
-  const handleDescriptionChange = (value: string) => {
-    setEditableDescription(value)
-    onContentChange?.('description', value)
-  }
-
-  const handleStoreDescriptionChange = (value: string) => {
-    setEditableStoreDescription(value)
-    onContentChange?.('storeDescription', value)
-  }
   const primaryColor = themeColors?.primary || '#000000';
   const secondaryColor = themeColors?.secondary || '#666666';
   const backgroundColor = themeColors?.background || '#ffffff';
@@ -91,22 +67,12 @@ export function ContactPage({
             Contact Us
           </h1>
           
-          {isEditMode ? (
-            <textarea
-              value={editableDescription}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              className="text-xl max-w-2xl mx-auto leading-relaxed w-full p-2 border border-gray-300 rounded resize-none"
-              style={{ color: secondaryColor }}
-              rows={2}
-            />
-          ) : (
-            <p 
-              className="text-xl max-w-2xl mx-auto leading-relaxed"
-              style={{ color: secondaryColor }}
-            >
-              {editableDescription}
-            </p>
-          )}
+          <p 
+            className="text-xl max-w-2xl mx-auto leading-relaxed"
+            style={{ color: secondaryColor }}
+          >
+            {content.catalogue.settings?.contactDescription || 'Get in touch with us for more information about our products'}
+          </p>
         </div>
 
         {/* Contact Information Grid */}
@@ -173,22 +139,12 @@ export function ContactPage({
               </h2>
               
               <div className="space-y-4">
-                {isEditMode ? (
-                  <textarea
-                    value={editableStoreDescription}
-                    onChange={(e) => handleStoreDescriptionChange(e.target.value)}
-                    className="text-base leading-relaxed mb-6 w-full p-2 border border-gray-300 rounded resize-none"
-                    style={{ color: secondaryColor }}
-                    rows={3}
-                  />
-                ) : (
-                  <p 
-                    className="text-base leading-relaxed mb-6"
-                    style={{ color: secondaryColor }}
-                  >
-                    {editableStoreDescription}
-                  </p>
-                )}
+                <p 
+                  className="text-base leading-relaxed mb-6"
+                  style={{ color: secondaryColor }}
+                >
+                  {content.catalogue.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.'}
+                </p>
                 
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">

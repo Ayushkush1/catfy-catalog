@@ -315,11 +315,21 @@ export function StyleCustomizer({
         companyDescription: content.profile?.companyDescription || '',
         tagline: content.profile?.tagline || '',
         
+        // Category fields
+        categoryName: content.categories?.[0]?.name || '',
+        categoryDescription: content.categories?.[0]?.description || '',
+        
+        // New Collection fields
+        newCollectionTitle: (content as any).newCollection?.title || 'New Collection',
+        newCollectionDescription: (content as any).newCollection?.description || 'Discover our latest products and innovations',
+        
         // Contact fields
         email: content.profile?.email || '',
         phone: content.profile?.phone || '',
         website: content.profile?.website || '',
-        address: content.profile?.address || ''
+        address: content.profile?.address || '',
+        contactDescription: content.catalogue?.settings?.contactDescription || 'Get in touch with us for more information about our products',
+        storeDescription: content.catalogue?.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.'
       })
     }
   }, [content])
@@ -394,15 +404,49 @@ export function StyleCustomizer({
           newContent.profile.phone = editValues.phone;
         }
         break;
+      case 'address':
+        if (newContent.profile) {
+          newContent.profile.address = editValues.address;
+        }
+        break;
       case 'website':
         if (newContent.profile) {
           newContent.profile.website = editValues.website;
         }
         break;
-      case 'address':
-        if (newContent.profile) {
-          newContent.profile.address = editValues.address;
+      case 'categoryName':
+        if (newContent.categories && newContent.categories[0]) {
+          newContent.categories[0].name = editValues.categoryName;
         }
+        break;
+      case 'categoryDescription':
+        if (newContent.categories && newContent.categories[0]) {
+          newContent.categories[0].description = editValues.categoryDescription;
+        }
+        break;
+      case 'newCollectionTitle':
+        (newContent as any).newCollection = {
+          ...(newContent as any).newCollection,
+          title: editValues.newCollectionTitle
+        };
+        break;
+      case 'newCollectionDescription':
+        (newContent as any).newCollection = {
+          ...(newContent as any).newCollection,
+          description: editValues.newCollectionDescription
+        };
+        break;
+      case 'contactDescription':
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        newContent.catalogue.settings.contactDescription = editValues.contactDescription;
+        break;
+      case 'storeDescription':
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        newContent.catalogue.settings.storeDescription = editValues.storeDescription;
         break;
     }
     
@@ -429,6 +473,27 @@ export function StyleCustomizer({
           break;
         case 'address':
           onContentChange('profile.address', editValues.address);
+          break;
+        case 'website':
+          onContentChange('profile.website', editValues.website);
+          break;
+        case 'categoryName':
+          onContentChange('categories.0.name', editValues.categoryName);
+          break;
+        case 'categoryDescription':
+          onContentChange('categories.0.description', editValues.categoryDescription);
+          break;
+        case 'newCollectionTitle':
+          onContentChange('newCollection.title', editValues.newCollectionTitle);
+          break;
+        case 'newCollectionDescription':
+          onContentChange('newCollection.description', editValues.newCollectionDescription);
+          break;
+        case 'contactDescription':
+          onContentChange('catalogue.settings.contactDescription', editValues.contactDescription);
+          break;
+        case 'storeDescription':
+          onContentChange('catalogue.settings.storeDescription', editValues.storeDescription);
           break;
       }
     }
@@ -802,9 +867,9 @@ export function StyleCustomizer({
               <h4 className="text-sm font-medium text-gray-700">Edit Products</h4>
               
               {content?.products && content.products.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
+                <div className="space-y-4 ">
                   {content.products.map((product: any, index: number) => (
-                    <div key={product.id || index} className="border rounded-lg p-3 space-y-3">
+                    <div key={product.id || index} className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-gray-500">Product {index + 1}</span>
                         {product.category && (
@@ -938,6 +1003,118 @@ export function StyleCustomizer({
                         onClick={() => handleFieldEdit('description')}
                       >
                         {content.catalogue?.description || content.description || 'Click to edit catalog description...'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Category Information Section */}
+                {content.categories && content.categories.length > 0 && (
+                  <div className="space-y-3">
+                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category Information</h5>
+                    
+                    {/* Category Name */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-600">Category Name</Label>
+                      {editingField === 'categoryName' ? (
+                        <div className="flex gap-2">
+                          <Input
+                            value={editValues.categoryName}
+                            onChange={(e) => setEditValues(prev => ({ ...prev, categoryName: e.target.value }))}
+                            onKeyDown={(e) => handleKeyPress(e, 'categoryName')}
+                            onBlur={() => handleFieldSave('categoryName')}
+                            className="flex-1"
+                            autoFocus
+                          />
+                          <Button size="sm" onClick={() => handleFieldSave('categoryName')}>Save</Button>
+                        </div>
+                      ) : (
+                        <div
+                          className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleFieldEdit('categoryName')}
+                        >
+                          {content.categories[0]?.name || 'Click to edit category name...'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Category Description */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-600">Category Description</Label>
+                      {editingField === 'categoryDescription' ? (
+                        <div className="flex gap-2">
+                          <Input
+                            value={editValues.categoryDescription}
+                            onChange={(e) => setEditValues(prev => ({ ...prev, categoryDescription: e.target.value }))}
+                            onKeyDown={(e) => handleKeyPress(e, 'categoryDescription')}
+                            onBlur={() => handleFieldSave('categoryDescription')}
+                            className="flex-1"
+                            autoFocus
+                          />
+                          <Button size="sm" onClick={() => handleFieldSave('categoryDescription')}>Save</Button>
+                        </div>
+                      ) : (
+                        <div
+                          className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleFieldEdit('categoryDescription')}
+                        >
+                          {content.categories[0]?.description || 'Click to edit category description...'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Collection Section */}
+                <div className="space-y-3">
+                  <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Collection</h5>
+                  
+                  {/* New Collection Title */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Collection Title</Label>
+                    {editingField === 'newCollectionTitle' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.newCollectionTitle}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, newCollectionTitle: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'newCollectionTitle')}
+                          onBlur={() => handleFieldSave('newCollectionTitle')}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('newCollectionTitle')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('newCollectionTitle')}
+                      >
+                        {(content as any).newCollection?.title || 'New Collection'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* New Collection Description */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Collection Description</Label>
+                    {editingField === 'newCollectionDescription' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.newCollectionDescription}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, newCollectionDescription: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'newCollectionDescription')}
+                          onBlur={() => handleFieldSave('newCollectionDescription')}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('newCollectionDescription')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('newCollectionDescription')}
+                      >
+                        {(content as any).newCollection?.description || 'Discover our latest products and innovations'}
                       </div>
                     )}
                   </div>
@@ -1151,6 +1328,56 @@ export function StyleCustomizer({
                         onClick={() => handleFieldEdit('address')}
                       >
                         {content.profile?.address || 'Click to edit address...'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contact Description */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Contact Page Description</Label>
+                    {editingField === 'contactDescription' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.contactDescription}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, contactDescription: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'contactDescription')}
+                          onBlur={() => handleFieldSave('contactDescription')}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('contactDescription')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('contactDescription')}
+                      >
+                        {editValues.contactDescription || 'Click to edit contact description...'}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Store Description */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Store Description</Label>
+                    {editingField === 'storeDescription' ? (
+                      <div className="flex gap-2">
+                        <textarea
+                          value={editValues.storeDescription}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, storeDescription: e.target.value }))}
+                          onBlur={() => handleFieldSave('storeDescription')}
+                          className="flex-1 text-sm p-2 border rounded resize-none"
+                          rows={3}
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('storeDescription')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50 min-h-[60px]"
+                        onClick={() => handleFieldEdit('storeDescription')}
+                      >
+                        {editValues.storeDescription || 'Click to edit store description...'}
                       </div>
                     )}
                   </div>

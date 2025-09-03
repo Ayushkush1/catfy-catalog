@@ -81,7 +81,14 @@ export function ProductShowcaseTemplate({
   };
 
   return (
-    <div className="product-showcase-template bg-white">
+    <div 
+      className="product-showcase-template bg-white"
+      style={{
+        transform: 'translateZ(0)', // Enable hardware acceleration
+        backfaceVisibility: 'hidden', // Prevent flickering
+        perspective: '1000px' // Enable 3D rendering context
+      }}
+    >
       {/* Page 1: Cover Page */}
       <CoverPage 
         catalogue={catalogue}

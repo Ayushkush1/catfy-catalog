@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Catalogue, Profile } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
@@ -31,23 +31,7 @@ export function CoverPage({
   advancedStyles,
   onContentChange
 }: CoverPageProps) {
-  const [editableName, setEditableName] = useState(content.catalogue.name)
-  const [editableDescription, setEditableDescription] = useState(content.catalogue.description || 'Discover our premium collection of products')
-
-  useEffect(() => {
-    setEditableName(content.catalogue.name)
-    setEditableDescription(content.catalogue.description || 'Discover our premium collection of products')
-  }, [content.catalogue.name, content.catalogue.description])
-
-  const handleNameChange = (value: string) => {
-    setEditableName(value)
-    onContentChange?.('name', value)
-  }
-
-  const handleDescriptionChange = (value: string) => {
-    setEditableDescription(value)
-    onContentChange?.('description', value)
-  }
+  // Remove inline editing - content is managed centrally in StyleCustomizer
   const primaryColor = themeColors?.primary || '#000000';
   const secondaryColor = themeColors?.secondary || '#666666';
   const backgroundColor = themeColors?.background || '#ffffff';
@@ -58,73 +42,36 @@ export function CoverPage({
       className="w-full min-h-screen flex flex-col justify-between p-8 print:break-after-page"
       style={{ 
         backgroundColor: customColors?.backgroundColors?.cover || backgroundColor,
-        padding: spacingCustomization?.padding?.page ? `${spacingCustomization.padding.page}px` : '2rem'
+        padding: spacingCustomization?.padding?.page ? `${spacingCustomization.padding.page}px` : '2rem',
+        transform: 'translateZ(0)', // Enable hardware acceleration
+        willChange: 'scroll-position' // Optimize for scrolling
       }}
     >
       {/* Header with Title */}
       <div className="flex-1 flex flex-col justify-center items-center text-center">
-        {isEditMode ? (
-          <input
-            type="text"
-            value={editableName}
-            onChange={(e) => handleNameChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur()
-              }
-            }}
-            className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-wider mb-6 bg-transparent border-none outline-none text-center w-full"
-            style={{ 
-              color: customColors?.textColors?.title || textColor,
-              fontFamily: fontCustomization?.fontFamily?.title || 'inherit',
-              fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title}px` : 'inherit',
-              marginBottom: spacingCustomization?.margin?.elements ? `${spacingCustomization.margin.elements}px` : '1.5rem'
-            }}
-          />
-        ) : (
-          <h1 
-            className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-wider mb-6"
-            style={{ 
-              color: customColors?.textColors?.title || textColor,
-              fontFamily: fontCustomization?.fontFamily?.title || 'inherit',
-              fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title}px` : 'inherit',
-              marginBottom: spacingCustomization?.margin?.elements ? `${spacingCustomization.margin.elements}px` : '1.5rem'
-            }}
-          >
-            {editableName}
-          </h1>
-        )}
+        <h1 
+          className="text-6xl md:text-7xl lg:text-8xl font-bold tracking-wider mb-6"
+          style={{ 
+            color: customColors?.textColors?.title || textColor,
+            fontFamily: fontCustomization?.fontFamily?.title || 'inherit',
+            fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title}px` : 'inherit',
+            marginBottom: spacingCustomization?.margin?.elements ? `${spacingCustomization.margin.elements}px` : '1.5rem'
+          }}
+        >
+          {content.catalogue.name}
+        </h1>
         
         <div className="max-w-2xl mx-auto mb-8">
-          {isEditMode ? (
-            <textarea
-              value={editableDescription}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.currentTarget.blur()
-                }
-              }}
-              className="text-lg md:text-xl leading-relaxed bg-transparent border-none outline-none text-center w-full resize-none"
-              style={{ 
-                color: customColors?.textColors?.description || secondaryColor,
-                fontFamily: fontCustomization?.fontFamily?.description || 'inherit',
-                fontSize: fontCustomization?.fontSize?.description ? `${fontCustomization.fontSize.description}px` : 'inherit'
-              }}
-              rows={3}
-            />
-          ) : (
-            <p 
-              className="text-lg md:text-xl leading-relaxed"
-              style={{ 
-                color: customColors?.textColors?.description || secondaryColor,
-                fontFamily: fontCustomization?.fontFamily?.description || 'inherit',
-                fontSize: fontCustomization?.fontSize?.description ? `${fontCustomization.fontSize.description}px` : 'inherit'
-              }}
-            >
-              {editableDescription}
-            </p>
-          )}
+          <p 
+             className="text-lg md:text-xl leading-relaxed"
+             style={{ 
+               color: customColors?.textColors?.description || secondaryColor,
+               fontFamily: fontCustomization?.fontFamily?.description || 'inherit',
+               fontSize: fontCustomization?.fontSize?.description ? `${fontCustomization.fontSize.description}px` : 'inherit'
+             }}
+           >
+             {content.catalogue.description || 'Discover our premium collection of products'}
+           </p>
         </div>
 
         {/* Hero Image Placeholder */}

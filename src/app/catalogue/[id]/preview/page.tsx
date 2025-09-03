@@ -261,9 +261,47 @@ export default function CataloguePreviewPage() {
     if (!catalogue?.id) return
     
     try {
-      await handleCatalogueUpdate(catalogue.id, {
-        [field]: value
-      })
+      // Handle nested field paths
+      const updates: any = {}
+      
+      if (field.startsWith('catalogue.')) {
+        const fieldName = field.replace('catalogue.', '')
+        updates[fieldName] = value
+      } else if (field.startsWith('profile.')) {
+        const fieldName = field.replace('profile.', '')
+        updates.profile = {
+          ...catalogue.profile,
+          [fieldName]: value
+        }
+      } else if (field.startsWith('categories.')) {
+        const match = field.match(/categories\.(\d+)\.(.+)/)
+        if (match && catalogue.categories) {
+          const categoryIndex = parseInt(match[1])
+          const fieldName = match[2]
+          const updatedCategories = [...catalogue.categories]
+          if (updatedCategories[categoryIndex]) {
+            updatedCategories[categoryIndex] = {
+              ...updatedCategories[categoryIndex],
+              [fieldName]: value
+            }
+            updates.categories = updatedCategories
+          }
+        }
+      } else if (field.startsWith('newCollection.')) {
+        const fieldName = field.replace('newCollection.', '')
+        const currentSettings = catalogue.settings as any || {}
+        updates.settings = {
+          ...currentSettings,
+          newCollection: {
+            ...currentSettings.newCollection,
+            [fieldName]: value
+          }
+        }
+      } else {
+        updates[field] = value
+      }
+      
+      await handleCatalogueUpdate(catalogue.id, updates)
     } catch (error) {
       console.error('Error updating catalogue content:', error)
     }
@@ -723,6 +761,7 @@ export default function CataloguePreviewPage() {
                 onAdvancedStyleChange={handleAdvancedStylesChange}
                 onColorChange={handleColorChange}
                 onContentChange={handleContentChange}
+                onProductUpdate={handleProductUpdate}
               />
             </div>
           </div>
