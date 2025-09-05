@@ -47,6 +47,8 @@ interface Catalogue {
   id: string
   name: string
   description: string | null
+  quote?: string
+  tagline?: string
   isPublic: boolean
   theme: string
   createdAt: string

@@ -7,6 +7,8 @@ export const ContentSchema = z.object({
     id: z.string(),
     name: z.string(),
     description: z.string().optional(),
+    quote: z.string().optional(),
+    tagline: z.string().optional(),
     isPublic: z.boolean(),
     theme: z.string().optional(),
     settings: z.any().optional(),
@@ -76,6 +78,8 @@ export class ContentMapper {
         id: catalogue.id,
         name: catalogue.name,
         description: catalogue.description || undefined,
+        quote: catalogue.quote || undefined,
+        tagline: catalogue.tagline || undefined,
         isPublic: catalogue.isPublic,
         theme: catalogue.theme || undefined,
         settings: catalogue.settings,
@@ -94,9 +98,9 @@ export class ContentMapper {
         city: profile.city,
         state: profile.state,
         country: profile.country,
-        logo: (profile as any).logo || null,
-        tagline: (profile as any).tagline || null,
-        socialLinks: (profile as any).socialLinks || null
+        logo: profile.logo || null,
+        tagline: profile.tagline || null,
+        socialLinks: profile.socialLinks || null
       },
       products: catalogue.products.map(product => ({
         id: product.id,

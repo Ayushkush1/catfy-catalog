@@ -26,6 +26,10 @@ type Catalogue = PrismaCatalogue & {
     city: string | null
     state: string | null
     country: string | null
+    postalCode: string | null
+    logo: string | null
+    tagline: string | null
+    socialLinks: any | null
   }
 }
 
@@ -605,7 +609,10 @@ export default function CataloguePreviewPage() {
     city: catalogue.profile?.city || null,
     state: catalogue.profile?.state || null,
     country: catalogue.profile?.country || null,
-    postalCode: null,
+    postalCode: catalogue.profile?.postalCode || null,
+    logo: catalogue.profile?.logo || null,
+    tagline: catalogue.profile?.tagline || null,
+    socialLinks: catalogue.profile?.socialLinks || null,
     stripeCustomerId: null,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -675,11 +682,11 @@ export default function CataloguePreviewPage() {
                 '--theme-primary': themeColors.primary,
                 '--theme-secondary': themeColors.secondary,
                 '--theme-accent': themeColors.accent,
-                // A4 size dimensions (210mm x 297mm) at 96 DPI
-                width: '794px', // 210mm at 96 DPI
-                minHeight: '1123px', // 297mm at 96 DPI
-                maxWidth: '794px',
-                transform: 'scale(1)', // Larger scale for better visibility
+                // Fixed viewport dimensions
+                width: '1200px',
+                minHeight: '800px',
+                maxWidth: '1200px',
+                transform: 'scale(1)',
                 transformOrigin: 'top center',
                 margin: '0 auto',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
@@ -729,10 +736,10 @@ export default function CataloguePreviewPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Right Sidebar - StyleCustomizer */}
         {isEditMode && (
-          <div className="fixed right-0 top-[69px] h-[calc(100vh-69px)] w-96 bg-white shadow-xl border-l border-gray-200 z-10 overflow-y-auto">
+          <div className="w-[320px] bg-white shadow-xl border-l border-gray-200 overflow-y-auto h-[calc(100vh-73px)] fixed right-0 top-[73px] z-50">
             <div className="p-4 space-y-6">
               <StyleCustomizer
                 fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
@@ -766,6 +773,7 @@ export default function CataloguePreviewPage() {
             </div>
           </div>
         )}
+
       </div>
     </div>
   )

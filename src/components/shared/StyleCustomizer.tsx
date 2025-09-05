@@ -312,7 +312,7 @@ export function StyleCustomizer({
         // Company/Profile fields
         companyName: content.profile?.companyName || '',
         fullName: content.profile?.fullName || '',
-        companyDescription: content.profile?.companyDescription || '',
+        companyDescription: content.catalogue?.description || content.description || '',
         tagline: content.profile?.tagline || '',
         
         // Category fields
@@ -385,8 +385,10 @@ export function StyleCustomizer({
         }
         break;
       case 'companyDescription':
-        if (newContent.profile) {
-          (newContent.profile as any).companyDescription = editValues.companyDescription;
+        if (newContent.catalogue) {
+          newContent.catalogue.description = editValues.companyDescription;
+        } else {
+          (newContent as any).description = editValues.companyDescription;
         }
         break;
       case 'tagline':
@@ -464,6 +466,9 @@ export function StyleCustomizer({
           break;
         case 'companyName':
           onContentChange('profile.companyName', editValues.companyName);
+          break;
+        case 'companyDescription':
+          onContentChange('catalogue.description', editValues.companyDescription);
           break;
         case 'email':
           onContentChange('profile.email', editValues.email);

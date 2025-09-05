@@ -3,8 +3,8 @@
 import React, { useMemo } from 'react';
 import { Catalogue, Category, Product, Profile } from '@prisma/client';
 import { CoverPage } from './components/CoverPage';
+import { IntroPage } from './components/IntroPage';
 import { ProductCategoryPage } from './components/ProductCategoryPage';
-import { NewCollectionPage } from './components/NewCollectionPage';
 import { ContactPage } from './components/ContactPage';
 import { ContentMapper } from '@/lib/content-schema';
 import { TemplateComponentProps } from '@/lib/template-registry';
@@ -103,7 +103,21 @@ export function ProductShowcaseTemplate({
         onContentChange={onContentChange}
       />
       
-      {/* Page 2: Product Category Page */}
+      {/* Page 2: Intro Page */}
+      <IntroPage 
+        catalogue={catalogue}
+        profile={profile}
+        themeColors={themeColors}
+        isEditMode={isEditMode}
+        content={content}
+        customColors={customColors}
+        fontCustomization={fontCustomization}
+        spacingCustomization={spacingCustomization}
+        advancedStyles={advancedStyles}
+        onContentChange={onContentChange}
+      />
+      
+      {/* Page 3: Product Category Page */}
       <ProductCategoryPage
           catalogue={catalogue}
           profile={profile}
@@ -118,22 +132,6 @@ export function ProductShowcaseTemplate({
           spacingCustomization={spacingCustomization}
           advancedStyles={advancedStyles}
         />
-      
-      {/* Page 3: New Collection Page */}
-      <NewCollectionPage 
-        catalogue={catalogue}
-        profile={profile}
-        themeColors={themeColors}
-        isEditMode={isEditMode}
-        content={content}
-        onProductsReorder={handleProductsReorder}
-        onProductUpdate={onProductUpdate}
-        onContentChange={onContentChange}
-        customColors={customColors}
-        fontCustomization={fontCustomization}
-        spacingCustomization={spacingCustomization}
-        advancedStyles={advancedStyles}
-      />
       
       {/* Page 4: Contact Page */}
       <ContactPage 

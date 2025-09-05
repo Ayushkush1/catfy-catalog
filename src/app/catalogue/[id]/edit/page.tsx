@@ -76,6 +76,8 @@ interface Catalogue {
   id: string
   name: string
   description: string | null
+  quote?: string
+  tagline?: string
   isPublic: boolean
   theme: string
   template?: string
@@ -527,6 +529,9 @@ export default function EditCataloguePage() {
       const requestData = {
         name: catalogue.name,
         description: catalogue.description,
+        quote: catalogue.quote,
+        tagline: catalogue.tagline,
+        introImage: catalogue.introImage,
         isPublic: catalogue.isPublic,
         theme: catalogue.theme,
         settings: catalogue.settings
@@ -2301,6 +2306,66 @@ export default function EditCataloguePage() {
                   rows={3}
                 />
               </div>
+
+              <div>
+                <Label htmlFor="catalogueTagline">Tagline</Label>
+                <Input
+                  id="catalogueTagline"
+                  value={catalogue?.tagline || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, tagline: e.target.value } : null)}
+                  placeholder="Enter a catchy tagline for your catalogue"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="catalogueQuote">Quote</Label>
+                <Textarea
+                  id="catalogueQuote"
+                  value={catalogue?.quote || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, quote: e.target.value } : null)}
+                  placeholder="Enter an inspiring quote for your catalogue"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Intro Image</Label>
+                {!catalogue?.introImage ? (
+                  <FileUpload
+                    uploadType="catalogue"
+                    catalogueId={catalogueId}
+                    maxFiles={1}
+                    accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                    onUpload={(files) => {
+                      if (files.length > 0) {
+                        setCatalogue(prev => prev ? { ...prev, introImage: files[0].url } : null)
+                      }
+                    }}
+                    onError={(error) => {
+                      setErrorWithAutoDismiss(`Intro image upload failed: ${error}`)
+                    }}
+                    className="mt-2"
+                  />
+                ) : (
+                  <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                    <p className="text-sm text-gray-600 mb-2">Current intro image:</p>
+                    <img
+                      src={catalogue.introImage}
+                      alt="Intro Image"
+                      className="w-32 h-24 object-cover border rounded"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCatalogue(prev => prev ? { ...prev, introImage: '' } : null)}
+                      className="text-xs"
+                    >
+                      Change Image
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
 
@@ -2530,6 +2595,110 @@ export default function EditCataloguePage() {
                     } : null)}
                     placeholder="https://www.company.com"
                   />
+                </div>
+              </div>
+
+              {/* Contact Page Customization */}
+              <div className="space-y-4">
+                <h4 className="text-md font-medium">Contact Page Customization</h4>
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Contact Image */}
+                  <div>
+                    <Label htmlFor="contactImage">Contact Image</Label>
+                    {!catalogue?.settings?.contactDetails?.contactImage ? (
+                      <FileUpload
+                         uploadType="catalogue"
+                         catalogueId={catalogueId}
+                         maxFiles={1}
+                         accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                         onUpload={(files) => {
+                           if (files.length > 0) {
+                             setCatalogue(prev => prev ? {
+                               ...prev,
+                               settings: {
+                                 ...(prev.settings || {}),
+                                 contactDetails: {
+                                   ...(prev.settings?.contactDetails || {}),
+                                   contactImage: files[0].url
+                                 }
+                               }
+                             } : null)
+                           }
+                         }}
+                         onError={(error) => {
+                           setErrorWithAutoDismiss(`Contact image upload failed: ${error}`)
+                         }}
+                         className="mt-2"
+                       />
+                    ) : (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                        <p className="text-sm text-gray-600 mb-2">Current contact image:</p>
+                        <img
+                          src={catalogue.settings.contactDetails.contactImage}
+                          alt="Contact Image"
+                          className="w-32 h-24 object-cover border rounded"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...(prev.settings || {}),
+                              contactDetails: {
+                                ...(prev.settings?.contactDetails || {}),
+                                contactImage: ''
+                              }
+                            }
+                          } : null)}
+                          className="text-xs"
+                        >
+                          Change Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Contact Quote */}
+                  <div>
+                    <Label htmlFor="contactQuote">Quote</Label>
+                    <Input
+                      id="contactQuote"
+                      value={catalogue?.settings?.contactDetails?.contactQuote || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings?.contactDetails || {}),
+                            contactQuote: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter a quote for the contact page"
+                    />
+                  </div>
+
+                  {/* Quote Author */}
+                  <div>
+                    <Label htmlFor="contactQuoteBy">Quote By</Label>
+                    <Input
+                      id="contactQuoteBy"
+                      value={catalogue?.settings?.contactDetails?.contactQuoteBy || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings?.contactDetails || {}),
+                            contactQuoteBy: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter the author of the quote"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

@@ -171,16 +171,16 @@ export async function POST(request: NextRequest) {
         return page.waitForTimeout(3000)
       })
 
-      // Generate PDF
+      // Generate PDF with custom dimensions matching desktop preview
       const pdfBuffer = await page.pdf({
-        format: format === 'Letter' ? 'letter' : 'a4',
-        landscape: orientation === 'landscape',
+        width: '1200px',
+        height: '800px',
         printBackground: true,
         margin: {
-          top: '0.5in',
-          right: '0.5in',
-          bottom: '0.5in',
-          left: '0.5in',
+          top: '0px',
+          right: '0px',
+          bottom: '0px',
+          left: '0px',
         },
         preferCSSPageSize: true,
       })

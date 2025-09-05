@@ -14,6 +14,9 @@ const updateProfileSchema = z.object({
   state: z.string().optional(),
   country: z.string().optional(),
   postalCode: z.string().optional(),
+  logo: z.string().optional(),
+  tagline: z.string().optional(),
+  socialLinks: z.any().optional(),
 })
 
 // GET - Retrieve user profile

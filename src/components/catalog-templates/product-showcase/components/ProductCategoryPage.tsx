@@ -5,25 +5,7 @@ import { Catalogue, Profile, Product, Category } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
 import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+// Removed arrayMove import - no longer using drag-and-drop functionality
 
 interface ProductCategoryPageProps {
   catalogue: Catalogue & {
@@ -43,11 +25,11 @@ interface ProductCategoryPageProps {
   advancedStyles?: AdvancedStyleCustomization;
 }
 
-export function ProductCategoryPage({ 
-  catalogue, 
-  profile, 
-  themeColors, 
-  isEditMode, 
+export function ProductCategoryPage({
+  catalogue,
+  profile,
+  themeColors,
+  isEditMode,
   content,
   onProductsReorder,
   onProductUpdate,
@@ -60,60 +42,9 @@ export function ProductCategoryPage({
   const [localProducts, setLocalProducts] = useState(catalogue.products || [])
   // Remove inline editing - content is managed centrally in StyleCustomizer
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  // Disable drag and drop during scrolling for better performance
-  const [isScrolling, setIsScrolling] = useState(false)
-  const scrollTimeoutRef = React.useRef<NodeJS.Timeout>()
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolling(true)
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current)
-      }
-      scrollTimeoutRef.current = setTimeout(() => {
-        setIsScrolling(false)
-      }, 150)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current)
-      }
-    }
-  }, [])
-
   useEffect(() => {
     setLocalProducts(catalogue.products || [])
   }, [catalogue.products])
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-
-    if (active.id !== over?.id) {
-      const oldIndex = localProducts.findIndex((product) => product.id === active.id)
-      const newIndex = localProducts.findIndex((product) => product.id === over?.id)
-
-      const newProducts = arrayMove(localProducts, oldIndex, newIndex)
-      setLocalProducts(newProducts)
-
-      if (onProductsReorder) {
-        onProductsReorder(newProducts.map(p => p.id))
-      }
-    }
-  }
 
   // Removed inline editing handlers - content is managed centrally
   const primaryColor = themeColors?.primary || '#000000';
@@ -124,242 +55,147 @@ export function ProductCategoryPage({
   const category = catalogue.categories[0]; // Using first category for demo
   const products = localProducts || []
 
-  // Sortable Product Item Component
-  const SortableProductItem = ({ product, index }: { product: Product; index: number }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: product.id })
+  // Removed sortable and static product item components - using ProductSplitView for single product display
 
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    }
+  // Component to render individual product in split-screen layout with alternating sides
+  const ProductSplitView = ({ product, index, isReversed, isLast }: { product: any; index: number; isReversed: boolean; isLast: boolean }) => {
+    const imageSection = (
+      <div className="w-1/2 realive overflow-hidden">
+        {product.imageUrl ? (
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-orange-200 via-pink-200 to-blue-200 flex items-center justify-center relative">
+            {/* Hanging Rod */}
+            <div className="absolute top-16 left-8 right-8 h-2 bg-gray-600 rounded-full shadow-lg" />
 
-    return (
-      <div 
-        ref={setNodeRef} 
-        style={style} 
-        {...attributes} 
-        {...(isEditMode ? listeners : {})}
-        className={`group ${isEditMode ? 'cursor-move' : ''}`}
-      >
-        {/* Product Image */}
-        <div className="aspect-square mb-4 overflow-hidden rounded-lg">
-          {product.imageUrl ? (
-            <img 
-              src={product.imageUrl} 
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center"
-              style={{ backgroundColor: '#f5f5f5' }}
-            >
-              <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
-            </div>
-          )}
-        </div>
+            {/* Hanging Clothes */}
+            <div className="flex justify-center space-x-8 mt-16">
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="relative">
+                  {/* Hanger */}
+                  <div className="w-8 h-6 relative mx-auto mb-2">
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-2 bg-gray-600" />
+                    <div className="absolute top-2 left-0 w-full h-1 bg-gray-600 rounded-full" />
+                    <div className="absolute top-1 left-0 w-1 h-2 bg-gray-600 transform rotate-12" />
+                    <div className="absolute top-1 right-0 w-1 h-2 bg-gray-600 transform -rotate-12" />
+                  </div>
 
-        {/* Product Info */}
-        <div className="space-y-2">
-          <h3 
-            className="text-lg font-semibold"
-            style={{ color: textColor }}
-          >
-            {product.name}
-          </h3>
-          
-          {product.description && (
-            <p 
-              className="text-sm"
-              style={{ color: secondaryColor }}
-            >
-              {product.description}
-            </p>
-          )}
-          
-          <div className="flex justify-between items-center">
-            <span 
-              className="text-xl font-bold"
-              style={{ color: primaryColor }}
-            >
-              ${product.price?.toString() || '0'}
-            </span>
-            
-            <span 
-              className="text-sm font-medium"
-              style={{ color: secondaryColor }}
-            >
-              #{String(index + 1).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  // Static Product Item Component (used during scrolling)
-  const StaticProductItem = ({ product, index, textColor, secondaryColor, primaryColor }: { 
-    product: Product, 
-    index: number,
-    textColor: string,
-    secondaryColor: string,
-    primaryColor: string
-  }) => {
-    return (
-      <div className="group">
-        {/* Product Image */}
-        <div className="aspect-square mb-4 overflow-hidden rounded-lg">
-          {product.imageUrl ? (
-            <img 
-              src={product.imageUrl} 
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div 
-              className="w-full h-full flex items-center justify-center"
-              style={{ backgroundColor: '#f5f5f5' }}
-            >
-              <svg className="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-              </svg>
-            </div>
-          )}
-        </div>
-
-        {/* Product Info */}
-        <div className="space-y-2">
-          <h3 
-            className="text-lg font-semibold"
-            style={{ color: textColor }}
-          >
-            {product.name}
-          </h3>
-          
-          {product.description && (
-            <p 
-              className="text-sm"
-              style={{ color: secondaryColor }}
-            >
-              {product.description}
-            </p>
-          )}
-          
-          <div className="flex justify-between items-center">
-            <span 
-              className="text-xl font-bold"
-              style={{ color: primaryColor }}
-            >
-              ${product.price?.toString() || '0'}
-            </span>
-            
-            <span 
-              className="text-sm font-medium"
-              style={{ color: secondaryColor }}
-            >
-              #{String(index + 1).padStart(2, '0')}
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div 
-      className="w-full min-h-screen p-8 print:break-after-page"
-      style={{ 
-        backgroundColor,
-        transform: 'translateZ(0)', // Enable hardware acceleration
-        willChange: 'scroll-position' // Optimize for scrolling
-      }}
-    >
-      {/* Header */}
-      <div className="mb-12">
-        <h1 
-          className="text-4xl md:text-5xl font-bold mb-4"
-          style={{ color: textColor }}
-        >
-          {catalogue.categories[0]?.name || 'Product Category'}
-        </h1>
-        
-        {catalogue.categories[0]?.description && (
-          <p 
-            className="text-lg max-w-2xl"
-            style={{ color: secondaryColor }}
-          >
-            {catalogue.categories[0].description}
-          </p>
-        )}
-      </div>
-
-      {/* Products Grid */}
-      {isEditMode && !isScrolling ? (
-        <DndContext 
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext 
-            items={products.slice(0, 6).map(p => p.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {products?.slice(0, 6).map((product, index) => (
-                <SortableProductItem 
-                  key={product.id} 
-                  product={product} 
-                  index={index}
-                />
+                  {/* Clothing Item */}
+                  <div
+                    className={`w-16 h-24 rounded-lg shadow-md ${item === 1 ? 'bg-orange-300' :
+                      item === 2 ? 'bg-pink-300' :
+                        item === 3 ? 'bg-blue-300' :
+                          item === 4 ? 'bg-green-300' : 'bg-purple-300'
+                      } opacity-80`}
+                  />
+                </div>
               ))}
             </div>
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products?.slice(0, 6).map((product, index) => (
-            <StaticProductItem 
-              key={product.id} 
-              product={product} 
-              index={index}
-              textColor={textColor}
-              secondaryColor={secondaryColor}
-              primaryColor={primaryColor}
-            />
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
+    );
 
-      {/* Footer with Page Info */}
-      <div className="mt-16 pt-8 border-t border-gray-200 flex justify-between items-center">
-        <div>
-          <p 
-            className="text-sm font-medium"
-            style={{ color: secondaryColor }}
-          >
-            {profile.companyName || profile.fullName || 'Company'}
+    const detailsSection = (
+
+      <div className="w-1/2 relative bg-gray-900 text-white flex flex-col justify-center px-16 py-32">
+
+        {/* <div className="flex flex-wrap gap-2 absolute top-4 right-4">
+          {product.tags.map((tag: string) => (
+            <span
+              key={tag}
+              className="
+                inline-flex items-center
+                px-2 py-0.5
+                bg-white/10 backdrop-blur-sm
+                text-white/80 text-[11px] 
+                rounded
+                shadow-sm
+              "
+            >
+              {tag}
+            </span>
+          ))}
+        </div> */}
+
+        {/* Product Name */}
+        <h1 className="text-4xl md:text-5xl font-light pt-12 mb-4 tracking-wide">
+          {product.name || 'PRODUCT NAME'}
+        </h1>
+
+        {/* Category */}
+        <p className="text-lg text-gray-400 mb-8 uppercase tracking-widest">
+          {product.category.name || 'CATEGORY NAME'}
+        </p>
+
+
+
+        {/* Decorative Line */}
+        <div className="w-16 h-[1px] bg-gray-300 mb-8" />
+
+        {/* Description */}
+        <div className="space-y-4 mb-12 text-gray-300 leading-relaxed">
+          <p>
+            {product.description || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'}
           </p>
+
         </div>
-        
-        <div className="text-right">
-          <p 
-            className="text-sm"
-            style={{ color: secondaryColor }}
-          >
-            Page 2 of 4
-          </p>
+
+        {/* Decorative Line */}
+        <div className="w-16 h-px bg-gray-600 mb-8" />
+
+        <div className='flex justify-between pt-52'>
+          {/* Collection Label */}
+          <div className="mb-8">
+            <p className="text-sm text-gray-500 uppercase tracking-widest mb-2">
+              EXCLUSIVE COLLECTION
+            </p>
+          </div>
+
+          {/* Price */}
+          <div className="text-right">
+            <p className="text-3xl font-light">
+              {product.price ? `₹${product.price.toLocaleString()}` : '₹2,450'}
+            </p>
+          </div>
         </div>
       </div>
+    );
+
+    return (
+      <div className={`w-full h-screen flex ${!isLast ? 'print:break-after-page' : ''}`} style={{ minHeight: '100vh' }}>
+        {isReversed ? (
+          <>
+            {detailsSection}
+            {imageSection}
+          </>
+        ) : (
+          <>
+            {imageSection}
+            {detailsSection}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // All products displayed vertically - no pagination needed
+
+  return (
+    <div className="w-full overflow-hidden">
+      {localProducts.map((product, index) => (
+        <ProductSplitView
+          key={product.id}
+          product={product}
+          index={index}
+          isReversed={index % 2 === 1}
+          isLast={index === localProducts.length - 1}
+        />
+      ))}
     </div>
   );
 }

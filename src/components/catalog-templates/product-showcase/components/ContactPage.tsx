@@ -33,167 +33,172 @@ export function ContactPage({
   const textColor = themeColors?.text || '#000000';
 
   return (
-    <div 
-      className="w-full min-h-screen p-8 print:break-after-page relative overflow-hidden"
-      style={{ backgroundColor }}
-    >
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-32 h-32 opacity-10">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M20,20 Q50,5 80,20 Q95,50 80,80 Q50,95 20,80 Q5,50 20,20" fill={primaryColor} />
-        </svg>
-      </div>
-      
-      <div className="absolute bottom-0 right-0 w-40 h-40 opacity-10">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <path d="M10,50 Q30,10 50,30 Q70,10 90,50 Q70,90 50,70 Q30,90 10,50" fill={primaryColor} />
-        </svg>
-      </div>
-
-      <div className="absolute top-1/4 right-1/4 w-24 h-24 opacity-5">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          <circle cx="50" cy="50" r="40" fill={primaryColor} />
-        </svg>
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 
-            className="text-5xl md:text-6xl font-bold mb-6"
-            style={{ color: textColor }}
-          >
-            Contact Us
-          </h1>
-          
-          <p 
-            className="text-xl max-w-2xl mx-auto leading-relaxed"
-            style={{ color: secondaryColor }}
-          >
-            {content.catalogue.settings?.contactDescription || 'Get in touch with us for more information about our products'}
-          </p>
-        </div>
-
-        {/* Contact Information Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-          {/* Contact Details */}
-          <div className="space-y-8">
-            <div>
-              <h2 
-                className="text-2xl font-bold mb-4"
-                style={{ color: textColor }}
-              >
-                Get In Touch
-              </h2>
-              
-              <div className="space-y-4">
-                {profile.email && (
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>{profile.email}</span>
-                  </div>
-                )}
-                
-                {profile.phone && (
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>{profile.phone}</span>
-                  </div>
-                )}
-                
-                {profile.website && (
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>{profile.website}</span>
-                  </div>
-                )}
-                
-                {profile.address && (
-                  <div className="flex items-start space-x-3">
-                    <svg className="w-5 h-5 mt-1" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>{profile.address}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Company Information */}
-          <div className="space-y-8">
-            <div>
-              <h2 
-                className="text-2xl font-bold mb-4"
-                style={{ color: textColor }}
-              >
-                Our Store
-              </h2>
-              
-              <div className="space-y-4">
-                <p 
-                  className="text-base leading-relaxed mb-6"
-                  style={{ color: secondaryColor }}
-                >
-                  {content.catalogue.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.'}
-                </p>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>Premium Quality Products</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>Expert Customer Service</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <svg className="w-5 h-5" style={{ color: primaryColor }} fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span style={{ color: secondaryColor }}>Fast & Reliable Delivery</span>
-                  </div>
+    <div className="relative w-full h-screen overflow-hidden print:h-screen bg-white">
+      {/* Two Column Layout */}
+      <div className="flex h-full">
+        {/* Left Side - Atelier Windows Grid */}
+        <div className="w-1/2 relative overflow-hidden bg-gray-100">
+          {/* Image Section */}
+          <div className="h-full w-full relative overflow-hidden">
+            {(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+              <img
+                src={(catalogue?.settings as any)?.contactDetails?.contactImage}
+                alt="Contact"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <div className="text-center p-8">
+                  <svg className="w-40 h-40 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-gray-500 text-sm">No image uploaded</p>
                 </div>
               </div>
+            )}
+            {/* Image Overlay Effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-transparent" />
+          </div>
+
+          {/* Quote Overlay */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg max-w-sm text-center shadow-lg">
+              <blockquote className="text-lg italic mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
+                "{(catalogue?.settings as any)?.contactDetails?.contactQuote || 'Where creativity meets craftsmanship'}"
+              </blockquote>
+              <cite className="text-sm tracking-wider uppercase text-gray-600 font-light">
+                {(catalogue?.settings as any)?.contactDetails?.contactQuoteBy || 'VERITE ATELIER'}
+              </cite>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="text-center pt-8 border-t border-gray-200">
-          <div 
-            className="text-3xl font-bold mb-4"
-            style={{ color: primaryColor }}
-          >
-            {profile.companyName || profile.fullName || 'Company'}
+        {/* Right Side - Contact Information */}
+        <div className="w-1/2 flex flex-col items-center justify-center px-16 py-12 bg-gray-50">
+          {/* Contact Title */}
+          <h1 className="text-4xl text-center font-light mb-12 text-gray-900 tracking-wide" style={{ fontFamily: 'serif' }}>
+            CONTACT
+          </h1>
+
+          {/* Contact Details */}
+          <div className="space-y-8 text-center mb-12">
+            {/* Address */}
+            <div>
+              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
+                ADDRESS
+              </h3>
+              <p className="text-sm text-center leading-relaxed text-gray-800">
+                {profile.address || '123 Fashion District\nParis, France 75001'}
+              </p>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
+                TELEPHONE
+              </h3>
+              <p className="text-sm text-gray-800">
+                {profile.phone || '+33 1 42 86 87 88'}
+              </p>
+            </div>
+
+            {/* Email */}
+            <div>
+              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
+                FACEBOOK
+              </h3>
+              <p className="text-sm text-gray-800">
+                {profile.email || 'contact@verite.fr'}
+              </p>
+            </div>
+
+            
           </div>
-          
-          <div className="flex justify-center space-x-8 text-sm" style={{ color: secondaryColor }}>
-            {profile.website && <span>{profile.website}</span>}
-            {profile.email && <span>{profile.email}</span>}
-            {profile.phone && <span>{profile.phone}</span>}
+
+          {/* Social Media Icons */}
+          <div className="flex space-x-4 mb-8">
+            {/* Instagram */}
+            {content?.catalogue?.settings?.socialMedia?.instagram && (
+              <a 
+                href={content.catalogue.settings.socialMedia.instagram}
+                target="_blank"
+                rel="noopener noreferrer" 
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                </svg>
+              </a>
+            )}
+
+            {/* Facebook */}
+            {content?.catalogue?.settings?.socialMedia?.facebook && (
+              <a 
+                href={content.catalogue.settings.socialMedia.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                </svg>
+              </a>
+            )}
+
+            {/* LinkedIn */}
+            {content?.catalogue?.settings?.socialMedia?.linkedin && (
+              <a 
+                href={content.catalogue.settings.socialMedia.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                </svg>
+              </a>
+            )}
+
+            {/* Twitter/X */}
+            {content?.catalogue?.settings?.socialMedia?.twitter && (
+              <a 
+                href={content.catalogue.settings.socialMedia.twitter}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </a>
+            )}
           </div>
-          
-          <p 
-            className="text-sm mt-4"
-            style={{ color: secondaryColor }}
-          >
-            Page 4 of 4
-          </p>
+
+          {/* QR Code */}
+          <div className="text-center">
+            <div className="w-20 h-20 bg-white mx-auto mb-4 rounded-lg flex items-center justify-center shadow-md border border-gray-200">
+              {/* QR Code Pattern */}
+              <svg className="w-16 h-16" viewBox="0 0 100 100">
+                <rect x="0" y="0" width="100" height="100" fill="white"/>
+                {/* QR Code pattern - simplified */}
+                <rect x="10" y="10" width="15" height="15" fill="black"/>
+                <rect x="75" y="10" width="15" height="15" fill="black"/>
+                <rect x="10" y="75" width="15" height="15" fill="black"/>
+                <rect x="30" y="30" width="5" height="5" fill="black"/>
+                <rect x="40" y="20" width="5" height="5" fill="black"/>
+                <rect x="50" y="30" width="5" height="5" fill="black"/>
+                <rect x="60" y="40" width="5" height="5" fill="black"/>
+                <rect x="70" y="50" width="5" height="5" fill="black"/>
+                <rect x="30" y="60" width="5" height="5" fill="black"/>
+                <rect x="45" y="70" width="5" height="5" fill="black"/>
+                <rect x="65" y="65" width="5" height="5" fill="black"/>
+                <rect x="80" y="80" width="5" height="5" fill="black"/>
+              </svg>
+            </div>
+            <p className="text-xs text-gray-500 tracking-wide uppercase">
+              SCAN FOR DIGITAL CATALOGUE
+            </p>
+          </div>
         </div>
       </div>
     </div>

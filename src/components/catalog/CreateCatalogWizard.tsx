@@ -41,6 +41,8 @@ interface CatalogueData {
   id?: string
   name: string
   description: string
+  quote: string
+  tagline: string
   templateId: string
   theme: string
   isPublic: boolean
@@ -92,6 +94,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const [data, setData] = useState<CatalogueData>({
     name: '',
     description: '',
+    quote: '',
+    tagline: '',
     templateId: 'modern-4page',
     theme: 'modern',
     isPublic: false,
@@ -430,6 +434,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     onChange={(e) => updateData('description', e.target.value)}
                     placeholder="Describe your catalogue and what products it contains"
                     rows={4}
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="tagline">Tagline</Label>
+                  <Input
+                    id="tagline"
+                    value={data.tagline}
+                    onChange={(e) => updateData('tagline', e.target.value)}
+                    placeholder="Enter a catchy tagline for your catalogue"
+                    className="mt-2"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="quote">Quote</Label>
+                  <Textarea
+                    id="quote"
+                    value={data.quote}
+                    onChange={(e) => updateData('quote', e.target.value)}
+                    placeholder="Enter an inspiring quote for your catalogue"
+                    rows={3}
                     className="mt-2"
                   />
                 </div>
