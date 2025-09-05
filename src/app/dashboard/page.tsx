@@ -278,22 +278,56 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="text-white pb-2">
                 <div className="flex flex-col gap-3 mb-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                    <Package className="h-8 w-8 text-white" />
-                  </div>
+                  
                   <div>
-                    <h1 className="text-4xl font-bold pb-1">
+                    <h1 className="text-3xl font-bold pb-4">
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
-                    <p className="text-purple-100 text-lg">Welcome back to your creative space</p>
+                    <p className="text-white text-sm">Welcome back to your AI-powered catalogue studio</p>
+                    <p className="text-white text-xs mt-1 max-w-[400px]">
+                      Effortlessly create, manage, and share beautiful product catalogues.
+                      Try out instant PDF export, pro themes, and more!
+                    </p>
+                    {profile?.subscription?.plan === 'FREE' && (
+                      <div className="mt-2">
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 py-1 text-xs font-medium">
+                          Free Plan
+                        </Badge>
+                        <span className="ml-2 text-amber-200 text-xs">
+                          Upgrade for unlimited exports and premium features.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="mb-8 max-w-2xl">
-                  <p className="text-purple-100 text-sm leading-relaxed">
-                    The catalog builder serves as a welcoming home for knowledge seekers and avid creators alike.
-                    Create stunning catalogs that captivate your audience.
-                  </p>
+
+                {/* Feature Highlights */}
+                <div className="flex flex-wrap gap-2 mt-2 mb-8">
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
+                    <div className="w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-xs font-medium">AI-Powered</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
+                    <div className="w-5 h-5 bg-blue-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-xs font-medium">5 Pro Themes</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
+                    <div className="w-5 h-5 bg-purple-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-xs font-medium">Instant Export</span>
+                  </div>
                 </div>
 
                 <Button
@@ -310,12 +344,43 @@ export default function DashboardPage() {
                 </Button>
               </div>
 
-              {/* Decorative 3D Icon */}
-              <div className="hidden lg:block pr-5">
-                <div className="w-48 h-48 relative">
-                  <div className="absolute inset-0 bg-white/10 rounded-3xl transform rotate-12"></div>
-                  <div className="absolute inset-4 bg-white/20 rounded-2xl transform -rotate-6 flex items-center justify-center">
-                    <FolderOpen className="h-20 w-20 text-white/80" />
+              <div className='relative right-40'>
+                {/* Floating Catalogue Cards */}
+
+
+                <div className="absolute -top-16 right-20 w-32 h-40 bg-gradient-to-br from-white/25 to-white/15 rounded-2xl transform -rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 animate-float delay-500">
+                  <div className="p-4 h-full flex flex-col">
+                    <div className="w-8 h-8 bg-blue-400 rounded-xl mb-3 flex items-center justify-center">
+                      <Package className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-2 bg-white/50 rounded"></div>
+                      <div className="h-2 bg-white/40 rounded w-4/5"></div>
+                      <div className="h-2 bg-white/30 rounded w-3/5"></div>
+                      <div className="h-2 bg-white/20 rounded w-2/3"></div>
+                    </div>
+                  </div>
+                </div>
+
+
+                <div className="absolute -bottom-10 right-8 w-24 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 animate-float delay-1000">
+                  <div className="p-3 h-full flex flex-col">
+                    <div className="w-5 h-5 bg-purple-400 rounded-lg mb-2"></div>
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-1.5 bg-white/40 rounded"></div>
+                      <div className="h-1.5 bg-white/30 rounded w-3/4"></div>
+                      <div className="h-1.5 bg-white/20 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute -top-10 -right-4 w-28 h-36 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-12 shadow-2xl backdrop-blur-sm border border-white/30 animate-float">
+                  <div className="p-4 h-full flex flex-col">
+                    <div className="w-6 h-6 bg-emerald-400 rounded-lg mb-2"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-2 bg-white/40 rounded"></div>
+                      <div className="h-2 bg-white/30 rounded w-3/4"></div>
+                      <div className="h-2 bg-white/20 rounded w-1/2"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -611,7 +676,7 @@ export default function DashboardPage() {
                         </div>
                       </div>
 
-                      
+
                     </div>
 
                     {/* Subtle Hover Glow Effect */}
