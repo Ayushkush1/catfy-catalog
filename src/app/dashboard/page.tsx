@@ -284,7 +284,7 @@ export default function DashboardPage() {
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
                     <p className="text-white text-sm">Welcome back to your AI-powered catalogue studio</p>
-                    <p className="text-white text-xs mt-1 max-w-[400px]">
+                    <p className="text-white text-xs mt-1">
                       Effortlessly create, manage, and share beautiful product catalogues.
                       Try out instant PDF export, pro themes, and more!
                     </p>
