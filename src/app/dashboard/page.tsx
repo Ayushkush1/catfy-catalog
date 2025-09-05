@@ -415,7 +415,7 @@ export default function DashboardPage() {
                       setShowUpgradePrompt(true)
                     }
                   }}
-                  className="bg-white border text-[#2D1B69] px-6 py-2 rounded-lg font-medium"
+                  className=" px-6 py-2 rounded-lg text-white bg-gradient-to-r from-[#2D1B69] to-[#6366F1] font-medium"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   New Catalog

@@ -10,7 +10,7 @@ import { TeamManagement } from '@/components/TeamManagement'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -51,6 +51,7 @@ import { SubscriptionPlan } from '@prisma/client'
 import {
   AlertTriangle,
   ArrowLeft,
+  BarChart3,
   Check,
   Crown,
   Edit,
@@ -73,6 +74,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 interface Catalogue {
+  introImage: any
   id: string
   name: string
   description: string | null
@@ -300,8 +302,8 @@ export default function EditCataloguePage() {
 
     // Update catalogue template
     if (catalogue) {
-      setCatalogue(prev => prev ? { 
-        ...prev, 
+      setCatalogue(prev => prev ? {
+        ...prev,
         settings: {
           ...(prev.settings as Record<string, any> || {}),
           templateId: templateId
@@ -315,7 +317,7 @@ export default function EditCataloguePage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             settings: {
               ...(catalogue.settings as object || {}),
               templateId: templateId
@@ -498,7 +500,7 @@ export default function EditCataloguePage() {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/catalogues/${catalogueId}`)
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to fetch catalogue')
@@ -774,10 +776,78 @@ export default function EditCataloguePage() {
     }
   }
 
+  const handlePreview = () => {
+    router.push(`/catalogue/${catalogueId}/preview`)
+  }
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!confirm('Are you sure you want to delete this category? All products in this category will be moved to "Uncategorized".')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete category')
+      }
+
+      // Update local state
+      setCatalogue(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          categories: prev.categories.filter(c => c.id !== categoryId),
+          // Move products to uncategorized (empty string as categoryId)
+          products: prev.products.map(p =>
+            p.categoryId === categoryId ? { ...p, categoryId: '' } : p
+          )
+        }
+      })
+
+      toast.success('Category deleted successfully')
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      toast.error('Failed to delete category')
+    }
+  }
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/products/${productId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product')
+      }
+
+      // Update local state
+      setCatalogue(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          products: prev.products.filter(p => p.id !== productId)
+        }
+      })
+
+      toast.success('Product deleted successfully')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('Failed to delete product')
+    }
+  }
+
   if (isLoading) {
     return (
       <>
-        <Header title="Edit Catalogue" />
+        <Header title="Edit Catalogue" showGradientBanner={true} />
         <div className="container mx-auto py-8 px-4">
           <div className="space-y-6">
             <Skeleton className="h-8 w-64" />
@@ -796,7 +866,7 @@ export default function EditCataloguePage() {
   if (!catalogue) {
     return (
       <>
-        <Header title="Edit Catalogue" />
+        <Header title="Edit Catalogue" showGradientBanner={true} />
         <div className="container mx-auto py-8 px-4">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -811,1019 +881,1054 @@ export default function EditCataloguePage() {
 
   return (
     <>
-      <Header title="Edit Catalogue" />
-      <div className="container mx-auto py-6 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-start">
-            <Button variant="ghost" size="sm" className="mt-1 absolute left-8" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                
-              </Link>
-            </Button>
+      <Header
+        title="Edit Catalogue"
+        catalogueName={catalogue.name}
+        lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        })}
+        showGradientBanner={true}
+        onPreview={handlePreview}
+        onSave={saveCatalogue}
+        isSaving={isSaving}
+      />
+      <div className="min-h-screen bg-gray-50 -mt-6">
+        {/* Main Layout Container */}
+        <div className="flex">
+          {/* Left Sidebar */}
+          <div className="w-64 bg-white min-h-screen ml-8">
+            {/* Navigation */}
+            <nav className="p-4">
+              <div className="space-y-1">
+                {/* Dashboard/Back Button */}
+                <Button variant="ghost" size="sm" asChild className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50 mb-4">
+                  <Link href="/dashboard">
+                    <ArrowLeft className="mr-3 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
 
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
-                {catalogue.name}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Last updated {new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Eye className="mr-3 h-4 w-4" />
+                  Overview
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <FolderOpen className="mr-3 h-4 w-4" />
+                  Categories
+                  <span className={`ml-auto text-xs px-2 py-1 rounded-full ${activeTab === 'categories'
+                    ? 'bg-gray-200 text-gray-900'
+                    : 'bg-gray-200 text-gray-600'
+                    }`}>
+                    {catalogue.categories.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Package className="mr-3 h-4 w-4" />
+                  Products
+                  <span className="ml-auto bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
+                    {catalogue.products.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('theme')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Palette className="mr-3 h-4 w-4" />
+                  Theme
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Settings className="mr-3 h-4 w-4" />
+                  Settings
+                </button>
+              </div>
+            </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/catalogue/${catalogueId}/preview`}>
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Link>
-            </Button>
-
-
-
-            <Button onClick={saveCatalogue} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </>
+          {/* Main Content */}
+          <div className="flex-1 flex bg-gray-50 rounded-tr-3xl mr-8">
+            {/* Content Area */}
+            <div className="flex-1 p-6">
+              {error && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setError(null)
+                        if (errorTimeoutId) {
+                          clearTimeout(errorTimeoutId)
+                          setErrorTimeoutId(null)
+                        }
+                      }}
+                      className="h-auto p-1 ml-2 hover:bg-red-100"
+                    >
+                      ×
+                    </Button>
+                  </AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </div>
-        </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>{error}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setError(null)
-                  if (errorTimeoutId) {
-                    clearTimeout(errorTimeoutId)
-                    setErrorTimeoutId(null)
-                  }
-                }}
-                className="h-auto p-1 ml-2 hover:bg-red-100"
-              >
-                ×
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+              {/* Tab Content */}
+              <div className="space-y-6">
+                {/* Overview Tab */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* Stats Cards - Dynamic data */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Total Categories</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.categories.length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <FolderOpen className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="categories">Categories ({catalogue.categories.length})</TabsTrigger>
-            <TabsTrigger value="products">Products ({catalogue.products.length})</TabsTrigger>
-            <TabsTrigger value="theme">Theme</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Total Products</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.products.length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Package className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-600 text-sm font-medium">Total Categories</p>
-                      <p className="text-2xl font-bold text-blue-900">{catalogue.categories.length}</p>
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Active Products</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.products.filter(p => p.isActive).length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Public Status</p>
+                              <p className="text-xl font-bold text-[#1A1B41]">{catalogue.isPublic ? 'Public' : 'Private'}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              {catalogue.isPublic ? (
+                                <Eye className="h-6 w-6 text-white" />
+                              ) : (
+                                <Package className="h-6 w-6 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <FolderOpen className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-600 text-sm font-medium">Total Products</p>
-                      <p className="text-2xl font-bold text-green-900">{catalogue.products.length}</p>
+                    {/* Recent Categories and Quick Actions Layout */}
+                    <div className="grid grid-cols-4 gap-6">
+                      {/* Recent Categories - Left Column (2/3) */}
+                      <div className="col-span-3">
+                        <div className="bg-white rounded-lg p-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h3 className="text-lg font-semibold text-[#1A1B41]">Recent Categories</h3>
+                              <p className="text-sm text-gray-500">Showing 3 of {catalogue.categories.length} categories</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-[#301F70] border-[#301F70]/20 hover:bg-[#301F70]/10"
+                              onClick={() => setActiveTab('categories')}
+                            >
+                              Advanced Search
+                            </Button>
+                          </div>
+
+                          {catalogue.categories.length === 0 ? (
+                            <div className="text-center py-8">
+                              <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                              <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
+                              <Button
+                                onClick={() => openCategoryDialog()}
+                                className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Category
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {catalogue.categories.slice(0, 3).map((category) => {
+                                const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
+                                const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
+
+                                return (
+                                  <div
+                                    key={category.id}
+                                    className="group relative overflow-hidden bg-white border border-gray-100 shadow-sm rounded-2xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer transform-gpu"
+                                  >
+                                    {/* Animated Background Gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#301F70]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                    {/* Category Image */}
+                                    <div className="relative h-40 bg-gray-50 overflow-hidden">
+                                      {previewImage ? (
+                                        <img
+                                          src={previewImage}
+                                          alt={category.name}
+                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-[#779CAB]/30 to-[#A2E8DD]/30 flex items-center justify-center group-hover:from-[#301F70]/20 group-hover:to-[#1A1B41]/20 transition-all duration-500">
+                                          <div className="w-16 h-16 rounded-2xl bg-white/80 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                                            <Package className="h-8 w-8 text-[#1A1B41] group-hover:text-[#301F70] transition-colors duration-300" />
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Overlay Gradient */}
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                      {/* Floating Badge */}
+                                      <Badge
+                                        variant="secondary"
+                                        className="absolute top-3 left-3 text-xs bg-white/95 backdrop-blur-sm text-[#1A1B41] border border-white/50 shadow-lg group-hover:bg-[#301F70] group-hover:text-white transition-all duration-300"
+                                      >
+                                        Public
+                                      </Badge>
+
+                                      {/* Hover Action Button */}
+                                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            openCategoryDialog(category)
+                                          }}
+                                          className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-[#301F70] hover:text-white transition-all duration-200 border border-white/50"
+                                        >
+                                          <Eye className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                    {/* Category Info */}
+                                    <div className="p-5 relative z-10">
+                                      <div className="mb-4">
+                                        <h4 className="font-semibold text-[#1A1B41] text-md mb-2 group-hover:text-[#301F70] transition-colors duration-300 line-clamp-1">
+                                          {category.name}
+                                        </h4>
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-2 h-2 rounded-full bg-[#A2E8DD] group-hover:bg-[#301F70] transition-colors duration-300"></div>
+                                          <p className="text-sm font-medium text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
+                                            {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Product Thumbnails */}
+                                      {categoryProducts.length > 0 && (
+                                        <div className="mb-4">
+                                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Featured Items</p>
+                                          <div className="flex gap-2">
+                                            {categoryProducts.slice(0, 3).map((product) => (
+                                              <div key={product.id} className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 group/thumb">
+                                                {product.imageUrl ? (
+                                                  <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-200"
+                                                  />
+                                                ) : (
+                                                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                                    <Package className="h-4 w-4 text-gray-400" />
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                            {categoryProducts.length > 3 && (
+                                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border border-gray-200">
+                                                <span className="text-xs font-semibold text-gray-500">+{categoryProducts.length - 3}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+
+                                    </div>
+
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Actions - Right Column (1/3) - Remove background */}
+                      <div className="col-span-1">
+                        <div className="px-1">
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-[#1A1B41]">Quick Actions</h3>
+                            <p className="text-sm text-gray-500">Tasks for managing your catalogue</p>
+                          </div>
+                          <div className="space-y-3">
+                            <div
+                              onClick={() => openCategoryDialog()}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Plus className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Add Category</p>
+                                  <p className="text-xs text-gray-600">Organize products</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => openProductDialog()}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Package className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Add Product</p>
+                                  <p className="text-xs text-gray-600">Expand catalogue</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => setShowEditDialog(true)}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Edit className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Edit Details</p>
+                                  <p className="text-xs text-gray-600">Update branding</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => setShowSettingsDialog(true)}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Settings className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Edit Settings</p>
+                                  <p className="text-xs text-gray-600">Display options</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <Package className="h-8 w-8 text-green-500" />
                   </div>
-                </CardContent>
-              </Card>
+                )}
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-600 text-sm font-medium">Visibility</p>
-                      <p className="text-lg font-bold text-purple-900">
-                        {catalogue.isPublic ? 'Public' : 'Private'}
-                      </p>
+                {/* Categories Tab */}
+                {activeTab === 'categories' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-[#1A1B41]">Categories</h2>
+                      <Button
+                        onClick={() => openCategoryDialog()}
+                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Category
+                      </Button>
                     </div>
-                    <Eye className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-600 text-sm font-medium">Theme</p>
-                      <p className="text-lg font-bold text-orange-900 capitalize">{catalogue.theme}</p>
-                    </div>
-                    <Palette className="h-8 w-8 text-orange-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Categories and Quick Actions - Column Layout */}
-            <div className="grid grid-cols-10 gap-6">
-              {/* Recent Categories - 70% */}
-              <div className="col-span-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Categories</CardTitle>
-                    <CardDescription>Your latest category additions</CardDescription>
-                  </CardHeader>
-                  <CardContent>
                     {catalogue.categories.length === 0 ? (
-                      <div className="text-center py-8">
-                        <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-                        <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
-                        <Button onClick={() => openCategoryDialog()}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Create Category
-                        </Button>
+                      <div className="bg-white rounded-lg">
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Package className="h-12 w-12 text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                          <p className="text-gray-600 text-center mb-4">
+                            Create your first category to organize your products
+                          </p>
+                          <Button
+                            onClick={() => openCategoryDialog()}
+                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Category
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {catalogue.categories.slice(0, 3).map((category) => {
-                          // Get first product image from this category for preview
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {catalogue.categories.map((category) => {
                           const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
                           const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
 
                           return (
-                            <Card key={category.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border border-slate-200/60 bg-white shadow-sm">
-                              {/* Compact Image Section */}
+                            <div key={category.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white shadow-md hover:shadow-slate-200/40 rounded-lg">
                               <div className="relative h-48 bg-slate-50 overflow-hidden">
                                 {previewImage ? (
                                   <div className="absolute inset-0">
                                     <img
                                       src={previewImage}
                                       alt={category.name}
-                                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 opacity-95"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent" />
                                   </div>
                                 ) : (
-                                  <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                                    <div
-                                      className="w-12 h-12 rounded-lg flex items-center justify-center border"
-                                      style={{
-                                        backgroundColor: category.color ? `${category.color}10` : '#f8fafc',
-                                        borderColor: category.color ? `${category.color}30` : '#e2e8f0'
-                                      }}
-                                    >
-                                      <Package
-                                        className="h-6 w-6"
-                                        style={{ color: category.color || '#64748b' }}
-                                      />
+                                  <div className="absolute inset-0 bg-gradient-to-br from-[#779CAB]/20 to-[#A2E8DD]/20 flex items-center justify-center">
+                                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-sm border-2 bg-white/80 border-[#779CAB]/30">
+                                      <Package className="h-8 w-8 text-[#1A1B41]" />
                                     </div>
                                   </div>
                                 )}
 
-                                {/* Action Button */}
-                                <div className="absolute top-2 right-2">
-                                  <Button
-                                    onClick={() => openCategoryDialog(category)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm"
-                                  >
-                                    <Edit className="h-3 w-3 text-slate-600" />
-                                  </Button>
+                                <div className="absolute top-4 right-4">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-9 w-9 p-0 bg-white/95 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm">
+                                        <MoreVertical className="h-4 w-4 text-slate-600" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => openCategoryDialog(category)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        className="text-red-600"
+                                        onClick={() => handleDeleteCategory(category.id)}
+                                      >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-5">
+                                  <div className="space-y-1">
+                                    <h3 className="text-slate-800 font-semibold text-xl leading-tight">
+                                      {category.name}
+                                    </h3>
+                                    <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
+                                      {category.description || 'No description'}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
 
-                              {/* Content Section */}
-                              <div className="p-3 space-y-2">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-semibold text-slate-800 text-sm truncate">{category.name}</h4>
-                                    <div
-                                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                      style={{ backgroundColor: category.color || '#10b981' }}
-                                    />
+                              <div className="p-6 space-y-5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-2 h-2 rounded-full bg-[#A2E8DD]" />
+                                    <span className="text-sm font-semibold text-slate-700">
+                                      {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
+                                    </span>
                                   </div>
-                                  <span className="text-xs text-slate-600 font-medium">
-                                    {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
-                                  </span>
+
+                                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-slate-200 font-medium px-3 py-1">
+                                    Active
+                                  </Badge>
                                 </div>
 
-                                {/* Product Preview Thumbnails */}
                                 {categoryProducts.length > 0 && (
-                                  <div className="flex gap-1">
-                                    {categoryProducts.slice(0, 3).map((product, idx) => (
-                                      <div key={product.id} className="w-6 h-6 rounded border border-slate-200 overflow-hidden">
-                                        {product.imageUrl ? (
-                                          <img
-                                            src={product.imageUrl}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        ) : (
-                                          <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                            <Package className="h-3 w-3 text-slate-400" />
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                    {categoryProducts.length > 3 && (
-                                      <div className="w-6 h-6 rounded bg-slate-100 border border-slate-200 flex items-center justify-center">
-                                        <span className="text-[9px] font-semibold text-slate-500">+{categoryProducts.length - 3}</span>
-                                      </div>
-                                    )}
+                                  <div className="space-y-3">
+                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Featured Products</p>
+                                    <div className="flex gap-2.5">
+                                      {categoryProducts.slice(0, 4).map((product) => (
+                                        <div key={product.id} className="group/thumb">
+                                          {product.imageUrl ? (
+                                            <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-200 group-hover/thumb:shadow-md group-hover/thumb:scale-105">
+                                              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                            </div>
+                                          ) : (
+                                            <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-all duration-200 group-hover/thumb:bg-slate-100">
+                                              <Package className="h-6 w-6 text-slate-400" />
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                      {categoryProducts.length > 4 && (
+                                        <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                                          <span className="text-xs font-semibold text-slate-500">+{categoryProducts.length - 4}</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
+
+                                <Button
+                                  variant="outline"
+                                  className="w-full bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium h-11 transition-all duration-200 hover:border-slate-300"
+                                  onClick={() => setActiveTab('products')}
+                                >
+                                  <Eye className="mr-2.5 h-4 w-4" />
+                                  View Products
+                                </Button>
                               </div>
-                            </Card>
+                            </div>
                           )
                         })}
                       </div>
-                    )}              </CardContent>
-                </Card>
-              </div>
+                    )}
+                  </div>
+                )}
 
-              {/* Quick Actions - 30% */}
-              <div className="col-span-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Common tasks for managing your catalogue</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div
-                        onClick={() => openCategoryDialog()}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row items-center justify-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Plus className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Add Category</p>
-                            <p className="text-xs text-gray-600">Organize products</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
+                {/* Products Tab */}
+                {activeTab === 'products' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-[#1A1B41]">Products</h2>
+                      <Button
                         onClick={() => openProductDialog()}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
+                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
                       >
-                        <div className="flex flex-row justify-center items-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Package className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Add Product</p>
-                            <p className="text-xs text-gray-600">Expand catalogue</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setShowEditDialog(true)}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row justify-center items-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Edit className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Edit Details</p>
-                            <p className="text-xs text-gray-600">Update branding</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setShowSettingsDialog(true)}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row items-center text-center justify-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Settings className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Edit Settings</p>
-                            <p className="text-xs text-gray-600">Display options</p>
-                          </div>
-                        </div>
-                      </div>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Product
+                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
 
-          {/* Categories Tab */}
-          <TabsContent value="categories" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Categories</h2>
-              <Button onClick={() => openCategoryDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Category
-              </Button>
-            </div>
-
-            {catalogue.categories.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Package className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Create your first category to organize your products
-                  </p>
-                  <Button onClick={() => openCategoryDialog()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Category
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {catalogue.categories.map((category) => {
-                  // Get first product image from this category for preview
-                  const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
-                  const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
-
-                  return (
-                    <Card key={category.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-200/60 bg-white shadow-sm hover:shadow-slate-200/40">
-                      {/* Premium Header with Clean Image Display */}
-                      <div className="relative h-48 bg-slate-50 overflow-hidden">
-                        {/* Category Preview Image */}
-                        {previewImage ? (
-                          <div className="absolute inset-0">
-                            <img
-                              src={previewImage}
-                              alt={category.name}
-                              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 opacity-95"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent" />
-                          </div>
-                        ) : (
-                          // Clean fallback with subtle color accent
-                          <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                            <div
-                              className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-sm border-2"
-                              style={{
-                                backgroundColor: category.color ? `${category.color}10` : '#f8fafc',
-                                borderColor: category.color ? `${category.color}30` : '#e2e8f0'
-                              }}
-                            >
-                              <Package
-                                className="h-8 w-8"
-                                style={{ color: category.color || '#64748b' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Subtle Corner Accent */}
-                        <div
-                          className="absolute top-0 right-0 w-20 h-20 opacity-15"
-                          style={{
-                            background: `radial-gradient(circle at top right, #64748b 0%, transparent 70%)`
-                          }}
-                        />
-
-                        {/* Action Menu */}
-                        <div className="absolute top-4 right-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 bg-white/95 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm">
-                                <MoreVertical className="h-4 w-4 text-slate-600" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openCategoryDialog(category)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        {/* Category Title - Clean Design */}
-                        <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <div className="space-y-1">
-                            <h3 className="text-slate-800 font-semibold text-xl leading-tight">
-                              {category.name}
-                            </h3>
-                            <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
-                              {category.description || 'No description'}
-                            </p>
-                          </div>
+                    {catalogue.products.length === 0 ? (
+                      <div className="bg-white rounded-lg">
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Package className="h-12 w-12 text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+                          <p className="text-gray-600 text-center mb-4">
+                            Add your first product to start building your catalogue
+                          </p>
+                          <Button
+                            onClick={() => openProductDialog()}
+                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Product
+                          </Button>
                         </div>
                       </div>
-
-                      {/* Premium Content Section */}
-                      <CardContent className="p-6 space-y-5">
-                        {/* Stats Row */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: category.color || '#10b981' }}
-                            />
-                            <span className="text-sm font-semibold text-slate-700">
-                              {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
-                            </span>
-                          </div>
-
-                          <Badge
-                            variant="secondary"
-                            className="bg-slate-50 text-slate-700 border-slate-200 font-medium px-3 py-1"
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {catalogue.products.map((product) => (
+                          <div
+                            key={product.id}
+                            className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden bg-white rounded-lg shadow-md transform"
+                            style={{
+                              transitionProperty: 'box-shadow, transform, opacity',
+                              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
                           >
-                            Active
-                          </Badge>
-                        </div>
+                            <div className="aspect-[4/3] relative bg-gray-100">
+                              {product.imageUrl ? (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) {
+                                      nextElement.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                              ) : null}
 
-                        {/* Product Preview Thumbnails */}
-                        {categoryProducts.length > 0 && (
-                          <div className="space-y-3">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Featured Products</p>
-                            <div className="flex gap-2.5">
-                              {categoryProducts.slice(0, 4).map((product, idx) => (
-                                <div key={product.id} className="group/thumb">
-                                  {product.imageUrl ? (
-                                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-200 group-hover/thumb:shadow-md group-hover/thumb:scale-105">
-                                      <img
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-all duration-200 group-hover/thumb:bg-slate-100">
-                                      <Package className="h-6 w-6 text-slate-400" />
-                                    </div>
+                              <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.imageUrl ? 'hidden' : 'flex'}`}>
+                                <div className="text-center text-gray-400">
+                                  <Package className="h-12 w-12 mx-auto mb-2" />
+                                  <p className="text-sm">No Image</p>
+                                </div>
+                              </div>
+
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="secondary" size="sm" className="h-8 w-8 p-0 bg-white/90 hover:bg-white">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openProductDialog(product)}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      className="text-red-600"
+                                      onClick={() => handleDeleteProduct(product.id)}
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              <div className="absolute top-2 left-2">
+                                <Badge variant={product.isActive ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
+                                  {product.isActive ? 'Available' : 'Unavailable'}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="p-4 space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                                  {product.name}
+                                </h3>
+                                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                                  {product.description || 'No description available'}
+                                </p>
+                              </div>
+
+                              <div className='flex justify-between'>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xl font-bold text-gray-900">
+                                    {product.priceDisplay === 'show' && product.price ? (
+                                      `$${Number(product.price).toFixed(2)}`
+                                    ) : product.priceDisplay === 'contact' ? (
+                                      <span className="text-blue-600 text-base font-medium">Contact for Price</span>
+                                    ) : (
+                                      <span className="text-gray-500 text-base font-medium">Price Hidden</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500">Category:</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {product.categoryId
+                                      ? catalogue.categories.find(c => c.id === product.categoryId)?.name || 'Unknown'
+                                      : 'Uncategorized'
+                                    }
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              {product.tags && product.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {product.tags.slice(0, 3).map((tag, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {product.tags.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs px-2 py-1">
+                                      +{product.tags.length - 3} more
+                                    </Badge>
                                   )}
                                 </div>
-                              ))}
-                              {categoryProducts.length > 4 && (
-                                <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-slate-500">+{categoryProducts.length - 4}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Settings Tab */}
+                {activeTab === 'settings' && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-lg p-6">
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-[#1A1B41]">Catalogue Settings</h3>
+                        <p className="text-sm text-gray-500">Configure your catalogue preferences</p>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Public Visibility</Label>
+                            <p className="text-sm text-gray-600">Make your catalogue visible to everyone</p>
+                          </div>
+                          <Switch
+                            checked={catalogue.isPublic}
+                            onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {catalogue && <TeamManagement catalogueId={catalogue.id} isOwner={true} />}
+                  </div>
+                )}
+
+                {/* Theme Tab */}
+                {activeTab === 'theme' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-[#301F70]' : selectedTemplate ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-[#301F70]/10 text-[#301F70]' :
+                          selectedTemplate ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
+                          }`}>
+                          {selectedTemplate ? '✓' : '1'}
+                        </div>
+                        <span className="font-medium">Choose Template</span>
+                      </div>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                      <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-[#301F70]' : selectedTheme ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-[#301F70]/10 text-[#301F70]' :
+                          selectedTheme ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
+                          }`}>
+                          {selectedTheme ? '✓' : '2'}
+                        </div>
+                        <span className="font-medium">Choose Theme</span>
+                      </div>
+                    </div>
+
+                    {templateStep === 'template' ? (
+                      <div>
+                        <div className="mb-6">
+                          <h3 className="font-medium text-lg text-[#1A1B41]">Select a Template</h3>
+                          <p className="text-sm text-gray-600">Choose a template structure for your catalogue</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                          {templates.map((template) => (
+                            <div
+                              key={template.id}
+                              onClick={() => handleTemplateSelect(template.id)}
+                              className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${selectedTemplate === template.id
+                                ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/5 to-[#1A1B41]/5 shadow-lg ring-2 ring-[#301F70]/20'
+                                : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-[#779CAB]/5'
+                                }`}
+                            >
+                              {template.isPremium && (
+                                <div className="absolute -top-2 -right-2 z-10">
+                                  <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                                    <Crown className="h-3 w-3" />
+                                    Premium
+                                  </div>
                                 </div>
                               )}
+
+                              {selectedTemplate === template.id && (
+                                <div className="absolute top-4 right-4">
+                                  <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full">
+                                    <Check className="h-4 w-4 text-white" />
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="space-y-5">
+                                <div className="mb-4 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
+                                  <div className="aspect-video relative">
+                                    <svg viewBox="0 0 400 225" className="w-full h-full">
+                                      <rect width="400" height="225" fill="#f8fafc" />
+                                      <rect x="0" y="0" width="400" height="45" fill="#e2e8f0" />
+                                      <rect x="20" y="15" width="80" height="15" rx="3" fill="#64748b" />
+                                      <rect x="320" y="15" width="60" height="15" rx="3" fill="#3b82f6" />
+
+                                      {template.category === 'modern' && (
+                                        <>
+                                          <rect x="20" y="70" width="360" height="40" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                          <rect x="40" y="85" width="120" height="10" rx="2" fill="#1f2937" />
+                                          <rect x="20" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                          <rect x="210" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                        </>
+                                      )}
+
+                                      {template.category === 'classic' && (
+                                        <>
+                                          <rect x="50" y="70" width="300" height="30" rx="4" fill="#ffffff" stroke="#d1d5db" />
+                                          <rect x="70" y="80" width="100" height="10" rx="2" fill="#374151" />
+                                          <rect x="50" y="120" width="300" height="80" rx="4" fill="#ffffff" stroke="#d1d5db" />
+                                          <rect x="70" y="140" width="260" height="8" rx="2" fill="#6b7280" />
+                                          <rect x="70" y="155" width="200" height="8" rx="2" fill="#6b7280" />
+                                        </>
+                                      )}
+
+                                      {template.category === 'minimal' && (
+                                        <>
+                                          <rect x="100" y="80" width="200" height="20" rx="2" fill="#1f2937" />
+                                          <rect x="150" y="120" width="100" height="60" rx="4" fill="#f3f4f6" stroke="#e5e7eb" />
+                                          <rect x="170" y="140" width="60" height="6" rx="1" fill="#9ca3af" />
+                                          <rect x="170" y="155" width="40" height="6" rx="1" fill="#9ca3af" />
+                                        </>
+                                      )}
+
+                                      {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized') && (
+                                        <>
+                                          <rect x="20" y="70" width="120" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" />
+                                          <rect x="160" y="70" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
+                                          <rect x="160" y="140" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
+                                          <circle cx="80" cy="130" r="25" fill="#ddd6fe" />
+                                        </>
+                                      )}
+                                    </svg>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                  <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${selectedTemplate === template.id
+                                    ? 'bg-[#301F70]/10 text-[#301F70]'
+                                    : 'bg-gray-100 text-gray-600 group-hover:bg-[#779CAB]/10 group-hover:text-[#1A1B41]'
+                                    }`}>
+                                    <Package className="h-7 w-7" />
+                                  </div>
+                                  <div className="text-right">
+                                    <Badge variant="secondary" className="text-xs font-medium capitalize">
+                                      {template.category}
+                                    </Badge>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-[#1A1B41] transition-colors">
+                                    {template.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                    {template.description}
+                                  </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
+                                    <span className="text-xs text-gray-500">{(template.features || []).length} features</span>
+                                  </div>
+                                  <ul className="space-y-2">
+                                    {(template.features || []).slice(0, 3).map((feature, index) => (
+                                      <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
+                                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${selectedTemplate === template.id ? 'bg-[#301F70]' : 'bg-gray-400 group-hover:bg-[#779CAB]'
+                                          } transition-colors`} />
+                                        <span className="font-medium">{feature}</span>
+                                      </li>
+                                    ))}
+                                    {(template.features || []).length > 3 && (
+                                      <li className="text-xs text-gray-500 flex items-center gap-3 italic">
+                                        <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                                        +{(template.features || []).length - 3} more features
+                                      </li>
+                                    )}
+                                  </ul>
+                                </div>
+
+                                <div className="pt-2 border-t border-gray-100">
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="text-gray-500">Compatible themes: {template.compatibleThemes?.length || 0}</span>
+                                    <span className={`font-semibold ${selectedTemplate === template.id ? 'text-[#301F70]' : 'text-gray-600 group-hover:text-[#1A1B41]'
+                                      } transition-colors`}>
+                                      Select Template →
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        )}
-
-                        {/* Action Button */}
-                        <Button
-                          variant="outline"
-                          className="w-full bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium h-11 transition-all duration-200 hover:border-slate-300"
-                          onClick={() => {
-                            setActiveTab('products')
-                          }}
-                        >
-                          <Eye className="mr-2.5 h-4 w-4" />
-                          View Products
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Products Tab */}
-          <TabsContent value="products" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Products</h2>
-              <Button onClick={() => openProductDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
-            </div>
-
-            {catalogue.products.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Package className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Add your first product to start building your catalogue
-                  </p>
-                  <Button onClick={() => openProductDialog()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Product
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {catalogue.products.map((product) => (
-                  <Card key={product.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
-                    {/* Image Section - Always show, with fallback */}
-                    <div className="aspect-[4/3] relative bg-gray-100">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : null}
-
-                      {/* Fallback placeholder */}
-                      <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.imageUrl ? 'hidden' : 'flex'}`}>
-                        <div className="text-center text-gray-400">
-                          <Package className="h-12 w-12 mx-auto mb-2" />
-                          <p className="text-sm">No Image</p>
-                        </div>
-                      </div>
-
-                      {/* Overlay actions */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" size="sm" className="h-8 w-8 p-0 bg-white/90 hover:bg-white">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openProductDialog(product)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* Status badge */}
-                      <div className="absolute top-2 left-2">
-                        <Badge variant={product.isActive ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
-                          {product.isActive ? 'Available' : 'Unavailable'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="p-4 space-y-3">
-                      {/* Title and Description */}
-                      <div>
-                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {product.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                          {product.description || 'No description available'}
-                        </p>
-                      </div>
-
-                      <div className='flex justify-between'>
-                        {/* Price */}
-                        <div className="flex items-center justify-between">
-                          <div className="text-xl font-bold text-gray-900">
-                            {product.priceDisplay === 'show' && product.price ? (
-                              `$${Number(product.price).toFixed(2)}`
-                            ) : product.priceDisplay === 'contact' ? (
-                              <span className="text-blue-600 text-base font-medium">Contact for Price</span>
-                            ) : (
-                              <span className="text-gray-500 text-base font-medium">Price Hidden</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Category */}
-                        {product.categoryId && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Category:</span>
-                            <Badge variant="outline" className="text-xs">
-                              {catalogue.categories.find(c => c.id === product.categoryId)?.name || 'Unknown'}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {product.tags.slice(0, 3).map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
-                              {tag}
-                            </Badge>
                           ))}
-                          {product.tags.length > 3 && (
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              +{product.tags.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Catalogue Settings </CardTitle>
-                <CardDescription>Configure your catalogue preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Public Visibility</Label>
-                    <p className="text-sm text-gray-600">Make your catalogue visible to everyone</p>
-                  </div>
-                  <Switch
-                    checked={catalogue.isPublic}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Team Management */}
-            {catalogue && <TeamManagement catalogueId={catalogue.id} isOwner={true} />}
-          </TabsContent>
-
-          {/* Theme Tab */}
-          <TabsContent value="theme" className="space-y-6">
-            {/* Step Navigation */}
-            <div className="flex items-center space-x-4 mb-6">
-              <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-blue-600' : selectedTemplate ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-blue-100 text-blue-600' :
-                    selectedTemplate ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                  }`}>
-                  {selectedTemplate ? '✓' : '1'}
-                </div>
-                <span className="font-medium">Choose Template</span>
-              </div>
-              <div className="flex-1 h-px bg-gray-200"></div>
-              <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-blue-600' : selectedTheme ? 'text-green-600' : 'text-gray-400'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-blue-100 text-blue-600' :
-                    selectedTheme ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                  }`}>
-                  {selectedTheme ? '✓' : '2'}
-                </div>
-                <span className="font-medium">Choose Theme</span>
-              </div>
-            </div>
-
-            {templateStep === 'template' ? (
-              /* Template Selection */
-              <div>
-                <div className="mb-6">
-                  <h3 className="font-medium text-lg">Select a Template</h3>
-                  <p className="text-sm text-gray-600">Choose a template structure for your catalogue</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {templates.map((template) => (
-                    <div
-                      key={template.id}
-                      onClick={() => handleTemplateSelect(template.id)}
-                      className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${selectedTemplate === template.id
-                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-blue-50'
-                        }`}
-                    >
-                      {/* Premium Badge */}
-                      {template.isPremium && (
-                        <div className="absolute -top-2 -right-2 z-10">
-                          <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
-                            <Crown className="h-3 w-3" />
-                            Premium
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Selection Indicator */}
-                      {selectedTemplate === template.id && (
-                        <div className="absolute top-4 right-4">
-                          <div className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full">
-                            <Check className="h-4 w-4 text-white" />
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-5">
-                        {/* Preview Thumbnail */}
-                        <div className="mb-4 rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
-                          <div className="aspect-video relative">
-                            {/* Template Preview SVG */}
-                            <svg viewBox="0 0 400 225" className="w-full h-full">
-                              {/* Background */}
-                              <rect width="400" height="225" fill="#f8fafc" />
-                              
-                              {/* Header */}
-                              <rect x="0" y="0" width="400" height="45" fill="#e2e8f0" />
-                              <rect x="20" y="15" width="80" height="15" rx="3" fill="#64748b" />
-                              <rect x="320" y="15" width="60" height="15" rx="3" fill="#3b82f6" />
-                              
-                              {/* Content based on template category */}
-                              {template.category === 'modern' && (
-                                <>
-                                  <rect x="20" y="70" width="360" height="40" rx="8" fill="#ffffff" stroke="#e2e8f0" />
-                                  <rect x="40" y="85" width="120" height="10" rx="2" fill="#1f2937" />
-                                  <rect x="20" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
-                                  <rect x="210" y="130" width="170" height="70" rx="8" fill="#ffffff" stroke="#e2e8f0" />
-                                </>
-                              )}
-                              
-                              {template.category === 'classic' && (
-                                <>
-                                  <rect x="50" y="70" width="300" height="30" rx="4" fill="#ffffff" stroke="#d1d5db" />
-                                  <rect x="70" y="80" width="100" height="10" rx="2" fill="#374151" />
-                                  <rect x="50" y="120" width="300" height="80" rx="4" fill="#ffffff" stroke="#d1d5db" />
-                                  <rect x="70" y="140" width="260" height="8" rx="2" fill="#6b7280" />
-                                  <rect x="70" y="155" width="200" height="8" rx="2" fill="#6b7280" />
-                                </>
-                              )}
-                              
-                              {template.category === 'minimal' && (
-                                <>
-                                  <rect x="100" y="80" width="200" height="20" rx="2" fill="#1f2937" />
-                                  <rect x="150" y="120" width="100" height="60" rx="4" fill="#f3f4f6" stroke="#e5e7eb" />
-                                  <rect x="170" y="140" width="60" height="6" rx="1" fill="#9ca3af" />
-                                  <rect x="170" y="155" width="40" height="6" rx="1" fill="#9ca3af" />
-                                </>
-                              )}
-                              
-                              {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized') && (
-                                <>
-                                  <rect x="20" y="70" width="120" height="120" rx="8" fill="#ffffff" stroke="#e2e8f0" />
-                                  <rect x="160" y="70" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
-                                  <rect x="160" y="140" width="220" height="50" rx="6" fill="#ffffff" stroke="#e2e8f0" />
-                                  <circle cx="80" cy="130" r="25" fill="#ddd6fe" />
-                                </>
-                              )}
-                            </svg>
-                          </div>
-                        </div>
-                        
-                        {/* Icon and Category */}
-                        <div className="flex items-center justify-between">
-                          <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${
-                            selectedTemplate === template.id 
-                              ? 'bg-blue-100 text-blue-600' 
-                              : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
-                          }`}>
-                            <Package className="h-7 w-7" />
-                          </div>
-                          <div className="text-right">
-                            <Badge variant="secondary" className="text-xs font-medium capitalize">
-                              {template.category}
-                            </Badge>
-                          </div>
-                        </div>
-                        
-                        {/* Title and Description */}
-                        <div className="space-y-2">
-                          <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-blue-900 transition-colors">
-                            {template.name}
-                          </h4>
-                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                            {template.description}
-                          </p>
-                        </div>
-                        
-                        {/* Features */}
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
-                            <span className="text-xs text-gray-500">{(template.features || []).length} features</span>
-                          </div>
-                          <ul className="space-y-2">
-                            {(template.features || []).slice(0, 3).map((feature, index) => (
-                              <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
-                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                  selectedTemplate === template.id ? 'bg-blue-500' : 'bg-gray-400 group-hover:bg-blue-500'
-                                } transition-colors`} />
-                                <span className="font-medium">{feature}</span>
-                              </li>
-                            ))}
-                            {(template.features || []).length > 3 && (
-                              <li className="text-xs text-gray-500 flex items-center gap-3 italic">
-                                <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                                +{(template.features || []).length - 3} more features
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                        
-                        {/* Footer */}
-                        <div className="pt-2 border-t border-gray-100">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500">Compatible themes: {template.compatibleThemes?.length || 0}</span>
-                            <span className={`font-semibold ${
-                              selectedTemplate === template.id ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
-                            } transition-colors`}>
-                              Select Template →
-                            </span>
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Theme Selection */
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="font-medium text-lg">Choose Theme for {templates.find(t => t.id === selectedTemplate)?.name}</h3>
-                    <p className="text-sm text-gray-600">Select a color scheme and styling for your template</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setTemplateStep('template')
-                      setSelectedTemplate(null)
-                      setAvailableThemes([])
-                    }}
-                  >
-                    Change Template
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).map((theme) => {
-                    const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
-                    const isSelected = selectedTheme === theme.id
-
-                    return (
-                      <div
-                        key={theme.id}
-                        onClick={() => handleThemeSelect(theme.id)}
-                        className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected
-                          ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg ring-2 ring-blue-200'
-                          : 'border-gray-200 hover:border-blue-300 bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-blue-50'
-                          }`}
-                      >
-                        {/* Premium Badge */}
-                        {theme.isPremium && (
-                          <div className="absolute -top-2 -right-2 z-10">
-                            <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
-                              <Crown className="h-3 w-3" />
-                              Premium
-                            </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="font-medium text-lg text-[#1A1B41]">Choose Theme for {templates.find(t => t.id === selectedTemplate)?.name}</h3>
+                            <p className="text-sm text-gray-600">Select a color scheme and styling for your template</p>
                           </div>
-                        )}
-
-                        {/* Selection Indicator */}
-                        {isSelected && (
-                          <div className="absolute top-4 right-4">
-                            <div className="flex items-center justify-center w-6 h-6 bg-blue-500 rounded-full">
-                              <Check className="h-4 w-4 text-white" />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-5">
-                          {/* Icon and Category */}
-                          <div className="flex items-center justify-between">
-                            <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${
-                              isSelected 
-                                ? 'bg-blue-100 text-blue-600' 
-                                : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
-                            }`}>
-                              <IconComponent className="h-7 w-7" />
-                            </div>
-                            <div className="text-right">
-                              <Badge variant="secondary" className="text-xs font-medium capitalize">
-                                {theme.category}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Title and Description */}
-                          <div className="space-y-2">
-                            <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-blue-900 transition-colors">
-                              {theme.name}
-                            </h4>
-                            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                              {theme.description}
-                            </p>
-                          </div>
-
-                          {/* Color Palette */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Color Palette</p>
-                              <span className="text-xs text-gray-500">{Object.keys(theme.colors || {}).length} colors</span>
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              {Object.values(theme.colors || {}).map((color, index) => (
-                                <div
-                                  key={index}
-                                  className="w-10 h-10 rounded-xl border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer"
-                                  style={{ backgroundColor: color as string }}
-                                  title={color as string}
-                                />
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Features */}
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
-                              <span className="text-xs text-gray-500">{theme.features?.length || 0} features</span>
-                            </div>
-                            <ul className="space-y-2">
-                              {theme.features?.slice(0, 3).map((feature: string, index: number) => (
-                                <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
-                                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                    isSelected ? 'bg-blue-500' : 'bg-gray-400 group-hover:bg-blue-500'
-                                  } transition-colors`} />
-                                  <span className="font-medium">{feature}</span>
-                                </li>
-                              ))}
-                              {(theme.features?.length || 0) > 3 && (
-                                <li className="text-xs text-gray-500 flex items-center gap-3 italic">
-                                  <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                                  +{(theme.features?.length || 0) - 3} more features
-                                </li>
-                              )}
-                            </ul>
-                          </div>
-                          
-                          {/* Footer */}
-                          <div className="pt-2 border-t border-gray-100">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-500">Theme ID: {theme.id}</span>
-                              <span className={`font-semibold ${
-                                isSelected ? 'text-blue-600' : 'text-gray-600 group-hover:text-blue-600'
-                              } transition-colors`}>
-                                Select Theme →
-                              </span>
-                            </div>
-                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setTemplateStep('template')
+                              setSelectedTemplate(null)
+                              setAvailableThemes([])
+                            }}
+                            className="border-[#301F70]/20 text-[#301F70] hover:bg-[#301F70]/10"
+                          >
+                            Change Template
+                          </Button>
                         </div>
-                      </div>
-                    )
-                  })}
-                </div>
 
-                {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-2">
-                      <Palette className="h-12 w-12 mx-auto" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
-                    <p className="text-gray-600">Try selecting a different template</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                          {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).map((theme) => {
+                            const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
+                            const isSelected = selectedTheme === theme.id
+
+                            return (
+                              <div
+                                key={theme.id}
+                                onClick={() => handleThemeSelect(theme.id)}
+                                className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected
+                                  ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/5 to-[#1A1B41]/5 shadow-lg ring-2 ring-[#301F70]/20'
+                                  : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-[#779CAB]/5'
+                                  }`}
+                              >
+                                {theme.isPremium && (
+                                  <div className="absolute -top-2 -right-2 z-10">
+                                    <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                                      <Crown className="h-3 w-3" />
+                                      Premium
+                                    </div>
+                                  </div>
+                                )}
+
+                                {isSelected && (
+                                  <div className="absolute top-4 right-4">
+                                    <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full">
+                                      <Check className="h-4 w-4 text-white" />
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="space-y-5">
+                                  <div className="flex items-center justify-between">
+                                    <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${isSelected
+                                      ? 'bg-[#301F70]/10 text-[#301F70]'
+                                      : 'bg-gray-100 text-gray-600 group-hover:bg-[#779CAB]/10 group-hover:text-[#1A1B41]'
+                                      }`}>
+                                      <IconComponent className="h-7 w-7" />
+                                    </div>
+                                    <div className="text-right">
+                                      <Badge variant="secondary" className="text-xs font-medium capitalize">
+                                        {theme.category}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-[#1A1B41] transition-colors">
+                                      {theme.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                      {theme.description}
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Color Palette</p>
+                                      <span className="text-xs text-gray-500">{Object.keys(theme.colors || {}).length} colors</span>
+                                    </div>
+                                    <div className="flex gap-2 flex-wrap">
+                                      {Object.values(theme.colors || {}).map((color, index) => (
+                                        <div
+                                          key={index}
+                                          className="w-10 h-10 rounded-xl border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer"
+                                          style={{ backgroundColor: color as string }}
+                                          title={color as string}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
+                                      <span className="text-xs text-gray-500">{theme.features?.length || 0} features</span>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {theme.features?.slice(0, 3).map((feature: string, index: number) => (
+                                        <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
+                                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#301F70]' : 'bg-gray-400 group-hover:bg-[#779CAB]'
+                                            } transition-colors`} />
+                                          <span className="font-medium">{feature}</span>
+                                        </li>
+                                      ))}
+                                      {(theme.features?.length || 0) > 3 && (
+                                        <li className="text-xs text-gray-500 flex items-center gap-3 italic">
+                                          <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                                          +{(theme.features?.length || 0) - 3} more features
+                                        </li>
+                                      )}
+                                    </ul>
+                                  </div>
+
+                                  <div className="pt-2 border-t border-gray-100">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="text-gray-500">Theme ID: {theme.id}</span>
+                                      <span className={`font-semibold ${isSelected ? 'text-[#301F70]' : 'text-gray-600 group-hover:text-[#1A1B41]'
+                                        } transition-colors`}>
+                                        Select Theme →
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).length === 0 && (
+                          <div className="text-center py-12">
+                            <div className="text-gray-400 mb-2">
+                              <Palette className="h-12 w-12 mx-auto" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
+                            <p className="text-gray-600">Try selecting a different template</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-              
-            )}
-        </TabsContent>
-      </Tabs>
+            </div>
+
+          </div>
+        </div>
+      </div>
 
       {/* Category Dialog */}
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
@@ -2602,102 +2707,11 @@ export default function EditCataloguePage() {
               <div className="space-y-4">
                 <h4 className="text-md font-medium">Contact Page Customization</h4>
                 <div className="grid grid-cols-1 gap-4">
-                  {/* Contact Image */}
-                  <div>
-                    <Label htmlFor="contactImage">Contact Image</Label>
-                    {!catalogue?.settings?.contactDetails?.contactImage ? (
-                      <FileUpload
-                         uploadType="catalogue"
-                         catalogueId={catalogueId}
-                         maxFiles={1}
-                         accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                         onUpload={(files) => {
-                           if (files.length > 0) {
-                             setCatalogue(prev => prev ? {
-                               ...prev,
-                               settings: {
-                                 ...(prev.settings || {}),
-                                 contactDetails: {
-                                   ...(prev.settings?.contactDetails || {}),
-                                   contactImage: files[0].url
-                                 }
-                               }
-                             } : null)
-                           }
-                         }}
-                         onError={(error) => {
-                           setErrorWithAutoDismiss(`Contact image upload failed: ${error}`)
-                         }}
-                         className="mt-2"
-                       />
-                    ) : (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                        <p className="text-sm text-gray-600 mb-2">Current contact image:</p>
-                        <img
-                          src={catalogue.settings.contactDetails.contactImage}
-                          alt="Contact Image"
-                          className="w-32 h-24 object-cover border rounded"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCatalogue(prev => prev ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDetails: {
-                                ...(prev.settings?.contactDetails || {}),
-                                contactImage: ''
-                              }
-                            }
-                          } : null)}
-                          className="text-xs"
-                        >
-                          Change Image
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Contact Quote */}
-                  <div>
-                    <Label htmlFor="contactQuote">Quote</Label>
-                    <Input
-                      id="contactQuote"
-                      value={catalogue?.settings?.contactDetails?.contactQuote || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            contactQuote: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="Enter a quote for the contact page"
-                    />
-                  </div>
-
-                  {/* Quote Author */}
-                  <div>
-                    <Label htmlFor="contactQuoteBy">Quote By</Label>
-                    <Input
-                      id="contactQuoteBy"
-                      value={catalogue?.settings?.contactDetails?.contactQuoteBy || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            contactQuoteBy: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="Enter the author of the quote"
-                    />
+                  {/* Note: Contact image, quote, and quote by features can be added later */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      Additional contact customization features will be available in future updates.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -2806,7 +2820,6 @@ export default function EditCataloguePage() {
         feature="product and category management"
         currentPlan={currentPlan}
       />
-    </div >
     </>
   )
 }
