@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
+import { Loader2, Mail, Lock, Eye, EyeOff, User, Layout, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -75,121 +75,129 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex overflow-hidden">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-purple-600 via-purple-700 to-blue-600 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 flex flex-col justify-center px-12 text-white">
+        <div className="relative z-10 flex flex-col justify-center text-white px-40 h-screen">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="w-32 h-32 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
+          <div className="mb-6">
+            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatalogueAI Logo"
-                width={100}
-                height={100}
-                className="w-full h-full"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-4xl font-bold mb-4">AI-Powered Catalogue Builder</h1>
-            <p className="text-xl text-purple-100 mb-8">Create stunning product catalogues in minutes with AI assistance. Choose from 5 professional themes and let AI handle the heavy lifting.</p>
+            <h1 className="text-2xl xl:text-3xl font-bold mb-3">AI-Powered<br />Catalogue Builder</h1>
+            <p className="text-base xl:text-lg text-purple-100 mb-2 leading-relaxed">Create stunning product catalogues in minutes with AI assistance.</p>
           </div>
 
           {/* Features */}
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+          <div className="space-y-5 mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Mail className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">AI-Generated Content</h3>
-                <p className="text-purple-100">Smart product descriptions & categorization</p>
+                <h3 className="text-sm font-semibold">AI-Generated Content</h3>
+                <p className="text-xs text-purple-100">Smart descriptions & categorization</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                </svg>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Layout className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Professional Themes</h3>
-                <p className="text-purple-100">5 stunning catalogue designs to choose from</p>
+                <h3 className="text-sm font-semibold">Professional Themes</h3>
+                <p className="text-xs text-purple-100">5 stunning designs to choose from</p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                </svg>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Share2 className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Export & Share</h3>
-                <p className="text-purple-100">PDF-ready catalogues in one click</p>
+                <h3 className="text-sm font-semibold">Export & Share</h3>
+                <p className="text-xs text-purple-100">PDF-ready catalogues in one click</p>
               </div>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="mt-12 flex space-x-8">
+          <div className="flex space-x-4">
             <div>
-              <div className="text-2xl font-bold">10K+</div>
-              <div className="text-purple-200 text-sm">Happy Users</div>
+              <div className="text-lg font-bold">10K+</div>
+              <div className="text-purple-200 text-xs">Happy Users</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">50K+</div>
-              <div className="text-purple-200 text-sm">Catalogues Created</div>
+              <div className="text-lg font-bold">50K+</div>
+              <div className="text-purple-200 text-xs">Catalogues Created</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md border-0 shadow-none">
-          <CardHeader className="text-center pb-8">
-            <CardTitle className="text-2xl font-bold text-gray-900">Welcome to CATFY</CardTitle>
-            <CardDescription className="text-gray-600">Sign in to start building your AI-powered catalogue</CardDescription>
-          </CardHeader>
+      <div className="flex-1 flex items-center justify-center p-4 lg:p-6 bg-gray-50 h-screen overflow-hidden">
+        <div className="w-full max-w-sm">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-1">Welcome to CATFY</h2>
+            <p className="text-sm text-gray-600">Sign in to access your catalogues</p>
 
-          <CardContent className="space-y-6">
+            {/* Toggle Buttons */}
+            <div className="flex bg-gray-100 rounded-lg p-1 mt-4">
+              <button className="flex-1 py-1.5 px-3 bg-white text-gray-900 rounded-md shadow-sm font-medium text-sm">
+                Sign In
+              </button>
+              <Link
+                href="/auth/signup"
+                className="flex-1 py-1.5 px-3 text-gray-600 hover:text-gray-900 font-medium text-center text-sm"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-4">
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4">
               {/* Account Type Selection */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-gray-700">Account Type</Label>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-700">Account Type</Label>
+                <div className="grid grid-cols-2 gap-2">
                   <div
                     onClick={() => setAccountType('INDIVIDUAL')}
-                    className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all ${accountType === 'INDIVIDUAL'
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'INDIVIDUAL'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accountType === 'INDIVIDUAL' ? 'bg-purple-100' : 'bg-gray-100'
+                    <div className="flex items-center space-x-2">
+                      <div className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'INDIVIDUAL' ? 'bg-purple-100' : 'bg-gray-100'
                         }`}>
-                        <User className={`h-5 w-5 ${accountType === 'INDIVIDUAL' ? 'text-purple-600' : 'text-gray-600'
+                        <User className={`h-3 w-3 ${accountType === 'INDIVIDUAL' ? 'text-purple-600' : 'text-gray-600'
                           }`} />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">Individual</h3>
-                        <p className="text-sm text-gray-500">Personal and small projects</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 text-xs">Individual</h3>
+                        <p className="text-xs text-gray-500">Personal use</p>
                       </div>
                     </div>
                     {accountType === 'INDIVIDUAL' && (
-                      <div className="absolute top-3 right-3">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500">
-                          <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute top-1 right-1">
+                        <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
+                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -199,28 +207,28 @@ export default function LoginPage() {
 
                   <div
                     onClick={() => setAccountType('BUSINESS')}
-                    className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all ${accountType === 'BUSINESS'
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'BUSINESS'
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${accountType === 'BUSINESS' ? 'bg-purple-100' : 'bg-gray-100'
+                    <div className="flex items-center space-x-2">
+                      <div className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'BUSINESS' ? 'bg-purple-100' : 'bg-gray-100'
                         }`}>
-                        <svg className={`h-5 w-5 ${accountType === 'BUSINESS' ? 'text-purple-600' : 'text-gray-600'
+                        <svg className={`h-3 w-3 ${accountType === 'BUSINESS' ? 'text-purple-600' : 'text-gray-600'
                           }`} fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">Business</h3>
-                        <p className="text-sm text-gray-500">Teams and commercial use</p>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-gray-900 text-xs">Business</h3>
+                        <p className="text-xs text-gray-500">Teams & commercial</p>
                       </div>
                     </div>
                     {accountType === 'BUSINESS' && (
-                      <div className="absolute top-3 right-3">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-500">
-                          <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="absolute top-1 right-1">
+                        <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
+                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -228,22 +236,21 @@ export default function LoginPage() {
                     )}
                   </div>
                 </div>
+
               </div>
 
-              
-
               {/* Email Field */}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 pl-10 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="h-9 pl-9 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
                     required
                     disabled={isLoading}
                   />
@@ -251,17 +258,17 @@ export default function LoginPage() {
               </div>
 
               {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-xs font-medium text-gray-700">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 pl-10 pr-10 rounded-xl border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="h-9 pl-9 pr-9 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
                     required
                     disabled={isLoading}
                   />
@@ -271,9 +278,9 @@ export default function LoginPage() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-3.5 w-3.5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5" />
                     )}
                   </button>
                 </div>
@@ -282,12 +289,12 @@ export default function LoginPage() {
               {/* Sign In Button */}
               <Button
                 type="submit"
-                className="w-full h-12 bg-black hover:bg-gray-800 text-white rounded-xl font-medium"
+                className="w-full h-9 bg-black hover:bg-gray-800 text-white rounded-lg font-medium text-sm"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                     Signing in...
                   </>
                 ) : (
@@ -302,7 +309,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-3 text-gray-500 font-medium">
+                <span className="bg-gray-50 px-2 text-gray-500 font-medium">
                   OR
                 </span>
               </div>
@@ -312,14 +319,14 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 border-gray-200 hover:bg-gray-50 rounded-xl font-medium"
+              className="w-full h-9 border-gray-200 hover:bg-gray-50 rounded-lg font-medium text-sm"
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
               ) : (
-                <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                <svg className="mr-2 h-3.5 w-3.5" viewBox="0 0 24 24">
                   <path
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                     fill="#4285F4"
@@ -340,36 +347,29 @@ export default function LoginPage() {
               )}
               Continue with Google
             </Button>
-          </CardContent>
 
-          <CardFooter className="flex flex-col space-y-4 pt-6">
-            <div className="text-sm text-center text-gray-600">
-              <Link
-                href="/auth/forgot-password"
-                className="text-purple-600 hover:text-purple-500 font-medium"
-              >
-                Forgot your password?
-              </Link>
+            {/* Footer Links */}
+            <div className="text-center space-y-2">
+              <div className="text-xs text-gray-600">
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-purple-600 hover:text-purple-500 font-medium"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+              <div className="text-xs text-gray-600">
+                <Link
+                  href="/admin/login"
+                  className="text-red-500 hover:text-red-700 font-medium underline"
+                >
+                  Admin Login
+                </Link>
+              </div>
             </div>
-            <div className="text-sm text-center text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                href="/auth/signup"
-                className="text-purple-600 hover:text-purple-500 font-medium"
-              >
-                Sign Up
-              </Link>
-            </div>
-            <div className="text-sm text-center text-gray-600">
-              <Link
-                href="/admin/login"
-                className="text-red-500 hover:text-red-600 font-medium"
-              >
-                Admin Login
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>
+
+          </div>
+        </div>
       </div>
     </div>
   )
