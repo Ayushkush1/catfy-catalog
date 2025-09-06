@@ -16,7 +16,8 @@ import {
   Crown,
   Calendar,
   Palette,
-  Sparkles
+  Sparkles,
+  Book
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -91,6 +92,148 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadDashboardData()
+
+    // Add custom animations
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes float {
+        0%, 100% { 
+          transform: translateY(0px) rotate(var(--rotation, 0deg)); 
+        }
+        50% { 
+          transform: translateY(-5px) rotate(var(--rotation, 0deg)); 
+        }
+      }
+      
+      @keyframes floatReverse {
+        0%, 100% { 
+          transform: translateY(0px) rotate(var(--rotation, 0deg)); 
+        }
+        50% { 
+          transform: translateY(5px) rotate(var(--rotation, 0deg)); 
+        }
+      }
+      
+      @keyframes slowSpin {
+        from { 
+          transform: rotate(0deg) translateY(var(--float-y, 0px)); 
+        }
+        to { 
+          transform: rotate(360deg) translateY(var(--float-y, 0px)); 
+        }
+      }
+      
+      @keyframes shimmer {
+        0% { 
+          background-position: -200% 0; 
+        }
+        100% { 
+          background-position: 200% 0; 
+        }
+      }
+      
+      @keyframes glow {
+        0%, 100% { 
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.1), 0 0 40px rgba(147, 51, 234, 0.1); 
+        }
+        50% { 
+          box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(147, 51, 234, 0.2); 
+        }
+      }
+      
+      @keyframes pulseGlow {
+        0%, 100% { 
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+          transform: scale(1);
+        }
+        50% { 
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(147, 51, 234, 0.4);
+          transform: scale(1.05);
+        }
+      }
+      
+      @keyframes gentleBob {
+        0%, 100% { transform: translateY(0px); }
+        25% { transform: translateY(-3px); }
+        75% { transform: translateY(3px); }
+      }
+      
+      @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      @keyframes pulseSlow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+      
+      .animate-float {
+        animation: float 4s ease-in-out infinite;
+      }
+      
+      .animate-float-reverse {
+        animation: floatReverse 3.5s ease-in-out infinite;
+      }
+      
+      .animate-float.delay-500 {
+        animation-delay: 0.5s;
+      }
+      
+      .animate-float.delay-1000 {
+        animation-delay: 1s;
+      }
+      
+      .animate-slow-spin {
+        animation: slowSpin 20s linear infinite;
+      }
+      
+      .animate-shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 3s infinite;
+      }
+      
+      .animate-glow {
+        animation: glow 4s ease-in-out infinite;
+      }
+      
+      .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      
+      .animate-pulse-glow {
+        animation: pulseGlow 3s ease-in-out infinite;
+      }
+      
+      .animate-gentle-bob {
+        animation: gentleBob 2.5s ease-in-out infinite;
+      }
+      
+      .animate-sparkle {
+        animation: sparkle 2s ease-in-out infinite;
+      }
+      
+      .animate-breathe {
+        animation: breathe 4s ease-in-out infinite;
+      }
+      
+      .animate-pulse-slow {
+        animation: pulseSlow 3s ease-in-out infinite;
+      }
+    `
+    document.head.appendChild(style)
+
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style)
+      }
+    }
   }, [])
 
   const loadDashboardData = async () => {
@@ -276,14 +419,14 @@ export default function DashboardPage() {
         <div className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white px-6 mx-8 rounded-3xl py-12">
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
-              <div className="text-white pb-2">
-                <div className="flex flex-col gap-3 mb-4">
-                  
+              <div className="text-white pb-6">
+                <div className="flex flex-col gap-8 mb-6">
+
                   <div>
-                    <h1 className="text-3xl font-bold pb-4">
+                    <h1 className="text-4xl font-bold pt-4 pb-4">
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
-                    <p className="text-white text-sm">Welcome back to your AI-powered catalogue studio</p>
+                    <p className="text-white text-md">Welcome back to your AI-powered catalogue studio</p>
                     <p className="text-white text-xs mt-1">
                       Effortlessly create, manage, and share beautiful product catalogues.
                       Try out instant PDF export, pro themes, and more!
@@ -303,30 +446,30 @@ export default function DashboardPage() {
 
 
                 {/* Feature Highlights */}
-                <div className="flex flex-wrap gap-2 mt-2 mb-8">
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
-                    <div className="w-5 h-5 bg-emerald-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex flex-wrap gap-1 mt-2 mb-8">
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-emerald-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-white text-xs font-medium">AI-Powered</span>
+                    <span className="text-white text-[11px] font-medium">AI-Powered</span>
                   </div>
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
-                    <div className="w-5 h-5 bg-blue-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-white text-xs font-medium">5 Pro Themes</span>
+                    <span className="text-white text-[11px] font-medium">5 Pro Themes</span>
                   </div>
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1 border border-white/20">
-                    <div className="w-5 h-5 bg-purple-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-purple-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-white text-xs font-medium">Instant Export</span>
+                    <span className="text-white text-[11px] font-medium">Instant Export</span>
                   </div>
                 </div>
 
@@ -338,51 +481,72 @@ export default function DashboardPage() {
                       setShowUpgradePrompt(true)
                     }
                   }}
-                  className="bg-white text-[#2D1B69] hover:bg-purple-50 font-semibold px-6 py-3 rounded-lg"
+                  className="bg-white text-[#2D1B69] hover:bg-purple-50 font-semibold px-4 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-xl  hover:scale-105"
                 >
-                  Create Catalog
+                  <FolderOpen className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" />
+                  Create Catalogue
                 </Button>
               </div>
 
-              <div className='relative right-40'>
-                {/* Floating Catalogue Cards */}
-
-
-                <div className="absolute -top-16 right-20 w-32 h-40 bg-gradient-to-br from-white/25 to-white/15 rounded-2xl transform -rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 animate-float delay-500">
-                  <div className="p-4 h-full flex flex-col">
-                    <div className="w-8 h-8 bg-blue-400 rounded-xl mb-3 flex items-center justify-center">
-                      <Package className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-2 bg-white/50 rounded"></div>
-                      <div className="h-2 bg-white/40 rounded w-4/5"></div>
-                      <div className="h-2 bg-white/30 rounded w-3/5"></div>
-                      <div className="h-2 bg-white/20 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                </div>
-
-
-                <div className="absolute -bottom-10 right-8 w-24 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 animate-float delay-1000">
-                  <div className="p-3 h-full flex flex-col">
-                    <div className="w-5 h-5 bg-purple-400 rounded-lg mb-2"></div>
-                    <div className="flex-1 space-y-1.5">
-                      <div className="h-1.5 bg-white/40 rounded"></div>
-                      <div className="h-1.5 bg-white/30 rounded w-3/4"></div>
-                      <div className="h-1.5 bg-white/20 rounded w-1/2"></div>
+              {/* Enhanced Floating Catalogue Cards with Micro Animations */}
+              <div className='relative -top-4 right-40'>
+                {/* Card 1 - Main floating card with shimmer effect */}
+              
+                  <div className="absolute -top-16 right-20 w-32 h-40 bg-gradient-to-br from-white/25 to-white/15 rounded-2xl transform -rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 delay-5000 overflow-hidden">
+                    {/* Shimmer overlay */}
+                    <div className="absolute inset-0 animate-shimmer opacity-50"></div>
+                    <div className="relative p-4 h-full flex flex-col">
+                      <div className="w-8 h-8 bg-blue-400 rounded-xl mb-3 flex items-center justify-center animate-pulse-slow">
+                        <Package className="h-4 w-4 text-white animate-slow-spin" style={{ '--float-y': '2px' } as any} />
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-2 bg-white/50 rounded animate-pulse"></div>
+                        <div className="h-2 bg-white/40 rounded w-4/5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="h-2 bg-white/30 rounded w-3/5 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                        <div className="h-2 bg-white/20 rounded w-2/3 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="absolute -top-10 -right-4 w-28 h-36 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-12 shadow-2xl backdrop-blur-sm border border-white/30 animate-float">
-                  <div className="p-4 h-full flex flex-col">
-                    <div className="w-6 h-6 bg-emerald-400 rounded-lg mb-2"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-2 bg-white/40 rounded"></div>
-                      <div className="h-2 bg-white/30 rounded w-3/4"></div>
-                      <div className="h-2 bg-white/20 rounded w-1/2"></div>
+
+                  {/* Card 2 - Top right card with enhanced effects */}
+                  <div className="absolute -bottom-16 right-10 w-28 h-36 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 overflow-hidden">
+                    {/* Gradient border animation */}
+                    
+
+                    <div className="relative p-4 h-full flex flex-col">
+                      <div className="w-6 h-6 bg-emerald-400 rounded-lg mb-2 relative overflow-hidden">
+                        {/* Icon with rotating highlight */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <div className="w-3 h-3 bg-white/80 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-2 bg-white/40 rounded animate-pulse"></div>
+                        <div className="h-2 bg-white/30 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.25s' }}></div>
+                        <div className="h-2 bg-white/20 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                {/* Card 3 - Bottom card with reverse float */}
+                  <div className="absolute  -top-10 -right-0 w-24 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-12 shadow-2xl backdrop-blur-sm border border-white/30  delay-1000 overflow-hidden">
+                    {/* Animated border glow */}
+                    <div className="relative p-3 h-full flex flex-col">
+                      <div className="w-5 h-5 bg-purple-400 rounded-lg mb-2 animate-pulse-slow">
+                        <div className="w-full h-full bg-gradient-to-br from-purple-300 to-purple-500 rounded-lg animate-pulse"></div>
+                      </div>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-1.5 bg-white/40 rounded animate-pulse"></div>
+                        <div className="h-1.5 bg-white/30 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                        <div className="h-1.5 bg-white/20 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                
+
+
               </div>
             </div>
           </div>
@@ -406,8 +570,8 @@ export default function DashboardPage() {
                       <p className="text-sm font-medium text-[#779CAB] mb-1">Total Catalogues</p>
                       <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalCatalogues}</p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3]   rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Package className="h-6 w-6 text-white" />
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Book className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>

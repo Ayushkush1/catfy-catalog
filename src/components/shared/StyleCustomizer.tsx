@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Palette, Type, Layout, Settings, Package } from 'lucide-react'
+import { Palette, Type, Layout, Settings, Package, Edit } from 'lucide-react'
 
 // Font and color interfaces
 interface FontCustomization {
@@ -246,7 +246,7 @@ const ColorPicker: React.FC<{
     <div className="space-y-2">
       <Label className="text-xs text-gray-600">{label}</Label>
       <div className="flex items-center space-x-2">
-        <div 
+        <div
           className="w-8 h-8 rounded border-2 border-gray-300 cursor-pointer flex-shrink-0"
           style={{ backgroundColor: value }}
           onClick={() => setIsOpen(!isOpen)}
@@ -308,21 +308,21 @@ export function StyleCustomizer({
         // Catalogue fields
         name: content.catalogue?.name || content.name || '',
         description: content.catalogue?.description || content.description || '',
-        
+
         // Company/Profile fields
         companyName: content.profile?.companyName || '',
         fullName: content.profile?.fullName || '',
         companyDescription: content.catalogue?.description || content.description || '',
         tagline: content.profile?.tagline || '',
-        
+
         // Category fields
         categoryName: content.categories?.[0]?.name || '',
         categoryDescription: content.categories?.[0]?.description || '',
-        
+
         // New Collection fields
         newCollectionTitle: (content as any).newCollection?.title || 'New Collection',
         newCollectionDescription: (content as any).newCollection?.description || 'Discover our latest products and innovations',
-        
+
         // Contact fields
         email: content.profile?.email || '',
         phone: content.profile?.phone || '',
@@ -356,9 +356,9 @@ export function StyleCustomizer({
 
   const handleFieldSave = (field: string) => {
     if (!onContentChange || !content) return;
-    
+
     const newContent = { ...content };
-    
+
     switch (field) {
       case 'name':
         if (newContent.catalogue) {
@@ -451,7 +451,7 @@ export function StyleCustomizer({
         newContent.catalogue.settings.storeDescription = editValues.storeDescription;
         break;
     }
-    
+
     if (onContentChange) {
       // Call onContentChange for each field that was updated
       switch (field) {
@@ -523,7 +523,7 @@ export function StyleCustomizer({
   const handleProductFieldSave = async (productId: string, field: string) => {
     const fieldKey = `product-${field}-${productId}`
     const newValue = editValues[fieldKey]
-    
+
     if (newValue !== undefined && onProductUpdate) {
       try {
         await onProductUpdate(productId, { [field]: newValue })
@@ -563,34 +563,40 @@ export function StyleCustomizer({
 
   return (
     <Card className="w-full max-w-md">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Settings className="w-5 h-5" />
-          Style Customizer
-        </CardTitle>
-      </CardHeader>
+      {/* Sidebar Header */}
+      <div className="sticky top-0 bg-gradient-to-r from-[#301F70] to-[#1A1B41] p-4 border-b border-gray-200/60">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+            <Edit className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-white">Style Customizer</h3>
+            <p className="text-xs text-white/80">Live preview editing</p>
+          </div>
+        </div>
+      </div>
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4 text-xs">
             <TabsTrigger value="colors" className="flex items-center gap-1 px-2">
-              <Palette className="w-3 h-3" />
-              <span className="hidden sm:inline">Colors</span>
+              <Palette className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Colors</span>
             </TabsTrigger>
             <TabsTrigger value="typography" className="flex items-center gap-1 px-2">
-              <Type className="w-3 h-3" />
-              <span className="hidden sm:inline">Fonts</span>
+              <Type className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Fonts</span>
             </TabsTrigger>
             <TabsTrigger value="products" className="flex items-center gap-1 px-2">
-              <Package className="w-3 h-3" />
-              <span className="hidden sm:inline">Products</span>
+              <Package className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Product</span>
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-1 px-2">
-              <Settings className="w-3 h-3" />
-              <span className="hidden sm:inline">Content</span>
+              <Settings className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Content</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="colors" className="space-y-3">
+          <TabsContent value="colors" className="space-y-3 p-2">
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-700">Text Colors</h4>
               <ColorPicker
@@ -623,7 +629,7 @@ export function StyleCustomizer({
                 elementKey="productDescription"
               />
             </div>
-            
+
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-700">Theme Colors</h4>
               <ColorPicker
@@ -649,7 +655,7 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
-          <TabsContent value="typography" className="space-y-2">
+          <TabsContent value="typography" className="space-y-3 p-2">
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-700">Font Family</h4>
               <div className="space-y-2">
@@ -867,10 +873,10 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
-          <TabsContent value="products" className="space-y-3">
+          <TabsContent value="products" className="space-y-3 p-2">
             <div className="space-y-4">
               <h4 className="text-sm font-medium text-gray-700">Edit Products</h4>
-              
+
               {content?.products && content.products.length > 0 ? (
                 <div className="space-y-4 ">
                   {content.products.map((product: any, index: number) => (
@@ -883,7 +889,7 @@ export function StyleCustomizer({
                           </span>
                         )}
                       </div>
-                      
+
                       {/* Product Name */}
                       <div className="space-y-2">
                         <Label className="text-xs text-gray-600">Product Name</Label>
@@ -933,7 +939,7 @@ export function StyleCustomizer({
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Product Price Display */}
                       {product.price && (
                         <div className="text-xs text-gray-500">
@@ -953,15 +959,15 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
-          <TabsContent value="content" className="space-y-3">
+          <TabsContent value="content" className="space-y-3 p-2">
             {content && onContentChange && (
               <div className="space-y-4">
                 <h4 className="text-sm font-medium text-gray-700">Edit Content</h4>
-                
+
                 {/* Catalog Information Section */}
                 <div className="space-y-3">
                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Catalog Information</h5>
-                  
+
                   {/* Catalog Name */}
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">Catalog Name</Label>
@@ -1017,7 +1023,7 @@ export function StyleCustomizer({
                 {content.categories && content.categories.length > 0 && (
                   <div className="space-y-3">
                     <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category Information</h5>
-                    
+
                     {/* Category Name */}
                     <div className="space-y-2">
                       <Label className="text-xs text-gray-600">Category Name</Label>
@@ -1073,7 +1079,7 @@ export function StyleCustomizer({
                 {/* New Collection Section */}
                 <div className="space-y-3">
                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Collection</h5>
-                  
+
                   {/* New Collection Title */}
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">Collection Title</Label>
@@ -1128,7 +1134,7 @@ export function StyleCustomizer({
                 {/* Company Information Section */}
                 <div className="space-y-3">
                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company Information</h5>
-                  
+
                   {/* Company Name */}
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">Company Name</Label>
@@ -1233,7 +1239,7 @@ export function StyleCustomizer({
                 {/* Contact Information Section */}
                 <div className="space-y-3">
                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact Information</h5>
-                  
+
                   {/* Email */}
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">Email</Label>

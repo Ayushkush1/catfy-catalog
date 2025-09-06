@@ -157,8 +157,15 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
             <div className="flex items-center space-x-6">
               {/* CATFY Logo */}
               <Link href="/dashboard" className="flex items-center space-x-2 group">
-                <div className="relative w-8 h-8 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                  <Sparkles className="h-5 w-5 text-white" />
+                <div className="relative w-8 h-8 border rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200 overflow-hidden">
+                  <Image
+                  src="/assets/CATFYLogo.png"
+                  alt="Catafy Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                  priority
+                  />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-[#2D1B69] tracking-tight">CATFY</span>
@@ -311,7 +318,7 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
 
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
-        <div className=' bg-gray-50'>
+        <div className=' bg-gray-100 pt-4'>
           <div className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white px-8 mx-8 rounded-t-3xl pt-8 h-40">
             <div className="container mx-auto">
               <div className="flex items-center justify-between">

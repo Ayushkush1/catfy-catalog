@@ -63,21 +63,21 @@ export default function CataloguePreviewPage() {
   const [spacingCustomization, setSpacingCustomization] = useState<SpacingCustomization>(DEFAULT_SPACING_CUSTOMIZATION)
   const [advancedStyles, setAdvancedStyles] = useState<AdvancedStyleCustomization>(DEFAULT_ADVANCED_STYLES)
   const [smartSortEnabled, setSmartSortEnabled] = useState(true)
-  
+
   const params = useParams()
   const catalogueId = params.id as string
   const { canExport } = useSubscription()
 
   const shareCatalogue = async () => {
     if (!catalogue) return
-    
+
     if (!catalogue.isPublic) {
       toast.error('Only public catalogues can be shared')
       return
     }
 
     const shareUrl = `${window.location.origin}/preview/${catalogue.id}`
-    
+
     try {
       await navigator.clipboard.writeText(shareUrl)
       toast.success('Share link copied to clipboard!')
@@ -95,7 +95,7 @@ export default function CataloguePreviewPage() {
 
   const exportToPDF = async () => {
     if (!catalogue) return
-    
+
     if (!canExport()) {
       toast.error('You have reached your export limit. Please upgrade your plan to export more catalogues.')
       return
@@ -103,7 +103,7 @@ export default function CataloguePreviewPage() {
 
     try {
       toast.loading('Generating PDF...', { id: 'pdf-export' })
-      
+
       const response = await fetch('/api/export/pdf', {
         method: 'POST',
         headers: {
@@ -119,7 +119,7 @@ export default function CataloguePreviewPage() {
 
       if (response.ok) {
         const contentType = response.headers.get('content-type')
-        
+
         if (contentType && contentType.includes('application/pdf')) {
           // Direct PDF download for public catalogues
           const blob = await response.blob()
@@ -156,9 +156,9 @@ export default function CataloguePreviewPage() {
     try {
       setIsLoading(true)
       setError(null)
-      
+
       const response = await fetch(`/api/catalogues/${catalogueId}`)
-      
+
       if (response.ok) {
         const data = await response.json()
         setCatalogue(data.catalogue)
@@ -177,7 +177,7 @@ export default function CataloguePreviewPage() {
 
   const handleProductsReorder = async (updatedProducts: (PrismaProduct & { category: PrismaCategory | null })[]) => {
     if (!catalogueId) return
-    
+
     try {
       const response = await fetch(`/api/catalogues/${catalogueId}/products/sort`, {
         method: 'PATCH',
@@ -221,7 +221,7 @@ export default function CataloguePreviewPage() {
       })
 
       console.log('📡 API Response status:', response.status)
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ API Error:', errorText)
@@ -230,10 +230,10 @@ export default function CataloguePreviewPage() {
 
       const responseData = await response.json()
       console.log('✅ Catalogue updated successfully:', responseData)
-      
+
       // Extract the catalogue data from the response
       const updatedCatalogue = responseData.catalogue || responseData
-      
+
       // Update the catalogue state with the new data
       setCatalogue(prev => {
         if (!prev) return null
@@ -246,14 +246,14 @@ export default function CataloguePreviewPage() {
             ...(updatedCatalogue.settings as object || {})
           }
         }
-        
+
         // Also update the fontCustomization state if it's in the response
         const newSettings = newCatalogue.settings as any
         if (newSettings?.fontCustomization) {
           console.log('🔄 Updating fontCustomization state from API response:', newSettings.fontCustomization)
           setFontCustomization(newSettings.fontCustomization)
         }
-        
+
         return newCatalogue
       })
     } catch (error) {
@@ -263,11 +263,11 @@ export default function CataloguePreviewPage() {
 
   const handleContentChange = async (field: string, value: string) => {
     if (!catalogue?.id) return
-    
+
     try {
       // Handle nested field paths
       const updates: any = {}
-      
+
       if (field.startsWith('catalogue.')) {
         const fieldName = field.replace('catalogue.', '')
         updates[fieldName] = value
@@ -304,7 +304,7 @@ export default function CataloguePreviewPage() {
       } else {
         updates[field] = value
       }
-      
+
       await handleCatalogueUpdate(catalogue.id, updates)
     } catch (error) {
       console.error('Error updating catalogue content:', error)
@@ -327,15 +327,15 @@ export default function CataloguePreviewPage() {
 
       const responseData = await response.json()
       console.log('Successfully updated product:', responseData)
-      
+
       // Extract the product data from the response
       const updatedProduct = responseData.product || responseData
-      
+
       setCatalogue(prev => {
         if (!prev) return prev
         return {
           ...prev,
-          products: prev.products.map(product => 
+          products: prev.products.map(product =>
             product.id === productId ? { ...product, ...updatedProduct } : product
           )
         }
@@ -347,7 +347,7 @@ export default function CataloguePreviewPage() {
 
   const handleColorChange = async (type: string, colors: any) => {
     console.log('🎨 handleColorChange called with type:', type, 'colors:', colors)
-    
+
     // Convert to the template's ColorCustomization format
     const updatedColors = { ...customColors }
     if (type === 'textColors') {
@@ -355,9 +355,9 @@ export default function CataloguePreviewPage() {
     } else if (type === 'backgroundColors') {
       updatedColors.backgroundColors = { ...updatedColors.backgroundColors, ...colors }
     }
-    
+
     setCustomColors(updatedColors)
-    
+
     // Save to database
     if (catalogue?.id) {
       console.log('💾 Saving color changes to database...')
@@ -403,7 +403,7 @@ export default function CataloguePreviewPage() {
     }
     current[pathParts[pathParts.length - 1]] = value
     setFontCustomization(newFontCustomization)
-    
+
     // Save to database
     if (catalogue?.id) {
       console.log('💾 Saving font changes to database...')
@@ -428,7 +428,7 @@ export default function CataloguePreviewPage() {
     }
     current[pathParts[pathParts.length - 1]] = value
     setSpacingCustomization(newSpacingCustomization)
-    
+
     // Save to database
     if (catalogue?.id) {
       await handleCatalogueUpdate(catalogue.id, {
@@ -449,7 +449,7 @@ export default function CataloguePreviewPage() {
     }
     current[pathParts[pathParts.length - 1]] = value
     setAdvancedStyles(newAdvancedStyles)
-    
+
     // Save to database
     if (catalogue?.id) {
       await handleCatalogueUpdate(catalogue.id, {
@@ -474,13 +474,13 @@ export default function CataloguePreviewPage() {
     if (catalogue?.settings) {
       const settings = catalogue.settings as any
       console.log('📋 Catalogue settings found:', settings)
-      
+
       // Initialize custom colors from saved settings
       if (settings.customColors) {
         console.log('🎨 Initializing custom colors:', settings.customColors)
         setCustomColors(settings.customColors)
       }
-      
+
       // Initialize font customization from saved settings or defaults
       if (settings.fontCustomization) {
         console.log('🔤 Initializing font customization from saved settings:', settings.fontCustomization)
@@ -489,13 +489,13 @@ export default function CataloguePreviewPage() {
         console.log('🔤 No saved fontCustomization found, using defaults:', DEFAULT_FONT_CUSTOMIZATION)
         setFontCustomization(DEFAULT_FONT_CUSTOMIZATION)
       }
-      
+
       // Initialize spacing customization from saved settings
       if (settings.spacingCustomization) {
         console.log('📏 Initializing spacing customization:', settings.spacingCustomization)
         setSpacingCustomization(settings.spacingCustomization)
       }
-      
+
       // Initialize advanced styles from saved settings
       if (settings.advancedStyles) {
         console.log('✨ Initializing advanced styles:', settings.advancedStyles)
@@ -527,32 +527,42 @@ export default function CataloguePreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b shadow-sm print:hidden">
-          <div className="container mx-auto px-4 py-3">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        {/* Enhanced Loading Header */}
+        <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-lg print:hidden">
+          <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Skeleton className="h-8 w-32" />
-                <div>
-                  <Skeleton className="h-5 w-48 mb-1" />
-                  <Skeleton className="h-4 w-24" />
+              <div className="flex items-center gap-6">
+                <Skeleton className="h-10 w-32 rounded-xl" />
+                <div className="border-l border-gray-300 pl-6">
+                  <Skeleton className="h-6 w-48 mb-2 rounded-lg" />
+                  <Skeleton className="h-4 w-32 rounded-lg" />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-24" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-9 w-24 rounded-xl" />
+                <Skeleton className="h-9 w-20 rounded-xl" />
+                <Skeleton className="h-9 w-16 rounded-xl" />
+                <Skeleton className="h-9 w-28 rounded-xl" />
               </div>
             </div>
           </div>
         </div>
-        <div className="container mx-auto py-8 px-4">
-          <div className="space-y-6">
-            <Skeleton className="h-32 w-full" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-64" />
-              ))}
+        {/* Enhanced Loading Content */}
+        <div className="container mx-auto py-12 px-6">
+          <div className="space-y-8">
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <Skeleton className="h-40 w-full rounded-xl mb-6" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-4">
+                    <Skeleton className="h-48 rounded-xl" />
+                    <Skeleton className="h-6 w-3/4 rounded-lg" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-2/3 rounded-lg" />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -562,37 +572,42 @@ export default function CataloguePreviewPage() {
 
   if (error || !catalogue) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="w-20 h-20 bg-gradient-to-r from-red-400 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+            <AlertTriangle className="h-10 w-10 text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-[#1A1B41] mb-4 tracking-tight">
             {error || 'Catalogue not found'}
           </h1>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-8 text-lg leading-relaxed max-w-md mx-auto">
             The catalogue you're looking for doesn't exist or you don't have permission to view it.
           </p>
-          <Button asChild>
+          <Button
+            asChild
+            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white px-8 py-3 rounded-xl shadow-lg transition-all duration-300"
+          >
             <Link href="/dashboard">Back to Dashboard</Link>
           </Button>
         </div>
       </div>
     )
   }
-    
+
   const settings = catalogue.settings as any || {}
   const templateId = settings.templateId || 'modern-4page' // Default to modern template
-  
+
   // Get the template component
   const TemplateComponent = getTemplateComponent(templateId)
   const templateConfig = getTemplateById(templateId)
-  
+
   // Get theme colors
   const themeColors = {
     primary: getThemeColors(catalogue.theme || 'modern').primary,
     secondary: getThemeColors(catalogue.theme || 'modern').secondary,
     accent: '#f1f5f9'
   }
-  
+
   // Transform profile data to match expected structure
   const profileData = {
     id: catalogue.profileId || '',
@@ -619,48 +634,69 @@ export default function CataloguePreviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <div className="bg-white border-b shadow-sm print:hidden ">
-        <div className="container mx-auto px-4 py-3">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Enhanced Admin Header */}
+      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-lg print:hidden sticky top-0 z-40">
+        <div className=" mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
+            <div className="flex items-center gap-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 transition-all duration-300"
+              >
                 <Link href={`/catalogue/${catalogue.id}/edit`}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Edit
+                  <ArrowLeft className="h-4 w-4 mr-2 text-[#1A1B41]" />
+                  <span className="text-[#1A1B41] font-medium">Back to Edit</span>
                 </Link>
               </Button>
-              <div>
-                <h1 className="font-semibold text-gray-900">{catalogue.name}</h1>
-                <p className="text-sm text-gray-600">Preview Mode</p>
+              <div className="border-l border-gray-300 pl-6">
+                <h1 className="font-bold text-xl text-[#1A1B41] tracking-tight">{catalogue.name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] animate-pulse"></div>
+                  <p className="text-sm text-gray-600 font-medium">Live Preview Mode</p>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={isEditMode ? "default" : "outline"} 
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant={isEditMode ? "default" : "outline"}
                 size="sm"
                 onClick={() => setIsEditMode(!isEditMode)}
-                className="relative"
+                className={`relative transition-all duration-300 ${isEditMode
+                  ? 'bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white shadow-lg'
+                  : 'border-[#301F70]/30 text-[#301F70] hover:bg-gradient-to-r hover:from-[#301F70]/5 hover:to-[#1A1B41]/5'
+                  }`}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 {isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
                 {isEditMode && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <div className="absolute -top-1 -right-1">
+                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-lg">
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full blur-sm opacity-70"></div>
+                    </div>
+                  </div>
                 )}
               </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/catalogue/${catalogue.id}/edit`}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Full Edit
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" onClick={shareCatalogue}>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={shareCatalogue}
+                className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300"
+              >
                 <Share2 className="h-4 w-4 mr-2" />
                 Share
               </Button>
-              <Button variant="outline" size="sm" onClick={exportToPDF} disabled={!canExport()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportToPDF}
+                disabled={!canExport()}
+                className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Export PDF
               </Button>
@@ -669,15 +705,15 @@ export default function CataloguePreviewPage() {
         </div>
       </div>
 
-      {/* Main Content Area with Sidebar */}
-      <div className="flex bg-gray-100 min-h-[calc(100vh-73px)] relative">
-        {/* Template Content - PDF Export Size Preview */}
-        <div className={`flex justify-center py-1 transition-all duration-300 overflow-x-hidden overflow-y-auto h-[calc(100vh-73px)] ${
-          isEditMode ? 'w-[calc(100vw-320px)]' : 'w-full'
-        }`}>
+      {/* Enhanced Main Content Area with Sidebar */}
+      <div className="flex bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-[calc(100vh-81px)] relative">
+        {/* Template Content - Enhanced PDF Export Size Preview */}
+        <div className={`flex justify-center pt-2 transition-all duration-500 ease-in-out overflow-x-hidden overflow-y-auto h-[calc(100vh-81px)] ${isEditMode ? 'w-[calc(100vw-320px)]' : 'w-full'
+          }`}>
           <div className="overflow-x-hidden">
-            <div 
-              className="bg-white shadow-lg transition-all duration-200 relative group"
+            <div
+              className={`bg-white shadow-2xl transition-all duration-300 relative group overflow-hidden ${isEditMode ? 'ring-4 ring-[#301F70]/20 shadow-[#301F70]/20' : 'shadow-gray-300/50'
+                }`}
               style={{
                 '--theme-primary': themeColors.primary,
                 '--theme-secondary': themeColors.secondary,
@@ -689,12 +725,13 @@ export default function CataloguePreviewPage() {
                 transform: 'scale(1)',
                 transformOrigin: 'top center',
                 margin: '0 auto',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-                border: isEditMode ? '2px solid #3b82f6' : '2px solid transparent',
+                boxShadow: isEditMode
+                  ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
+                  : '0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
               } as React.CSSProperties}
             >
               {TemplateComponent && templateConfig ? (
-                <TemplateComponent 
+                <TemplateComponent
                   key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}-${smartSortEnabled}`}
                   catalogue={{
                     ...catalogue,
@@ -726,9 +763,12 @@ export default function CataloguePreviewPage() {
                   smartSortEnabled={smartSortEnabled}
                 />
               ) : (
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Template Not Found</h2>
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+                  <div className="text-center p-8">
+                    <div className="w-16 h-16 bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <AlertTriangle className="h-8 w-8 text-white" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#1A1B41] mb-2">Template Not Found</h2>
                     <p className="text-gray-600">The selected template could not be loaded.</p>
                   </div>
                 </div>
@@ -737,10 +777,12 @@ export default function CataloguePreviewPage() {
           </div>
         </div>
 
-        {/* Right Sidebar - StyleCustomizer */}
+        {/* Enhanced Right Sidebar - StyleCustomizer */}
         {isEditMode && (
-          <div className="w-[320px] bg-white shadow-xl border-l border-gray-200 overflow-y-auto h-[calc(100vh-73px)] fixed right-0 top-[73px] z-50">
-            <div className="p-4 space-y-6">
+          <div className="w-[320px] bg-white/95 backdrop-blur-xl shadow-2xl border-gray-200/60 overflow-y-auto h-[calc(100vh-80px)] fixed right-0 top-[85px] z-50">
+            
+
+            <div className="">
               <StyleCustomizer
                 fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
                 spacingCustomization={spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION}
