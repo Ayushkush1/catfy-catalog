@@ -688,7 +688,10 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCatalogues.map((catalogue) => (
-                  <Card key={catalogue.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
+                  <Card 
+                  onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
+                  key={catalogue.id} 
+                  className="group hover:shadow-2xl transition-all cursor-pointer duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
                     {/* Enhanced Image Header with Gradient */}
                     <div className="relative h-48 overflow-hidden">
                       {/* Dynamic Theme-based Gradients */}
@@ -761,14 +764,7 @@ export default function DashboardPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
-                          className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
-                          title="Edit Catalogue"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                        
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
