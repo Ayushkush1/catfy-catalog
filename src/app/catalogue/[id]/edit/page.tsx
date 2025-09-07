@@ -787,11 +787,18 @@ export default function EditCataloguePage() {
     }
 
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
+      const deleteUrl = `/api/catalogues/${catalogueId}/categories/${categoryId}`
+      console.log('Deleting category with URL:', deleteUrl)
+
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
       })
 
+      console.log('Delete category response status:', response.status)
+
       if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Delete category error response:', errorData)
         throw new Error('Failed to delete category')
       }
 
@@ -821,11 +828,18 @@ export default function EditCataloguePage() {
     }
 
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/products/${productId}`, {
+      const deleteUrl = `/api/catalogues/${catalogueId}/products/${productId}`
+      console.log('Deleting product with URL:', deleteUrl)
+
+      const response = await fetch(deleteUrl, {
         method: 'DELETE',
       })
 
+      console.log('Delete product response status:', response.status)
+
       if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Delete product error response:', errorData)
         throw new Error('Failed to delete product')
       }
 

@@ -342,6 +342,132 @@ export default function CataloguePreviewPage() {
       })
     } catch (error) {
       console.error('Error updating product:', error)
+      throw error
+    }
+  }
+
+  // New category management handlers
+  const handleCategoryUpdate = async (categoryId: string, updates: any) => {
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update category')
+      }
+
+      const responseData = await response.json()
+      console.log('Successfully updated category:', responseData)
+
+      const updatedCategory = responseData.category || responseData
+
+      setCatalogue(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          categories: prev.categories.map(category =>
+            category.id === categoryId ? { ...category, ...updatedCategory } : category
+          )
+        }
+      })
+    } catch (error) {
+      console.error('Error updating category:', error)
+      throw error
+    }
+  }
+
+  const handleCategoryCreate = async (categoryData: any) => {
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(categoryData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create category')
+      }
+
+      const responseData = await response.json()
+      console.log('Successfully created category:', responseData)
+
+      const newCategory = responseData.category || responseData
+
+      setCatalogue(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          categories: [...prev.categories, newCategory]
+        }
+      })
+    } catch (error) {
+      console.error('Error creating category:', error)
+      throw error
+    }
+  }
+
+  const handleCategoryDelete = async (categoryId: string) => {
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete category')
+      }
+
+      console.log('Successfully deleted category:', categoryId)
+
+      setCatalogue(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          categories: prev.categories.filter(category => category.id !== categoryId),
+          // Also remove category association from products
+          products: prev.products.map(product =>
+            product.categoryId === categoryId
+              ? { ...product, categoryId: null, category: null }
+              : product
+          )
+        }
+      })
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      throw error
+    }
+  }
+
+  const handleProductImageUpdate = async (productId: string, imageUrl: string) => {
+    try {
+      await handleProductUpdate(productId, { imageUrl })
+      toast.success('Product image updated successfully')
+    } catch (error) {
+      console.error('Error updating product image:', error)
+      toast.error('Failed to update product image')
+      throw error
+    }
+  }
+
+  const handleBulkContentUpdate = async (updates: any) => {
+    try {
+      if (!catalogue?.id) return
+
+      await handleCatalogueUpdate(catalogue.id, updates)
+      toast.success('Content updated successfully')
+    } catch (error) {
+      console.error('Error updating content:', error)
+      toast.error('Failed to update content')
+      throw error
     }
   }
 
@@ -780,7 +906,7 @@ export default function CataloguePreviewPage() {
         {/* Enhanced Right Sidebar - StyleCustomizer */}
         {isEditMode && (
           <div className="w-[320px] bg-white/95 backdrop-blur-xl shadow-2xl border-gray-200/60 overflow-y-auto h-[calc(100vh-80px)] fixed right-0 top-[85px] z-50">
-            
+
 
             <div className="">
               <StyleCustomizer
@@ -811,6 +937,11 @@ export default function CataloguePreviewPage() {
                 onColorChange={handleColorChange}
                 onContentChange={handleContentChange}
                 onProductUpdate={handleProductUpdate}
+                onCategoryUpdate={handleCategoryUpdate}
+                onCategoryCreate={handleCategoryCreate}
+                onCategoryDelete={handleCategoryDelete}
+                onProductImageUpdate={handleProductImageUpdate}
+                onBulkContentUpdate={handleBulkContentUpdate}
               />
             </div>
           </div>

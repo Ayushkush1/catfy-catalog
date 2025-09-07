@@ -169,7 +169,7 @@ export async function PUT(
 
     const body = await request.json()
     console.log('PUT request body received:', body)
-    
+
     const validatedData = updateProductSchema.parse(body)
     console.log('Validated data:', validatedData)
 
@@ -207,7 +207,7 @@ export async function PUT(
         )
       }
     }
-    
+
     // Convert empty categoryId to null for database
     if (validatedData.categoryId === '') {
       validatedData.categoryId = undefined
@@ -216,7 +216,7 @@ export async function PUT(
     // Update product
     console.log('Updating product with ID:', params.productId)
     console.log('Update data being sent to database:', validatedData)
-    
+
     const product = await prisma.product.update({
       where: {
         id: params.productId,
@@ -226,13 +226,13 @@ export async function PUT(
         category: true,
       },
     })
-    
+
     console.log('Product updated successfully:', product)
 
     return NextResponse.json({ product })
   } catch (error) {
     console.error('Error updating product:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.errors },
@@ -253,8 +253,11 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
+    console.log('DELETE product request received with params:', params)
+
     const user = await getUser()
     if (!user) {
+      console.log('No user found for delete product request')
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -263,26 +266,41 @@ export async function DELETE(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
+      console.log('No profile found for user:', user.id)
       return NextResponse.json(
         { error: 'Profile not found' },
         { status: 404 }
       )
     }
 
-    // Verify catalogue ownership
+    console.log('Looking for catalogue with ID:', params.id, 'for profile:', profile.id)
+
+    // Verify catalogue ownership or team membership
     const catalogue = await prisma.catalogue.findFirst({
       where: {
         id: params.id,
-        profileId: profile.id,
+        OR: [
+          { profileId: profile.id }, // User owns the catalogue
+          {
+            teamMembers: {
+              some: {
+                profileId: profile.id
+              }
+            }
+          } // User is a team member
+        ]
       },
     })
 
     if (!catalogue) {
+      console.log('Catalogue not found or no access for catalogue ID:', params.id)
       return NextResponse.json(
-        { error: 'Catalogue not found' },
+        { error: 'Catalogue not found or access denied' },
         { status: 404 }
       )
     }
+
+    console.log('Looking for product with ID:', params.productId, 'in catalogue:', params.id)
 
     // Verify product exists and belongs to catalogue
     const existingProduct = await prisma.product.findFirst({
@@ -293,11 +311,14 @@ export async function DELETE(
     })
 
     if (!existingProduct) {
+      console.log('Product not found with ID:', params.productId)
       return NextResponse.json(
         { error: 'Product not found' },
         { status: 404 }
       )
     }
+
+    console.log('Found product:', existingProduct.name, 'deleting...')
 
     // Delete product
     await prisma.product.delete({
@@ -306,6 +327,7 @@ export async function DELETE(
       },
     })
 
+    console.log('Product deleted successfully')
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting product:', error)

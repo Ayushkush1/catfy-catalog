@@ -9,6 +9,7 @@ export const runtime = 'nodejs'
 const createCategorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(50),
   description: z.string().optional(),
+  color: z.string().optional(),
 })
 
 const updateCategorySchema = z.object({
@@ -174,6 +175,7 @@ export async function POST(
     const category = await prisma.category.create({
       data: {
         ...validatedData,
+        color: validatedData.color || '#3b82f6',
         catalogueId: params.id,
         sortOrder,
       },
@@ -189,7 +191,7 @@ export async function POST(
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {
     console.error('Error creating category:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.errors },

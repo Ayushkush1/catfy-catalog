@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Palette, Type, Layout, Settings, Package, Edit } from 'lucide-react'
+import { Palette, Type, Layout, Settings, Package, Edit, Image, Check, X, Upload } from 'lucide-react'
 
 // Font and color interfaces
 interface FontCustomization {
@@ -117,6 +117,11 @@ interface StyleCustomizerProps {
   content?: any
   onContentChange?: (field: string, value: string) => void
   onProductUpdate?: (productId: string, updates: any) => void
+  onCategoryUpdate?: (categoryId: string, updates: any) => void
+  onCategoryCreate?: (category: any) => void
+  onCategoryDelete?: (categoryId: string) => void
+  onProductImageUpdate?: (productId: string, imageUrl: string) => void
+  onBulkContentUpdate?: (updates: any) => void
 }
 
 // Default values
@@ -295,13 +300,22 @@ export function StyleCustomizer({
   onColorChange,
   content,
   onContentChange,
-  onProductUpdate
+  onProductUpdate,
+  onCategoryUpdate,
+  onCategoryCreate,
+  onCategoryDelete,
+  onProductImageUpdate,
+  onBulkContentUpdate
 }: StyleCustomizerProps) {
   const [activeTab, setActiveTab] = useState('colors')
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Record<string, string>>({})
-
-  // Initialize edit values when content changes
+  const [showImageUpload, setShowImageUpload] = useState<string>('')
+  const [newCategoryForm, setNewCategoryForm] = useState({ name: '', description: '', color: '#3b82f6' })
+  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false)
+  const [bulkEditMode, setBulkEditMode] = useState(false)
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+  const [imagePreview, setImagePreview] = useState<string>('')
   useEffect(() => {
     if (content) {
       setEditValues({
@@ -541,6 +555,121 @@ export function StyleCustomizer({
     }
   }
 
+  // Enhanced product handlers
+  const handleProductPriceUpdate = async (productId: string, price: number) => {
+    if (onProductUpdate) {
+      try {
+        await onProductUpdate(productId, { price })
+      } catch (error) {
+        console.error('Failed to update product price:', error)
+      }
+    }
+  }
+
+  const handleProductTagsUpdate = async (productId: string, tags: string[]) => {
+    if (onProductUpdate) {
+      try {
+        await onProductUpdate(productId, { tags })
+      } catch (error) {
+        console.error('Failed to update product tags:', error)
+      }
+    }
+  }
+
+  const handleProductImageUpdate = async (productId: string, imageUrl: string) => {
+    if (onProductImageUpdate) {
+      try {
+        await onProductImageUpdate(productId, imageUrl)
+        setShowImageUpload('')
+        setImagePreview('')
+      } catch (error) {
+        console.error('Failed to update product image:', error)
+      }
+    }
+  }
+
+  const handleProductVisibilityToggle = async (productId: string, isActive: boolean) => {
+    if (onProductUpdate) {
+      try {
+        await onProductUpdate(productId, { isActive })
+      } catch (error) {
+        console.error('Failed to update product visibility:', error)
+      }
+    }
+  }
+
+  // Category management handlers
+  const handleCategoryUpdate = async (categoryId: string, updates: any) => {
+    if (onCategoryUpdate) {
+      try {
+        await onCategoryUpdate(categoryId, updates)
+        setEditingField('')
+      } catch (error) {
+        console.error('Failed to update category:', error)
+      }
+    }
+  }
+
+  const handleCategoryCreate = async () => {
+    if (onCategoryCreate && newCategoryForm.name.trim()) {
+      try {
+        await onCategoryCreate(newCategoryForm)
+        setNewCategoryForm({ name: '', description: '', color: '#3b82f6' })
+        setShowNewCategoryForm(false)
+      } catch (error) {
+        console.error('Failed to create category:', error)
+      }
+    }
+  }
+
+  const handleCategoryDelete = async (categoryId: string) => {
+    if (onCategoryDelete && confirm('Are you sure you want to delete this category? Products in this category will become uncategorized.')) {
+      try {
+        await onCategoryDelete(categoryId)
+      } catch (error) {
+        console.error('Failed to delete category:', error)
+      }
+    }
+  }
+
+  // Bulk editing handlers
+  const handleBulkProductUpdate = async (updates: any) => {
+    if (onProductUpdate && selectedProducts.length > 0) {
+      try {
+        for (const productId of selectedProducts) {
+          await onProductUpdate(productId, updates)
+        }
+        setSelectedProducts([])
+        setBulkEditMode(false)
+      } catch (error) {
+        console.error('Failed to bulk update products:', error)
+      }
+    }
+  }
+
+  const toggleProductSelection = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    )
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, productId: string) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => setImagePreview(e.target?.result as string)
+      reader.readAsDataURL(file)
+
+      // TODO: Upload to your storage service and get URL
+      // For now, we'll use a placeholder URL
+      const imageUrl = `https://placeholder.image.url/${file.name}`
+      await handleProductImageUpdate(productId, imageUrl)
+    }
+  }
+
   const defaultColors = {
     primary: '#3b82f6',
     secondary: '#64748b',
@@ -577,20 +706,28 @@ export function StyleCustomizer({
       </div>
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 text-xs">
-            <TabsTrigger value="colors" className="flex items-center gap-1 px-2">
+          <TabsList className="grid w-full grid-cols-6 text-xs">
+            <TabsTrigger value="colors" className="flex items-center gap-1 px-1">
               <Palette className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Colors</span>
             </TabsTrigger>
-            <TabsTrigger value="typography" className="flex items-center gap-1 px-2">
+            <TabsTrigger value="typography" className="flex items-center gap-1 px-1">
               <Type className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Fonts</span>
             </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-1 px-2">
+            <TabsTrigger value="categories" className="flex items-center gap-1 px-1">
+              <Layout className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Category</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-1 px-1">
               <Package className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Product</span>
             </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1 px-2">
+            <TabsTrigger value="media" className="flex items-center gap-1 px-1">
+              <Image className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Media</span>
+            </TabsTrigger>
+            <TabsTrigger value="content" className="flex items-center gap-1 px-1">
               <Settings className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Content</span>
             </TabsTrigger>
@@ -873,21 +1010,339 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
+          <TabsContent value="categories" className="space-y-3 p-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-700">Manage Categories</h4>
+                <Button
+                  size="sm"
+                  onClick={() => setShowNewCategoryForm(!showNewCategoryForm)}
+                  className="text-xs"
+                >
+                  {showNewCategoryForm ? 'Cancel' : 'Add Category'}
+                </Button>
+              </div>
+
+              {/* New Category Form */}
+              {showNewCategoryForm && (
+                <div className="p-3 border rounded-lg bg-green-50">
+                  <h5 className="text-sm font-medium mb-3">Create New Category</h5>
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-gray-600">Category Name</Label>
+                      <Input
+                        value={newCategoryForm.name}
+                        onChange={(e) => setNewCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter category name"
+                        className="text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Description</Label>
+                      <textarea
+                        value={newCategoryForm.description}
+                        onChange={(e) => setNewCategoryForm(prev => ({ ...prev, description: e.target.value }))}
+                        placeholder="Enter category description"
+                        className="w-full text-sm p-2 border rounded resize-none"
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-600">Category Color</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={newCategoryForm.color}
+                          onChange={(e) => setNewCategoryForm(prev => ({ ...prev, color: e.target.value }))}
+                          className="w-8 h-8 rounded border"
+                        />
+                        <Input
+                          value={newCategoryForm.color}
+                          onChange={(e) => setNewCategoryForm(prev => ({ ...prev, color: e.target.value }))}
+                          placeholder="#3b82f6"
+                          className="text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={handleCategoryCreate} className="text-xs">
+                        Create Category
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setShowNewCategoryForm(false)}
+                        className="text-xs"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing Categories */}
+              {content?.categories && content.categories.length > 0 ? (
+                <div className="space-y-3">
+                  {content.categories.map((category: any, index: number) => (
+                    <div key={category.id || index} className="border rounded-lg p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-4 h-4 rounded"
+                            style={{ backgroundColor: category.color || '#3b82f6' }}
+                          />
+                          <span className="text-sm font-medium">{category.name}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleCategoryDelete(category.id)}
+                          className="text-xs"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+
+                      {/* Category Name */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Category Name</Label>
+                        {editingField === `category-name-${category.id}` ? (
+                          <div className="flex gap-2">
+                            <Input
+                              value={editValues[`category-name-${category.id}`] || ''}
+                              onChange={(e) => setEditValues(prev => ({ ...prev, [`category-name-${category.id}`]: e.target.value }))}
+                              onBlur={() => {
+                                handleCategoryUpdate(category.id, { name: editValues[`category-name-${category.id}`] })
+                              }}
+                              className="flex-1 text-sm"
+                              autoFocus
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                handleCategoryUpdate(category.id, { name: editValues[`category-name-${category.id}`] })
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm"
+                            onClick={() => {
+                              setEditingField(`category-name-${category.id}`)
+                              setEditValues(prev => ({ ...prev, [`category-name-${category.id}`]: category.name }))
+                            }}
+                          >
+                            {category.name || 'Click to edit category name...'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Category Description */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Category Description</Label>
+                        {editingField === `category-desc-${category.id}` ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editValues[`category-desc-${category.id}`] || ''}
+                              onChange={(e) => setEditValues(prev => ({ ...prev, [`category-desc-${category.id}`]: e.target.value }))}
+                              className="w-full text-sm p-2 border rounded resize-none"
+                              rows={3}
+                              autoFocus
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  handleCategoryUpdate(category.id, { description: editValues[`category-desc-${category.id}`] })
+                                }}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingField('')}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm min-h-[60px]"
+                            onClick={() => {
+                              setEditingField(`category-desc-${category.id}`)
+                              setEditValues(prev => ({ ...prev, [`category-desc-${category.id}`]: category.description || '' }))
+                            }}
+                          >
+                            {category.description || 'Click to edit category description...'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Category Color */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Category Color</Label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={category.color || '#3b82f6'}
+                            onChange={(e) => handleCategoryUpdate(category.id, { color: e.target.value })}
+                            className="w-8 h-8 rounded border"
+                          />
+                          <Input
+                            value={category.color || '#3b82f6'}
+                            onChange={(e) => handleCategoryUpdate(category.id, { color: e.target.value })}
+                            className="text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Product Count */}
+                      <div className="text-xs text-gray-500">
+                        Products in this category: {content?.products?.filter((p: any) => p.categoryId === category.id).length || 0}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Layout className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No categories found</p>
+                  <p className="text-xs">Create categories to organize your products</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="products" className="space-y-3 p-2">
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-700">Edit Products</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-700">Edit Products</h4>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant={bulkEditMode ? "destructive" : "outline"}
+                    onClick={() => setBulkEditMode(!bulkEditMode)}
+                    className="text-xs"
+                  >
+                    {bulkEditMode ? 'Cancel Bulk' : 'Bulk Edit'}
+                  </Button>
+                  {bulkEditMode && selectedProducts.length > 0 && (
+                    <Button
+                      size="sm"
+                      onClick={() => setEditingField('bulk-actions')}
+                      className="text-xs"
+                    >
+                      Actions ({selectedProducts.length})
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Bulk Actions Panel */}
+              {editingField === 'bulk-actions' && (
+                <div className="p-3 border rounded-lg bg-blue-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="text-sm font-medium">Bulk Actions</h5>
+                    <span className="text-xs text-blue-600">
+                      {selectedProducts.length} products selected
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleBulkProductUpdate({ isActive: true })}
+                      className="w-full text-xs flex items-center gap-2"
+                    >
+                      <Check className="w-3 h-3" />
+                      Activate Selected Products
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleBulkProductUpdate({ isActive: false })}
+                      className="w-full text-xs flex items-center gap-2"
+                    >
+                      <X className="w-3 h-3" />
+                      Deactivate Selected Products
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setEditingField('')}
+                      className="w-full text-xs"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {content?.products && content.products.length > 0 ? (
-                <div className="space-y-4 ">
+                <div className="space-y-4">
                   {content.products.map((product: any, index: number) => (
-                    <div key={product.id || index} className="space-y-3">
+                    <div key={product.id || index} className="border rounded-lg p-3 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-gray-500">Product {index + 1}</span>
+                        <div className="flex items-center gap-2">
+                          {bulkEditMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedProducts.includes(product.id)}
+                              onChange={() => toggleProductSelection(product.id)}
+                              className="rounded"
+                            />
+                          )}
+                          <span className="text-xs font-medium text-gray-500">Product {index + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <div
+                              className={`w-2 h-2 rounded-full ${product.isActive ? 'bg-green-400' : 'bg-red-400'}`}
+                              title={product.isActive ? 'Active' : 'Inactive'}
+                            />
+                            <button
+                              onClick={() => handleProductVisibilityToggle(product.id, !product.isActive)}
+                              className="text-xs text-gray-500 hover:text-gray-700"
+                            >
+                              {product.isActive ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
+                        </div>
                         {product.category && (
                           <span className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">
                             {product.category.name || 'Uncategorized'}
                           </span>
                         )}
+                      </div>
+
+                      {/* Product Image */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Product Image</Label>
+                        <div className="flex items-center gap-2">
+                          {(product.imageUrl || imagePreview) && (
+                            <img
+                              src={imagePreview || product.imageUrl}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded border"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, product.id)}
+                              className="text-xs"
+                            />
+                            {product.imageUrl && (
+                              <p className="text-xs text-gray-500 mt-1 truncate">
+                                Current: {product.imageUrl.split('/').pop()}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
 
                       {/* Product Name */}
@@ -940,12 +1395,128 @@ export function StyleCustomizer({
                         )}
                       </div>
 
-                      {/* Product Price Display */}
-                      {product.price && (
-                        <div className="text-xs text-gray-500">
-                          Price: ${product.price}
-                        </div>
-                      )}
+                      {/* Product Price */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Product Price</Label>
+                        {editingField === `product-price-${product.id}` ? (
+                          <div className="flex gap-2">
+                            <Input
+                              type="number"
+                              value={editValues[`product-price-${product.id}`] || ''}
+                              onChange={(e) => setEditValues(prev => ({ ...prev, [`product-price-${product.id}`]: e.target.value }))}
+                              onBlur={() => {
+                                const price = parseFloat(editValues[`product-price-${product.id}`]) || 0
+                                handleProductPriceUpdate(product.id, price)
+                                setEditingField('')
+                              }}
+                              className="flex-1 text-sm"
+                              step="0.01"
+                              min="0"
+                              autoFocus
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                const price = parseFloat(editValues[`product-price-${product.id}`]) || 0
+                                handleProductPriceUpdate(product.id, price)
+                                setEditingField('')
+                              }}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm"
+                            onClick={() => {
+                              setEditingField(`product-price-${product.id}`)
+                              setEditValues(prev => ({ ...prev, [`product-price-${product.id}`]: product.price?.toString() || '0' }))
+                            }}
+                          >
+                            {product.price ? `$${product.price}` : 'Click to set price...'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Product Tags */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Product Tags</Label>
+                        {editingField === `product-tags-${product.id}` ? (
+                          <div className="space-y-2">
+                            <Input
+                              value={editValues[`product-tags-${product.id}`] || ''}
+                              onChange={(e) => setEditValues(prev => ({ ...prev, [`product-tags-${product.id}`]: e.target.value }))}
+                              placeholder="Enter tags separated by commas"
+                              className="text-sm"
+                              autoFocus
+                            />
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  const tagsString = editValues[`product-tags-${product.id}`] || ''
+                                  const tags = tagsString.split(',').map(tag => tag.trim()).filter(Boolean)
+                                  handleProductTagsUpdate(product.id, tags)
+                                  setEditingField('')
+                                }}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingField('')}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm min-h-[40px]"
+                            onClick={() => {
+                              setEditingField(`product-tags-${product.id}`)
+                              setEditValues(prev => ({
+                                ...prev,
+                                [`product-tags-${product.id}`]: (product.tags || []).join(', ')
+                              }))
+                            }}
+                          >
+                            {product.tags && product.tags.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {product.tags.map((tag: string, tagIndex: number) => (
+                                  <span key={tagIndex} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              'Click to add tags...'
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Category Assignment */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-gray-600">Category</Label>
+                        <Select
+                          value={product.categoryId || ''}
+                          onValueChange={(categoryId) => handleProductFieldSave(product.id, 'categoryId')}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Uncategorized</SelectItem>
+                            {content?.categories?.map((category: any) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -959,10 +1530,170 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
+          <TabsContent value="media" className="space-y-3 p-2">
+            <div className="space-y-4">
+              <h4 className="text-sm font-medium text-gray-700">Media Management</h4>
+
+              {/* Company Logo */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company Assets</h5>
+
+                <div className="space-y-2">
+                  <Label className="text-xs text-gray-600">Company Logo</Label>
+                  <div className="border rounded-lg p-3">
+                    {content?.profile?.logo && (
+                      <div className="mb-3">
+                        <img
+                          src={content.profile.logo}
+                          alt="Company Logo"
+                          className="w-16 h-16 object-contain border rounded"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Current logo</p>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          // TODO: Implement logo upload
+                          console.log('Logo upload:', file)
+                        }
+                      }}
+                      className="text-xs w-full"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Upload your company logo (recommended: 200x200px)</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Product Images Overview */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Product Images</h5>
+
+                {content?.products && content.products.length > 0 ? (
+                  <div className="space-y-3">
+                    {content.products.map((product: any, index: number) => (
+                      <div key={product.id || index} className="border rounded-lg p-3">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-sm font-medium">{product.name}</span>
+                          {!product.imageUrl && (
+                            <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                              No Image
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          {product.imageUrl && (
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={product.imageUrl}
+                                alt={product.name}
+                                className="w-12 h-12 object-cover border rounded"
+                              />
+                              <div className="flex-1">
+                                <p className="text-xs text-gray-600 truncate">
+                                  {product.imageUrl.split('/').pop()}
+                                </p>
+                                <button
+                                  onClick={() => {
+                                    if (onProductUpdate) {
+                                      onProductUpdate(product.id, { imageUrl: null })
+                                    }
+                                  }}
+                                  className="text-xs text-red-600 hover:text-red-700"
+                                >
+                                  Remove Image
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, product.id)}
+                            className="text-xs w-full"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <p className="text-sm">No products found</p>
+                    <p className="text-xs">Add products to manage their images</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Bulk Image Upload */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Bulk Upload</h5>
+
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
+                  <div className="text-center">
+                    <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || [])
+                        console.log('Bulk upload:', files)
+                        // TODO: Implement bulk upload
+                      }}
+                      className="text-xs w-full mb-2"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Select multiple images to upload for your products
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Supported formats: JPG, PNG, WebP (max 5MB each)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="content" className="space-y-3 p-2">
             {content && onContentChange && (
               <div className="space-y-4">
                 <h4 className="text-sm font-medium text-gray-700">Edit Content</h4>
+
+                {/* Content Overview */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h5 className="text-xs font-semibold text-blue-700 mb-2">Content Summary</h5>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-white rounded p-2">
+                      <div className="font-medium text-gray-600">Products</div>
+                      <div className="text-lg font-bold text-blue-600">
+                        {content?.products?.length || 0}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="font-medium text-gray-600">Categories</div>
+                      <div className="text-lg font-bold text-green-600">
+                        {content?.categories?.length || 0}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="font-medium text-gray-600">With Images</div>
+                      <div className="text-lg font-bold text-purple-600">
+                        {content?.products?.filter((p: any) => p.imageUrl).length || 0}
+                      </div>
+                    </div>
+                    <div className="bg-white rounded p-2">
+                      <div className="font-medium text-gray-600">Active</div>
+                      <div className="text-lg font-bold text-orange-600">
+                        {content?.products?.filter((p: any) => p.isActive).length || 0}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Catalog Information Section */}
                 <div className="space-y-3">

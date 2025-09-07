@@ -129,7 +129,7 @@ export function ProductCategoryPage({
 
         {/* Category */}
         <p className="text-lg text-gray-400 mb-8 uppercase tracking-widest">
-          {product.category.name || 'CATEGORY NAME'}
+          {product.category?.name || 'UNCATEGORIZED'}
         </p>
 
 
