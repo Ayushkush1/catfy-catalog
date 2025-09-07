@@ -431,7 +431,7 @@ export default function DashboardPage() {
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
                     <p
-                      className="text-white text-md max-w-[700px]"
+                      className="text-white text-md max-w-[760px]"
                       style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
                     >
                       Welcome back to your AI-powered catalogue studio. Effortlessly create, manage, and share beautiful product catalogues.
