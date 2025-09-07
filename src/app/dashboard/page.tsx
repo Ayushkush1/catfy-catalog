@@ -42,6 +42,7 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
+import Image from 'next/image'
 import { i } from 'vitest/dist/reporters-w_64AS5f.js'
 
 interface Catalogue {
@@ -423,14 +424,20 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-8 mb-6">
 
                   <div>
-                    <h1 className="text-4xl font-bold pt-4 pb-4">
+                    <h1
+                      className="text-4xl font-extrabold pt-4 pb-4"
+                      style={{ fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif" }}
+                    >
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
-                    <p className="text-white text-md">Welcome back to your AI-powered catalogue studio</p>
-                    <p className="text-white text-xs mt-1">
-                      Effortlessly create, manage, and share beautiful product catalogues.
+                    <p
+                      className="text-white text-md max-w-[700px]"
+                      style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
+                    >
+                      Welcome back to your AI-powered catalogue studio. Effortlessly create, manage, and share beautiful product catalogues.
                       Try out instant PDF export, pro themes, and more!
                     </p>
+                    
                     {profile?.subscription?.plan === 'FREE' && (
                       <div className="mt-2">
                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 py-1 text-xs font-medium">
@@ -489,61 +496,14 @@ export default function DashboardPage() {
               </div>
 
               {/* Enhanced Floating Catalogue Cards with Micro Animations */}
-              <div className='relative -top-4 right-40'>
-                {/* Card 1 - Main floating card with shimmer effect */}
-              
-                  <div className="absolute -top-16 right-20 w-32 h-40 bg-gradient-to-br from-white/25 to-white/15 rounded-2xl transform -rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 delay-5000 overflow-hidden">
-                    {/* Shimmer overlay */}
-                    <div className="absolute inset-0 animate-shimmer opacity-50"></div>
-                    <div className="relative p-4 h-full flex flex-col">
-                      <div className="w-8 h-8 bg-blue-400 rounded-xl mb-3 flex items-center justify-center animate-pulse-slow">
-                        <Package className="h-4 w-4 text-white animate-slow-spin" style={{ '--float-y': '2px' } as any} />
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-2 bg-white/50 rounded animate-pulse"></div>
-                        <div className="h-2 bg-white/40 rounded w-4/5 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                        <div className="h-2 bg-white/30 rounded w-3/5 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-                        <div className="h-2 bg-white/20 rounded w-2/3 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 2 - Top right card with enhanced effects */}
-                  <div className="absolute -bottom-16 right-10 w-28 h-36 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-6 shadow-2xl backdrop-blur-sm border border-white/30 overflow-hidden">
-                    {/* Gradient border animation */}
-                    
-
-                    <div className="relative p-4 h-full flex flex-col">
-                      <div className="w-6 h-6 bg-emerald-400 rounded-lg mb-2 relative overflow-hidden">
-                        {/* Icon with rotating highlight */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                        <div className="relative w-full h-full flex items-center justify-center">
-                          <div className="w-3 h-3 bg-white/80 rounded animate-pulse"></div>
-                        </div>
-                      </div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-2 bg-white/40 rounded animate-pulse"></div>
-                        <div className="h-2 bg-white/30 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.25s' }}></div>
-                        <div className="h-2 bg-white/20 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-
-                {/* Card 3 - Bottom card with reverse float */}
-                  <div className="absolute  -top-10 -right-0 w-24 h-32 bg-gradient-to-br from-white/20 to-white/10 rounded-2xl transform rotate-12 shadow-2xl backdrop-blur-sm border border-white/30  delay-1000 overflow-hidden">
-                    {/* Animated border glow */}
-                    <div className="relative p-3 h-full flex flex-col">
-                      <div className="w-5 h-5 bg-purple-400 rounded-lg mb-2 animate-pulse-slow">
-                        <div className="w-full h-full bg-gradient-to-br from-purple-300 to-purple-500 rounded-lg animate-pulse"></div>
-                      </div>
-                      <div className="flex-1 space-y-1.5">
-                        <div className="h-1.5 bg-white/40 rounded animate-pulse"></div>
-                        <div className="h-1.5 bg-white/30 rounded w-3/4 animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                        <div className="h-1.5 bg-white/20 rounded w-1/2 animate-pulse" style={{ animationDelay: '0.6s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-
+              <div className='absolute top-20 right-56 h-[350px] w-[410px] hidden md:block'>
+               <Image
+                  height={350}
+                  width={410}
+                  src="/assets/heroImage.png"
+                  alt="Catalogue Hero"
+                  className="w-full h-full object-contain z-10 pointer-events-none select-none drop-shadow-xl animate-float"
+                />
                 
 
 
