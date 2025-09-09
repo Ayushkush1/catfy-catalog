@@ -2,7 +2,9 @@
 
 import React from 'react';
 import { Catalogue, Profile, Product, Category } from '@prisma/client';
+import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
+import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer';
 
 interface DailyRoutinePageProps {
     catalogue: Catalogue & {
@@ -12,10 +14,11 @@ interface DailyRoutinePageProps {
     profile: Profile;
     themeColors?: any;
     isEditMode?: boolean;
+    content: StandardizedContent;
     customColors?: ColorCustomization;
-    fontCustomization?: any;
-    spacingCustomization?: any;
-    advancedStyles?: any;
+    fontCustomization?: FontCustomization;
+    spacingCustomization?: SpacingCustomization;
+    advancedStyles?: AdvancedStyleCustomization;
     onProductUpdate?: (productId: string, updates: Partial<Product>) => void;
     onContentChange?: (field: string, value: string) => void;
 }
@@ -25,6 +28,7 @@ export function DailyRoutinePage({
     profile,
     themeColors,
     isEditMode,
+    content,
     customColors,
     fontCustomization,
     spacingCustomization,
@@ -38,7 +42,6 @@ export function DailyRoutinePage({
             id: product.id,
             step: index + 1,
             title: product.name,
-            subtitle: product.category?.name || 'Treatment',
             description: product.description || 'Essential step in your daily skincare routine',
             image: product.imageUrl || product.images?.[0] || null
         }))
@@ -46,48 +49,40 @@ export function DailyRoutinePage({
             {
                 step: 1,
                 title: 'Daily Facial Cleanser',
-                subtitle: 'CLEANSE',
                 description: 'Gently removes impurities without disrupting skin\'s natural balance. Use morning and evening for best results.',
                 image: null
             },
             {
                 step: 2,
                 title: 'Revitalizing Essence',
-                subtitle: 'TREAT',
                 description: 'Powerful active ingredients target specific concerns while preparing skin for maximum hydration absorption.',
                 image: null
             },
             {
                 step: 3,
                 title: 'Moisture Complex',
-                subtitle: 'HYDRATE',
                 description: 'Locks in essential moisture and strengthens skin barrier for lasting protection throughout the day.',
                 image: null
             }
         ];
 
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-black">
+        <div className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page bg-[#1f1616]">
             {/* Main content container */}
             <div className="h-full flex flex-col justify-center items-center p-16">
                 {/* Header */}
                 <div className="text-center mb-16">
-                    <h1 className="text-5xl font-light text-white mb-4">DAILY ROUTINE</h1>
+                    <h1 className="text-4xl font-light text-white mt-10">DAILY ROUTINE</h1>
                 </div>
 
                 {/* Routine steps grid */}
-                <div className="flex justify-center space-x-12 mb-16">
+                <div className="flex justify-center mb-16">
                     {routineSteps.map((step, index) => (
                         <div key={step.step || index} className="flex flex-col items-center max-w-xs">
-                            {/* Step number */}
-                            <div className="mb-6">
-                                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white text-xl font-medium shadow-lg">
-                                    {step.step}
-                                </div>
-                            </div>
+                            
 
                             {/* Product image container */}
-                            <div className="w-64 h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl mb-6 flex items-center justify-center shadow-xl overflow-hidden">
+                            <div className="w-[300px] h-[350px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-6 flex items-center justify-center shadow-xl overflow-hidden">
                                 {step.image ? (
                                     <img
                                         src={step.image}
@@ -129,9 +124,8 @@ export function DailyRoutinePage({
 
                             {/* Step info */}
                             <div className="text-center">
-                                <h3 className="text-white text-xl font-medium mb-2">{step.subtitle}</h3>
-                                <h4 className="text-gray-300 text-lg mb-4">{step.title}</h4>
-                                <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+                                <h4 className="text-gray-300 text-md mb-4">{step.title}</h4>
+                                <p className="text-gray-400 text-xs leading-relaxed max-w-xs">
                                     {step.description}
                                 </p>
                             </div>
@@ -139,15 +133,7 @@ export function DailyRoutinePage({
                     ))}
                 </div>
 
-                {/* Bottom instructions */}
-                <div className="flex justify-between w-full max-w-4xl text-gray-500 text-sm">
-                    <div>
-                        <p>For optimal results, follow this routine morning and evening</p>
-                    </div>
-                    <div>
-                        <p>Results may vary based on skin type</p>
-                    </div>
-                </div>
+                
             </div>
         </div>
     );

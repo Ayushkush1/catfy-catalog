@@ -2,18 +2,20 @@
 
 import React from 'react';
 import { Catalogue, Profile } from '@prisma/client';
+import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
+import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer';
 
 interface CoverPageProps {
     catalogue: Catalogue;
     profile: Profile;
     themeColors?: any;
     isEditMode?: boolean;
+    content: StandardizedContent;
     customColors?: ColorCustomization;
-    fontCustomization?: any;
-    spacingCustomization?: any;
-    advancedStyles?: any;
-    onCatalogueUpdate?: (updates: Partial<Catalogue>) => void;
+    fontCustomization?: FontCustomization;
+    spacingCustomization?: SpacingCustomization;
+    advancedStyles?: AdvancedStyleCustomization;
     onContentChange?: (field: string, value: string) => void;
 }
 
@@ -22,150 +24,124 @@ export function CoverPage({
     profile,
     themeColors,
     isEditMode,
+    content,
     customColors,
     fontCustomization,
     spacingCustomization,
     advancedStyles,
-    onCatalogueUpdate,
     onContentChange
 }: CoverPageProps) {
+    // Ensure settings is parsed and has the correct shape
+    const settings = typeof catalogue.settings === 'string'
+        ? JSON.parse(catalogue.settings)
+        : catalogue.settings;
+
     return (
-        <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-amber-50 via-stone-100 to-amber-100">
-            {/* Background botanical element */}
-            <div className="absolute top-0 left-0 w-full h-full">
-                <div className="absolute top-0 left-0 w-80 h-80 opacity-30">
-                    <svg viewBox="0 0 300 300" className="w-full h-full">
-                        <path d="M50 150 Q100 50, 150 150 Q200 250, 250 150"
-                            stroke="#4ade80" strokeWidth="3" fill="none" opacity="0.6" />
-                        <path d="M30 180 Q80 80, 130 180 Q180 280, 230 180"
-                            stroke="#22c55e" strokeWidth="2" fill="none" opacity="0.4" />
-                    </svg>
-                </div>
+        <div className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page">
+
+
+            
+            {/* Cover Image Background */}
+            <div className="absolute inset-0 overflow-hidden">
+                <img
+                    src={settings?.mediaAssets?.coverImageUrl || '/default-cover.jpg'}
+                    alt="Catalogue Cover"
+                    className="w-full h-full object-cover"
+                />
             </div>
 
-            {/* Main content */}
-            <div className="relative z-10 flex h-full">
-                {/* Left side - Text content */}
-                <div className="w-1/2 flex flex-col justify-center items-start pl-16 pr-8">
-                    {/* Brand name */}
-                    <div className="mb-8">
-                        <span className="text-orange-500 text-sm font-medium tracking-wider uppercase">
-                            {profile.companyName || 'AURUM'}
-                        </span>
-                    </div>
+            {/* Semi-transparent overlay for text readability */}
+            <div className="absolute inset-0 bg-black bg-opacity-20" />
 
-                    {/* Main heading */}
-                    <div className="mb-12">
-                        <h1 className="text-6xl font-light text-right leading-tight text-gray-800">
-                            THE<br />
-                            ESSENCE<br />
-                            OF
-                        </h1>
-                        <h2 className="text-6xl font-normal text-orange-500 mt-2">
-                            LUXURY
-                        </h2>
-                    </div>
+            {/* Main container */}
+            <div className="relative z-10 h-screen">
+                {/* Company brand text - Top left */}
+                <div className="absolute top-12 left-16">
+                    <h2
+                        className="font-light tracking-[0.3em] text-sm"
+                        style={{
+                            fontFamily: fontCustomization?.fontFamily?.companyName || 'serif',
+                            color: '#f97316'
+                        }}
+                    >
+                        {content.profile?.companyName || profile.companyName || (catalogue?.settings as any)?.companyInfo?.companyName || 'AURUM'}
+                    </h2>
+                </div>
 
-                    {/* Description box */}
-                    <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg max-w-sm mb-8">
-                        <p className="text-white text-sm leading-relaxed">
-                            {catalogue.description ||
+                {/* Description card - Left side, vertically centered */}
+                <div className="absolute left-16 top-1/2 transform -translate-y-1/2 max-w-sm">
+                    <div
+                        className="backdrop-blur-sm p-6 rounded-sm"
+                        style={{
+                            backgroundColor: 'rgba(139, 69, 19, 0.4)',
+                            color: '#ffffff'
+                        }}
+                    >
+                        <p
+                            className="text-sm leading-relaxed"
+                            style={{
+                                fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif',
+                                color: '#ffffff'
+                            }}
+                        >
+                            {content.catalogue?.description || catalogue.description ||
                                 'Discover our signature collection of botanical essences, meticulously crafted from rare ingredients sourced from pristine locations around the world.'}
                         </p>
-                        <p className="text-white text-sm leading-relaxed mt-4">
-                            Each formulation embodies the perfect balance of science and nature, delivering transformative results with every application.
-                        </p>
-                    </div>
 
-                    {/* Bottom text */}
-                    <div className="mt-auto mb-16">
-                        <p className="text-gray-600 text-sm tracking-wide">
-                            CURATED BOTANICAL FORMULATIONS
-                        </p>
                     </div>
                 </div>
 
-                {/* Right side - Product showcase */}
-                <div className="w-1/2 flex items-center justify-center pr-16">
-                    <div className="relative">
-                        {/* Product bottles */}
-                        <div className="flex items-end space-x-6">
-                            {/* Bottle 1 */}
-                            <div className="w-24 h-40 bg-gradient-to-b from-gray-200 to-gray-300 rounded-full relative shadow-lg">
-                                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-4 h-6 bg-white rounded-full"></div>
-                                <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 text-xs text-center">
-                                    <div className="text-gray-700 font-light">cel</div>
-                                    <div className="text-xs text-gray-500 mt-2 leading-tight">
-                                        R E P A I R  &<br />
-                                        P R O T E C T<br />
-                                        S E R U M
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-4">40 ml<br />1.41 FL OZ</div>
-                                </div>
-                            </div>
+                {/* Main heading - Right side, vertically centered */}
+                <div className="absolute right-16 top-1/2 transform -translate-y-1/2">
+                    <div className="text-right max-w-sm">
+                        <h1
+                            className="font-extralight tracking-wider text-right leading-tight"
+                            style={{
+                                fontFamily: fontCustomization?.fontFamily?.title || 'serif',
+                                color: '#ffffff',
+                                fontSize: '3.5rem',
+                                fontWeight: '100'
+                            }}
+                        >
+                            <div
+                                className="text-lg leading-tight font-extralight mb-4"
+                                style={{
+                                    fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title * 1.5}px` : '2rem',
+                                    fontWeight: '100'
+                                }}
+                            >
+                                {(() => {
+                                    const text = content.catalogue?.name || catalogue.name || 'CATALOGUE NAME';
+                                    const words = text.split(' ');
+                                    const lastWord = words.pop();
+                                    const restWords = words.join(' ');
 
-                            {/* Bottle 2 - Center, taller */}
-                            <div className="w-28 h-48 bg-gradient-to-b from-gray-100 to-gray-200 rounded-full relative shadow-xl">
-                                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-5 h-8 bg-white rounded-full"></div>
-                                <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-xs text-center">
-                                    <div className="text-gray-700 font-light text-sm">cel</div>
-                                    <div className="text-xs text-gray-500 mt-3 leading-tight">
-                                        R E P A I R  &<br />
-                                        P R O T E C T
-                                    </div>
-                                    <div className="text-xs text-gray-600 mt-2 font-medium">
-                                        Revive and strengthen<br />
-                                        Damaged Skin
-                                    </div>
-                                    <div className="text-xs text-gray-600 mt-2">
-                                        Defence for all from barrier<br />
-                                        and micro function.
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-4">236 ml<br />8 FL OZ</div>
-                                </div>
+                                    return (
+                                        <>
+                                            {restWords && <span>{restWords} </span>}
+                                            <span style={{ color: '#f97316' }}>{lastWord}</span>
+                                        </>
+                                    );
+                                })()}
                             </div>
-
-                            {/* Bottle 3 */}
-                            <div className="w-28 h-48 bg-gradient-to-b from-gray-100 to-gray-200 rounded-full relative shadow-xl">
-                                <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-5 h-8 bg-white rounded-full"></div>
-                                <div className="absolute top-1/4 left-1/2 transform -translate-x-1/2 text-xs text-center">
-                                    <div className="text-gray-700 font-light text-sm">cel</div>
-                                    <div className="text-xs text-gray-500 mt-3 leading-tight">
-                                        R E P A I R  &<br />
-                                        P R O T E C T
-                                    </div>
-                                    <div className="text-orange-500 text-xs mt-2 font-medium">
-                                        Hydrate and protect<br />
-                                        damaged skin
-                                    </div>
-                                    <div className="text-xs text-gray-600 mt-2">
-                                        Suitable for all skin types
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-4">236 ml<br />8 FL OZ</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Decorative plant element */}
-                        <div className="absolute -top-20 -left-12 opacity-60">
-                            <div className="w-32 h-32 text-green-600">
-                                <svg viewBox="0 0 100 100" className="w-full h-full">
-                                    <path d="M50 90 Q30 50, 50 10 Q70 50, 50 90" fill="currentColor" opacity="0.7" />
-                                    <path d="M35 80 Q25 60, 35 40" stroke="currentColor" strokeWidth="2" fill="none" />
-                                    <path d="M65 80 Q75 60, 65 40" stroke="currentColor" strokeWidth="2" fill="none" />
-                                </svg>
-                            </div>
-                        </div>
+                        </h1>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom right logo/brand mark */}
-            <div className="absolute bottom-8 right-8">
-                <div className="w-12 h-12 border-2 border-orange-500 flex items-center justify-center">
-                    <span className="text-orange-500 text-sm font-bold">⬜</span>
-                </div>
+            {/* Bottom tagline */}
+            <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
+                <p
+                    className="font-light tracking-[0.4em] text-sm text-white"
+                    style={{
+                        fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                    }}
+                >
+                    {(content.catalogue as any).year ? `Catalogue ${(content.catalogue as any).year}` : 'Catalogue 2025'}
+                </p>
             </div>
+
+            
         </div>
     );
 }

@@ -6,8 +6,9 @@ import { BrandPromisePage } from './components/BrandPromisePage'
 import { DailyRoutinePage } from './components/DailyRoutinePage'
 import { ContactPage } from './components/ContactPage'
 import { ColorCustomization } from './types/ColorCustomization'
-import { ContentMapper } from '@/lib/content-schema'
+import { ContentMapper, StandardizedContent } from '@/lib/content-schema'
 import { TemplateComponentProps } from '@/lib/template-registry'
+import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer'
 import { useEffect, useMemo } from 'react'
 
 interface SkincareCatalogueTemplateProps {
@@ -26,10 +27,11 @@ interface SkincareCatalogueTemplateProps {
   onProductsReorder?: (products: (Product & { category: Category | null })[]) => void
   onCatalogueUpdate?: (catalogueId: string, updates: Partial<Catalogue>) => void
   onProductUpdate?: (productId: string, updates: Partial<Product>) => void
+  onContentChange?: (field: string, value: string) => void
   customColors?: ColorCustomization
-  fontCustomization?: any
-  spacingCustomization?: any
-  advancedStyles?: any
+  fontCustomization?: FontCustomization
+  spacingCustomization?: SpacingCustomization
+  advancedStyles?: AdvancedStyleCustomization
   smartSortEnabled?: boolean
   themeId?: string
 }
@@ -61,6 +63,7 @@ export function SkincareCatalogueTemplate({
   onProductsReorder,
   onCatalogueUpdate,
   onProductUpdate,
+  onContentChange,
   customColors = DEFAULT_COLORS,
   fontCustomization,
   spacingCustomization,
@@ -69,7 +72,7 @@ export function SkincareCatalogueTemplate({
   themeId
 }: SkincareCatalogueTemplateProps) {
   // Convert raw data to standardized format
-  const standardizedContent = useMemo(() => {
+  const content = useMemo(() => {
     return ContentMapper.mapToStandardized({
       ...catalogue,
       products: catalogue.products,
@@ -86,11 +89,18 @@ export function SkincareCatalogueTemplate({
   useEffect(() => {
     try {
       // This will throw if content doesn't match schema
-      ContentMapper.validate(standardizedContent)
+      ContentMapper.validate(content)
     } catch (error) {
       console.warn('Content validation warning:', error)
     }
-  }, [standardizedContent])
+  }, [content])
+
+  // Create wrapper function for onCatalogueUpdate to match component expectations
+  const handleCatalogueUpdate = (updates: Partial<Catalogue>) => {
+    if (onCatalogueUpdate && catalogueId) {
+      onCatalogueUpdate(catalogueId, updates)
+    }
+  }
 
   return (
     <div className="bg-white catalog-template skincare-catalogue">
@@ -100,10 +110,13 @@ export function SkincareCatalogueTemplate({
           catalogue={catalogue}
           profile={profile}
           themeColors={themeColors}
+          isEditMode={isEditMode}
+          content={content}
           customColors={customColors}
           fontCustomization={fontCustomization}
           spacingCustomization={spacingCustomization}
           advancedStyles={advancedStyles}
+          onContentChange={onContentChange}
         />
       </div>
 
@@ -113,10 +126,13 @@ export function SkincareCatalogueTemplate({
           catalogue={catalogue}
           profile={profile}
           themeColors={themeColors}
+          isEditMode={isEditMode}
+          content={content}
           customColors={customColors}
           fontCustomization={fontCustomization}
           spacingCustomization={spacingCustomization}
           advancedStyles={advancedStyles}
+          onContentChange={onContentChange}
         />
       </div>
 
@@ -126,10 +142,13 @@ export function SkincareCatalogueTemplate({
           catalogue={catalogue}
           profile={profile}
           themeColors={themeColors}
+          isEditMode={isEditMode}
+          content={content}
           customColors={customColors}
           fontCustomization={fontCustomization}
           spacingCustomization={spacingCustomization}
           advancedStyles={advancedStyles}
+          onContentChange={onContentChange}
         />
       </div>
 
@@ -139,8 +158,11 @@ export function SkincareCatalogueTemplate({
           catalogue={catalogue}
           profile={profile}
           themeColors={themeColors}
+          isEditMode={isEditMode}
+          content={content}
           customColors={customColors}
           fontCustomization={fontCustomization}
+          onContentChange={onContentChange}
         />
       </div>
 
