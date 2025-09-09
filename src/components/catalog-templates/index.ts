@@ -1,6 +1,6 @@
 import { Catalogue, Product, Category, Profile } from '@prisma/client'
-import { ModernCatalogTemplate } from './modern-4page/ModernCatalogTemplate'
-import { ProductShowcaseTemplate } from './product-showcase/ProductShowcaseTemplate'
+import { SkincareCatalogueTemplate } from './skincare-catalogue/SkincareCatalogueTemplate'
+import { FashionCatalogueTemplate } from './fashion-catalogue/FashionCatalogueTemplate'
 import { TemplateRegistry, type TemplateConfig as RegistryTemplateConfig } from '@/lib/template-registry'
 import { ContentMapper, type StandardizedContent } from '@/lib/content-schema'
 
@@ -55,19 +55,21 @@ export type { RegistryTemplateConfig }
 // Available catalog templates
 export const CATALOG_TEMPLATES: TemplateConfig[] = [
   {
-    id: 'modern-4page',
-    name: 'Modern 4-Page Catalog',
-    description: 'A sleek, modern catalog design with 4 pages featuring cover, table of contents, product grid, and contact information.',
-    category: 'modern',
+    id: 'skincare-catalogue',
+    name: 'Skin Care Catalogue',
+    description: 'A modern 4-page template designed specifically for skincare and wellness brands to showcase their botanical formulations with elegant, clean layouts and professional presentation',
+    category: 'product',
     isPremium: false,
-    previewImage: '/templates/modern-4page-preview.jpg',
-    component: ModernCatalogTemplate,
+    previewImage: '/templates/skincare-catalogue-preview.svg',
+    component: SkincareCatalogueTemplate,
     features: [
-      '4-page layout',
-      'Modern design',
-      'Product categorization',
-      'Contact information',
-      'Responsive grid',
+      'Skincare product showcase',
+      'Botanical ingredients highlight',
+      'Daily routine workflow',
+      'Brand story presentation',
+      'Professional contact page',
+      'Premium aesthetic design',
+      'Responsive grid layout',
       'Print-optimized'
     ],
     pageCount: 4,
@@ -78,13 +80,13 @@ export const CATALOG_TEMPLATES: TemplateConfig[] = [
     }
   },
   {
-    id: 'product-showcase',
-    name: 'Product Showcase',
-    description: 'A modern 4-page template designed for showcasing products with elegant layouts and professional presentation',
+    id: 'fashion-catalogue',
+    name: 'Fashion Catalogue',
+    description: 'A modern 4-page template designed specifically for fashion brands and clothing retailers to showcase their products with elegant layouts and professional presentation',
     category: 'product',
     isPremium: false,
-    previewImage: '/templates/product-showcase-preview.svg',
-    component: ProductShowcaseTemplate,
+    previewImage: '/templates/fashion-catalogue-preview.svg',
+    component: FashionCatalogueTemplate,
     features: [
       'Product catalog display',
       'Category organization',
@@ -207,4 +209,4 @@ export function validateContentStructure(content: StandardizedContent): boolean 
   }
 }
 
-export { ModernCatalogTemplate, ProductShowcaseTemplate }
+export { SkincareCatalogueTemplate, FashionCatalogueTemplate }

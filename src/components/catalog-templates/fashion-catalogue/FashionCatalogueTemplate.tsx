@@ -11,7 +11,7 @@ import { TemplateComponentProps } from '@/lib/template-registry';
 import { ColorCustomization, DEFAULT_COLORS } from './types/ColorCustomization';
 import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer'
 
-interface ProductShowcaseTemplateProps {
+interface FashionCatalogueTemplateProps {
   catalogue: Catalogue & {
     products: (Product & { category: Category | null })[]
     categories: Category[]
@@ -21,6 +21,8 @@ interface ProductShowcaseTemplateProps {
     primary: string
     secondary: string
     accent: string
+    background?: string
+    text?: string
   }
   isEditMode?: boolean
   catalogueId?: string
@@ -28,7 +30,7 @@ interface ProductShowcaseTemplateProps {
   onCatalogueUpdate?: (catalogueId: string, updates: Partial<Catalogue>) => void
   onProductUpdate?: (productId: string, updates: Partial<Product>) => void
   onContentChange?: (field: string, value: string) => void
-  customColors?: ColorCustomization
+  customColors?: ColorCustomization | any
   fontCustomization?: FontCustomization
   spacingCustomization?: SpacingCustomization
   advancedStyles?: AdvancedStyleCustomization
@@ -36,14 +38,14 @@ interface ProductShowcaseTemplateProps {
   themeId?: string
 }
 
-export function ProductShowcaseTemplate({ 
-  catalogue, 
-  profile, 
-  themeColors, 
-  isEditMode, 
-  catalogueId, 
-  onCatalogueUpdate, 
-  onProductUpdate, 
+export function FashionCatalogueTemplate({
+  catalogue,
+  profile,
+  themeColors,
+  isEditMode,
+  catalogueId,
+  onCatalogueUpdate,
+  onProductUpdate,
   onProductsReorder,
   onContentChange,
   customColors = DEFAULT_COLORS,
@@ -52,7 +54,7 @@ export function ProductShowcaseTemplate({
   advancedStyles,
   smartSortEnabled = false,
   themeId
-}: ProductShowcaseTemplateProps) {
+}: FashionCatalogueTemplateProps) {
   // Convert raw data to standardized format
   const content = useMemo(() => {
     return ContentMapper.mapToStandardized({
@@ -73,7 +75,7 @@ export function ProductShowcaseTemplate({
   const handleProductsReorder = (productIds: string[]) => {
     if (onProductsReorder) {
       // Convert productIds back to products array
-      const reorderedProducts = productIds.map(id => 
+      const reorderedProducts = productIds.map(id =>
         catalogue.products.find(p => p.id === id)
       ).filter(Boolean) as (Product & { category: Category | null })[]
       onProductsReorder(reorderedProducts)
@@ -81,8 +83,8 @@ export function ProductShowcaseTemplate({
   };
 
   return (
-    <div 
-      className="product-showcase-template bg-white"
+    <div
+      className="fashion-catalogue-template bg-white"
       style={{
         transform: 'translateZ(0)', // Enable hardware acceleration
         backfaceVisibility: 'hidden', // Prevent flickering
@@ -90,7 +92,7 @@ export function ProductShowcaseTemplate({
       }}
     >
       {/* Page 1: Cover Page */}
-      <CoverPage 
+      <CoverPage
         catalogue={catalogue}
         profile={profile}
         themeColors={themeColors}
@@ -102,12 +104,17 @@ export function ProductShowcaseTemplate({
         advancedStyles={advancedStyles}
         onContentChange={onContentChange}
       />
-      
+
       {/* Page 2: Intro Page */}
-      <IntroPage 
+      <IntroPage
         catalogue={catalogue}
         profile={profile}
-        themeColors={themeColors}
+        themeColors={{
+          primary: themeColors.primary,
+          secondary: themeColors.secondary,
+          background: themeColors.background || '#ffffff',
+          text: themeColors.text || '#000000'
+        }}
         isEditMode={isEditMode}
         content={content}
         customColors={customColors}
@@ -116,29 +123,28 @@ export function ProductShowcaseTemplate({
         advancedStyles={advancedStyles}
         onContentChange={onContentChange}
       />
-      
+
       {/* Page 3: Product Category Page */}
       <ProductCategoryPage
-          catalogue={catalogue}
-          profile={profile}
-          themeColors={themeColors}
-          isEditMode={isEditMode}
-          content={content}
-          onProductsReorder={handleProductsReorder}
-          onProductUpdate={onProductUpdate}
-          onContentChange={onContentChange}
-          customColors={customColors}
-          fontCustomization={fontCustomization}
-          spacingCustomization={spacingCustomization}
-          advancedStyles={advancedStyles}
-        />
-      
-      {/* Page 4: Contact Page */}
-      <ContactPage 
         catalogue={catalogue}
         profile={profile}
         themeColors={themeColors}
         isEditMode={isEditMode}
+        content={content}
+        onProductsReorder={handleProductsReorder}
+        onProductUpdate={onProductUpdate}
+        onContentChange={onContentChange}
+        customColors={customColors}
+        fontCustomization={fontCustomization}
+        spacingCustomization={spacingCustomization}
+        advancedStyles={advancedStyles}
+      />
+
+      {/* Page 4: Contact Page */}
+      <ContactPage
+        catalogue={catalogue}
+        profile={profile}
+        themeColors={themeColors}
         content={content}
         onCatalogueUpdate={handleCatalogueUpdate}
         onContentChange={onContentChange}
@@ -152,9 +158,9 @@ export function ProductShowcaseTemplate({
 }
 
 // Wrapper component for template registry compatibility
-export function ProductShowcaseTemplateWrapper(props: TemplateComponentProps) {
+export function FashionCatalogueTemplateWrapper(props: TemplateComponentProps) {
   const { content, theme, ...otherProps } = props;
-  
+
   // Extract data from standardized content
   const catalogue = {
     id: content.catalogue.id,
@@ -185,7 +191,7 @@ export function ProductShowcaseTemplateWrapper(props: TemplateComponentProps) {
       color: c.color
     }))
   } as any;
-  
+
   const profile = {
     id: content.profile.id,
     companyName: content.profile.companyName,
@@ -198,15 +204,17 @@ export function ProductShowcaseTemplateWrapper(props: TemplateComponentProps) {
     tagline: content.profile.tagline,
     socialLinks: content.profile.socialLinks
   } as any;
-  
+
   const themeColors = {
     primary: theme.colors.primary,
     secondary: theme.colors.secondary,
-    accent: theme.colors.accent
+    accent: theme.colors.accent,
+    background: theme.colors.background || '#ffffff',
+    text: typeof theme.colors.text === 'string' ? theme.colors.text : theme.colors.text?.primary || '#000000'
   };
-  
+
   return (
-    <ProductShowcaseTemplate 
+    <FashionCatalogueTemplate
       catalogue={catalogue}
       profile={profile}
       themeColors={themeColors}
@@ -215,4 +223,4 @@ export function ProductShowcaseTemplateWrapper(props: TemplateComponentProps) {
   );
 }
 
-export default ProductShowcaseTemplate;
+export default FashionCatalogueTemplate;

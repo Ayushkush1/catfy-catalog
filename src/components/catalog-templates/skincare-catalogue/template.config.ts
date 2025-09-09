@@ -1,19 +1,22 @@
 import { TemplateConfig } from '@/lib/template-registry'
 
-const template: Omit<TemplateConfig, 'id'> = {
-  name: 'Modern 4-Page Catalog',
-  description: 'A sleek, modern catalog design with 4 pages featuring cover, table of contents, product grid, and contact information.',
-  category: 'modern',
+export const skincareCatalogueConfig: TemplateConfig = {
+  id: 'skincare-catalogue',
+  name: 'Skin Care Catalogue',
+  description: 'A modern 4-page template designed specifically for skincare and wellness brands to showcase their botanical formulations with elegant, clean layouts and professional presentation',
+  category: 'product',
   isPremium: false,
   version: '1.0.0',
   author: 'Catfy Team',
-  previewImage: '/templates/modern-4page-preview.jpg',
+  previewImage: '/templates/skincare-catalogue-preview.svg',
   features: [
-    '4-page layout',
-    'Modern design',
-    'Product categorization',
-    'Contact information',
-    'Responsive grid',
+    'Skincare product showcase',
+    'Botanical ingredients highlight',
+    'Daily routine workflow',
+    'Brand story presentation',
+    'Professional contact page',
+    'Premium aesthetic design',
+    'Responsive grid layout',
     'Print-optimized',
     'Drag & drop editing',
     'Smart sorting',
@@ -72,5 +75,3 @@ const template: Omit<TemplateConfig, 'id'> = {
   createdAt: new Date(),
   updatedAt: new Date()
 }
-
-export default template

@@ -1,15 +1,15 @@
 import { TemplateConfig } from '../../../lib/template-registry';
 
-export const productShowcaseConfig: TemplateConfig = {
-  id: 'product-showcase',
-  name: 'Product Showcase',
-  description: 'A modern 3-page template designed for showcasing products with elegant layouts and professional presentation',
+export const fashionCatalogueConfig: TemplateConfig = {
+  id: 'fashion-catalogue',
+  name: 'Fashion Catalogue',
+  description: 'A modern 4-page template designed specifically for fashion brands and clothing retailers to showcase their products with elegant layouts and professional presentation',
   category: 'product',
   pageCount: 3,
   version: '1.0.0',
   author: 'Catfy Team',
   isPremium: false,
-  previewImage: '/templates/product-showcase-preview.svg',
+  previewImage: '/templates/fashion-catalogue-preview.svg',
   features: [
     'Product catalog display',
     'Category organization',

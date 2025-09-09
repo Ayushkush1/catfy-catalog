@@ -1,11 +1,11 @@
 // Template auto-discovery and registration
 import { TemplateRegistry } from '@/lib/template-registry'
-import { ModernCatalogTemplateWrapper } from '@/components/catalog-templates/modern-4page/ModernCatalogTemplate'
-import { ProductShowcaseTemplateWrapper } from '@/components/catalog-templates/product-showcase/ProductShowcaseTemplate'
+import { SkincareCatalogueTemplateWrapper } from '@/components/catalog-templates/skincare-catalogue/SkincareCatalogueTemplate'
+import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/fashion-catalogue/FashionCatalogueTemplate'
 
 // Import template configurations
-import modernTemplate from '@/components/catalog-templates/modern-4page/template.config'
-import { productShowcaseConfig } from '@/components/catalog-templates/product-showcase/template.config'
+import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
+import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-catalogue/template.config'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
@@ -14,27 +14,24 @@ let templateRegistry: TemplateRegistry | null = null
 export function initializeTemplateRegistry(): TemplateRegistry {
   if (!templateRegistry) {
     templateRegistry = TemplateRegistry.getInstance()
-    
+
     // Register all templates
     registerAllTemplates()
   }
-  
+
   return templateRegistry
 }
 
 // Register all available templates
 function registerAllTemplates() {
   if (!templateRegistry) return
-  
-  // Register modern 4-page template
-  templateRegistry.registerTemplate({
-    id: 'modern-4page',
-    ...modernTemplate
-  }, ModernCatalogTemplateWrapper)
-  
-  // Register product showcase template
-  templateRegistry.registerTemplate(productShowcaseConfig, ProductShowcaseTemplateWrapper)
-  
+
+  // Register skincare catalogue template
+  templateRegistry.registerTemplate(skincareCatalogueConfig, SkincareCatalogueTemplateWrapper)
+
+  // Register fashion catalogue template
+  templateRegistry.registerTemplate(fashionCatalogueConfig, FashionCatalogueTemplateWrapper)
+
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
   //   id: 'classic-brochure',
@@ -81,9 +78,9 @@ export function validateTemplateThemeCompatibility(templateId: string, themeId: 
 export function getCompatibleThemes(templateId: string): string[] {
   const registry = getTemplateRegistry()
   const template = registry.getTemplate(templateId)
-  
+
   if (!template) return []
-  
+
   return template.compatibleThemes
 }
 
@@ -121,8 +118,8 @@ export function getTemplateSupportedFields(templateId: string) {
 
 // Export template configurations for direct access
 export {
-  modernTemplate,
-  productShowcaseConfig
+  skincareCatalogueConfig,
+  fashionCatalogueConfig
 }
 
 // Export types

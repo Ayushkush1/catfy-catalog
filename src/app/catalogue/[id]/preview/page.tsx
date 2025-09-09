@@ -2,9 +2,9 @@
 
 import { getTemplateById, getTemplateComponent } from '@/components/catalog-templates'
 import StyleCustomizer, { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, FontCustomization, SpacingCustomization } from '@/components/shared/StyleCustomizer'
-import { ColorCustomization } from '@/components/catalog-templates/modern-4page/types/ColorCustomization'
-import { Button } from '@/components/ui/button'
+import { ColorCustomization } from '@/components/catalog-templates/skincare-catalogue/types/ColorCustomization'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ContentMapper } from '@/lib/content-schema'
 import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
@@ -272,12 +272,12 @@ export default function CataloguePreviewPage() {
       if (field.startsWith('catalogue.settings.')) {
         const settingsPath = field.replace('catalogue.settings.', '')
         const currentSettings = catalogue.settings as any || {}
-        
+
         // Handle nested settings paths
         const pathParts = settingsPath.split('.')
         const updatedSettings = { ...currentSettings }
         let current = updatedSettings
-        
+
         // Navigate to the parent object
         for (let i = 0; i < pathParts.length - 1; i++) {
           if (!current[pathParts[i]]) {
@@ -285,10 +285,10 @@ export default function CataloguePreviewPage() {
           }
           current = current[pathParts[i]]
         }
-        
+
         // Set the final value
         current[pathParts[pathParts.length - 1]] = value
-        
+
         updates.settings = updatedSettings
       } else if (field.startsWith('catalogue.')) {
         const fieldName = field.replace('catalogue.', '')

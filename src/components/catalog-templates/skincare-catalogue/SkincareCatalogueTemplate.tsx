@@ -1,13 +1,16 @@
 'use client'
 
 import { Catalogue, Category, Product, Profile } from '@prisma/client'
-import { CatalogCover, ContactPage, ProductGrid, TableOfContents } from './components'
+import { CoverPage } from './components/CoverPage'
+import { BrandPromisePage } from './components/BrandPromisePage'
+import { DailyRoutinePage } from './components/DailyRoutinePage'
+import { ContactPage } from './components/ContactPage'
 import { ColorCustomization } from './types/ColorCustomization'
 import { ContentMapper } from '@/lib/content-schema'
 import { TemplateComponentProps } from '@/lib/template-registry'
 import { useEffect, useMemo } from 'react'
 
-interface ModernCatalogTemplateProps {
+interface SkincareCatalogueTemplateProps {
   catalogue: Catalogue & {
     products: (Product & { category: Category | null })[]
     categories: Category[]
@@ -49,14 +52,14 @@ const DEFAULT_COLORS: ColorCustomization = {
   }
 }
 
-export function ModernCatalogTemplate({ 
-  catalogue, 
-  profile, 
-  themeColors, 
-  isEditMode, 
-  catalogueId, 
-  onProductsReorder, 
-  onCatalogueUpdate, 
+export function SkincareCatalogueTemplate({
+  catalogue,
+  profile,
+  themeColors,
+  isEditMode,
+  catalogueId,
+  onProductsReorder,
+  onCatalogueUpdate,
   onProductUpdate,
   customColors = DEFAULT_COLORS,
   fontCustomization,
@@ -64,7 +67,7 @@ export function ModernCatalogTemplate({
   advancedStyles,
   smartSortEnabled = false,
   themeId
-}: ModernCatalogTemplateProps) {
+}: SkincareCatalogueTemplateProps) {
   // Convert raw data to standardized format
   const standardizedContent = useMemo(() => {
     return ContentMapper.mapToStandardized({
@@ -90,64 +93,56 @@ export function ModernCatalogTemplate({
   }, [standardizedContent])
 
   return (
-    <div className="bg-white catalog-template">
-      {/* Page 1: Cover */}
-      <div className="min-h-screen flex items-center justify-center p-8 page-break">
-        <CatalogCover 
-            catalogue={catalogue} 
-            profile={profile} 
-            themeColors={themeColors}
-            customColors={customColors}
-            fontCustomization={fontCustomization}
-            spacingCustomization={spacingCustomization}
-            advancedStyles={advancedStyles}
-            isEditMode={isEditMode}
-            onCatalogueUpdate={onCatalogueUpdate}
-          />
-      </div>
-
-      {/* Page 2: Table of Contents */}
-      <div className="min-h-screen flex items-center justify-center p-8 page-break">
-        <TableOfContents 
-          categories={catalogue.categories}
-          products={catalogue.products}
-          themeColors={themeColors}
-          customColors={customColors}
-          fontCustomization={fontCustomization}
-        />
-      </div>
-
-      {/* Page 3: Product Grid */}
-      <div className="min-h-screen flex items-center justify-center p-8 page-break">
-        <ProductGrid
-          products={catalogue.products}
-          categories={catalogue.categories}
+    <div className="bg-white catalog-template skincare-catalogue">
+      {/* Page 1: Cover Page */}
+      <div className="min-h-screen flex items-center justify-center page-break">
+        <CoverPage
+          catalogue={catalogue}
+          profile={profile}
           themeColors={themeColors}
           customColors={customColors}
           fontCustomization={fontCustomization}
           spacingCustomization={spacingCustomization}
           advancedStyles={advancedStyles}
-          layout="category"
-          isEditMode={isEditMode}
-          catalogueId={catalogueId}
-          onProductsReorder={onProductsReorder}
-          onProductUpdate={onProductUpdate}
-          useSmartSort={smartSortEnabled}
+        />
+      </div>
+
+      {/* Page 2: Brand Promise Page */}
+      <div className="min-h-screen flex items-center justify-center page-break">
+        <BrandPromisePage
+          catalogue={catalogue}
+          profile={profile}
+          themeColors={themeColors}
+          customColors={customColors}
+          fontCustomization={fontCustomization}
+          spacingCustomization={spacingCustomization}
+          advancedStyles={advancedStyles}
+        />
+      </div>
+
+      {/* Page 3: Daily Routine Page */}
+      <div className="min-h-screen flex items-center justify-center page-break">
+        <DailyRoutinePage
+          catalogue={catalogue}
+          profile={profile}
+          themeColors={themeColors}
+          customColors={customColors}
+          fontCustomization={fontCustomization}
+          spacingCustomization={spacingCustomization}
+          advancedStyles={advancedStyles}
         />
       </div>
 
       {/* Page 4: Contact Page */}
-      <div className="min-h-screen flex items-center justify-center p-8 page-break">
-        <ContactPage 
-          profile={profile}
+      <div className="min-h-screen flex items-center justify-center page-break">
+        <ContactPage
           catalogue={catalogue}
+          profile={profile}
           themeColors={themeColors}
           customColors={customColors}
           fontCustomization={fontCustomization}
         />
       </div>
-
-
 
       {/* Print Styles */}
       <style jsx>{`
@@ -173,13 +168,17 @@ export function ModernCatalogTemplate({
 }
 
 // Wrapper component that implements TemplateComponentProps interface
-export function ModernCatalogTemplateWrapper({ content, theme, isEditMode, onContentUpdate, customProps }: TemplateComponentProps) {
-  // Convert standardized content to ModernCatalogTemplate props
+export function SkincareCatalogueTemplateWrapper({ content, theme, isEditMode, onContentUpdate, customProps }: TemplateComponentProps) {
+  // Convert standardized content to SkincareCatalogueTemplate props
   const catalogue = {
     id: content.catalogue?.id || '',
     name: content.catalogue?.name || '',
     description: content.catalogue?.description || null,
-    theme: content.catalogue?.theme || 'modern',
+    quote: content.catalogue?.quote || null,
+    tagline: content.catalogue?.tagline || null,
+    year: content.catalogue?.year || null,
+    introImage: (content.catalogue as any)?.introImage || null,
+    theme: content.catalogue?.theme || 'skincare',
     isPublic: content.catalogue?.isPublic || false,
     slug: null,
     status: 'DRAFT' as const,
@@ -232,6 +231,9 @@ export function ModernCatalogTemplateWrapper({ content, theme, isEditMode, onCon
     state: content.profile?.state || null,
     country: content.profile?.country || null,
     postalCode: null,
+    tagline: (content.profile as any)?.tagline || null,
+    logo: (content.profile as any)?.logo || null,
+    socialLinks: (content.profile as any)?.socialLinks || null,
     stripeCustomerId: null,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -244,7 +246,7 @@ export function ModernCatalogTemplateWrapper({ content, theme, isEditMode, onCon
   }
 
   return (
-    <ModernCatalogTemplate
+    <SkincareCatalogueTemplate
       catalogue={catalogue}
       profile={profile}
       themeColors={themeColors}
@@ -254,4 +256,4 @@ export function ModernCatalogTemplateWrapper({ content, theme, isEditMode, onCon
   )
 }
 
-export default ModernCatalogTemplateWrapper
+export default SkincareCatalogueTemplateWrapper

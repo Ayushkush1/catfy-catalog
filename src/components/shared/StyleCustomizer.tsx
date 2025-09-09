@@ -346,13 +346,13 @@ export function StyleCustomizer({
         address: content.profile?.address || content.catalogue?.settings?.contactDetails?.address || '',
         contactDescription: content.catalogue?.settings?.contactDescription || 'Get in touch with us for more information about our products',
         storeDescription: content.catalogue?.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
-        
+
         // Social Media fields
         facebook: content.catalogue?.settings?.socialMedia?.facebook || '',
         instagram: content.catalogue?.settings?.socialMedia?.instagram || '',
         linkedin: content.catalogue?.settings?.socialMedia?.linkedin || '',
         twitter: content.catalogue?.settings?.socialMedia?.twitter || '',
-        
+
         // Contact quote fields
         contactQuote: content.catalogue?.settings?.contactDetails?.contactQuote || '',
         contactQuoteBy: content.catalogue?.settings?.contactDetails?.contactQuoteBy || ''

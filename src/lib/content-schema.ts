@@ -158,8 +158,8 @@ export const ContentHelpers = {
 
   // Get featured products (based on tags)
   getFeaturedProducts(content: StandardizedContent) {
-    return content.products.filter(product => 
-      product.tags.some(tag => 
+    return content.products.filter(product =>
+      product.tags.some(tag =>
         ['featured', 'bestseller', 'trending', 'new'].includes(tag.toLowerCase())
       )
     )
@@ -168,22 +168,22 @@ export const ContentHelpers = {
   // Sort products by priority tags
   sortProductsByPriority(products: StandardizedContent['products']) {
     const priorityOrder = ['bestseller', 'featured', 'trending', 'new', 'seasonal']
-    
+
     return products.sort((a, b) => {
-      const aPriority = Math.min(...a.tags.map(tag => 
+      const aPriority = Math.min(...a.tags.map(tag =>
         priorityOrder.indexOf(tag.toLowerCase())
       ).filter(index => index !== -1))
-      
-      const bPriority = Math.min(...b.tags.map(tag => 
+
+      const bPriority = Math.min(...b.tags.map(tag =>
         priorityOrder.indexOf(tag.toLowerCase())
       ).filter(index => index !== -1))
-      
+
       if (aPriority === Infinity && bPriority === Infinity) {
         return a.sortOrder - b.sortOrder
       }
       if (aPriority === Infinity) return 1
       if (bPriority === Infinity) return -1
-      
+
       return aPriority - bPriority
     })
   },
@@ -191,9 +191,9 @@ export const ContentHelpers = {
   // Format price with currency
   formatPrice(price: any, currency: string = 'INR'): string {
     if (!price) return 'Price on request'
-    
+
     const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)
-    
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency
