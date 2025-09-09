@@ -1,8 +1,9 @@
 import React from 'react';
-import { CatalogueData, Profile } from '@/types/supabase';
+import { Catalogue, Profile } from '@prisma/client';
+import { StandardizedContent } from '@/lib/content-schema';
 
 interface IntroPageProps {
-  catalogue: CatalogueData;
+  catalogue: Catalogue;
   profile: Profile;
   themeColors?: {
     primary: string;
@@ -11,17 +12,7 @@ interface IntroPageProps {
     text: string;
   };
   isEditMode?: boolean;
-  content: {
-    catalogue: {
-      name: string;
-      description: string;
-    };
-    profile: {
-      companyName: string | null;
-      tagline: string | null;
-      fullName: string | null;
-    };
-  };
+  content: StandardizedContent;
   customColors?: {
     backgroundColors?: {
       intro?: string;
@@ -118,8 +109,7 @@ export function IntroPage({
             
           </h1>
 
-          {/* Decorative Line */}
-          <div className="w-16 h-px bg-gray-400 mb-8" />
+          
 
           {/* Subtitle */}
           <h2 
@@ -159,11 +149,18 @@ export function IntroPage({
             >
               {content.profile?.companyName || profile.companyName || (catalogue?.settings as any)?.companyInfo?.companyName || 'COMPANY NAME'}
             </span>
-            {((catalogue?.settings as any)?.companyInfo?.companyDescription) && (
+            
+            {/* Company Description */}
+            {content.catalogue?.description && (
               <p className="text-xs text-gray-400 font-light leading-relaxed max-w-md">
-                {(catalogue?.settings as any)?.companyInfo?.companyDescription}
+                {content.catalogue.description}
               </p>
             )}
+            
+            {/* Catalogue Year */}
+            <p className="text-xs text-gray-500 font-light tracking-wider mt-2">
+              {content.catalogue?.year ? `Catalogue ${content.catalogue.year}` : 'Catalogue 2025'}
+            </p>
           </div>
         </div>
       </div>

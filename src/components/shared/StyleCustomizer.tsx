@@ -307,12 +307,10 @@ export function StyleCustomizer({
   onProductImageUpdate,
   onBulkContentUpdate
 }: StyleCustomizerProps) {
-  const [activeTab, setActiveTab] = useState('colors')
+  const [activeTab, setActiveTab] = useState('content')
   const [editingField, setEditingField] = useState<string | null>(null)
   const [editValues, setEditValues] = useState<Record<string, string>>({})
   const [showImageUpload, setShowImageUpload] = useState<string>('')
-  const [newCategoryForm, setNewCategoryForm] = useState({ name: '', description: '', color: '#3b82f6' })
-  const [showNewCategoryForm, setShowNewCategoryForm] = useState(false)
   const [bulkEditMode, setBulkEditMode] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [imagePreview, setImagePreview] = useState<string>('')
@@ -324,10 +322,11 @@ export function StyleCustomizer({
         description: content.catalogue?.description || content.description || '',
 
         // Company/Profile fields
-        companyName: content.profile?.companyName || '',
+        companyName: content.catalogue?.settings?.companyInfo?.companyName || content.profile?.companyName || '',
         fullName: content.profile?.fullName || '',
-        companyDescription: content.catalogue?.description || content.description || '',
-        tagline: content.profile?.tagline || '',
+        companyDescription: content.catalogue?.settings?.companyInfo?.companyDescription || '',
+        tagline: content.catalogue?.tagline || content.profile?.tagline || '',
+        catalogueQuote: content.catalogue?.quote || '',
 
         // Category fields
         categoryName: content.categories?.[0]?.name || '',
@@ -337,13 +336,26 @@ export function StyleCustomizer({
         newCollectionTitle: (content as any).newCollection?.title || 'New Collection',
         newCollectionDescription: (content as any).newCollection?.description || 'Discover our latest products and innovations',
 
+        // Catalogue year (bottom decorative text)
+        year: content.catalogue?.year || '2025',
+
         // Contact fields
-        email: content.profile?.email || '',
-        phone: content.profile?.phone || '',
-        website: content.profile?.website || '',
-        address: content.profile?.address || '',
+        email: content.profile?.email || content.catalogue?.settings?.contactDetails?.email || '',
+        phone: content.profile?.phone || content.catalogue?.settings?.contactDetails?.phone || '',
+        website: content.profile?.website || content.catalogue?.settings?.contactDetails?.website || '',
+        address: content.profile?.address || content.catalogue?.settings?.contactDetails?.address || '',
         contactDescription: content.catalogue?.settings?.contactDescription || 'Get in touch with us for more information about our products',
-        storeDescription: content.catalogue?.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.'
+        storeDescription: content.catalogue?.settings?.storeDescription || 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation.',
+        
+        // Social Media fields
+        facebook: content.catalogue?.settings?.socialMedia?.facebook || '',
+        instagram: content.catalogue?.settings?.socialMedia?.instagram || '',
+        linkedin: content.catalogue?.settings?.socialMedia?.linkedin || '',
+        twitter: content.catalogue?.settings?.socialMedia?.twitter || '',
+        
+        // Contact quote fields
+        contactQuote: content.catalogue?.settings?.contactDetails?.contactQuote || '',
+        contactQuoteBy: content.catalogue?.settings?.contactDetails?.contactQuoteBy || ''
       })
     }
   }, [content])
@@ -389,9 +401,17 @@ export function StyleCustomizer({
         }
         break;
       case 'companyName':
-        if (newContent.profile) {
-          newContent.profile.companyName = editValues.companyName;
+        // Save to catalogue.settings.companyInfo.companyName
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
         }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.companyInfo) {
+          newContent.catalogue.settings.companyInfo = {};
+        }
+        newContent.catalogue.settings.companyInfo.companyName = editValues.companyName;
         break;
       case 'fullName':
         if (newContent.profile) {
@@ -399,13 +419,22 @@ export function StyleCustomizer({
         }
         break;
       case 'companyDescription':
-        if (newContent.catalogue) {
-          newContent.catalogue.description = editValues.companyDescription;
-        } else {
-          (newContent as any).description = editValues.companyDescription;
+        // Save to catalogue.settings.companyInfo.companyDescription
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
         }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.companyInfo) {
+          newContent.catalogue.settings.companyInfo = {};
+        }
+        newContent.catalogue.settings.companyInfo.companyDescription = editValues.companyDescription;
         break;
       case 'tagline':
+        if (newContent.catalogue) {
+          newContent.catalogue.tagline = editValues.tagline;
+        }
         if (newContent.profile) {
           newContent.profile.tagline = editValues.tagline;
         }
@@ -414,21 +443,65 @@ export function StyleCustomizer({
         if (newContent.profile) {
           newContent.profile.email = editValues.email;
         }
+        // Also save to catalogue.settings.contactDetails for edit dialog compatibility
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.email = editValues.email;
         break;
       case 'phone':
         if (newContent.profile) {
           newContent.profile.phone = editValues.phone;
         }
+        // Also save to catalogue.settings.contactDetails for edit dialog compatibility
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.phone = editValues.phone;
         break;
       case 'address':
         if (newContent.profile) {
           newContent.profile.address = editValues.address;
         }
+        // Also save to catalogue.settings.contactDetails for edit dialog compatibility
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.address = editValues.address;
         break;
       case 'website':
         if (newContent.profile) {
           newContent.profile.website = editValues.website;
         }
+        // Also save to catalogue.settings.contactDetails for edit dialog compatibility
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.website = editValues.website;
         break;
       case 'categoryName':
         if (newContent.categories && newContent.categories[0]) {
@@ -453,16 +526,104 @@ export function StyleCustomizer({
         };
         break;
       case 'contactDescription':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
         if (!newContent.catalogue.settings) {
           newContent.catalogue.settings = {};
         }
         newContent.catalogue.settings.contactDescription = editValues.contactDescription;
         break;
       case 'storeDescription':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
         if (!newContent.catalogue.settings) {
           newContent.catalogue.settings = {};
         }
         newContent.catalogue.settings.storeDescription = editValues.storeDescription;
+        break;
+      case 'year':
+        if (newContent.catalogue) {
+          newContent.catalogue.year = editValues.year;
+        }
+        break;
+      case 'catalogueQuote':
+        if (newContent.catalogue) {
+          newContent.catalogue.quote = editValues.catalogueQuote;
+        }
+        break;
+      case 'facebook':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.socialMedia) {
+          newContent.catalogue.settings.socialMedia = {};
+        }
+        newContent.catalogue.settings.socialMedia.facebook = editValues.facebook;
+        break;
+      case 'instagram':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.socialMedia) {
+          newContent.catalogue.settings.socialMedia = {};
+        }
+        newContent.catalogue.settings.socialMedia.instagram = editValues.instagram;
+        break;
+      case 'linkedin':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.socialMedia) {
+          newContent.catalogue.settings.socialMedia = {};
+        }
+        newContent.catalogue.settings.socialMedia.linkedin = editValues.linkedin;
+        break;
+      case 'twitter':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.socialMedia) {
+          newContent.catalogue.settings.socialMedia = {};
+        }
+        newContent.catalogue.settings.socialMedia.twitter = editValues.twitter;
+        break;
+      case 'contactQuote':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.contactQuote = editValues.contactQuote;
+        break;
+      case 'contactQuoteBy':
+        if (!newContent.catalogue) {
+          newContent.catalogue = { settings: {} };
+        }
+        if (!newContent.catalogue.settings) {
+          newContent.catalogue.settings = {};
+        }
+        if (!newContent.catalogue.settings.contactDetails) {
+          newContent.catalogue.settings.contactDetails = {};
+        }
+        newContent.catalogue.settings.contactDetails.contactQuoteBy = editValues.contactQuoteBy;
         break;
     }
 
@@ -475,26 +636,36 @@ export function StyleCustomizer({
         case 'description':
           onContentChange('catalogue.description', editValues.description);
           break;
+        case 'year':
+          onContentChange('catalogue.year', editValues.year);
+          break;
         case 'tagline':
           onContentChange('catalogue.tagline', editValues.tagline);
           break;
+        case 'catalogueQuote':
+          onContentChange('catalogue.quote', editValues.catalogueQuote);
+          break;
         case 'companyName':
-          onContentChange('profile.companyName', editValues.companyName);
+          onContentChange('catalogue.settings.companyInfo.companyName', editValues.companyName);
           break;
         case 'companyDescription':
-          onContentChange('catalogue.description', editValues.companyDescription);
+          onContentChange('catalogue.settings.companyInfo.companyDescription', editValues.companyDescription);
           break;
         case 'email':
           onContentChange('profile.email', editValues.email);
+          onContentChange('catalogue.settings.contactDetails.email', editValues.email);
           break;
         case 'phone':
           onContentChange('profile.phone', editValues.phone);
+          onContentChange('catalogue.settings.contactDetails.phone', editValues.phone);
           break;
         case 'address':
           onContentChange('profile.address', editValues.address);
+          onContentChange('catalogue.settings.contactDetails.address', editValues.address);
           break;
         case 'website':
           onContentChange('profile.website', editValues.website);
+          onContentChange('catalogue.settings.contactDetails.website', editValues.website);
           break;
         case 'categoryName':
           onContentChange('categories.0.name', editValues.categoryName);
@@ -513,6 +684,30 @@ export function StyleCustomizer({
           break;
         case 'storeDescription':
           onContentChange('catalogue.settings.storeDescription', editValues.storeDescription);
+          break;
+        case 'year':
+          onContentChange('catalogue.year', editValues.year);
+          break;
+        case 'catalogueQuote':
+          onContentChange('catalogue.quote', editValues.catalogueQuote);
+          break;
+        case 'facebook':
+          onContentChange('catalogue.settings.socialMedia.facebook', editValues.facebook);
+          break;
+        case 'instagram':
+          onContentChange('catalogue.settings.socialMedia.instagram', editValues.instagram);
+          break;
+        case 'linkedin':
+          onContentChange('catalogue.settings.socialMedia.linkedin', editValues.linkedin);
+          break;
+        case 'twitter':
+          onContentChange('catalogue.settings.socialMedia.twitter', editValues.twitter);
+          break;
+        case 'contactQuote':
+          onContentChange('catalogue.settings.contactDetails.contactQuote', editValues.contactQuote);
+          break;
+        case 'contactQuoteBy':
+          onContentChange('catalogue.settings.contactDetails.contactQuoteBy', editValues.contactQuoteBy);
           break;
       }
     }
@@ -598,40 +793,6 @@ export function StyleCustomizer({
     }
   }
 
-  // Category management handlers
-  const handleCategoryUpdate = async (categoryId: string, updates: any) => {
-    if (onCategoryUpdate) {
-      try {
-        await onCategoryUpdate(categoryId, updates)
-        setEditingField('')
-      } catch (error) {
-        console.error('Failed to update category:', error)
-      }
-    }
-  }
-
-  const handleCategoryCreate = async () => {
-    if (onCategoryCreate && newCategoryForm.name.trim()) {
-      try {
-        await onCategoryCreate(newCategoryForm)
-        setNewCategoryForm({ name: '', description: '', color: '#3b82f6' })
-        setShowNewCategoryForm(false)
-      } catch (error) {
-        console.error('Failed to create category:', error)
-      }
-    }
-  }
-
-  const handleCategoryDelete = async (categoryId: string) => {
-    if (onCategoryDelete && confirm('Are you sure you want to delete this category? Products in this category will become uncategorized.')) {
-      try {
-        await onCategoryDelete(categoryId)
-      } catch (error) {
-        console.error('Failed to delete category:', error)
-      }
-    }
-  }
-
   // Bulk editing handlers
   const handleBulkProductUpdate = async (updates: any) => {
     if (onProductUpdate && selectedProducts.length > 0) {
@@ -706,7 +867,15 @@ export function StyleCustomizer({
       </div>
       <CardContent className="space-y-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 text-xs">
+          <TabsList className="grid w-full grid-cols-4 text-xs">
+            <TabsTrigger value="content" className="flex items-center gap-1 px-1">
+              <Settings className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Content</span>
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-1 px-1">
+              <Package className="w-2 h-2" />
+              <span className="hidden text-xs sm:inline">Product</span>
+            </TabsTrigger>
             <TabsTrigger value="colors" className="flex items-center gap-1 px-1">
               <Palette className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Colors</span>
@@ -714,22 +883,6 @@ export function StyleCustomizer({
             <TabsTrigger value="typography" className="flex items-center gap-1 px-1">
               <Type className="w-2 h-2" />
               <span className="hidden text-xs sm:inline">Fonts</span>
-            </TabsTrigger>
-            <TabsTrigger value="categories" className="flex items-center gap-1 px-1">
-              <Layout className="w-2 h-2" />
-              <span className="hidden text-xs sm:inline">Category</span>
-            </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-1 px-1">
-              <Package className="w-2 h-2" />
-              <span className="hidden text-xs sm:inline">Product</span>
-            </TabsTrigger>
-            <TabsTrigger value="media" className="flex items-center gap-1 px-1">
-              <Image className="w-2 h-2" />
-              <span className="hidden text-xs sm:inline">Media</span>
-            </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1 px-1">
-              <Settings className="w-2 h-2" />
-              <span className="hidden text-xs sm:inline">Content</span>
             </TabsTrigger>
           </TabsList>
 
@@ -802,7 +955,9 @@ export function StyleCustomizer({
                   onValueChange={(value) => handleFontChange('fontFamily.title', value)}
                 >
                   <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={getFontDisplayName(fontCustomization.fontFamily?.title || 'Inter, sans-serif')} />
+                    <SelectValue>
+                      {getFontDisplayName(fontCustomization.fontFamily?.title || 'Inter, sans-serif')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {fontOptions.map((font) => (
@@ -820,7 +975,9 @@ export function StyleCustomizer({
                   onValueChange={(value) => handleFontChange('fontFamily.companyName', value)}
                 >
                   <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={getFontDisplayName(fontCustomization.fontFamily?.companyName || 'Inter, sans-serif')} />
+                    <SelectValue>
+                      {getFontDisplayName(fontCustomization.fontFamily?.companyName || 'Inter, sans-serif')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {fontOptions.map((font) => (
@@ -838,7 +995,9 @@ export function StyleCustomizer({
                   onValueChange={(value) => handleFontChange('fontFamily.price', value)}
                 >
                   <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={getFontDisplayName(fontCustomization.fontFamily?.price || 'Inter, sans-serif')} />
+                    <SelectValue>
+                      {getFontDisplayName(fontCustomization.fontFamily?.price || 'Inter, sans-serif')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {fontOptions.map((font) => (
@@ -856,7 +1015,9 @@ export function StyleCustomizer({
                   onValueChange={(value) => handleFontChange('fontFamily.productDescription', value)}
                 >
                   <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={getFontDisplayName(fontCustomization.fontFamily?.productDescription || 'Inter, sans-serif')} />
+                    <SelectValue>
+                      {getFontDisplayName(fontCustomization.fontFamily?.productDescription || 'Inter, sans-serif')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {fontOptions.map((font) => (
@@ -874,7 +1035,9 @@ export function StyleCustomizer({
                   onValueChange={(value) => handleFontChange('fontFamily.description', value)}
                 >
                   <SelectTrigger className="text-xs">
-                    <SelectValue placeholder={getFontDisplayName(fontCustomization.fontFamily?.description || 'Inter, sans-serif')} />
+                    <SelectValue>
+                      {getFontDisplayName(fontCustomization.fontFamily?.description || 'Inter, sans-serif')}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {fontOptions.map((font) => (
@@ -1007,214 +1170,6 @@ export function StyleCustomizer({
                   />
                 </div>
               </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="categories" className="space-y-3 p-2">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-gray-700">Manage Categories</h4>
-                <Button
-                  size="sm"
-                  onClick={() => setShowNewCategoryForm(!showNewCategoryForm)}
-                  className="text-xs"
-                >
-                  {showNewCategoryForm ? 'Cancel' : 'Add Category'}
-                </Button>
-              </div>
-
-              {/* New Category Form */}
-              {showNewCategoryForm && (
-                <div className="p-3 border rounded-lg bg-green-50">
-                  <h5 className="text-sm font-medium mb-3">Create New Category</h5>
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-gray-600">Category Name</Label>
-                      <Input
-                        value={newCategoryForm.name}
-                        onChange={(e) => setNewCategoryForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Enter category name"
-                        className="text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">Description</Label>
-                      <textarea
-                        value={newCategoryForm.description}
-                        onChange={(e) => setNewCategoryForm(prev => ({ ...prev, description: e.target.value }))}
-                        placeholder="Enter category description"
-                        className="w-full text-sm p-2 border rounded resize-none"
-                        rows={2}
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">Category Color</Label>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="color"
-                          value={newCategoryForm.color}
-                          onChange={(e) => setNewCategoryForm(prev => ({ ...prev, color: e.target.value }))}
-                          className="w-8 h-8 rounded border"
-                        />
-                        <Input
-                          value={newCategoryForm.color}
-                          onChange={(e) => setNewCategoryForm(prev => ({ ...prev, color: e.target.value }))}
-                          placeholder="#3b82f6"
-                          className="text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={handleCategoryCreate} className="text-xs">
-                        Create Category
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowNewCategoryForm(false)}
-                        className="text-xs"
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Existing Categories */}
-              {content?.categories && content.categories.length > 0 ? (
-                <div className="space-y-3">
-                  {content.categories.map((category: any, index: number) => (
-                    <div key={category.id || index} className="border rounded-lg p-3 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-4 h-4 rounded"
-                            style={{ backgroundColor: category.color || '#3b82f6' }}
-                          />
-                          <span className="text-sm font-medium">{category.name}</span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => handleCategoryDelete(category.id)}
-                          className="text-xs"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-
-                      {/* Category Name */}
-                      <div className="space-y-2">
-                        <Label className="text-xs text-gray-600">Category Name</Label>
-                        {editingField === `category-name-${category.id}` ? (
-                          <div className="flex gap-2">
-                            <Input
-                              value={editValues[`category-name-${category.id}`] || ''}
-                              onChange={(e) => setEditValues(prev => ({ ...prev, [`category-name-${category.id}`]: e.target.value }))}
-                              onBlur={() => {
-                                handleCategoryUpdate(category.id, { name: editValues[`category-name-${category.id}`] })
-                              }}
-                              className="flex-1 text-sm"
-                              autoFocus
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                handleCategoryUpdate(category.id, { name: editValues[`category-name-${category.id}`] })
-                              }}
-                            >
-                              Save
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm"
-                            onClick={() => {
-                              setEditingField(`category-name-${category.id}`)
-                              setEditValues(prev => ({ ...prev, [`category-name-${category.id}`]: category.name }))
-                            }}
-                          >
-                            {category.name || 'Click to edit category name...'}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Category Description */}
-                      <div className="space-y-2">
-                        <Label className="text-xs text-gray-600">Category Description</Label>
-                        {editingField === `category-desc-${category.id}` ? (
-                          <div className="space-y-2">
-                            <textarea
-                              value={editValues[`category-desc-${category.id}`] || ''}
-                              onChange={(e) => setEditValues(prev => ({ ...prev, [`category-desc-${category.id}`]: e.target.value }))}
-                              className="w-full text-sm p-2 border rounded resize-none"
-                              rows={3}
-                              autoFocus
-                            />
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  handleCategoryUpdate(category.id, { description: editValues[`category-desc-${category.id}`] })
-                                }}
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => setEditingField('')}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="p-2 border rounded cursor-pointer hover:bg-gray-50 text-sm min-h-[60px]"
-                            onClick={() => {
-                              setEditingField(`category-desc-${category.id}`)
-                              setEditValues(prev => ({ ...prev, [`category-desc-${category.id}`]: category.description || '' }))
-                            }}
-                          >
-                            {category.description || 'Click to edit category description...'}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Category Color */}
-                      <div className="space-y-2">
-                        <Label className="text-xs text-gray-600">Category Color</Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={category.color || '#3b82f6'}
-                            onChange={(e) => handleCategoryUpdate(category.id, { color: e.target.value })}
-                            className="w-8 h-8 rounded border"
-                          />
-                          <Input
-                            value={category.color || '#3b82f6'}
-                            onChange={(e) => handleCategoryUpdate(category.id, { color: e.target.value })}
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Product Count */}
-                      <div className="text-xs text-gray-500">
-                        Products in this category: {content?.products?.filter((p: any) => p.categoryId === category.id).length || 0}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Layout className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No categories found</p>
-                  <p className="text-xs">Create categories to organize your products</p>
-                </div>
-              )}
             </div>
           </TabsContent>
 
@@ -1501,14 +1456,21 @@ export function StyleCustomizer({
                       <div className="space-y-2">
                         <Label className="text-xs text-gray-600">Category</Label>
                         <Select
-                          value={product.categoryId || ''}
-                          onValueChange={(categoryId) => handleProductFieldSave(product.id, 'categoryId')}
+                          value={product.categoryId || 'uncategorized'}
+                          onValueChange={(categoryId) => {
+                            const actualCategoryId = categoryId === 'uncategorized' ? null : categoryId
+                            if (onProductUpdate) {
+                              onProductUpdate(product.id, { categoryId: actualCategoryId })
+                            }
+                          }}
                         >
                           <SelectTrigger className="text-sm">
-                            <SelectValue placeholder="Select category" />
+                            <SelectValue>
+                              {product.categoryId && content?.categories?.find((cat: any) => cat.id === product.categoryId)?.name || 'Uncategorized'}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Uncategorized</SelectItem>
+                            <SelectItem value="uncategorized">Uncategorized</SelectItem>
                             {content?.categories?.map((category: any) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
@@ -1530,170 +1492,15 @@ export function StyleCustomizer({
             </div>
           </TabsContent>
 
-          <TabsContent value="media" className="space-y-3 p-2">
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium text-gray-700">Media Management</h4>
 
-              {/* Company Logo */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Company Assets</h5>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-gray-600">Company Logo</Label>
-                  <div className="border rounded-lg p-3">
-                    {content?.profile?.logo && (
-                      <div className="mb-3">
-                        <img
-                          src={content.profile.logo}
-                          alt="Company Logo"
-                          className="w-16 h-16 object-contain border rounded"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Current logo</p>
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          // TODO: Implement logo upload
-                          console.log('Logo upload:', file)
-                        }
-                      }}
-                      className="text-xs w-full"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Upload your company logo (recommended: 200x200px)</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Product Images Overview */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Product Images</h5>
-
-                {content?.products && content.products.length > 0 ? (
-                  <div className="space-y-3">
-                    {content.products.map((product: any, index: number) => (
-                      <div key={product.id || index} className="border rounded-lg p-3">
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="text-sm font-medium">{product.name}</span>
-                          {!product.imageUrl && (
-                            <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                              No Image
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          {product.imageUrl && (
-                            <div className="flex items-center gap-3">
-                              <img
-                                src={product.imageUrl}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover border rounded"
-                              />
-                              <div className="flex-1">
-                                <p className="text-xs text-gray-600 truncate">
-                                  {product.imageUrl.split('/').pop()}
-                                </p>
-                                <button
-                                  onClick={() => {
-                                    if (onProductUpdate) {
-                                      onProductUpdate(product.id, { imageUrl: null })
-                                    }
-                                  }}
-                                  className="text-xs text-red-600 hover:text-red-700"
-                                >
-                                  Remove Image
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleImageUpload(e, product.id)}
-                            className="text-xs w-full"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <p className="text-sm">No products found</p>
-                    <p className="text-xs">Add products to manage their images</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Bulk Image Upload */}
-              <div className="space-y-3">
-                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Bulk Upload</h5>
-
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                  <div className="text-center">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || [])
-                        console.log('Bulk upload:', files)
-                        // TODO: Implement bulk upload
-                      }}
-                      className="text-xs w-full mb-2"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Select multiple images to upload for your products
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Supported formats: JPG, PNG, WebP (max 5MB each)
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
 
           <TabsContent value="content" className="space-y-3 p-2">
             {content && onContentChange && (
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-gray-700">Edit Content</h4>
 
-                {/* Content Overview */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <h5 className="text-xs font-semibold text-blue-700 mb-2">Content Summary</h5>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-white rounded p-2">
-                      <div className="font-medium text-gray-600">Products</div>
-                      <div className="text-lg font-bold text-blue-600">
-                        {content?.products?.length || 0}
-                      </div>
-                    </div>
-                    <div className="bg-white rounded p-2">
-                      <div className="font-medium text-gray-600">Categories</div>
-                      <div className="text-lg font-bold text-green-600">
-                        {content?.categories?.length || 0}
-                      </div>
-                    </div>
-                    <div className="bg-white rounded p-2">
-                      <div className="font-medium text-gray-600">With Images</div>
-                      <div className="text-lg font-bold text-purple-600">
-                        {content?.products?.filter((p: any) => p.imageUrl).length || 0}
-                      </div>
-                    </div>
-                    <div className="bg-white rounded p-2">
-                      <div className="font-medium text-gray-600">Active</div>
-                      <div className="text-lg font-bold text-orange-600">
-                        {content?.products?.filter((p: any) => p.isActive).length || 0}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+
 
                 {/* Catalog Information Section */}
                 <div className="space-y-3">
@@ -1748,119 +1555,89 @@ export function StyleCustomizer({
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* Category Information Section */}
-                {content.categories && content.categories.length > 0 && (
-                  <div className="space-y-3">
-                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Category Information</h5>
-
-                    {/* Category Name */}
-                    <div className="space-y-2">
-                      <Label className="text-xs text-gray-600">Category Name</Label>
-                      {editingField === 'categoryName' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={editValues.categoryName}
-                            onChange={(e) => setEditValues(prev => ({ ...prev, categoryName: e.target.value }))}
-                            onKeyDown={(e) => handleKeyPress(e, 'categoryName')}
-                            onBlur={() => handleFieldSave('categoryName')}
-                            className="flex-1"
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={() => handleFieldSave('categoryName')}>Save</Button>
-                        </div>
-                      ) : (
-                        <div
-                          className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleFieldEdit('categoryName')}
-                        >
-                          {content.categories[0]?.name || 'Click to edit category name...'}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Category Description */}
-                    <div className="space-y-2">
-                      <Label className="text-xs text-gray-600">Category Description</Label>
-                      {editingField === 'categoryDescription' ? (
-                        <div className="flex gap-2">
-                          <Input
-                            value={editValues.categoryDescription}
-                            onChange={(e) => setEditValues(prev => ({ ...prev, categoryDescription: e.target.value }))}
-                            onKeyDown={(e) => handleKeyPress(e, 'categoryDescription')}
-                            onBlur={() => handleFieldSave('categoryDescription')}
-                            className="flex-1"
-                            autoFocus
-                          />
-                          <Button size="sm" onClick={() => handleFieldSave('categoryDescription')}>Save</Button>
-                        </div>
-                      ) : (
-                        <div
-                          className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleFieldEdit('categoryDescription')}
-                        >
-                          {content.categories[0]?.description || 'Click to edit category description...'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* New Collection Section */}
-                <div className="space-y-3">
-                  <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Collection</h5>
-
-                  {/* New Collection Title */}
+                  {/* Catalogue Year (Bottom Decorative Text) */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Collection Title</Label>
-                    {editingField === 'newCollectionTitle' ? (
+                    <Label className="text-xs text-gray-600">Catalogue Year</Label>
+                    {editingField === 'year' ? (
                       <div className="flex gap-2">
                         <Input
-                          value={editValues.newCollectionTitle}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, newCollectionTitle: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'newCollectionTitle')}
-                          onBlur={() => handleFieldSave('newCollectionTitle')}
+                          value={editValues.year}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, year: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'year')}
+                          onBlur={() => handleFieldSave('year')}
                           className="flex-1"
+                          placeholder="2025"
                           autoFocus
                         />
-                        <Button size="sm" onClick={() => handleFieldSave('newCollectionTitle')}>Save</Button>
+                        <Button size="sm" onClick={() => handleFieldSave('year')}>Save</Button>
                       </div>
                     ) : (
                       <div
                         className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('newCollectionTitle')}
+                        onClick={() => handleFieldEdit('year')}
                       >
-                        {(content as any).newCollection?.title || 'New Collection'}
+                        {editValues.year || 'Click to edit catalogue year...'}
                       </div>
                     )}
                   </div>
 
-                  {/* New Collection Description */}
+                  {/*Catalogue Tagline */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Collection Description</Label>
-                    {editingField === 'newCollectionDescription' ? (
+                    <Label className="text-xs text-gray-600">Catalogue Tagline</Label>
+                    {editingField === 'tagline' ? (
                       <div className="flex gap-2">
                         <Input
-                          value={editValues.newCollectionDescription}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, newCollectionDescription: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'newCollectionDescription')}
-                          onBlur={() => handleFieldSave('newCollectionDescription')}
+                          value={editValues.tagline}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, tagline: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'tagline')}
+                          onBlur={() => handleFieldSave('tagline')}
                           className="flex-1"
                           autoFocus
                         />
-                        <Button size="sm" onClick={() => handleFieldSave('newCollectionDescription')}>Save</Button>
+                        <Button size="sm" onClick={() => handleFieldSave('tagline')}>Save</Button>
                       </div>
                     ) : (
                       <div
                         className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('newCollectionDescription')}
+                        onClick={() => handleFieldEdit('tagline')}
                       >
-                        {(content as any).newCollection?.description || 'Discover our latest products and innovations'}
+                        {editValues.tagline || content.catalogue?.tagline || content.profile?.tagline || 'Your Business Tagline Here'}
                       </div>
                     )}
                   </div>
+
+                  {/* Catalogue Quote */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Catalogue Quote</Label>
+                    {editingField === 'catalogueQuote' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.catalogueQuote || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, catalogueQuote: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'catalogueQuote')}
+                          onBlur={() => handleFieldSave('catalogueQuote')}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('catalogueQuote')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('catalogueQuote')}
+                      >
+                        {editValues.catalogueQuote || content.catalogue?.quote || 'Your Inspirational Catalogue Quote'}
+                      </div>
+                    )}
+                  </div>
+
+
                 </div>
+
+
+
+
 
                 {/* Company Information Section */}
                 <div className="space-y-3">
@@ -1886,35 +1663,12 @@ export function StyleCustomizer({
                         className="p-2 border rounded cursor-pointer hover:bg-gray-50"
                         onClick={() => handleFieldEdit('companyName')}
                       >
-                        {content.profile?.companyName || 'Click to edit company name...'}
+                        {editValues.companyName || content.catalogue?.settings?.companyInfo?.companyName || content.profile?.companyName || 'Your Company Name'}
                       </div>
                     )}
                   </div>
 
-                  {/* Full Name */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Full Name</Label>
-                    {editingField === 'fullName' ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={editValues.fullName}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, fullName: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'fullName')}
-                          onBlur={() => handleFieldSave('fullName')}
-                          className="flex-1"
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => handleFieldSave('fullName')}>Save</Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('fullName')}
-                      >
-                        {content.profile?.fullName || 'Click to edit full name...'}
-                      </div>
-                    )}
-                  </div>
+
 
                   {/* Company Description */}
                   <div className="space-y-2">
@@ -1936,63 +1690,38 @@ export function StyleCustomizer({
                         className="p-2 border rounded cursor-pointer hover:bg-gray-50"
                         onClick={() => handleFieldEdit('companyDescription')}
                       >
-                        {content.profile?.companyDescription || 'Click to edit company description...'}
+                        {content.catalogue?.description || 'Click to edit company description...'}
                       </div>
                     )}
                   </div>
 
-                  {/* Tagline */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Tagline</Label>
-                    {editingField === 'tagline' ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={editValues.tagline}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, tagline: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'tagline')}
-                          onBlur={() => handleFieldSave('tagline')}
-                          className="flex-1"
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => handleFieldSave('tagline')}>Save</Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('tagline')}
-                      >
-                        {content.profile?.tagline || 'Click to edit tagline...'}
-                      </div>
-                    )}
-                  </div>
                 </div>
 
                 {/* Contact Information Section */}
                 <div className="space-y-3">
                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact Information</h5>
 
-                  {/* Email */}
+                  {/* Address */}
                   <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Email</Label>
-                    {editingField === 'email' ? (
+                    <Label className="text-xs text-gray-600">Address</Label>
+                    {editingField === 'address' ? (
                       <div className="flex gap-2">
                         <Input
-                          type="email"
-                          value={editValues.email}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, email: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'email')}
-                          onBlur={() => handleFieldSave('email')}
+                          value={editValues.address}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, address: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'address')}
+                          onBlur={() => handleFieldSave('address')}
                           className="flex-1"
                           autoFocus
                         />
-                        <Button size="sm" onClick={() => handleFieldSave('email')}>Save</Button>
+                        <Button size="sm" onClick={() => handleFieldSave('address')}>Save</Button>
                       </div>
                     ) : (
                       <div
                         className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('email')}
+                        onClick={() => handleFieldEdit('address')}
                       >
-                        {content.profile?.email || 'Click to edit email...'}
+                        {content.profile?.address || 'Click to edit address...'}
                       </div>
                     )}
                   </div>
@@ -2023,6 +1752,34 @@ export function StyleCustomizer({
                     )}
                   </div>
 
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Email</Label>
+                    {editingField === 'email' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          type="email"
+                          value={editValues.email}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, email: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'email')}
+                          onBlur={() => handleFieldSave('email')}
+                          className="flex-1"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('email')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('email')}
+                      >
+                        {content.profile?.email || 'Click to edit email...'}
+                      </div>
+                    )}
+                  </div>
+
+
+
                   {/* Website */}
                   <div className="space-y-2">
                     <Label className="text-xs text-gray-600">Website</Label>
@@ -2049,81 +1806,160 @@ export function StyleCustomizer({
                     )}
                   </div>
 
-                  {/* Address */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Address</Label>
-                    {editingField === 'address' ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={editValues.address}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, address: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'address')}
-                          onBlur={() => handleFieldSave('address')}
-                          className="flex-1"
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => handleFieldSave('address')}>Save</Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('address')}
-                      >
-                        {content.profile?.address || 'Click to edit address...'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Contact Description */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Contact Page Description</Label>
-                    {editingField === 'contactDescription' ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={editValues.contactDescription}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, contactDescription: e.target.value }))}
-                          onKeyDown={(e) => handleKeyPress(e, 'contactDescription')}
-                          onBlur={() => handleFieldSave('contactDescription')}
-                          className="flex-1"
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => handleFieldSave('contactDescription')}>Save</Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleFieldEdit('contactDescription')}
-                      >
-                        {editValues.contactDescription || 'Click to edit contact description...'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Store Description */}
-                  <div className="space-y-2">
-                    <Label className="text-xs text-gray-600">Store Description</Label>
-                    {editingField === 'storeDescription' ? (
-                      <div className="flex gap-2">
-                        <textarea
-                          value={editValues.storeDescription}
-                          onChange={(e) => setEditValues(prev => ({ ...prev, storeDescription: e.target.value }))}
-                          onBlur={() => handleFieldSave('storeDescription')}
-                          className="flex-1 text-sm p-2 border rounded resize-none"
-                          rows={3}
-                          autoFocus
-                        />
-                        <Button size="sm" onClick={() => handleFieldSave('storeDescription')}>Save</Button>
-                      </div>
-                    ) : (
-                      <div
-                        className="p-2 border rounded cursor-pointer hover:bg-gray-50 min-h-[60px]"
-                        onClick={() => handleFieldEdit('storeDescription')}
-                      >
-                        {editValues.storeDescription || 'Click to edit store description...'}
-                      </div>
-                    )}
-                  </div>
                 </div>
+
+                {/* Social Media Links */}
+                <div className="space-y-3">
+                  <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Social Media Links</h5>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Facebook</Label>
+                    {editingField === 'facebook' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.facebook || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, facebook: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'facebook')}
+                          onBlur={() => handleFieldSave('facebook')}
+                          className="flex-1"
+                          placeholder="Facebook URL"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('facebook')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('facebook')}
+                      >
+                        {editValues.facebook || content.profile?.facebook || 'Click to edit Facebook link...'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Instagram</Label>
+                    {editingField === 'instagram' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.instagram || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, instagram: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'instagram')}
+                          onBlur={() => handleFieldSave('instagram')}
+                          className="flex-1"
+                          placeholder="Instagram URL"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('instagram')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('instagram')}
+                      >
+                        {editValues.instagram || content.profile?.instagram || 'Click to edit Instagram link...'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Twitter</Label>
+                    {editingField === 'twitter' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.twitter || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, twitter: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'twitter')}
+                          onBlur={() => handleFieldSave('twitter')}
+                          className="flex-1"
+                          placeholder="Twitter URL"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('twitter')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('twitter')}
+                      >
+                        {editValues.twitter || content.profile?.twitter || 'Click to edit Twitter link...'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">LinkedIn</Label>
+                    {editingField === 'linkedin' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.linkedin || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, linkedin: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'linkedin')}
+                          onBlur={() => handleFieldSave('linkedin')}
+                          className="flex-1"
+                          placeholder="LinkedIn URL"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('linkedin')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('linkedin')}
+                      >
+                        {editValues.linkedin || content.profile?.linkedin || 'Click to edit LinkedIn link...'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Contact Quote</Label>
+                    {editingField === 'contactQuote' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.contactQuote || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, contactQuote: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'contactQuote')}
+                          onBlur={() => handleFieldSave('contactQuote')}
+                          className="flex-1"
+                          placeholder="Enter a quote for contact section"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('contactQuote')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('contactQuote')}
+                      >
+                        {editValues.contactQuote || content.profile?.contactQuote || 'Click to edit contact quote...'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-600">Contact Quote By</Label>
+                    {editingField === 'contactQuoteBy' ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={editValues.contactQuoteBy || ''}
+                          onChange={(e) => setEditValues(prev => ({ ...prev, contactQuoteBy: e.target.value }))}
+                          onKeyDown={(e) => handleKeyPress(e, 'contactQuoteBy')}
+                          onBlur={() => handleFieldSave('contactQuoteBy')}
+                          className="flex-1"
+                          placeholder="Enter the author of the contact quote"
+                          autoFocus
+                        />
+                        <Button size="sm" onClick={() => handleFieldSave('contactQuoteBy')}>Save</Button>
+                      </div>
+                    ) : (
+                      <div
+                        className="p-2 border rounded cursor-pointer hover:bg-gray-50"
+                        onClick={() => handleFieldEdit('contactQuoteBy')}
+                      >
+                        {editValues.contactQuoteBy || content.profile?.contactQuoteBy || 'Click to edit contact quote author...'}
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
               </div>
             )}
           </TabsContent>

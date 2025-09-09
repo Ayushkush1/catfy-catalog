@@ -6,6 +6,7 @@ import { ColorCustomization } from '@/components/catalog-templates/modern-4page/
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSubscription } from '@/contexts/SubscriptionContext'
+import { ContentMapper } from '@/lib/content-schema'
 import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
 import { AlertTriangle, ArrowLeft, Download, Edit, Share2 } from 'lucide-react'
 import Link from 'next/link'
@@ -268,8 +269,30 @@ export default function CataloguePreviewPage() {
       // Handle nested field paths
       const updates: any = {}
 
-      if (field.startsWith('catalogue.')) {
+      if (field.startsWith('catalogue.settings.')) {
+        const settingsPath = field.replace('catalogue.settings.', '')
+        const currentSettings = catalogue.settings as any || {}
+        
+        // Handle nested settings paths
+        const pathParts = settingsPath.split('.')
+        const updatedSettings = { ...currentSettings }
+        let current = updatedSettings
+        
+        // Navigate to the parent object
+        for (let i = 0; i < pathParts.length - 1; i++) {
+          if (!current[pathParts[i]]) {
+            current[pathParts[i]] = {}
+          }
+          current = current[pathParts[i]]
+        }
+        
+        // Set the final value
+        current[pathParts[pathParts.length - 1]] = value
+        
+        updates.settings = updatedSettings
+      } else if (field.startsWith('catalogue.')) {
         const fieldName = field.replace('catalogue.', '')
+        // Handle direct catalogue fields (not settings)
         updates[fieldName] = value
       } else if (field.startsWith('profile.')) {
         const fieldName = field.replace('profile.', '')
@@ -305,6 +328,26 @@ export default function CataloguePreviewPage() {
         updates[field] = value
       }
 
+      // Update local state immediately for real-time preview
+      setCatalogue(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          ...updates,
+          // Ensure settings are properly merged
+          settings: updates.settings ? {
+            ...(prev.settings as object || {}),
+            ...updates.settings
+          } : prev.settings,
+          // Ensure profile is properly merged
+          profile: updates.profile ? {
+            ...(prev.profile || {}),
+            ...updates.profile
+          } : prev.profile
+        }
+      })
+
+      // Update database
       await handleCatalogueUpdate(catalogue.id, updates)
     } catch (error) {
       console.error('Error updating catalogue content:', error)
@@ -780,7 +823,7 @@ export default function CataloguePreviewPage() {
               <div className="border-l border-gray-300 pl-6">
                 <h1 className="font-bold text-xl text-[#1A1B41] tracking-tight">{catalogue.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] animate-pulse"></div>
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
                   <p className="text-sm text-gray-600 font-medium">Live Preview Mode</p>
                 </div>
               </div>
@@ -930,7 +973,11 @@ export default function CataloguePreviewPage() {
                     description: customColors?.textColors?.description || '#6b7280',
                   }
                 }}
-                content={catalogue}
+                content={ContentMapper.mapToStandardized({
+                  ...catalogue,
+                  products: catalogue?.products || [],
+                  categories: catalogue?.categories || []
+                }, profileData)}
                 onFontChange={handleFontChange}
                 onSpacingChange={handleSpacingChange}
                 onAdvancedStyleChange={handleAdvancedStylesChange}

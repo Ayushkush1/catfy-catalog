@@ -48,6 +48,7 @@ model Catalogue {
   description    String?
   quote          String?
   tagline        String?
+  year           String?
   introImage     String?
   theme          String          @default("modern")
   isPublic       Boolean         @default(false)

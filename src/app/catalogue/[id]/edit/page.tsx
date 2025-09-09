@@ -2482,6 +2482,16 @@ export default function EditCataloguePage() {
               </div>
 
               <div>
+                <Label htmlFor="catalogueYear">Catalogue Year</Label>
+                <Input
+                  id="catalogueYear"
+                  value={(catalogue as any)?.year || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, year: e.target.value } as any : null)}
+                  placeholder="2025"
+                />
+              </div>
+
+              <div>
                 <Label className="text-sm font-medium mb-2 block">Intro Image</Label>
                 {!catalogue?.introImage ? (
                   <FileUpload
@@ -2747,6 +2757,45 @@ export default function EditCataloguePage() {
                       }
                     } : null)}
                     placeholder="https://www.company.com"
+                  />
+                </div>
+              </div>
+
+              {/* Address and Contact Description */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="contactAddress">Address</Label>
+                  <Input
+                    id="contactAddress"
+                    value={(catalogue?.settings as any)?.contactDetails?.address || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings as any)?.contactDetails,
+                          address: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="123 Main Street, City, State 12345"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactDescription">Contact Page Description</Label>
+                  <Textarea
+                    id="contactDescription"
+                    value={(catalogue?.settings as any)?.contactDescription || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDescription: e.target.value
+                      }
+                    } : null)}
+                    placeholder="Get in touch with us for more information about our products"
+                    rows={3}
                   />
                 </div>
               </div>

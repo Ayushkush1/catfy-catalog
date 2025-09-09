@@ -9,6 +9,7 @@ export const ContentSchema = z.object({
     description: z.string().optional(),
     quote: z.string().optional(),
     tagline: z.string().optional(),
+    year: z.string().optional(),
     isPublic: z.boolean(),
     theme: z.string().optional(),
     settings: z.any().optional(),
@@ -36,7 +37,7 @@ export const ContentSchema = z.object({
     name: z.string(),
     description: z.string().nullable(),
     price: z.any().nullable(), // Decimal type
-    currency: z.string().default('USD'),
+    currency: z.string().default('INR'),
     priceDisplay: z.string().nullable(),
     sku: z.string().nullable(),
     tags: z.array(z.string()).default([]),
@@ -80,6 +81,7 @@ export class ContentMapper {
         description: catalogue.description || undefined,
         quote: catalogue.quote || undefined,
         tagline: catalogue.tagline || undefined,
+        year: catalogue.year || undefined,
         isPublic: catalogue.isPublic,
         theme: catalogue.theme || undefined,
         settings: catalogue.settings,
@@ -100,14 +102,14 @@ export class ContentMapper {
         country: profile.country,
         logo: profile.logo || null,
         tagline: profile.tagline || null,
-        socialLinks: profile.socialLinks || null
+        socialLinks: (profile.socialLinks as Record<string, string>) || null
       },
       products: catalogue.products.map(product => ({
         id: product.id,
         name: product.name,
         description: product.description,
         price: product.price,
-        currency: product.currency || 'USD',
+        currency: product.currency || 'INR',
         priceDisplay: product.priceDisplay,
         sku: product.sku,
         tags: Array.isArray(product.tags) ? product.tags as string[] : [],
@@ -187,7 +189,7 @@ export const ContentHelpers = {
   },
 
   // Format price with currency
-  formatPrice(price: any, currency: string = 'USD'): string {
+  formatPrice(price: any, currency: string = 'INR'): string {
     if (!price) return 'Price on request'
     
     const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)

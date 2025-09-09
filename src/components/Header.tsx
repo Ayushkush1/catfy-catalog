@@ -159,12 +159,12 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
               <Link href="/dashboard" className="flex items-center space-x-2 group">
                 <div className="relative w-8 h-8 border rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200 overflow-hidden">
                   <Image
-                  src="/assets/CATFYLogo.png"
-                  alt="Catafy Logo"
-                  width={32}
-                  height={32}
-                  className="object-contain"
-                  priority
+                    src="/assets/CATFYLogo.png"
+                    alt="Catafy Logo"
+                    width={32}
+                    height={32}
+                    className="object-contain"
+                    priority
                   />
                 </div>
                 <div className="flex flex-col">
@@ -234,7 +234,16 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
                       <AvatarFallback className="text-xs bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-bold">
-                        AK
+                        <div className="flex flex-col space-y-2 p-3 border-b border-gray-100">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10 border-2 border-[#A2E8DD]">
+                              <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
+                              <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-semibold">
+                                {getInitials(profile?.fullName || null, user.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </div>
+                        </div>
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -244,7 +253,7 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10 border-2 border-[#A2E8DD]">
                         <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
-                        <AvatarFallback className="bg-gradient-to-br from-[#301F70] to-[#779CAB] text-white font-semibold">
+                        <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-semibold">
                           {getInitials(profile?.fullName || null, user.email)}
                         </AvatarFallback>
                       </Avatar>

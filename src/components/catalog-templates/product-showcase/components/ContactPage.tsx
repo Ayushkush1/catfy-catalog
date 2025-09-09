@@ -40,9 +40,9 @@ export function ContactPage({
         <div className="w-1/2 relative overflow-hidden bg-gray-100">
           {/* Image Section */}
           <div className="h-full w-full relative overflow-hidden">
-            {(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+            {content?.catalogue?.settings?.contactDetails?.contactImage ? (
               <img
-                src={(catalogue?.settings as any)?.contactDetails?.contactImage}
+                src={content.catalogue.settings.contactDetails.contactImage}
                 alt="Contact"
                 className="w-full h-full object-cover"
               />
@@ -64,10 +64,10 @@ export function ContactPage({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg max-w-sm text-center shadow-lg">
               <blockquote className="text-lg italic mb-4 text-gray-800" style={{ fontFamily: 'serif' }}>
-                "{(catalogue?.settings as any)?.contactDetails?.contactQuote || 'Where creativity meets craftsmanship'}"
+                "{content?.catalogue?.settings?.contactDetails?.contactQuote || 'Where creativity meets craftsmanship'}"
               </blockquote>
               <cite className="text-sm tracking-wider uppercase text-gray-600 font-light">
-                {(catalogue?.settings as any)?.contactDetails?.contactQuoteBy || 'VERITE ATELIER'}
+                {content?.catalogue?.settings?.contactDetails?.contactQuoteBy || 'VERITE ATELIER'}
               </cite>
             </div>
           </div>
@@ -81,10 +81,10 @@ export function ContactPage({
           </h1>
 
           {/* Contact Details */}
-          <div className="space-y-8 text-center mb-12">
+          <div className="space-y-4 text-center mb-12">
             {/* Address */}
             <div>
-              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
+              <h3 className="text-sm font-medium mb-1 tracking-widest uppercase text-gray-600">
                 ADDRESS
               </h3>
               <p className="text-sm text-center leading-relaxed text-gray-800">
@@ -94,7 +94,7 @@ export function ContactPage({
 
             {/* Phone */}
             <div>
-              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
+              <h3 className="text-sm font-medium mb-1 tracking-widest uppercase text-gray-600">
                 TELEPHONE
               </h3>
               <p className="text-sm text-gray-800">
@@ -104,13 +104,25 @@ export function ContactPage({
 
             {/* Email */}
             <div>
-              <h3 className="text-sm font-medium mb-3 tracking-widest uppercase text-gray-600">
-                FACEBOOK
+              <h3 className="text-sm font-medium mb-1 tracking-widest uppercase text-gray-600">
+                Email
               </h3>
               <p className="text-sm text-gray-800">
                 {profile.email || 'contact@verite.fr'}
               </p>
             </div>
+
+            {/* Website */}
+            {profile.website && (
+              <div>
+                <h3 className="text-sm font-medium mb-1 tracking-widest uppercase text-gray-600">
+                  WEBSITE
+                </h3>
+                <p className="text-sm text-gray-800">
+                  {profile.website}
+                </p>
+              </div>
+            )}
 
             
           </div>

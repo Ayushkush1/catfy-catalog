@@ -19,11 +19,11 @@ interface CoverPageProps {
   onContentChange?: (field: string, value: string) => void;
 }
 
-export function CoverPage({ 
-  catalogue, 
-  profile, 
-  themeColors, 
-  isEditMode, 
+export function CoverPage({
+  catalogue,
+  profile,
+  themeColors,
+  isEditMode,
   content,
   customColors,
   fontCustomization,
@@ -46,12 +46,17 @@ export function CoverPage({
     { id: 5, color: '#8E44AD', alt: 'Purple formal wear' }
   ];
 
+  // Ensure settings is parsed and has the correct shape
+  const settings = typeof catalogue.settings === 'string'
+    ? JSON.parse(catalogue.settings)
+    : catalogue.settings;
+
   return (
     <div className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page">
       {/* Cover Image Background */}
       <div className="absolute inset-0 overflow-hidden">
         <img
-          src={catalogue.settings.mediaAssets?.coverImageUrl || '/default-cover.jpg'} 
+          src={settings?.mediaAssets?.coverImageUrl || '/default-cover.jpg'}
           alt="Catalogue Cover"
           className="w-full h-full object-cover"
         />
@@ -61,33 +66,53 @@ export function CoverPage({
       <div className="absolute inset-0 bg-black bg-opacity-20" />
 
       {/* VERITE Title - Large and Centered */}
-      <div className="relative z-10 flex items-center justify-center h-full">
-        <h1 
+      <div className="relative z-10 flex flex-col items-center justify-center h-full">
+        <h1
           className="text-[12rem] md:text-[15rem] lg:text-[18rem] font-bold text-white tracking-[0.2em] text-center leading-none"
           style={{
             fontFamily: fontCustomization?.fontFamily?.title || 'serif',
             fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title * 3}px` : 'inherit',
             textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-            ...advancedStyles
+            // Only spread valid CSS properties from advancedStyles
+            ...(advancedStyles && Object.fromEntries(
+              Object.entries(advancedStyles).filter(([key]) =>
+                [
+                  'color', 'background', 'backgroundColor', 'border', 'borderColor', 'borderRadius', 'boxShadow', 'margin', 'padding', 'letterSpacing', 'wordSpacing', 'lineHeight', 'fontWeight', 'fontStyle', 'textTransform', 'textDecoration', 'opacity', 'textAlign'
+                ].includes(key)
+              )
+            ))
           }}
         >          {content.catalogue.name?.toUpperCase() || content.profile.companyName?.toUpperCase() || 'CATALOG'}
         </h1>
-      </div>
-    {/* {console.log(content)} */}
 
-      {/* Bottom decorative text */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
-        <div className="flex items-center space-x-6">
+        {/* Catalog Description */}
+        <div className="flex items-center space-x-6 mt-4">
           <div className="w-12 h-px bg-white opacity-60" />
-          <p 
+          <p
             className="text-white text-sm tracking-[0.3em] uppercase font-light"
-            style={{ 
+            style={{
               fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
             }}
           >
             {content.catalogue.description || 'FASHION COLLECTION'}
           </p>
           <div className="w-12 h-px bg-white opacity-60" />
+        </div>
+
+      </div>
+
+
+      {/* Bottom decorative text */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="flex flex-col items-center space-y-2">
+          <span
+            className="text-white text-lg font-semibold tracking-widest"
+            style={{
+              fontFamily: fontCustomization?.fontFamily?.description || 'sans-serif'
+            }}
+          >
+            {(content.catalogue as any).year ? `Catalogue ${(content.catalogue as any).year}` : 'Catalogue 2025'}
+          </span>
         </div>
       </div>
     </div>
