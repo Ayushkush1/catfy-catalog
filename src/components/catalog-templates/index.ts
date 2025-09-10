@@ -1,6 +1,7 @@
 import { Catalogue, Product, Category, Profile } from '@prisma/client'
 import { SkincareCatalogueTemplate } from './skincare-catalogue/SkincareCatalogueTemplate'
 import { FashionCatalogueTemplate } from './fashion-catalogue/FashionCatalogueTemplate'
+import { FmcgCatalogueTemplate } from './fmcg-catalogue/FmcgCatalogueTemplate'
 import { TemplateRegistry, type TemplateConfig as RegistryTemplateConfig } from '@/lib/template-registry'
 import { ContentMapper, type StandardizedContent } from '@/lib/content-schema'
 
@@ -93,6 +94,32 @@ export const CATALOG_TEMPLATES: TemplateConfig[] = [
       'New collection highlights',
       'Contact information',
       'Professional layout',
+      'Theme color integration',
+      'Responsive design',
+      'Print optimization'
+    ],
+    pageCount: 4,
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay'],
+      categories: ['name', 'description', 'color'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+    }
+  },
+  {
+    id: 'fmcg-catalogue',
+    name: 'FMCG Catalogue',
+    description: 'A premium dark-themed 4-page template designed for FMCG brands, luxury products, and consumer goods with sophisticated layouts and elegant presentation',
+    category: 'product',
+    isPremium: false,
+    previewImage: '/templates/fmcg-catalogue-preview.svg',
+    component: FmcgCatalogueTemplate,
+    features: [
+      'Premium dark theme design',
+      'Luxury product showcase',
+      'Category-based organization',
+      'Crafted excellence branding',
+      'Contact information',
+      'Professional dark layouts',
       'Theme color integration',
       'Responsive design',
       'Print optimization'
@@ -209,4 +236,4 @@ export function validateContentStructure(content: StandardizedContent): boolean 
   }
 }
 
-export { SkincareCatalogueTemplate, FashionCatalogueTemplate }
+export { SkincareCatalogueTemplate, FashionCatalogueTemplate, FmcgCatalogueTemplate }

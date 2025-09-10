@@ -1,4 +1,5 @@
-export { CatalogCover } from './CatalogCover'
-export { TableOfContents } from './TableOfContents'
-export { ProductGrid } from './ProductGrid'
+export { CoverPage } from './CoverPage'
+export { BrandPromisePage } from './BrandPromisePage'
+export { DailyRoutinePage } from './DailyRoutinePage'
 export { ContactPage } from './ContactPage'
+export { IndividualColorPicker } from './IndividualColorPicker'

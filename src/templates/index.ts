@@ -2,10 +2,12 @@
 import { TemplateRegistry } from '@/lib/template-registry'
 import { SkincareCatalogueTemplateWrapper } from '@/components/catalog-templates/skincare-catalogue/SkincareCatalogueTemplate'
 import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/fashion-catalogue/FashionCatalogueTemplate'
+import { FmcgCatalogueTemplateWrapper } from '@/components/catalog-templates/fmcg-catalogue/FmcgCatalogueTemplate'
 
 // Import template configurations
 import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
 import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-catalogue/template.config'
+import { fmcgCatalogueConfig } from '@/components/catalog-templates/fmcg-catalogue/template.config'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
@@ -31,6 +33,9 @@ function registerAllTemplates() {
 
   // Register fashion catalogue template
   templateRegistry.registerTemplate(fashionCatalogueConfig, FashionCatalogueTemplateWrapper)
+
+  // Register FMCG catalogue template
+  templateRegistry.registerTemplate(fmcgCatalogueConfig, FmcgCatalogueTemplateWrapper)
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
