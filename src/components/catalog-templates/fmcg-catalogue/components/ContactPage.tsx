@@ -70,28 +70,40 @@ export function ContactPage({
         )}
 
         {/* Light overlay for text readability */}
-        <div className="absolute inset-0 bg-white bg-opacity-20" />
-
-        {/* Text Overlay - Bottom Left */}
+        <div className="absolute inset-0 bg-black bg-opacity-50" />
+        {/* Modern Text Overlay - Two Content Paragraphs, styled beautifully */}
         <div className="absolute bottom-0 left-0 p-16">
-          <h2
-            className="text-5xl font-light mb-4 leading-tight max-w-md"
-            style={{
-              fontFamily: fontCustomization?.fontFamily?.title || 'serif',
-              color: '#2c1810'
-            }}
-          >
-            Exceptional Products,
-          </h2>
-          <h2
-            className="text-5xl font-light leading-tight max-w-md"
-            style={{
-              fontFamily: fontCustomization?.fontFamily?.title || 'serif',
-              color: '#2c1810'
-            }}
-          >
-            Extraordinary Service
-          </h2>
+          <div className="relative flex items-start">
+            {/* Vertical Accent Bar */}
+            <div
+              className="absolute -left-6 top-0 h-full w-1.5 rounded-full shadow-lg"
+              style={{ background: `linear-gradient(180deg, ${primaryColor} 60%, #fff0 100%)` }}
+            />
+            <div className="pl-10">
+              {/* First Paragraph */}
+              <p
+                className="text-white text-opacity-95 text-xl font-medium mb-3 max-w-md leading-snug drop-shadow-lg"
+                style={{
+                  fontFamily: fontCustomization?.fontFamily?.description || 'sans-serif',
+                  letterSpacing: '0.01em'
+                }}
+              >
+                {content.catalogue?.settings?.contactDetails?.para1 ||
+                  "Crafting tomorrow's consumer experiences through premium quality and innovative solutions."}
+              </p>
+              
+              {/* Second Paragraph */}
+              <p
+                className="text-white text-opacity-80 text-sm max-w-md leading-relaxed italic"
+                style={{
+                  fontFamily: fontCustomization?.fontFamily?.description || 'sans-serif'
+                }}
+              >
+                {content.catalogue?.settings?.contactDetails?.para2 ||
+                  "Contact us to discover how we can help your brand excel in the FMCG world."}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -99,7 +111,7 @@ export function ContactPage({
       <div className="w-1/2 bg-white p-16 flex flex-col">
         <div className="h-full flex flex-col">
           <h1
-            className="text-4xl font-bold mb-2 tracking-wider"
+            className="text-4xl font-bold  tracking-wider"
             style={{
               fontFamily: fontCustomization?.fontFamily?.title || 'serif',
               color: textColor
@@ -109,7 +121,7 @@ export function ContactPage({
           </h1>
 
           <p
-            className="text-md"
+            className="text-md mb-4"
             style={{
               color: '#6b5b4a',
               fontFamily: fontCustomization?.fontFamily?.description || 'sans-serif'
@@ -118,11 +130,7 @@ export function ContactPage({
             We're here to assist you
           </p>
 
-          {/* Decorative Line */}
-          <div
-            className="w-full mb-4 h-px"
-            style={{ backgroundColor: primaryColor }}
-          />
+         
 
           {/* Contact Information */}
           <div className="space-y-4 flex-1">
@@ -156,7 +164,7 @@ export function ContactPage({
               <p className="mb-2 text-sm" style={{ color: '#5a4a3a' }}>
                 {content.profile.email || 'customer.care@luxuryfmcg.com'}
               </p>
-             
+
             </div>
 
             {/* Corporate Office */}
@@ -170,7 +178,7 @@ export function ContactPage({
               <p className="text-sm" style={{ color: '#5a4a3a' }}>
                 {content.profile.address || '123 Luxury Avenue'}
               </p>
-              
+
             </div>
 
             {/* Social Media */}
@@ -225,10 +233,10 @@ export function ContactPage({
                   <div
                     key={i}
                     className={`w-full h-full ${[0, 1, 2, 3, 4, 5, 9, 10, 14, 15, 19, 20, 21, 22, 23, 24].includes(i)
+                      ? 'bg-orange-600'
+                      : Math.random() > 0.6
                         ? 'bg-orange-600'
-                        : Math.random() > 0.6
-                          ? 'bg-orange-600'
-                          : 'bg-transparent'
+                        : 'bg-transparent'
                       }`}
                     style={{ backgroundColor: [0, 1, 2, 3, 4, 5, 9, 10, 14, 15, 19, 20, 21, 22, 23, 24].includes(i) || Math.random() > 0.6 ? primaryColor : 'transparent' }}
                   />

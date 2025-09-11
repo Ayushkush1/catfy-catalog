@@ -1715,46 +1715,133 @@ export default function EditCataloguePage() {
 
                               <div className="space-y-4">
                                 {/* Template Preview */}
-                                <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white border border-gray-200 shadow-sm">
-                                  <div className="aspect-video relative">
-                                    <svg viewBox="0 0 400 225" className="w-full h-full">
-                                      <rect width="400" height="225" fill="#ffffff" />
+                                <div className="relative rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+                                  <div className="aspect-[4/3] relative bg-white">
+                                    {template.previewImage ? (
+                                      <>
+                                        <object
+                                          data={template.previewImage}
+                                          type="image/svg+xml"
+                                          className="w-full h-full"
+                                          style={{ display: 'block' }}
+                                          onLoad={(e) => {
+                                            console.log(`Successfully loaded preview for ${template.name}:`, template.previewImage);
+                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (fallbackDiv) {
+                                              fallbackDiv.style.display = 'none';
+                                            }
+                                          }}
+                                          onError={(e) => {
+                                            console.error(`Failed to load preview for ${template.name}:`, template.previewImage);
+                                            e.currentTarget.style.display = 'none';
+                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (fallbackDiv) {
+                                              fallbackDiv.style.display = 'block';
+                                            }
+                                          }}
+                                        >
+                                          <img
+                                            src={template.previewImage}
+                                            alt={`${template.name} preview`}
+                                            className="w-full h-full object-contain"
+                                          />
+                                        </object>
 
-                                      {/* Header */}
-                                      <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
-                                      <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
-                                      <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+                                        {/* Fallback for SVG loading issues */}
+                                        <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ display: 'none' }}>
+                                          <svg
+                                            viewBox="0 0 400 300"
+                                            className="w-full h-full"
+                                          >
+                                            <rect width="400" height="300" fill="#ffffff" />
+                                            <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
+                                            <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+                                            <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
 
-                                      {template.category === 'modern' && (
-                                        <>
-                                          <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
-                                          <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
-                                          <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
-                                        </>
-                                      )}
+                                            {template.category === 'modern' && (
+                                              <>
+                                                <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
+                                                <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
+                                                <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
+                                              </>
+                                            )}
 
-                                      {template.category === 'classic' && (
-                                        <>
-                                          <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
-                                          <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
-                                        </>
-                                      )}
+                                            {template.category === 'classic' && (
+                                              <>
+                                                <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
+                                                <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
+                                              </>
+                                            )}
 
-                                      {template.category === 'minimal' && (
-                                        <>
-                                          <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
-                                          <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
-                                        </>
-                                      )}
+                                            {template.category === 'minimal' && (
+                                              <>
+                                                <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
+                                                <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
+                                              </>
+                                            )}
 
-                                      {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized') && (
-                                        <>
-                                          <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
-                                          <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
-                                          <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
-                                        </>
-                                      )}
-                                    </svg>
+                                            {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
+                                              <>
+                                                <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
+                                                <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
+                                                <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
+                                              </>
+                                            )}
+
+                                            <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
+                                              {template.name} (Fallback Preview)
+                                            </text>
+                                          </svg>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      /* No preview image available */
+                                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                                        <svg
+                                          viewBox="0 0 400 300"
+                                          className="w-full h-full"
+                                        >
+                                          <rect width="400" height="300" fill="#f9fafb" />
+                                          <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
+                                          <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+                                          <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+
+                                          {template.category === 'modern' && (
+                                            <>
+                                              <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
+                                              <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
+                                              <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
+                                            </>
+                                          )}
+
+                                          {template.category === 'classic' && (
+                                            <>
+                                              <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
+                                              <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
+                                            </>
+                                          )}
+
+                                          {template.category === 'minimal' && (
+                                            <>
+                                              <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
+                                              <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
+                                            </>
+                                          )}
+
+                                          {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
+                                            <>
+                                              <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
+                                              <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
+                                              <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
+                                            </>
+                                          )}
+
+                                          <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
+                                            {template.name} Preview
+                                          </text>
+                                        </svg>
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
 
