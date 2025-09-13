@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ShareDialog } from '@/components/shared/ShareDialog'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ContentMapper } from '@/lib/content-schema'
+import { ViewportToggle, getViewportStyles, type ViewportMode } from '@/components/preview/ViewportToggle'
 import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
 import { AlertTriangle, ArrowLeft, Download, Edit, Share2 } from 'lucide-react'
 import Link from 'next/link'
@@ -44,6 +45,7 @@ export default function CataloguePreviewPage() {
   const [error, setError] = useState<string | null>(null)
   const [isEditMode, setIsEditMode] = useState(false)
   const [showStyleCustomizer, setShowStyleCustomizer] = useState(false)
+  const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop')
   const [customColors, setCustomColors] = useState<ColorCustomization>({
     textColors: {
       companyName: '#1f2937',
@@ -805,6 +807,14 @@ export default function CataloguePreviewPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Viewport Toggle - Centered */}
+      {/* <div className="fixed top-1 left-[56%] transform  z-50 print:hidden">
+        <ViewportToggle 
+          currentMode={viewportMode} 
+          onModeChange={setViewportMode}
+        />
+      </div> */}
+
       {/* Enhanced Admin Header */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-lg print:hidden sticky top-0 z-40">
         <div className=" mx-auto px-6 py-4">
@@ -825,7 +835,7 @@ export default function CataloguePreviewPage() {
                 <h1 className="font-bold text-xl text-[#1A1B41] tracking-tight">{catalogue.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                  <p className="text-sm text-gray-600 font-medium">Live Preview Mode</p>
+                  <p className="text-sm text-gray-600 font-medium">Live Preview Mode • {viewportMode.charAt(0).toUpperCase() + viewportMode.slice(1)} View</p>
                 </div>
               </div>
             </div>
@@ -881,73 +891,80 @@ export default function CataloguePreviewPage() {
 
       {/* Enhanced Main Content Area with Sidebar */}
       <div className="flex bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-[calc(100vh-81px)] relative">
-        {/* Template Content - Enhanced PDF Export Size Preview */}
+        {/* Template Content - Enhanced with Responsive Preview */}
         <div className={`flex justify-center pt-2 transition-all duration-500 ease-in-out overflow-x-hidden overflow-y-auto h-[calc(100vh-81px)] ${isEditMode ? 'w-[calc(100vw-320px)]' : 'w-full'
           }`}>
           <div className="overflow-x-hidden">
-            <div
-              className={`bg-white shadow-2xl transition-all duration-300 relative group overflow-hidden ${isEditMode ? 'ring-4 ring-[#301F70]/20 shadow-[#301F70]/20' : 'shadow-gray-300/50'
-                }`}
-              style={{
-                '--theme-primary': themeColors.primary,
-                '--theme-secondary': themeColors.secondary,
-                '--theme-accent': themeColors.accent,
-                // Fixed viewport dimensions
-                width: '1200px',
-                minHeight: '800px',
-                maxWidth: '1200px',
-                transform: 'scale(1)',
-                transformOrigin: 'top center',
-                margin: '0 auto',
-                boxShadow: isEditMode
-                  ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
-                  : '0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-              } as React.CSSProperties}
-            >
-              {TemplateComponent && templateConfig ? (
-                <TemplateComponent
-                  key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}-${smartSortEnabled}`}
-                  catalogue={{
-                    ...catalogue,
-                    status: 'PUBLISHED',
-                    slug: null,
-                    viewCount: 0,
-                    exportCount: 0,
-                    shareCount: 0,
-                    lastViewedAt: null,
-                    lastExportedAt: null,
-                    lastSharedAt: null,
-                    settings: catalogue?.settings || {},
-                    categories: catalogue?.categories || [],
-                    products: catalogue?.products || [],
-                    profile: catalogue?.profile || null
-                  } as any}
-                  profile={profileData}
-                  themeColors={themeColors}
-                  isEditMode={isEditMode}
-                  catalogueId={catalogueId}
-                  onProductsReorder={handleProductsReorder}
-                  onCatalogueUpdate={handleCatalogueUpdate}
-                  onProductUpdate={handleProductUpdate}
-                  onContentChange={handleContentChange}
-                  customColors={customColors}
-                  fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
-                  spacingCustomization={spacingCustomization}
-                  advancedStyles={advancedStyles}
-                  smartSortEnabled={smartSortEnabled}
-                />
-              ) : (
-                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-                  <div className="text-center p-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <AlertTriangle className="h-8 w-8 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#1A1B41] mb-2">Template Not Found</h2>
-                    <p className="text-gray-600">The selected template could not be loaded.</p>
+            {/* Get viewport styles */}
+            {(() => {
+              const viewportStyles = getViewportStyles(viewportMode)
+              
+              return (
+                <div style={viewportStyles.wrapper}>
+                  <div
+                    className={`bg-white shadow-2xl transition-all duration-300 relative group overflow-hidden ${isEditMode ? 'ring-4 ring-[#301F70]/20 shadow-[#301F70]/20' : 'shadow-gray-300/50'
+                      }`}
+                    style={{
+                      ...viewportStyles.container,
+                      '--theme-primary': themeColors.primary,
+                      '--theme-secondary': themeColors.secondary,
+                      '--theme-accent': themeColors.accent,
+                      minHeight: viewportMode === 'desktop' ? '800px' : 'auto',
+                      boxShadow: viewportMode !== 'desktop' 
+                        ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)' 
+                        : isEditMode
+                          ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
+                          : '0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+                      borderRadius: viewportMode !== 'desktop' ? '12px' : '0',
+                    } as React.CSSProperties}
+                  >
+                    {TemplateComponent && templateConfig ? (
+                      <TemplateComponent
+                        key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}-${smartSortEnabled}-${viewportMode}`}
+                        catalogue={{
+                          ...catalogue,
+                          status: 'PUBLISHED',
+                          slug: null,
+                          viewCount: 0,
+                          exportCount: 0,
+                          shareCount: 0,
+                          lastViewedAt: null,
+                          lastExportedAt: null,
+                          lastSharedAt: null,
+                          settings: catalogue?.settings || {},
+                          categories: catalogue?.categories || [],
+                          products: catalogue?.products || [],
+                          profile: catalogue?.profile || null
+                        } as any}
+                        profile={profileData}
+                        themeColors={themeColors}
+                        isEditMode={isEditMode}
+                        catalogueId={catalogueId}
+                        onProductsReorder={handleProductsReorder}
+                        onCatalogueUpdate={handleCatalogueUpdate}
+                        onProductUpdate={handleProductUpdate}
+                        onContentChange={handleContentChange}
+                        customColors={customColors}
+                        fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
+                        spacingCustomization={spacingCustomization}
+                        advancedStyles={advancedStyles}
+                        smartSortEnabled={smartSortEnabled}
+                      />
+                    ) : (
+                      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
+                        <div className="text-center p-8">
+                          <div className="w-16 h-16 bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="h-8 w-8 text-white" />
+                          </div>
+                          <h2 className="text-2xl font-bold text-[#1A1B41] mb-2">Template Not Found</h2>
+                          <p className="text-gray-600">The selected template could not be loaded.</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
+              )
+            })()}
           </div>
         </div>
 
@@ -1000,6 +1017,81 @@ export default function CataloguePreviewPage() {
         )}
 
       </div>
+
+      {/* Global styles for responsive preview */}
+      <style jsx global>{`
+        @media print {
+          .preview-container {
+            transform: none !important;
+            width: auto !important;
+            max-width: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+          }
+        }
+        
+        body {
+          overflow-x: ${viewportMode !== 'desktop' ? 'hidden' : 'auto'};
+        }
+        
+        /* Mobile-specific styles */
+        ${viewportMode === 'mobile' ? `
+          .preview-container .grid {
+            grid-template-columns: 1fr !important;
+          }
+          .preview-container .md\\:grid-cols-2 {
+            grid-template-columns: 1fr !important;
+          }
+          .preview-container .lg\\:grid-cols-3 {
+            grid-template-columns: 1fr !important;
+          }
+          .preview-container .xl\\:grid-cols-4 {
+            grid-template-columns: 1fr !important;
+          }
+          .preview-container .text-4xl {
+            font-size: 2rem !important;
+          }
+          .preview-container .text-3xl {
+            font-size: 1.875rem !important;
+          }
+          .preview-container .text-2xl {
+            font-size: 1.5rem !important;
+          }
+          .preview-container .p-8 {
+            padding: 1rem !important;
+          }
+          .preview-container .p-6 {
+            padding: 0.75rem !important;
+          }
+          .preview-container .py-8 {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
+          }
+          .preview-container .mb-8 {
+            margin-bottom: 1rem !important;
+          }
+          .preview-container .gap-6 {
+            gap: 0.75rem !important;
+          }
+        ` : ''}
+        
+        /* Tablet-specific styles */
+        ${viewportMode === 'tablet' ? `
+          .preview-container .xl\\:grid-cols-4 {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .preview-container .lg\\:grid-cols-3 {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .preview-container .text-4xl {
+            font-size: 2.25rem !important;
+          }
+          .preview-container .p-8 {
+            padding: 1.5rem !important;
+          }
+        ` : ''}
+      `}</style>
     </div>
   )
 }
