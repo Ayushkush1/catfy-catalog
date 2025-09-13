@@ -10,6 +10,8 @@ export const runtime = 'nodejs'
 const createCatalogueSchema = z.object({
   name: z.string().min(1, 'Catalogue name is required').max(100),
   description: z.string().optional(),
+  quote: z.string().optional(),
+  tagline: z.string().optional(),
   theme: z.string().default('modern'),
   isPublic: z.boolean().default(false),
   settings: z.object({

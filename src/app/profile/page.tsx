@@ -9,10 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { Header } from '@/components/Header'
-import { Loader2, Save, User, Building, Mail, Phone, Globe, MapPin, HelpCircle, FileText, ChevronRight } from 'lucide-react'
+import { Loader2, Save, User, Building, Mail, Phone, Globe, MapPin, HelpCircle, FileText, ChevronRight, Crown, Zap, CreditCard } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { SubscriptionPlan } from '@prisma/client'
 
 interface UserProfile {
   id: string
@@ -143,52 +146,142 @@ export default function SettingsPage() {
 
   const isBusinessAccount = profile.accountType === 'BUSINESS'
 
+  // Plan Indicator Component
+  function PlanIndicator() {
+    const { currentPlan, planFeatures, isLoading } = useSubscription()
+    
+    if (isLoading) {
+      return (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-sm text-gray-600">Loading plan information...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    const getPlanIcon = (plan: SubscriptionPlan) => {
+      switch (plan) {
+        case SubscriptionPlan.FREE:
+          return <Zap className="h-5 w-5 text-gray-600" />
+        case SubscriptionPlan.STANDARD:
+        case SubscriptionPlan.PROFESSIONAL:
+        case SubscriptionPlan.BUSINESS:
+          return <Crown className="h-5 w-5 text-yellow-600" />
+        default:
+          return <Zap className="h-5 w-5 text-gray-600" />
+      }
+    }
+
+    const getPlanBadgeVariant = (plan: SubscriptionPlan) => {
+      return plan === SubscriptionPlan.FREE ? 'secondary' : 'default'
+    }
+
+    const getPlanDisplayName = (plan: SubscriptionPlan) => {
+      switch (plan) {
+        case SubscriptionPlan.FREE:
+          return 'Free Plan'
+        case SubscriptionPlan.STANDARD:
+          return 'Standard Plan'
+        case SubscriptionPlan.PROFESSIONAL:
+          return 'Professional Plan'
+        case SubscriptionPlan.BUSINESS:
+          return 'Business Plan'
+        default:
+          return 'Free Plan'
+      }
+    }
+
+    return (
+      <Card className="border-l-4 border-l-blue-500">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                {getPlanIcon(currentPlan)}
+              </div>
+              <div>
+                <div className="flex items-center space-x-2 mb-1">
+                  <h3 className="font-semibold text-gray-900">Current Subscription</h3>
+                  <Badge variant={getPlanBadgeVariant(currentPlan)}>
+                    {getPlanDisplayName(currentPlan)}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-600">
+                  {currentPlan === SubscriptionPlan.FREE 
+                    ? `${planFeatures.maxCatalogues} catalogue • ${planFeatures.maxProductsPerCatalogue} products per catalogue`
+                    : planFeatures.maxCatalogues === -1 
+                      ? 'Unlimited catalogues and products'
+                      : `${planFeatures.maxCatalogues} catalogues • ${planFeatures.maxProductsPerCatalogue} products per catalogue`
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              {currentPlan === SubscriptionPlan.FREE && (
+                <Link href="/billing">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Crown className="h-4 w-4 mr-1" />
+                    Upgrade
+                  </Button>
+                </Link>
+              )}
+              <Link href="/billing">
+                <Button variant="outline" size="sm">
+                  <CreditCard className="h-4 w-4 mr-1" />
+                  Manage
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          {/* Plan Features Summary */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500">Catalogues:</span>
+                <span className="ml-1 font-medium">
+                  {planFeatures.maxCatalogues === -1 ? 'Unlimited' : planFeatures.maxCatalogues}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Products:</span>
+                <span className="ml-1 font-medium">
+                  {planFeatures.maxProductsPerCatalogue === -1 ? 'Unlimited' : planFeatures.maxProductsPerCatalogue}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Storage:</span>
+                <span className="ml-1 font-medium">
+                  {planFeatures.maxStorageGB === -1 ? 'Unlimited' : `${planFeatures.maxStorageGB}GB`}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Exports:</span>
+                <span className="ml-1 font-medium">
+                  {planFeatures.maxExportsPerMonth === -1 ? 'Unlimited' : `${planFeatures.maxExportsPerMonth}/month`}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Profile" showBackButton backHref="/dashboard" />
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="space-y-6">
-          {/* Navigation Links */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/help">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <HelpCircle className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Help & Support</h3>
-                        <p className="text-sm text-gray-600">Get help and contact support</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            
-            <Link href="/documentation">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <FileText className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">Documentation</h3>
-                        <p className="text-sm text-gray-600">Learn how to use all features</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
+          {/* Current Plan Indicator */}
+          <PlanIndicator />
+          
+          
           {/* Account Information */}
           <Card>
             <CardHeader>

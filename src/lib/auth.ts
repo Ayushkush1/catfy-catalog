@@ -7,7 +7,7 @@ import { ADMIN_EMAILS } from '@/lib/admin-config'
 import type { User } from '@supabase/supabase-js'
 
 export async function getUser() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   
   if (error || !user) {

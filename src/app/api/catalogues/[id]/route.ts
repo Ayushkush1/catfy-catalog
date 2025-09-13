@@ -9,9 +9,13 @@ export const runtime = 'nodejs'
 const updateCatalogueSchema = z.object({
   name: z.string().min(1, 'Catalogue name is required').max(100).optional(),
   description: z.string().optional(),
+  quote: z.string().optional(),
+  tagline: z.string().optional(),
+  introImage: z.string().optional(),
   theme: z.string().optional(),
   isPublic: z.boolean().optional(),
   settings: z.object({
+    templateId: z.string().optional(),
     showPrices: z.boolean().optional(),
     showCategories: z.boolean().optional(),
     showDescription: z.boolean().optional(),
@@ -44,6 +48,9 @@ const updateCatalogueSchema = z.object({
       state: z.string().optional(),
       country: z.string().optional(),
       postalCode: z.string().optional(),
+      contactImage: z.string().optional(),
+      contactQuote: z.string().optional(),
+      contactQuoteBy: z.string().optional(),
     }).optional(),
     // Social Media
     socialMedia: z.object({
@@ -244,6 +251,9 @@ export async function GET(
         id: catalogue.id,
         name: catalogue.name,
         description: catalogue.description,
+        quote: catalogue.quote,
+        tagline: catalogue.tagline,
+        introImage: catalogue.introImage,
         theme: catalogue.theme,
         isPublic: catalogue.isPublic,
         settings: catalogue.settings as Record<string, any> || {},
@@ -280,8 +290,20 @@ export async function GET(
           updatedAt: category.updatedAt,
         })),
         profile: {
+          id: profile.id,
           fullName: profile.fullName,
           companyName: profile.companyName,
+          email: profile.email,
+          phone: profile.phone,
+          website: profile.website,
+          address: profile.address,
+          city: profile.city,
+          state: profile.state,
+          country: profile.country,
+          postalCode: profile.postalCode,
+          logo: profile.logo,
+          tagline: profile.tagline,
+          socialLinks: profile.socialLinks,
         },
         productCount: catalogue._count.products,
         categoryCount: catalogue._count.categories,
@@ -364,10 +386,13 @@ export async function PUT(
 
     console.log('Updated settings to save:', updatedSettings)
 
+    // Extract only the fields that exist in the database schema
+    const { settings: _, ...dbFields } = validatedData
+    
     const updatedCatalogue = await prisma.catalogue.update({
       where: { id: params.id },
       data: {
-        ...validatedData,
+        ...dbFields,
         settings: updatedSettings,
         updatedAt: new Date()
       },
@@ -403,6 +428,9 @@ export async function PUT(
         id: updatedCatalogue.id,
         name: updatedCatalogue.name,
         description: updatedCatalogue.description,
+        quote: updatedCatalogue.quote,
+        tagline: updatedCatalogue.tagline,
+        introImage: updatedCatalogue.introImage,
         theme: updatedCatalogue.theme,
         isPublic: updatedCatalogue.isPublic,
         settings: updatedCatalogue.settings,

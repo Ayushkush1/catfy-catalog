@@ -1,5 +1,24 @@
 'use client'
 
+import {
+  Plus,
+  Search,
+  Filter,
+  Package,
+  Eye,
+  Edit,
+  Share2,
+  Download,
+  Trash2,
+  MoreVertical,
+  FolderOpen,
+  TrendingUp,
+  Crown,
+  Calendar,
+  Palette,
+  Sparkles,
+  Book
+} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -11,25 +30,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/Header'
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Download, 
-  Share2,
-  Calendar,
-  Package,
-  Users,
-  TrendingUp,
-  Crown,
-  Zap,
-  Palette,
-  FolderOpen
-} from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,11 +42,15 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
+import Image from 'next/image'
+import { i } from 'vitest/dist/reporters-w_64AS5f.js'
 
 interface Catalogue {
   id: string
   name: string
   description: string | null
+  quote?: string
+  tagline?: string
   isPublic: boolean
   theme: string
   createdAt: string
@@ -83,18 +87,160 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [error, setError] = useState('')
-  
+
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     loadDashboardData()
+
+    // Add custom animations
+    const style = document.createElement('style')
+    style.textContent = `
+      @keyframes float {
+        0%, 100% { 
+          transform: translateY(0px) rotate(var(--rotation, 0deg)); 
+        }
+        50% { 
+          transform: translateY(-5px) rotate(var(--rotation, 0deg)); 
+        }
+      }
+      
+      @keyframes floatReverse {
+        0%, 100% { 
+          transform: translateY(0px) rotate(var(--rotation, 0deg)); 
+        }
+        50% { 
+          transform: translateY(5px) rotate(var(--rotation, 0deg)); 
+        }
+      }
+      
+      @keyframes slowSpin {
+        from { 
+          transform: rotate(0deg) translateY(var(--float-y, 0px)); 
+        }
+        to { 
+          transform: rotate(360deg) translateY(var(--float-y, 0px)); 
+        }
+      }
+      
+      @keyframes shimmer {
+        0% { 
+          background-position: -200% 0; 
+        }
+        100% { 
+          background-position: 200% 0; 
+        }
+      }
+      
+      @keyframes glow {
+        0%, 100% { 
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.1), 0 0 40px rgba(147, 51, 234, 0.1); 
+        }
+        50% { 
+          box-shadow: 0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(147, 51, 234, 0.2); 
+        }
+      }
+      
+      @keyframes pulseGlow {
+        0%, 100% { 
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+          transform: scale(1);
+        }
+        50% { 
+          box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(147, 51, 234, 0.4);
+          transform: scale(1.05);
+        }
+      }
+      
+      @keyframes gentleBob {
+        0%, 100% { transform: translateY(0px); }
+        25% { transform: translateY(-3px); }
+        75% { transform: translateY(3px); }
+      }
+      
+      @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+      }
+      
+      @keyframes breathe {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+      
+      @keyframes pulseSlow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+      
+      .animate-float {
+        animation: float 4s ease-in-out infinite;
+      }
+      
+      .animate-float-reverse {
+        animation: floatReverse 3.5s ease-in-out infinite;
+      }
+      
+      .animate-float.delay-500 {
+        animation-delay: 0.5s;
+      }
+      
+      .animate-float.delay-1000 {
+        animation-delay: 1s;
+      }
+      
+      .animate-slow-spin {
+        animation: slowSpin 20s linear infinite;
+      }
+      
+      .animate-shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        background-size: 200% 100%;
+        animation: shimmer 3s infinite;
+      }
+      
+      .animate-glow {
+        animation: glow 4s ease-in-out infinite;
+      }
+      
+      .animate-pulse-slow {
+        animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      
+      .animate-pulse-glow {
+        animation: pulseGlow 3s ease-in-out infinite;
+      }
+      
+      .animate-gentle-bob {
+        animation: gentleBob 2.5s ease-in-out infinite;
+      }
+      
+      .animate-sparkle {
+        animation: sparkle 2s ease-in-out infinite;
+      }
+      
+      .animate-breathe {
+        animation: breathe 4s ease-in-out infinite;
+      }
+      
+      .animate-pulse-slow {
+        animation: pulseSlow 3s ease-in-out infinite;
+      }
+    `
+    document.head.appendChild(style)
+
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style)
+      }
+    }
   }, [])
 
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      
+
       // Load user profile
       const profileResponse = await fetch('/api/auth/profile')
       if (profileResponse.ok) {
@@ -107,7 +253,7 @@ export default function DashboardPage() {
       if (cataloguesResponse.ok) {
         const cataloguesData = await cataloguesResponse.json()
         setCatalogues(cataloguesData.catalogues)
-        
+
         // Calculate basic stats
         const totalProducts = cataloguesData.catalogues.reduce(
           (sum: number, cat: Catalogue) => sum + (cat._count?.products || 0), 0
@@ -156,7 +302,7 @@ export default function DashboardPage() {
     }
 
     const shareUrl = `${window.location.origin}/preview/${catalogue.id}`
-    
+
     try {
       await navigator.clipboard.writeText(shareUrl)
       toast.success('Share link copied to clipboard!')
@@ -180,7 +326,7 @@ export default function DashboardPage() {
 
     try {
       toast.loading('Generating PDF...', { id: 'pdf-export' })
-      
+
       const response = await fetch('/api/export/pdf', {
         method: 'POST',
         headers: {
@@ -196,7 +342,7 @@ export default function DashboardPage() {
 
       if (response.ok) {
         const contentType = response.headers.get('content-type')
-        
+
         if (contentType && contentType.includes('application/pdf')) {
           // Direct PDF download for public catalogues
           const blob = await response.blob()
@@ -231,12 +377,12 @@ export default function DashboardPage() {
 
   const filteredCatalogues = catalogues.filter(catalogue => {
     const matchesSearch = catalogue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         catalogue.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    
+      catalogue.description?.toLowerCase().includes(searchQuery.toLowerCase())
+
     const matchesFilter = filterType === 'all' ||
-                         (filterType === 'public' && catalogue.isPublic) ||
-                         (filterType === 'private' && !catalogue.isPublic)
-    
+      (filterType === 'public' && catalogue.isPublic) ||
+      (filterType === 'private' && !catalogue.isPublic)
+
     return matchesSearch && matchesFilter
   })
 
@@ -269,149 +415,72 @@ export default function DashboardPage() {
   return (
     <>
       <Header title="Dashboard" />
-      <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {profile?.fullName?.split(' ')[0] || 'User'}!
-          </h1>
-          <p className="text-gray-600">
-            Manage your catalogues and track your progress
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
-          {profile?.subscription && (
-            <Badge variant={profile.subscription.plan === 'FREE' ? 'secondary' : 'default'}>
-              {profile.subscription.plan === 'FREE' ? (
-                <><Zap className="mr-1 h-3 w-3" /> Free Plan</>
-              ) : (
-                <><Crown className="mr-1 h-3 w-3" /> {profile.subscription.plan} Plan</>
-              )}
-            </Badge>
-          )}
-        </div>
-      </div>
+      <div className="min-h-screen pb-10 bg-gray-50">
+        {/* Purple Gradient Hero Section */}
+        <div className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white px-6 mx-8 rounded-3xl py-12">
+          <div className="container mx-auto">
+            <div className="flex items-center justify-between">
+              <div className="text-white pb-6">
+                <div className="flex flex-col gap-8 mb-6">
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+                  <div>
+                    <h1
+                      className="text-4xl font-extrabold pt-4 pb-4"
+                      style={{ fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif" }}
+                    >
+                      Hi, {profile?.fullName || 'Ayush Kumar'}
+                    </h1>
+                    <p
+                      className="text-white text-md max-w-[760px]"
+                      style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
+                    >
+                      Welcome back to your AI-powered catalogue studio. Effortlessly create, manage, and share beautiful product catalogues.
+                      Try out instant PDF export, pro themes, and more!
+                    </p>
+                    
+                    {profile?.subscription?.plan === 'FREE' && (
+                      <div className="mt-2">
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 py-1 text-xs font-medium">
+                          Free Plan
+                        </Badge>
+                        <span className="ml-2 text-amber-200 text-xs">
+                          Upgrade for unlimited exports and premium features.
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Catalogues</p>
-                  <p className="text-2xl font-bold">{stats.totalCatalogues}</p>
-                </div>
-                <Package className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Products</p>
-                  <p className="text-2xl font-bold">{stats.totalProducts}</p>
-                </div>
-                <Package className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Views</p>
-                  <p className="text-2xl font-bold">{stats.totalViews}</p>
-                </div>
-                <Eye className="h-8 w-8 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Exports</p>
-                  <p className="text-2xl font-bold">{stats.totalExports}</p>
-                </div>
-                <Download className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
-      {/* Catalogues Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h2 className="text-2xl font-semibold text-gray-900">Your Catalogues</h2>
-          
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search catalogues..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-32">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              onClick={() => {
-                if (canCreateCatalogue()) {
-                  router.push('/catalogue/new')
-                } else {
-                  setShowUpgradePrompt(true)
-                }
-              }}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Catalogue
-            </Button>
-          </div>
-        </div>
+                {/* Feature Highlights */}
+                <div className="flex flex-wrap gap-1 mt-2 mb-8">
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-emerald-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-[11px] font-medium">AI-Powered</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-[11px] font-medium">5 Pro Themes</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
+                    <div className="w-4 h-4 bg-purple-400 rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-white text-[11px] font-medium">Instant Export</span>
+                  </div>
+                </div>
 
-        {/* Catalogues Grid */}
-        {filteredCatalogues.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {catalogues.length === 0 ? 'No catalogues yet' : 'No catalogues found'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {catalogues.length === 0 
-                  ? 'Create your first catalogue to get started'
-                  : 'Try adjusting your search or filter criteria'
-                }
-              </p>
-              {catalogues.length === 0 && (
-                <Button 
+                <Button
                   onClick={() => {
                     if (canCreateCatalogue()) {
                       router.push('/catalogue/new')
@@ -419,144 +488,333 @@ export default function DashboardPage() {
                       setShowUpgradePrompt(true)
                     }
                   }}
+                  className="bg-white text-[#2D1B69] hover:bg-purple-50 font-semibold px-4 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-xl  hover:scale-105"
+                >
+                  <FolderOpen className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" />
+                  Create Catalogue
+                </Button>
+              </div>
+
+              {/* Enhanced Floating Catalogue Cards with Micro Animations */}
+              <div className='absolute top-20 right-56 h-[350px] w-[410px] hidden md:block'>
+               <Image
+                  height={350}
+                  width={410}
+                  src="/assets/heroImage.png"
+                  alt="Catalogue Hero"
+                  className="w-full h-full object-contain z-10 pointer-events-none select-none drop-shadow-xl animate-float"
+                />
+                
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-6 -mt-6 relative z-10">
+
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Stats Cards */}
+          {stats && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Catalogues</p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalCatalogues}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Book className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Products</p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalProducts}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Package className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Views</p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalViews}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Eye className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Exports</p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalExports}</p>
+                    </div>
+                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Download className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Catalogues Section */}
+          <div className="space-y-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Your Catalogues</h2>
+                <p className="text-gray-600 mt-1">Manage and organize your creative collections</p>
+              </div>
+
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <Button
+                  variant="ghost"
+                  className="text-[#2D1B69] hover:text-[#2d1b69b8] hover:bg-purple-50"
+                >
+                  VIEW ALL
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (canCreateCatalogue()) {
+                      router.push('/catalogue/new')
+                    } else {
+                      setShowUpgradePrompt(true)
+                    }
+                  }}
+                  className=" px-6 py-2 rounded-lg text-white bg-gradient-to-r from-[#2D1B69] to-[#6366F1] font-medium"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Catalogue
+                  New Catalog
                 </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCatalogues.map((catalogue) => (
-              <Card key={catalogue.id} className="group hover:shadow-xl transition-all duration-500 overflow-hidden border-0 bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1">
-                {/* Simplified Header with Clean Design */}
-                 <div className="relative h-40 bg-gradient-to-br from-indigo-200 via-blue-50 to-blue-50 overflow-hidden">
-                   {/* Subtle Background Pattern */}
-                   <div className="absolute inset-0 opacity-40">
-                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(99,102,241,0.1)_0%,transparent_50%)]" />
-                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(59,130,246,0.08)_0%,transparent_50%)]" />
-                   </div>
-                   
-                   {/* Content */}
-                   <div className="relative h-full p-6 flex flex-col justify-center text-center">
-                     {/* Catalogue Name */}
-                     <h3 className="text-2xl font-bold text-gray-800 leading-tight group-hover:text-indigo-700 transition-colors duration-300 mb-3">
-                       {catalogue.name}
-                     </h3>
-                     
-                     {/* Description */}
-                     <p className="text-gray-600 text-sm leading-relaxed line-clamp-2 max-w-sm mx-auto">
-                       {catalogue.description || 'A beautifully crafted catalogue showcasing premium products and categories with modern design.'}
-                     </p>
-                   </div>
-                  
-                  {/* Action Menu */}
-                  <div className="absolute top-3 right-3">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-8 w-8 p-0 bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-200"
-                        >
-                          <MoreVertical className="h-4 w-4 text-slate-600" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          onClick={() => router.push(`/catalogue/${catalogue.id}/preview`)}
-                          className="cursor-pointer"
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          Preview
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
-                          className="cursor-pointer"
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit Catalogue
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => shareCatalogue(catalogue)}
-                          className="cursor-pointer"
-                        >
-                          <Share2 className="mr-2 h-4 w-4" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => exportToPDF(catalogue.id)}
-                          disabled={!canExport()}
-                          className="cursor-pointer"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Export PDF
-                          {!canExport() && <Crown className="ml-auto h-3 w-3" />}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="cursor-pointer text-red-600 focus:text-red-600"
-                          onClick={() => deleteCatalogue(catalogue.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  
-                  {/* Status Badges */}
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge 
-                      variant={catalogue.isPublic ? 'default' : 'secondary'} 
-                      className="bg-white/90 text-slate-800 border border-slate-200/60 text-xs px-2 py-1"
-                    >
-                      {catalogue.isPublic ? 'Public' : 'Private'}
-                    </Badge>
-                  </div>
-                </div>
-                
-                {/* Content Section */}
-                <div className="p-6 bg-white">
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="text-center p-3 bg-indigo-50 rounded-lg">
-                      <div className="text-xl font-bold text-indigo-600">{catalogue._count?.categories || 0}</div>
-                      <div className="text-xs text-gray-500 font-medium">Categories</div>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <div className="text-xl font-bold text-blue-600">{catalogue._count?.products || 0}</div>
-                      <div className="text-xs text-gray-500 font-medium">Products</div>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <Badge variant="outline" className="text-xs px-2 py-1 bg-purple-100 border-purple-200 text-purple-700">
-                        <Palette className="h-3 w-3 mr-1" />
-                        {catalogue.theme || 'Modern'}
-                      </Badge>
-                      <div className="text-xs text-gray-500 pt-2 font-medium">Theme</div>
-                    </div>
-                  </div>
-                  
-                  {/* Update Info */}
-                  <div className="flex items-center justify-center text-xs text-gray-500 pt-2 border-t border-gray-100">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    <span>Updated {formatDistanceToNow(new Date(catalogue.updatedAt), { addSuffix: true })}</span>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+              </div>
+            </div>
 
-      {/* Upgrade Prompt Modal */}
-      <UpgradePrompt 
-        isOpen={showUpgradePrompt}
-        onClose={() => setShowUpgradePrompt(false)}
-        feature="catalogue creation"
-        currentPlan={currentPlan}
-      />
+            {/* Catalogues Grid */}
+            {filteredCatalogues.length === 0 ? (
+              <Card className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+                <CardContent className="p-12 text-center">
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#2D1B69] to-[#6366F1] rounded-2xl mx-auto mb-6 flex items-center justify-center">
+                    <Package className="h-10 w-10 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {catalogues.length === 0 ? 'No catalogues yet' : 'No catalogues found'}
+                  </h3>
+                  <p className="text-gray-600 mb-8 max-w-sm mx-auto leading-relaxed">
+                    {catalogues.length === 0
+                      ? 'Create your first catalogue to get started and showcase your amazing products'
+                      : 'Try adjusting your search or filter criteria to find what you\'re looking for'
+                    }
+                  </p>
+                  {catalogues.length === 0 && (
+                    <Button
+                      onClick={() => {
+                        if (canCreateCatalogue()) {
+                          router.push('/catalogue/new')
+                        } else {
+                          setShowUpgradePrompt(true)
+                        }
+                      }}
+                      className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] hover:from-[#1e1348] hover:to-[#4f46e5] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      <Plus className="mr-2 h-5 w-5" />
+                      Create Your First Catalogue
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredCatalogues.map((catalogue) => (
+                  <Card 
+                  onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
+                  key={catalogue.id} 
+                  className="group hover:shadow-2xl transition-all cursor-pointer duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
+                    {/* Enhanced Image Header with Gradient */}
+                    <div className="relative h-48 overflow-hidden">
+                      {/* Dynamic Theme-based Gradients */}
+                      {catalogue.name === "Fragrance" && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700" />
+                      )}
+                      {catalogue.name === "Fashion Collection" && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-600 to-red-700" />
+                      )}
+                      {catalogue.name === "Tech Gadgets" && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700" />
+                      )}
+                      {!["Fragrance", "Fashion Collection", "Tech Gadgets"].includes(catalogue.name) && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B69] via-[#6366F1] to-[#8B5CF6]" />
+                      )}
+
+                      {/* Beautiful Pattern Overlay */}
+                      <div className="absolute inset-0 opacity-30">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20 rounded-full"></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/30 rounded-full"></div>
+                      </div>
+
+                      {/* Content Overlay */}
+                      <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-6">
+                        {/* Catalogue Icon */}
+                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 ">
+                          <Package className="h-8 w-8 text-white" />
+                        </div>
+
+                        {/* Catalogue Name */}
+                        <h3 className="text-2xl font-bold text-white mb-2 ">
+                          {catalogue.name}
+                        </h3>
+
+                        {/* Quick Stats */}
+                        <div className="flex items-center space-x-4 text-white/90 text-sm">
+                          <div className="flex items-center space-x-1">
+                            <Package className="h-4 w-4" />
+                            <span>{catalogue._count?.products || 0} items</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{Math.floor(Math.random() * 100)} views</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="absolute top-4 left-4">
+                        <Badge
+                          variant={catalogue.isPublic ? 'default' : 'secondary'}
+                          className={`text-xs px-3 py-1 font-medium backdrop-blur-sm border ${catalogue.isPublic
+                            ? 'bg-emerald-500/90 text-white border-emerald-400'
+                            : 'bg-red-500/90 text-white border-red-400'
+                            }`}
+                        >
+                          {catalogue.isPublic ? 'Public' : 'Private'}
+                        </Badge>
+                      </div>
+
+                      {/* Direct Action Buttons - Show on Hover */}
+                      <div className="absolute top-4 right-4 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                        <Button
+                          size="sm"
+                          onClick={() => router.push(`/catalogue/${catalogue.id}/preview`)}
+                          className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
+                          title="Preview Catalogue"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="sm"
+                              className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
+                              title="More Options"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48 bg-white/95 backdrop-blur-sm">
+                            <DropdownMenuItem
+                              onClick={() => shareCatalogue(catalogue)}
+                              className="cursor-pointer hover:bg-gray-50"
+                            >
+                              <Share2 className="mr-3 h-4 w-4 text-blue-600" />
+                              Share Catalogue
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => exportToPDF(catalogue.id)}
+                              disabled={!canExport()}
+                              className="cursor-pointer hover:bg-gray-50"
+                            >
+                              <Download className="mr-3 h-4 w-4 text-green-600" />
+                              Export PDF
+                              {!canExport() && <Crown className="ml-auto h-3 w-3 text-amber-500" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="cursor-pointer text-red-600 focus:text-red-600 hover:bg-red-50"
+                              onClick={() => deleteCatalogue(catalogue.id)}
+                            >
+                              <Trash2 className="mr-3 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Content Section */}
+                    <div className="p-6 bg-white">
+                      {/* Description */}
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                        {catalogue.description || 'A beautifully crafted catalogue showcasing premium products with modern design and user-friendly interface.'}
+                      </p>
+
+                      {/* Enhanced Stats Grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 text-center border border-blue-100">
+                          <div className="text-lg font-bold text-blue-700 mb-1">{catalogue._count?.products || 0}</div>
+                          <div className="text-xs text-blue-600 font-medium">Products</div>
+                        </div>
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 text-center border border-purple-100">
+                          <div className="text-lg font-bold text-purple-700 mb-1">{catalogue._count?.categories || 0}</div>
+                          <div className="text-xs text-purple-600 font-medium">Categories</div>
+                        </div>
+                      </div>
+
+                      {/* Theme and Date Info */}
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-700 text-xs px-3 py-1">
+                          <Palette className="h-3 w-3 mr-1" />
+                          {catalogue.theme || 'Modern'}
+                        </Badge>
+                        <div className="text-xs text-gray-500 flex items-center">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {formatDistanceToNow(new Date(catalogue.updatedAt), { addSuffix: true })}
+                        </div>
+                      </div>
+
+
+                    </div>
+
+                    {/* Subtle Hover Glow Effect */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/0 via-purple-400/0 to-pink-400/0 group-hover:from-blue-400/5 group-hover:via-purple-400/5 group-hover:to-pink-400/5 transition-all duration-500 pointer-events-none"></div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upgrade Prompt Modal */}
+          <UpgradePrompt
+            isOpen={showUpgradePrompt}
+            onClose={() => setShowUpgradePrompt(false)}
+            feature="catalogue creation"
+            currentPlan={currentPlan}
+          />
+        </div>
       </div>
     </>
   )

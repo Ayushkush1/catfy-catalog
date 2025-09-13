@@ -1,3 +1,4 @@
+'use client'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Mail, Phone, Globe, ExternalLink, Facebook, Twitter, Instagram, Linkedin, MapPin } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { getTemplateComponent, getTemplateById } from '@/components/catalog-templates'
-import { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES } from '@/components/catalog-templates/modern-4page/components/StyleCustomizer'
+import { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES } from '@/components/shared/StyleCustomizer'
 
 interface PreviewPageProps {
   params: {
@@ -38,6 +39,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       },
       profile: {
         select: {
+          id: true,
           fullName: true,
           companyName: true,
           phone: true,
@@ -47,6 +49,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
           city: true,
           state: true,
           country: true,
+          postalCode: true,
         },
       },
     },
@@ -73,7 +76,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
     
     // Transform profile data to match expected structure
     const profileData = {
-      id: catalogue.profileId || '',
+      id: catalogue.profile?.id || catalogue.profileId || '',
       email: catalogue.profile?.email || '',
       fullName: catalogue.profile?.fullName || null,
       firstName: null,
@@ -87,20 +90,39 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
       city: catalogue.profile?.city || null,
       state: catalogue.profile?.state || null,
       country: catalogue.profile?.country || null,
-      postalCode: null,
+      postalCode: catalogue.profile?.postalCode || null,
+      logo: catalogue.profile?.logo || null,
+      tagline: catalogue.profile?.tagline || null,
+      socialLinks: catalogue.profile?.socialLinks || null,
       stripeCustomerId: null,
       createdAt: new Date(),
       updatedAt: new Date()
     }
     
     return (
+    <>
+      <style jsx global>{`
+        @media screen and (max-width: 1200px) {
+          .preview-container {
+            transform: scale(${Math.min(1, (typeof window !== 'undefined' ? window.innerWidth : 1200) / 1200)}) !important;
+          }
+        }
+        body {
+          overflow-x: auto;
+        }
+      `}</style>
       <div 
         data-pdf-ready="true" 
-        className="print:bg-white"
+        className="preview-container print:bg-white"
         style={{
           '--theme-primary': themeColors.primary,
           '--theme-secondary': themeColors.secondary,
-          '--theme-accent': themeColors.accent
+          '--theme-accent': themeColors.accent,
+          width: '1200px',
+          minHeight: '800px',
+          margin: '0 auto',
+          transform: 'scale(1)',
+          transformOrigin: 'top center'
         } as React.CSSProperties}
       >
         <TemplateComponent
@@ -112,17 +134,36 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
           advancedStyles={settings.advancedStyles || DEFAULT_ADVANCED_STYLES}
         />
       </div>
-    )
+    </>
+  )
   }
   
   // Legacy rendering for backward compatibility
   const themeColors = getThemeColors(catalogue.theme || 'modern')
 
   return (
-    <div 
-      className={`min-h-screen ${getThemeClasses(catalogue.theme)} print:bg-white`}
-      data-pdf-ready="true"
-    >
+    <>
+      <style jsx global>{`
+        @media screen and (max-width: 1200px) {
+          .preview-container {
+            transform: scale(${Math.min(1, (typeof window !== 'undefined' ? window.innerWidth : 1200) / 1200)}) !important;
+          }
+        }
+        body {
+          overflow-x: auto;
+        }
+      `}</style>
+      <div 
+        className={`preview-container ${getThemeClasses(catalogue.theme)} print:bg-white`}
+        data-pdf-ready="true"
+        style={{
+          width: '1200px',
+          minHeight: '800px',
+          margin: '0 auto',
+          transform: 'scale(1)',
+          transformOrigin: 'top center'
+        }}
+      >
       {/* Catalogue Content */}
       <div className="container mx-auto py-8 px-4">
         {/* Header */}
@@ -391,6 +432,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
         )}
       </div>
     </div>
+    </>
   )
 }
 

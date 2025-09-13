@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 // import { formatDistanceToNow } from 'date-fns'
 import { Header } from '@/components/Header'
@@ -9,7 +10,7 @@ import { TeamManagement } from '@/components/TeamManagement'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -42,10 +43,16 @@ import { Textarea } from '@/components/ui/textarea'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { smartSort } from '@/lib/sorting'
+import { templateRegistry } from '@/lib/template-registry'
+import { themeRegistry, getAllThemes } from '@/lib/theme-registry'
+import { initializeTemplateRegistry } from '@/templates'
+import { initializeThemeRegistry } from '@/themes'
 import { SubscriptionPlan } from '@prisma/client'
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
+  BarChart3,
   Check,
   Crown,
   Edit,
@@ -68,11 +75,15 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 
 interface Catalogue {
+  introImage: any
   id: string
   name: string
   description: string | null
+  quote?: string
+  tagline?: string
   isPublic: boolean
   theme: string
+  template?: string
   createdAt: string
   updatedAt: string
   categories: Category[]
@@ -133,6 +144,7 @@ export default function EditCataloguePage() {
   const params = useParams()
   const catalogueId = params?.id as string || ''
   const { currentPlan } = useSubscription()
+  const supabase = createClient()
 
   const [catalogue, setCatalogue] = useState<Catalogue | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -159,10 +171,13 @@ export default function EditCataloguePage() {
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [selectedThemeCategory, setSelectedThemeCategory] = useState('all')
   const [selectedTheme, setSelectedTheme] = useState('modern')
   const [products, setProducts] = useState<Product[]>([])
   const [smartSortEnabled, setSmartSortEnabled] = useState(false)
+  const [availableThemes, setAvailableThemes] = useState<any[]>([])
+  const [templateStep, setTemplateStep] = useState<'template' | 'theme'>('template')
 
   // Theme data matching the themes page
   const THEMES = [
@@ -275,9 +290,63 @@ export default function EditCataloguePage() {
     return theme.category === selectedThemeCategory
   })
 
+  // Get available templates and themes
+  const templates = templateRegistry.getAllTemplates()
+  const allThemes = getAllThemes()
+
+  // Handle template selection
+  const handleTemplateSelect = async (templateId: string) => {
+    setSelectedTemplate(templateId)
+    const compatibleThemes = themeRegistry.getCompatibleThemes(templateId)
+    setAvailableThemes(compatibleThemes)
+    setTemplateStep('theme')
+
+    // Update catalogue template
+    if (catalogue) {
+      setCatalogue(prev => prev ? {
+        ...prev,
+        settings: {
+          ...(prev.settings as Record<string, any> || {}),
+          templateId: templateId
+        } as any
+      } : null)
+
+      // Save to database immediately
+      try {
+        const response = await fetch(`/api/catalogues/${catalogueId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            settings: {
+              ...(catalogue.settings as object || {}),
+              templateId: templateId
+            }
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to update template')
+        }
+
+        console.log('Template saved successfully:', templateId)
+      } catch (error: any) {
+        console.error('Error saving template:', error)
+        toast.error(error.message || 'Failed to save template')
+      }
+    }
+
+    // Save to localStorage
+    localStorage.setItem('selectedTemplate', templateId)
+
+    // Reset theme selection when template changes
+    setSelectedTheme('')
+  }
+
   // Handle theme selection
   const handleThemeSelect = async (themeId: string) => {
-    const theme = THEMES.find(t => t.id === themeId)
+    const theme = availableThemes.find(t => t.id === themeId) || THEMES.find(t => t.id === themeId)
     if (!theme) return
 
     // For now, assume user can only use free themes
@@ -335,6 +404,24 @@ export default function EditCataloguePage() {
     }
   }
 
+  // Initialize registries
+  useEffect(() => {
+    initializeTemplateRegistry()
+    initializeThemeRegistry()
+  }, [])
+
+  // Check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.push('/auth/login')
+        return
+      }
+    }
+    checkAuth()
+  }, [supabase, router])
+
   useEffect(() => {
     fetchCatalogue()
   }, [catalogueId])
@@ -350,6 +437,32 @@ export default function EditCataloguePage() {
       // If catalogue doesn't have a theme but localStorage does, update catalogue
       if (!catalogue.theme && savedTheme) {
         setCatalogue(prev => prev ? { ...prev, theme: savedTheme } : null)
+      }
+    }
+  }, [catalogue])
+
+  // Initialize template selection based on catalogue data
+  useEffect(() => {
+    if (catalogue) {
+      // Set selected template from catalogue data or default to first available template
+      const catalogueTemplate = catalogue.template || localStorage.getItem('selectedTemplate')
+      if (catalogueTemplate) {
+        setSelectedTemplate(catalogueTemplate)
+        // Update available themes based on selected template
+        const template = templateRegistry.getTemplate(catalogueTemplate)
+        if (template) {
+          const compatibleThemes = themeRegistry.getCompatibleThemes(catalogueTemplate)
+          setAvailableThemes(compatibleThemes)
+        }
+      } else {
+        // Default to first available template if none is set
+        const templates = templateRegistry.getAllTemplates()
+        if (templates.length > 0) {
+          const defaultTemplate = templates[0]
+          setSelectedTemplate(defaultTemplate.id)
+          const compatibleThemes = themeRegistry.getCompatibleThemes(defaultTemplate.id)
+          setAvailableThemes(compatibleThemes)
+        }
       }
     }
   }, [catalogue])
@@ -387,7 +500,6 @@ export default function EditCataloguePage() {
   const fetchCatalogue = async () => {
     try {
       setIsLoading(true)
-
       const response = await fetch(`/api/catalogues/${catalogueId}`)
 
       if (!response.ok) {
@@ -420,6 +532,9 @@ export default function EditCataloguePage() {
       const requestData = {
         name: catalogue.name,
         description: catalogue.description,
+        quote: catalogue.quote,
+        tagline: catalogue.tagline,
+        introImage: catalogue.introImage,
         isPublic: catalogue.isPublic,
         theme: catalogue.theme,
         settings: catalogue.settings
@@ -662,10 +777,92 @@ export default function EditCataloguePage() {
     }
   }
 
+  const handlePreview = () => {
+    router.push(`/catalogue/${catalogueId}/preview`)
+  }
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    if (!confirm('Are you sure you want to delete this category? All products in this category will be moved to "Uncategorized".')) {
+      return
+    }
+
+    try {
+      const deleteUrl = `/api/catalogues/${catalogueId}/categories/${categoryId}`
+      console.log('Deleting category with URL:', deleteUrl)
+
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+      })
+
+      console.log('Delete category response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Delete category error response:', errorData)
+        throw new Error('Failed to delete category')
+      }
+
+      // Update local state
+      setCatalogue(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          categories: prev.categories.filter(c => c.id !== categoryId),
+          // Move products to uncategorized (empty string as categoryId)
+          products: prev.products.map(p =>
+            p.categoryId === categoryId ? { ...p, categoryId: '' } : p
+          )
+        }
+      })
+
+      toast.success('Category deleted successfully')
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      toast.error('Failed to delete category')
+    }
+  }
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const deleteUrl = `/api/catalogues/${catalogueId}/products/${productId}`
+      console.log('Deleting product with URL:', deleteUrl)
+
+      const response = await fetch(deleteUrl, {
+        method: 'DELETE',
+      })
+
+      console.log('Delete product response status:', response.status)
+
+      if (!response.ok) {
+        const errorData = await response.text()
+        console.error('Delete product error response:', errorData)
+        throw new Error('Failed to delete product')
+      }
+
+      // Update local state
+      setCatalogue(prev => {
+        if (!prev) return null
+        return {
+          ...prev,
+          products: prev.products.filter(p => p.id !== productId)
+        }
+      })
+
+      toast.success('Product deleted successfully')
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      toast.error('Failed to delete product')
+    }
+  }
+
   if (isLoading) {
     return (
       <>
-        <Header title="Edit Catalogue" />
+        <Header title="Edit Catalogue" showGradientBanner={true} />
         <div className="container mx-auto py-8 px-4">
           <div className="space-y-6">
             <Skeleton className="h-8 w-64" />
@@ -684,7 +881,7 @@ export default function EditCataloguePage() {
   if (!catalogue) {
     return (
       <>
-        <Header title="Edit Catalogue" />
+        <Header title="Edit Catalogue" showGradientBanner={true} />
         <div className="container mx-auto py-8 px-4">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -699,1008 +896,1719 @@ export default function EditCataloguePage() {
 
   return (
     <>
-      <Header title="Edit Catalogue" />
-      <div className="container mx-auto py-8 px-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-start gap-6">
-            <Button variant="ghost" size="sm" className="mt-1" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Link>
-            </Button>
+      <Header
+        title="Edit Catalogue"
+        catalogueName={catalogue.name}
+        lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric'
+        })}
+        showGradientBanner={true}
+        onPreview={handlePreview}
+        onSave={saveCatalogue}
+        isSaving={isSaving}
+      />
+      <div className="min-h-screen bg-gray-100 -mt-6">
+        {/* Main Layout Container */}
+        <div className="flex">
+          {/* Left Sidebar */}
+          <div className="w-64 bg-white min-h-screen ml-8">
+            {/* Navigation */}
+            <nav className="p-4">
+              <div className="space-y-1">
+                {/* Dashboard/Back Button */}
+                <Button variant="ghost" size="sm" asChild className="w-full justify-start text-gray-600 hover:text-gray-900 hover:bg-gray-50 mb-4">
+                  <Link href="/dashboard">
+                    <ArrowLeft className="mr-3 h-4 w-4" />
+                    Dashboard
+                  </Link>
+                </Button>
 
-            <div className="flex flex-col">
-              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
-                {catalogue.name}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Last updated {new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Eye className="mr-3 h-4 w-4" />
+                  Overview
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('categories')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <FolderOpen className="mr-3 h-4 w-4" />
+                  Categories
+                  <span className={`ml-auto text-xs px-2 py-1 rounded-full ${activeTab === 'categories'
+                    ? 'bg-gray-200 text-gray-900'
+                    : 'bg-gray-200 text-gray-600'
+                    }`}>
+                    {catalogue.categories.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('products')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Package className="mr-3 h-4 w-4" />
+                  Products
+                  <span className="ml-auto bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded-full">
+                    {catalogue.products.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('theme')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Palette className="mr-3 h-4 w-4" />
+                  Theme
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('settings')}
+                  className={`w-full flex items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
+                    ? 'text-gray-900 bg-gray-100 rounded-lg'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg'
+                    }`}
+                >
+                  <Settings className="mr-3 h-4 w-4" />
+                  Settings
+                </button>
+              </div>
+            </nav>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/catalogue/${catalogueId}/preview`}>
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Link>
-            </Button>
-
-
-
-            <Button onClick={saveCatalogue} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </>
+          {/* Main Content */}
+          <div className="flex-1 flex bg-gray-50  mr-8">
+            {/* Content Area */}
+            <div className="flex-1 p-6">
+              {error && (
+                <Alert variant="destructive" className="mb-6">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>{error}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setError(null)
+                        if (errorTimeoutId) {
+                          clearTimeout(errorTimeoutId)
+                          setErrorTimeoutId(null)
+                        }
+                      }}
+                      className="h-auto p-1 ml-2 hover:bg-red-100"
+                    >
+                      ×
+                    </Button>
+                  </AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </div>
-        </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>{error}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setError(null)
-                  if (errorTimeoutId) {
-                    clearTimeout(errorTimeoutId)
-                    setErrorTimeoutId(null)
-                  }
-                }}
-                className="h-auto p-1 ml-2 hover:bg-red-100"
-              >
-                ×
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+              {/* Tab Content */}
+              <div className="space-y-6">
+                {/* Overview Tab */}
+                {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                    {/* Stats Cards - Dynamic data */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Total Categories</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.categories.length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <FolderOpen className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="categories">Categories ({catalogue.categories.length})</TabsTrigger>
-            <TabsTrigger value="products">Products ({catalogue.products.length})</TabsTrigger>
-            <TabsTrigger value="theme">Theme</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Total Products</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.products.length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Package className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-600 text-sm font-medium">Total Categories</p>
-                      <p className="text-2xl font-bold text-blue-900">{catalogue.categories.length}</p>
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Active Products</p>
+                              <p className="text-2xl font-bold text-[#1A1B41]">{catalogue.products.filter(p => p.isActive).length}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              <Eye className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium text-[#779CAB] mb-1">Public Status</p>
+                              <p className="text-xl font-bold text-[#1A1B41]">{catalogue.isPublic ? 'Public' : 'Private'}</p>
+                            </div>
+                            <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                              {catalogue.isPublic ? (
+                                <Eye className="h-6 w-6 text-white" />
+                              ) : (
+                                <Package className="h-6 w-6 text-white" />
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <FolderOpen className="h-8 w-8 text-blue-500" />
-                  </div>
-                </CardContent>
-              </Card>
 
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-600 text-sm font-medium">Total Products</p>
-                      <p className="text-2xl font-bold text-green-900">{catalogue.products.length}</p>
+                    {/* Recent Categories and Quick Actions Layout */}
+                    <div className="grid grid-cols-5 gap-6">
+                      {/* Recent Categories - Left Column (2/3) */}
+                      <div className="col-span-4">
+                        <div className="bg-white rounded-lg p-6">
+                          <div className="flex items-center justify-between mb-6">
+                            <div>
+                              <h3 className="text-lg font-semibold text-[#1A1B41]">Recent Categories</h3>
+                              <p className="text-xs text-gray-500">Showing 3 of {catalogue.categories.length} categories</p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="xs"
+                              className="text-[#301F70] border-[#301F70]/20 hover:bg-[#301F70]/10"
+                              onClick={() => setActiveTab('categories')}
+                            >
+                              Advanced Search
+                            </Button>
+                          </div>
+
+                          {catalogue.categories.length === 0 ? (
+                            <div className="text-center py-8">
+                              <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                              <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
+                              <Button
+                                onClick={() => openCategoryDialog()}
+                                className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                              >
+                                <Plus className="mr-2 h-4 w-4" />
+                                Create Category
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {catalogue.categories.slice(0, 3).map((category) => {
+                                const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
+                                const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
+
+                                return (
+                                  <div
+                                    key={category.id}
+                                    className="group relative overflow-hidden bg-gradient-to-br from-white via-white to-gray-50/50 border border-gray-200/60 shadow-md rounded-2xl hover:shadow-xl hover:shadow-[#301F70]/10 hover:-translate-y-2 transition-all duration-500 cursor-pointer transform-gpu backdrop-blur-sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      openCategoryDialog(category)
+                                    }}
+                                    style={{
+                                      backgroundImage: 'radial-gradient(circle at top right, rgba(48, 31, 112, 0.03), transparent 50%)',
+                                    }}
+                                  >
+                                    {/* Animated Background Effects */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#301F70]/5 to-[#A2E8DD]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                    {/* Category Image Section - Reduced height */}
+                                    <div className="relative h-32 bg-gradient-to-br from-gray-50 to-gray-100/80 overflow-hidden rounded-t-2xl">
+                                      {previewImage ? (
+                                        <>
+                                          <img
+                                            src={previewImage}
+                                            alt={category.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                                          />
+                                          {/* Image overlay gradient */}
+                                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                        </>
+                                      ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-[#779CAB]/20 via-[#A2E8DD]/15 to-[#301F70]/10 flex items-center justify-center group-hover:from-[#301F70]/15 group-hover:via-[#A2E8DD]/20 group-hover:to-[#779CAB]/15 transition-all duration-500">
+                                          <div className="w-14 h-14 rounded-2xl bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300 border border-white/50">
+                                            <Package className="h-7 w-7 text-[#1A1B41] group-hover:text-[#301F70] transition-colors duration-300" />
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Compact Badge */}
+                                      <div className="absolute top-2 left-2">
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs bg-white/60 backdrop-blur-md text-[#1A1B41]   shadow-md transition-all duration-300 px-2 py-0.5 text-[10px] rounded-full font-medium"
+                                        >
+                                          Public
+                                        </Badge>
+                                      </div>
+
+
+                                    </div>
+
+                                    {/* Compact Category Info */}
+                                    <div className="p-4 relative z-10">
+                                      <div className="mb-3">
+                                        <h4 className="font-semibold text-sm text-[#1A1B41] mb-2 group-hover:text-[#301F70] transition-colors duration-300 line-clamp-1">
+                                          {category.name}
+                                        </h4>
+
+                                        {/* Compact stats */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <div className="w-2 h-2 rounded-full bg-[#A2E8DD] group-hover:bg-[#301F70] transition-colors duration-300" />
+                                          <p className="text-xs font-medium text-gray-600 group-hover:text-gray-700 transition-colors duration-300">
+                                            {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
+                                          </p>
+                                        </div>
+
+
+                                      </div>
+
+                                      {/* Compact Product Thumbnails */}
+                                      {categoryProducts.length > 0 && (
+                                        <div className="space-y-2">
+                                          <div className="flex items-center justify-between">
+                                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Featured</p>
+                                          </div>
+                                          <div className="flex gap-1.5">
+                                            {categoryProducts.slice(0, 3).map((product, index) => (
+                                              <div
+                                                key={product.id}
+                                                className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200/60 shadow-sm"
+                                              >
+                                                {product.imageUrl ? (
+                                                  <img
+                                                    src={product.imageUrl}
+                                                    alt={product.name}
+                                                    className="w-full h-full object-cover"
+                                                  />
+                                                ) : (
+                                                  <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center">
+                                                    <Package className="h-3 w-3 text-gray-400" />
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                            {categoryProducts.length > 3 && (
+                                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border border-gray-200/60 shadow-sm">
+                                                <span className="text-xs font-medium text-gray-600">+{categoryProducts.length - 3}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Compact footer - only show on hover */}
+                                      <div className="mt-3 border-t border-gray-100/80 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs text-gray-500">Click to edit</span>
+                                          <div className="text-xs text-[#301F70] font-medium">Edit Category</div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Actions - Right Column (1/3) - Remove background */}
+                      <div className="col-span-1">
+                        <div className="px-1">
+                          <div className="mb-6">
+                            <h3 className="text-lg font-semibold text-[#1A1B41]">Quick Actions</h3>
+                            <p className="text-xs text-gray-500">Tasks for managing your catalogue</p>
+                          </div>
+                          <div className="space-y-3">
+                            <div
+                              onClick={() => openCategoryDialog()}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Plus className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Add Category</p>
+                                  <p className="text-xs text-gray-600">Organize products</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => openProductDialog()}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Package className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Add Product</p>
+                                  <p className="text-xs text-gray-600">Expand catalogue</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => setShowEditDialog(true)}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Edit className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Edit Details</p>
+                                  <p className="text-xs text-gray-600">Update branding</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div
+                              onClick={() => setShowSettingsDialog(true)}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 hover:border-[#301F70]/50 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10 p-4 transition-all duration-200"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] group-hover:from-[#301F70] group-hover:to-[#1A1B41] transition-all duration-200">
+                                  <Settings className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm text-[#1A1B41]">Edit Settings</p>
+                                  <p className="text-xs text-gray-600">Display options</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <Package className="h-8 w-8 text-green-500" />
                   </div>
-                </CardContent>
-              </Card>
+                )}
 
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-purple-600 text-sm font-medium">Visibility</p>
-                      <p className="text-lg font-bold text-purple-900">
-                        {catalogue.isPublic ? 'Public' : 'Private'}
-                      </p>
+                {/* Categories Tab */}
+                {activeTab === 'categories' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-[#1A1B41]">Categories</h2>
+                      <Button
+                        onClick={() => openCategoryDialog()}
+                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Category
+                      </Button>
                     </div>
-                    <Eye className="h-8 w-8 text-purple-500" />
-                  </div>
-                </CardContent>
-              </Card>
 
-              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-orange-600 text-sm font-medium">Theme</p>
-                      <p className="text-lg font-bold text-orange-900 capitalize">{catalogue.theme}</p>
-                    </div>
-                    <Palette className="h-8 w-8 text-orange-500" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Recent Categories and Quick Actions - Column Layout */}
-            <div className="grid grid-cols-10 gap-6">
-              {/* Recent Categories - 70% */}
-              <div className="col-span-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recent Categories</CardTitle>
-                    <CardDescription>Your latest category additions</CardDescription>
-                  </CardHeader>
-                  <CardContent>
                     {catalogue.categories.length === 0 ? (
-                      <div className="text-center py-8">
-                        <FolderOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-                        <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
-                        <Button onClick={() => openCategoryDialog()}>
-                          <Plus className="mr-2 h-4 w-4" />
-                          Create Category
-                        </Button>
+                      <div className="bg-white rounded-lg">
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Package className="h-12 w-12 text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
+                          <p className="text-gray-600 text-center mb-4">
+                            Create your first category to organize your products
+                          </p>
+                          <Button
+                            onClick={() => openCategoryDialog()}
+                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Category
+                          </Button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-3">
-                        {catalogue.categories.slice(0, 3).map((category) => {
-                          // Get first product image from this category for preview
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {catalogue.categories.map((category) => {
                           const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
                           const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
 
                           return (
-                            <Card key={category.id} className="group hover:shadow-lg transition-all duration-300 overflow-hidden border border-slate-200/60 bg-white shadow-sm">
-                              {/* Compact Image Section */}
+                            <div
+                              key={category.id}
+                              className="group hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white shadow-md hover:shadow-slate-200/40 rounded-lg cursor-pointer"
+                              onClick={() => openCategoryDialog(category)}
+                            >
                               <div className="relative h-48 bg-slate-50 overflow-hidden">
                                 {previewImage ? (
                                   <div className="absolute inset-0">
                                     <img
                                       src={previewImage}
                                       alt={category.name}
-                                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
+                                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 opacity-95"
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-white/60 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent" />
                                   </div>
                                 ) : (
-                                  <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                                    <div
-                                      className="w-12 h-12 rounded-lg flex items-center justify-center border"
-                                      style={{
-                                        backgroundColor: category.color ? `${category.color}10` : '#f8fafc',
-                                        borderColor: category.color ? `${category.color}30` : '#e2e8f0'
-                                      }}
-                                    >
-                                      <Package
-                                        className="h-6 w-6"
-                                        style={{ color: category.color || '#64748b' }}
-                                      />
+                                  <div className="absolute inset-0 bg-gradient-to-br from-[#779CAB]/20 to-[#A2E8DD]/20 flex items-center justify-center">
+                                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-sm border-2 bg-white/80 border-[#779CAB]/30">
+                                      <Package className="h-8 w-8 text-[#1A1B41]" />
                                     </div>
                                   </div>
                                 )}
 
-                                {/* Action Button */}
-                                <div className="absolute top-2 right-2">
-                                  <Button
-                                    onClick={() => openCategoryDialog(category)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 bg-white/90 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm"
+                                {/* Hover Action Buttons */}
+                                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      openCategoryDialog(category)
+                                    }}
+                                    className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-[#1A1B41] hover:text-white transition-all duration-200 border border-white/60 group/btn"
                                   >
-                                    <Edit className="h-3 w-3 text-slate-600" />
-                                  </Button>
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleDeleteCategory(category.id)
+                                    }}
+                                    className="w-9 h-9 rounded-xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all duration-200 border border-white/60 group/btn"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+
+                                <div className="absolute bottom-0 left-0 right-0 p-5">
+                                  <div className="space-y-1">
+                                    <h3 className="text-slate-800 font-semibold text-xl leading-tight">
+                                      {category.name}
+                                    </h3>
+                                    <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
+                                      {category.description || 'No description'}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
 
-                              {/* Content Section */}
-                              <div className="p-3 space-y-2">
-                                <div className="space-y-1">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-semibold text-slate-800 text-sm truncate">{category.name}</h4>
-                                    <div
-                                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                      style={{ backgroundColor: category.color || '#10b981' }}
-                                    />
+                              <div className="p-6 space-y-5">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2.5">
+                                    <div className="w-2 h-2 rounded-full bg-[#A2E8DD]" />
+                                    <span className="text-sm font-semibold text-slate-700">
+                                      {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
+                                    </span>
                                   </div>
-                                  <span className="text-xs text-slate-600 font-medium">
-                                    {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
-                                  </span>
+
+                                  <Badge variant="secondary" className="bg-slate-50 text-slate-700 border-slate-200 font-medium px-3 py-1">
+                                    Active
+                                  </Badge>
                                 </div>
 
-                                {/* Product Preview Thumbnails */}
                                 {categoryProducts.length > 0 && (
-                                  <div className="flex gap-1">
-                                    {categoryProducts.slice(0, 3).map((product, idx) => (
-                                      <div key={product.id} className="w-6 h-6 rounded border border-slate-200 overflow-hidden">
-                                        {product.imageUrl ? (
-                                          <img
-                                            src={product.imageUrl}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover"
-                                          />
-                                        ) : (
-                                          <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                                            <Package className="h-3 w-3 text-slate-400" />
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                    {categoryProducts.length > 3 && (
-                                      <div className="w-6 h-6 rounded bg-slate-100 border border-slate-200 flex items-center justify-center">
-                                        <span className="text-[9px] font-semibold text-slate-500">+{categoryProducts.length - 3}</span>
-                                      </div>
-                                    )}
+                                  <div className="space-y-3">
+                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Featured Products</p>
+                                    <div className="flex gap-2.5">
+                                      {categoryProducts.slice(0, 4).map((product) => (
+                                        <div key={product.id} className="group/thumb">
+                                          {product.imageUrl ? (
+                                            <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-200 group-hover/thumb:shadow-md group-hover/thumb:scale-105">
+                                              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                                            </div>
+                                          ) : (
+                                            <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-all duration-200 group-hover/thumb:bg-slate-100">
+                                              <Package className="h-6 w-6 text-slate-400" />
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                      {categoryProducts.length > 4 && (
+                                        <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
+                                          <span className="text-xs font-semibold text-slate-500">+{categoryProducts.length - 4}</span>
+                                        </div>
+                                      )}
+                                    </div>
                                   </div>
                                 )}
+
+                                {/* Compact footer - only show on hover */}
+                                <div className="mt-3 ">
+                                  <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <span className="text-xs text-gray-500">Click to edit</span>
+                                    <div className="text-xs text-[#301F70] font-medium">Edit</div>
+                                  </div>
+                                </div>
                               </div>
-                            </Card>
+                            </div>
+
                           )
                         })}
                       </div>
-                    )}              </CardContent>
-                </Card>
-              </div>
+                    )}
+                  </div>
+                )}
 
-              {/* Quick Actions - 30% */}
-              <div className="col-span-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Common tasks for managing your catalogue</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div
-                        onClick={() => openCategoryDialog()}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row items-center justify-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Plus className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Add Category</p>
-                            <p className="text-xs text-gray-600">Organize products</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
+                {/* Products Tab */}
+                {activeTab === 'products' && (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-[#1A1B41]">Products</h2>
+                      <Button
                         onClick={() => openProductDialog()}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
+                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
                       >
-                        <div className="flex flex-row justify-center items-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Package className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Add Product</p>
-                            <p className="text-xs text-gray-600">Expand catalogue</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setShowEditDialog(true)}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row justify-center items-center text-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Edit className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Edit Details</p>
-                            <p className="text-xs text-gray-600">Update branding</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div
-                        onClick={() => setShowSettingsDialog(true)}
-                        className="group relative overflow-hidden rounded-lg border border-dashed border-gray-300 hover:border-gray-400 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-50 hover:to-blue-100 p-4 cursor-pointer transition-all duration-200 hover:shadow-md "
-                      >
-                        <div className="flex flex-row items-center text-center justify-center gap-3">
-                          <div className="p-2 rounded-full bg-blue-500 text-white group-hover:bg-blue-600 transition-colors">
-                            <Settings className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-sm text-gray-900">Edit Settings</p>
-                            <p className="text-xs text-gray-600">Display options</p>
-                          </div>
-                        </div>
-                      </div>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Product
+                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </TabsContent>
 
-          {/* Categories Tab */}
-          <TabsContent value="categories" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Categories</h2>
-              <Button onClick={() => openCategoryDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Category
-              </Button>
-            </div>
-
-            {catalogue.categories.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Package className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No categories yet</h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Create your first category to organize your products
-                  </p>
-                  <Button onClick={() => openCategoryDialog()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Category
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {catalogue.categories.map((category) => {
-                  // Get first product image from this category for preview
-                  const categoryProducts = catalogue.products.filter(p => p.categoryId === category.id)
-                  const previewImage = categoryProducts.find(p => p.imageUrl)?.imageUrl
-
-                  return (
-                    <Card key={category.id} className="group hover:shadow-2xl transition-all duration-500 overflow-hidden border border-slate-200/60 bg-white shadow-sm hover:shadow-slate-200/40">
-                      {/* Premium Header with Clean Image Display */}
-                      <div className="relative h-48 bg-slate-50 overflow-hidden">
-                        {/* Category Preview Image */}
-                        {previewImage ? (
-                          <div className="absolute inset-0">
-                            <img
-                              src={previewImage}
-                              alt={category.name}
-                              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 opacity-95"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/30 to-transparent" />
-                          </div>
-                        ) : (
-                          // Clean fallback with subtle color accent
-                          <div className="absolute inset-0 bg-slate-50 flex items-center justify-center">
-                            <div
-                              className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-sm border-2"
-                              style={{
-                                backgroundColor: category.color ? `${category.color}10` : '#f8fafc',
-                                borderColor: category.color ? `${category.color}30` : '#e2e8f0'
-                              }}
-                            >
-                              <Package
-                                className="h-8 w-8"
-                                style={{ color: category.color || '#64748b' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Subtle Corner Accent */}
-                        <div
-                          className="absolute top-0 right-0 w-20 h-20 opacity-15"
-                          style={{
-                            background: `radial-gradient(circle at top right, #64748b 0%, transparent 70%)`
-                          }}
-                        />
-
-                        {/* Action Menu */}
-                        <div className="absolute top-4 right-4">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 bg-white/95 hover:bg-white backdrop-blur-sm border border-slate-200/60 shadow-sm">
-                                <MoreVertical className="h-4 w-4 text-slate-600" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => openCategoryDialog(category)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        {/* Category Title - Clean Design */}
-                        <div className="absolute bottom-0 left-0 right-0 p-5">
-                          <div className="space-y-1">
-                            <h3 className="text-slate-800 font-semibold text-xl leading-tight">
-                              {category.name}
-                            </h3>
-                            <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
-                              {category.description || 'No description'}
-                            </p>
-                          </div>
+                    {catalogue.products.length === 0 ? (
+                      <div className="bg-white rounded-lg">
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Package className="h-12 w-12 text-gray-400 mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+                          <p className="text-gray-600 text-center mb-4">
+                            Add your first product to start building your catalogue
+                          </p>
+                          <Button
+                            onClick={() => openProductDialog()}
+                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Product
+                          </Button>
                         </div>
                       </div>
-
-                      {/* Premium Content Section */}
-                      <CardContent className="p-6 space-y-5">
-                        {/* Stats Row */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2.5">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: category.color || '#10b981' }}
-                            />
-                            <span className="text-sm font-semibold text-slate-700">
-                              {category._count.products} {category._count.products === 1 ? 'Product' : 'Products'}
-                            </span>
-                          </div>
-
-                          <Badge
-                            variant="secondary"
-                            className="bg-slate-50 text-slate-700 border-slate-200 font-medium px-3 py-1"
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {catalogue.products.map((product) => (
+                          <div
+                            key={product.id}
+                            className="group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden bg-white rounded-lg shadow-md transform cursor-pointer"
+                            style={{
+                              transitionProperty: 'box-shadow, transform, opacity',
+                              transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                            onClick={() => openProductDialog(product)}
                           >
-                            Active
-                          </Badge>
-                        </div>
+                            <div className="aspect-[4/3] relative bg-gray-100">
+                              {product.imageUrl ? (
+                                <img
+                                  src={product.imageUrl}
+                                  alt={product.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) {
+                                      nextElement.style.display = 'flex';
+                                    }
+                                  }}
+                                />
+                              ) : null}
 
-                        {/* Product Preview Thumbnails */}
-                        {categoryProducts.length > 0 && (
-                          <div className="space-y-3">
-                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Featured Products</p>
-                            <div className="flex gap-2.5">
-                              {categoryProducts.slice(0, 4).map((product, idx) => (
-                                <div key={product.id} className="group/thumb">
-                                  {product.imageUrl ? (
-                                    <div className="w-14 h-14 rounded-xl overflow-hidden border border-slate-200 shadow-sm transition-all duration-200 group-hover/thumb:shadow-md group-hover/thumb:scale-105">
-                                      <img
-                                        src={product.imageUrl}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center transition-all duration-200 group-hover/thumb:bg-slate-100">
-                                      <Package className="h-6 w-6 text-slate-400" />
-                                    </div>
+                              <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.imageUrl ? 'hidden' : 'flex'}`}>
+                                <div className="text-center text-gray-400">
+                                  <Package className="h-12 w-12 mx-auto mb-2" />
+                                  <p className="text-sm">No Image</p>
+                                </div>
+                              </div>
+
+                              {/* Hover Action Buttons */}
+                              <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    openProductDialog(product)
+                                  }}
+                                  className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-[#301F70] hover:text-white transition-all duration-200 border border-white/60 group/btn"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteProduct(product.id)
+                                  }}
+                                  className="w-8 h-8 rounded-xl bg-white/95 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white transition-all duration-200 border border-white/60 group/btn"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+
+                              <div className="absolute top-2 left-2">
+                                <Badge variant={product.isActive ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
+                                  {product.isActive ? 'Available' : 'Unavailable'}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="p-4 space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                                  {product.name}
+                                </h3>
+                                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
+                                  {product.description || 'No description available'}
+                                </p>
+                              </div>
+
+                              <div className='flex justify-between'>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xl font-bold text-gray-900">
+                                    {product.priceDisplay === 'show' && product.price ? (
+                                      `$${Number(product.price).toFixed(2)}`
+                                    ) : product.priceDisplay === 'contact' ? (
+                                      <span className="text-blue-600 text-base font-medium">Contact for Price</span>
+                                    ) : (
+                                      <span className="text-gray-500 text-base font-medium">Price Hidden</span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500">Category:</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {product.categoryId
+                                      ? catalogue.categories.find(c => c.id === product.categoryId)?.name || 'Unknown'
+                                      : 'Uncategorized'
+                                    }
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              {product.tags && product.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {product.tags.slice(0, 3).map((tag, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                  {product.tags.length > 3 && (
+                                    <Badge variant="secondary" className="text-xs px-2 py-1">
+                                      +{product.tags.length - 3} more
+                                    </Badge>
                                   )}
                                 </div>
-                              ))}
-                              {categoryProducts.length > 4 && (
-                                <div className="w-14 h-14 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center">
-                                  <span className="text-xs font-semibold text-slate-500">+{categoryProducts.length - 4}</span>
+                              )}
+
+                              {/* Hover footer for edit indication */}
+                              <div className="mt-3  opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-500">Click to edit</span>
+                                  <div className="text-xs text-[#301F70] font-medium">Edit Product</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Settings Tab */}
+                {activeTab === 'settings' && (
+                  <div className="space-y-6">
+                    <div className="bg-white rounded-lg p-6">
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold text-[#1A1B41]">Catalogue Settings</h3>
+                        <p className="text-sm text-gray-500">Configure your catalogue preferences</p>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-base font-medium">Public Visibility</Label>
+                            <p className="text-sm text-gray-600">Make your catalogue visible to everyone</p>
+                          </div>
+                          <Switch
+                            checked={catalogue.isPublic}
+                            onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {catalogue && <TeamManagement catalogueId={catalogue.id} isOwner={true} />}
+                  </div>
+                )}
+
+                {/* Theme Tab */}
+                {activeTab === 'theme' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-[#301F70]' : selectedTemplate ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-[#301F70]/10 text-[#301F70]' :
+                          selectedTemplate ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
+                          }`}>
+                          {selectedTemplate ? '✓' : '1'}
+                        </div>
+                        <span className="font-medium">Choose Template</span>
+                      </div>
+                      <div className="flex-1 h-px bg-gray-200"></div>
+                      <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-[#301F70]' : selectedTheme ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-[#301F70]/10 text-[#301F70]' :
+                          selectedTheme ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
+                          }`}>
+                          {selectedTheme ? '✓' : '2'}
+                        </div>
+                        <span className="font-medium">Choose Theme</span>
+                      </div>
+                    </div>
+
+                    {templateStep === 'template' ? (
+                      <div>
+                        <div className="mb-6">
+                          <h3 className="font-medium text-lg text-[#1A1B41]">Select a Template</h3>
+                          <p className="text-sm text-gray-600">Choose a template structure for your catalogue</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {templates.map((template) => (
+                            <div
+                              key={template.id}
+                              onClick={() => handleTemplateSelect(template.id)}
+                              className={`group relative border-2 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-2 ${selectedTemplate === template.id
+                                ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/10 to-[#1A1B41]/5 shadow-xl ring-2 ring-[#301F70]/30 scale-[1.02]'
+                                : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-[#779CAB]/5 hover:to-[#A2E8DD]/5 shadow-md hover:shadow-[#779CAB]/30'
+                                } overflow-hidden`}
+                            >
+                              {/* Premium Badge */}
+                              {template.isPremium && (
+                                <div className="absolute -top-2 -right-2 z-10">
+                                  <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    <Crown className="h-3 w-3" />
+                                    PRO
+                                  </div>
                                 </div>
                               )}
-                            </div>
-                          </div>
-                        )}
 
-                        {/* Action Button */}
-                        <Button
-                          variant="outline"
-                          className="w-full bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium h-11 transition-all duration-200 hover:border-slate-300"
-                          onClick={() => {
-                            setActiveTab('products')
-                          }}
-                        >
-                          <Eye className="mr-2.5 h-4 w-4" />
-                          View Products
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Products Tab */}
-          <TabsContent value="products" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">Products</h2>
-              <Button onClick={() => openProductDialog()}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
-            </div>
-
-            {catalogue.products.length === 0 ? (
-              <Card>
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Package className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
-                  <p className="text-gray-600 text-center mb-4">
-                    Add your first product to start building your catalogue
-                  </p>
-                  <Button onClick={() => openProductDialog()}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Product
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {catalogue.products.map((product) => (
-                  <Card key={product.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
-                    {/* Image Section - Always show, with fallback */}
-                    <div className="aspect-[4/3] relative bg-gray-100">
-                      {product.imageUrl ? (
-                        <img
-                          src={product.imageUrl}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                            if (nextElement) {
-                              nextElement.style.display = 'flex';
-                            }
-                          }}
-                        />
-                      ) : null}
-
-                      {/* Fallback placeholder */}
-                      <div className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.imageUrl ? 'hidden' : 'flex'}`}>
-                        <div className="text-center text-gray-400">
-                          <Package className="h-12 w-12 mx-auto mb-2" />
-                          <p className="text-sm">No Image</p>
-                        </div>
-                      </div>
-
-                      {/* Overlay actions */}
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" size="sm" className="h-8 w-8 p-0 bg-white/90 hover:bg-white">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openProductDialog(product)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-
-                      {/* Status badge */}
-                      <div className="absolute top-2 left-2">
-                        <Badge variant={product.isActive ? 'default' : 'secondary'} className="bg-white/90 text-gray-800">
-                          {product.isActive ? 'Available' : 'Unavailable'}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {/* Content Section */}
-                    <div className="p-4 space-y-3">
-                      {/* Title and Description */}
-                      <div>
-                        <h3 className="font-semibold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {product.name}
-                        </h3>
-                        <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                          {product.description || 'No description available'}
-                        </p>
-                      </div>
-
-                      <div className='flex justify-between'>
-                        {/* Price */}
-                        <div className="flex items-center justify-between">
-                          <div className="text-xl font-bold text-gray-900">
-                            {product.priceDisplay === 'show' && product.price ? (
-                              `$${Number(product.price).toFixed(2)}`
-                            ) : product.priceDisplay === 'contact' ? (
-                              <span className="text-blue-600 text-base font-medium">Contact for Price</span>
-                            ) : (
-                              <span className="text-gray-500 text-base font-medium">Price Hidden</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Category */}
-                        {product.categoryId && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">Category:</span>
-                            <Badge variant="outline" className="text-xs">
-                              {catalogue.categories.find(c => c.id === product.categoryId)?.name || 'Unknown'}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Tags */}
-                      {product.tags && product.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {product.tags.slice(0, 3).map((tag, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {product.tags.length > 3 && (
-                            <Badge variant="secondary" className="text-xs px-2 py-1">
-                              +{product.tags.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Catalogue Settings </CardTitle>
-                <CardDescription>Configure your catalogue preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Public Visibility</Label>
-                    <p className="text-sm text-gray-600">Make your catalogue visible to everyone</p>
-                  </div>
-                  <Switch
-                    checked={catalogue.isPublic}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Team Management */}
-            {catalogue && <TeamManagement catalogueId={catalogue.id} isOwner={true} />}
-          </TabsContent>
-
-          {/* Theme Tab */}
-          <TabsContent value="theme" className="space-y-6">
-            <div className="flex gap-6">
-              {/* Sidebar */}
-              <div className="w-64 space-y-4">
-                <div>
-                  <h3 className="font-medium text-sm text-gray-900 mb-3">Categories</h3>
-                  <div className="space-y-1">
-                    {[
-                      { id: 'all', label: 'All Themes', count: THEMES.length },
-                      { id: 'free', label: 'Free', count: THEMES.filter(t => !t.isPremium).length },
-                      { id: 'premium', label: 'Premium', count: THEMES.filter(t => t.isPremium).length },
-                      { id: 'modern', label: 'Modern', count: THEMES.filter(t => t.category === 'modern').length },
-                      { id: 'classic', label: 'Classic', count: THEMES.filter(t => t.category === 'classic').length },
-                      { id: 'minimal', label: 'Minimal', count: THEMES.filter(t => t.category === 'minimal').length },
-                      { id: 'bold', label: 'Bold', count: THEMES.filter(t => t.category === 'bold').length },
-                      { id: 'elegant', label: 'Elegant', count: THEMES.filter(t => t.category === 'elegant').length },
-                      { id: 'tech', label: 'Tech', count: THEMES.filter(t => t.category === 'tech').length }
-                    ].map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => setSelectedThemeCategory(category.id)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-md text-left transition-colors ${selectedThemeCategory === category.id
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'hover:bg-gray-100 text-gray-700'
-                          }`}
-                      >
-                        <span>{category.label}</span>
-                        <span className="text-gray-500">{category.count}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t">
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <h4 className="font-medium text-sm text-blue-900 mb-1">Current Plan</h4>
-                    <p className="text-xs text-blue-700">Free Plan</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Content */}
-              <div className="flex-1">
-                <div className="mb-6">
-                  <h3 className="font-medium text-lg capitalize">
-                    {selectedThemeCategory === 'all' ? 'All Themes' : selectedThemeCategory} ({filteredThemesForCategory.length})
-                  </h3>
-                  <p className="text-sm text-gray-600">Choose from our collection of professionally designed themes</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredThemesForCategory.map((theme) => {
-                    const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
-                    const isSelected = selectedTheme === theme.id
-
-                    return (
-                      <div
-                        key={theme.id}
-                        onClick={() => handleThemeSelect(theme.id)}
-                        className={`relative border rounded-xl p-6 cursor-pointer transition-all hover:shadow-lg group ${isSelected
-                          ? 'border-blue-500 bg-blue-50 shadow-md'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                          }`}
-                      >
-                        {/* Premium Badge */}
-                        {theme.isPremium && (
-                          <div className="absolute top-4 right-4">
-                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                              <Crown className="h-3 w-3" />
-                              Premium
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Selected Badge */}
-                        {isSelected && (
-                          <div className="absolute top-4 right-4">
-                            <div className="bg-blue-500 text-white rounded-full p-1.5">
-                              <Check className="h-4 w-4" />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="space-y-4">
-                          {/* Theme Icon */}
-                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-gray-100 group-hover:bg-gray-200 transition-colors">
-                            <IconComponent className="h-6 w-6 text-gray-600" />
-                          </div>
-
-                          {/* Theme Info */}
-                          <div>
-                            <h4 className="font-semibold text-lg text-gray-900">{theme.name}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{theme.description}</p>
-                          </div>
-
-                          {/* Color Palette */}
-                          <div>
-                            <p className="text-xs font-medium text-gray-700 mb-2">Color Palette</p>
-                            <div className="flex gap-2">
-                              {Object.values(theme.colors).map((color, index) => (
-                                <div
-                                  key={index}
-                                  className="w-8 h-8 rounded-lg border-2 border-white shadow-sm"
-                                  style={{ backgroundColor: color }}
-                                  title={color}
-                                />
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Features */}
-                          <div>
-                            <p className="text-xs font-medium text-gray-700 mb-2">Features</p>
-                            <ul className="space-y-1">
-                              {theme.features.slice(0, 3).map((feature, index) => (
-                                <li key={index} className="text-xs text-gray-600 flex items-center gap-2">
-                                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
-                                  {feature}
-                                </li>
-                              ))}
-                              {theme.features.length > 3 && (
-                                <li className="text-xs text-gray-500 italic">
-                                  +{theme.features.length - 3} more features
-                                </li>
+                              {/* Selection Check */}
+                              {selectedTemplate === template.id && (
+                                <div className="absolute top-3 right-3 z-10">
+                                  <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full shadow-lg">
+                                    <Check className="h-4 w-4 text-white" />
+                                  </div>
+                                </div>
                               )}
-                            </ul>
-                          </div>
+
+                              <div className="space-y-4">
+                                {/* Template Preview */}
+                                <div className="relative rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm">
+                                  <div className="aspect-[4/3] relative bg-white">
+                                    {template.previewImage ? (
+                                      <>
+                                        <object
+                                          data={template.previewImage}
+                                          type="image/svg+xml"
+                                          className="w-full h-full"
+                                          style={{ display: 'block' }}
+                                          onLoad={(e) => {
+                                            console.log(`Successfully loaded preview for ${template.name}:`, template.previewImage);
+                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (fallbackDiv) {
+                                              fallbackDiv.style.display = 'none';
+                                            }
+                                          }}
+                                          onError={(e) => {
+                                            console.error(`Failed to load preview for ${template.name}:`, template.previewImage);
+                                            e.currentTarget.style.display = 'none';
+                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
+                                            if (fallbackDiv) {
+                                              fallbackDiv.style.display = 'block';
+                                            }
+                                          }}
+                                        >
+                                          <img
+                                            src={template.previewImage}
+                                            alt={`${template.name} preview`}
+                                            className="w-full h-full object-contain"
+                                          />
+                                        </object>
+
+                                        {/* Fallback for SVG loading issues */}
+                                        <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ display: 'none' }}>
+                                          <svg
+                                            viewBox="0 0 400 300"
+                                            className="w-full h-full"
+                                          >
+                                            <rect width="400" height="300" fill="#ffffff" />
+                                            <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
+                                            <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+                                            <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+
+                                            {template.category === 'modern' && (
+                                              <>
+                                                <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
+                                                <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
+                                                <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
+                                              </>
+                                            )}
+
+                                            {template.category === 'classic' && (
+                                              <>
+                                                <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
+                                                <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
+                                              </>
+                                            )}
+
+                                            {template.category === 'minimal' && (
+                                              <>
+                                                <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
+                                                <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
+                                              </>
+                                            )}
+
+                                            {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
+                                              <>
+                                                <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
+                                                <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
+                                                <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
+                                              </>
+                                            )}
+
+                                            <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
+                                              {template.name} (Fallback Preview)
+                                            </text>
+                                          </svg>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      /* No preview image available */
+                                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                                        <svg
+                                          viewBox="0 0 400 300"
+                                          className="w-full h-full"
+                                        >
+                                          <rect width="400" height="300" fill="#f9fafb" />
+                                          <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
+                                          <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+                                          <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
+
+                                          {template.category === 'modern' && (
+                                            <>
+                                              <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
+                                              <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
+                                              <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
+                                            </>
+                                          )}
+
+                                          {template.category === 'classic' && (
+                                            <>
+                                              <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
+                                              <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
+                                            </>
+                                          )}
+
+                                          {template.category === 'minimal' && (
+                                            <>
+                                              <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
+                                              <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
+                                            </>
+                                          )}
+
+                                          {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
+                                            <>
+                                              <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
+                                              <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
+                                              <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
+                                            </>
+                                          )}
+
+                                          <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
+                                            {template.name} Preview
+                                          </text>
+                                        </svg>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Category Badge and Icon */}
+                                <div className="flex items-center justify-between">
+                                  <div className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${selectedTemplate === template.id
+                                    ? 'bg-gradient-to-br from-[#301F70]/20 to-[#1A1B41]/10 text-[#301F70]'
+                                    : 'bg-gradient-to-br from-[#779CAB]/10 to-[#A2E8DD]/10 text-[#1A1B41] group-hover:from-[#779CAB]/20 group-hover:to-[#A2E8DD]/20'
+                                    }`}>
+                                    <Package className="h-6 w-6" />
+                                  </div>
+                                  <Badge
+                                    className={`text-xs font-medium capitalize px-2 py-1 rounded-lg ${selectedTemplate === template.id
+                                      ? 'bg-[#301F70]/10 text-[#301F70] border-[#301F70]/20'
+                                      : 'bg-[#779CAB]/10 text-[#1A1B41] border-[#779CAB]/20'
+                                      }`}
+                                  >
+                                    {template.category}
+                                  </Badge>
+                                </div>
+
+                                {/* Title */}
+                                <div>
+                                  <h4 className={`font-bold text-lg leading-tight transition-colors duration-300 ${selectedTemplate === template.id
+                                    ? 'text-[#1A1B41]'
+                                    : 'text-gray-900 group-hover:text-[#1A1B41]'
+                                    }`}>
+                                    {template.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                    {template.description}
+                                  </p>
+                                </div>
+
+                                {/* Features */}
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span className="font-medium">Features:</span>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${selectedTemplate === template.id
+                                      ? 'bg-[#301F70]/10 text-[#301F70]'
+                                      : 'bg-gray-100 text-gray-600'
+                                      }`}>
+                                      {(template.features || []).length}
+                                    </span>
+                                  </div>
+
+                                  {/* Top 2 Features Only */}
+                                  <div className="space-y-1">
+                                    {(template.features || []).slice(0, 2).map((feature, index) => (
+                                      <div key={index} className="flex items-center gap-2 text-xs text-gray-600">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedTemplate === template.id
+                                          ? 'bg-[#301F70]'
+                                          : 'bg-[#779CAB]'
+                                          }`} />
+                                        <span className="truncate">{feature}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="pt-3 border-t border-gray-100">
+                                  <div className={`text-center text-xs font-medium transition-colors duration-300 ${selectedTemplate === template.id
+                                    ? 'text-[#301F70]'
+                                    : 'text-gray-500 group-hover:text-[#1A1B41]'
+                                    }`}>
+                                    {selectedTemplate === template.id ? '✓ Selected' : 'Click to Select'}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    )
-                  })}
-                </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div>
+                            <h3 className="font-medium text-lg text-[#1A1B41]">Choose Theme for {templates.find(t => t.id === selectedTemplate)?.name}</h3>
+                            <p className="text-sm text-gray-600">Select a color scheme and styling for your template</p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setTemplateStep('template')
+                              setSelectedTemplate(null)
+                              setAvailableThemes([])
+                            }}
+                            className="border-[#301F70]/20 text-[#301F70] hover:bg-[#301F70]/10"
+                          >
+                            Change Template
+                          </Button>
+                        </div>
 
-                {filteredThemesForCategory.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="text-gray-400 mb-2">
-                      <Palette className="h-12 w-12 mx-auto" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
-                    <p className="text-gray-600">Try selecting a different category</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                          {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).map((theme) => {
+                            const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
+                            const isSelected = selectedTheme === theme.id
+
+                            return (
+                              <div
+                                key={theme.id}
+                                onClick={() => handleThemeSelect(theme.id)}
+                                className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected
+                                  ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/5 to-[#1A1B41]/5 shadow-lg ring-2 ring-[#301F70]/20'
+                                  : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-[#779CAB]/5'
+                                  }`}
+                              >
+                                {theme.isPremium && (
+                                  <div className="absolute -top-2 -right-2 z-10">
+                                    <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
+                                      <Crown className="h-3 w-3" />
+                                      Premium
+                                    </div>
+                                  </div>
+                                )}
+
+                                {isSelected && (
+                                  <div className="absolute top-4 right-4">
+                                    <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full">
+                                      <Check className="h-4 w-4 text-white" />
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="space-y-5">
+                                  <div className="flex items-center justify-between">
+                                    <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${isSelected
+                                      ? 'bg-[#301F70]/10 text-[#301F70]'
+                                      : 'bg-gray-100 text-gray-600 group-hover:bg-[#779CAB]/10 group-hover:text-[#1A1B41]'
+                                      }`}>
+                                      <IconComponent className="h-7 w-7" />
+                                    </div>
+                                    <div className="text-right">
+                                      <Badge variant="secondary" className="text-xs font-medium capitalize">
+                                        {theme.category}
+                                      </Badge>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-[#1A1B41] transition-colors">
+                                      {theme.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                                      {theme.description}
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Color Palette</p>
+                                      <span className="text-xs text-gray-500">{Object.keys(theme.colors || {}).length} colors</span>
+                                    </div>
+                                    <div className="flex gap-2 flex-wrap">
+                                      {Object.values(theme.colors || {}).map((color, index) => (
+                                        <div
+                                          key={index}
+                                          className="w-10 h-10 rounded-xl border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer"
+                                          style={{ backgroundColor: color as string }}
+                                          title={color as string}
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
+                                      <span className="text-xs text-gray-500">{theme.features?.length || 0} features</span>
+                                    </div>
+                                    <ul className="space-y-2">
+                                      {theme.features?.slice(0, 3).map((feature: string, index: number) => (
+                                        <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
+                                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#301F70]' : 'bg-gray-400 group-hover:bg-[#779CAB]'
+                                            } transition-colors`} />
+                                          <span className="font-medium">{feature}</span>
+                                        </li>
+                                      ))}
+                                      {(theme.features?.length || 0) > 3 && (
+                                        <li className="text-xs text-gray-500 flex items-center gap-3 italic">
+                                          <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
+                                          +{(theme.features?.length || 0) - 3} more features
+                                        </li>
+                                      )}
+                                    </ul>
+                                  </div>
+
+                                  <div className="pt-2 border-t border-gray-100">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="text-gray-500">Theme ID: {theme.id}</span>
+                                      <span className={`font-semibold ${isSelected ? 'text-[#301F70]' : 'text-gray-600 group-hover:text-[#1A1B41]'
+                                        } transition-colors`}>
+                                        Select Theme <ArrowRight className='inline-block ml-1 h-3 w-3' />
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+
+                        {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).length === 0 && (
+                          <div className="text-center py-12">
+                            <div className="text-gray-400 mb-2">
+                              <Palette className="h-12 w-12 mx-auto" />
+                            </div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
+                            <p className="text-gray-600">Try selecting a different template</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
 
-        {/* Category Dialog */}
-        <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? 'Edit Category' : 'Add Category'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingCategory ? 'Update category information' : 'Create a new category for your products'}
-              </DialogDescription>
-            </DialogHeader>
+          </div>
+        </div>
+      </div>
 
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="categoryName">Category Name</Label>
-                <Input
-                  id="categoryName"
-                  value={categoryForm.name}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter category name"
-                />
-              </div>
+      {/* Category Dialog */}
+      <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingCategory ? 'Edit Category' : 'Add Category'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingCategory ? 'Update category information' : 'Create a new category for your products'}
+            </DialogDescription>
+          </DialogHeader>
 
-              <div>
-                <Label htmlFor="categoryDescription">Description</Label>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="categoryName">Category Name</Label>
+              <Input
+                id="categoryName"
+                value={categoryForm.name}
+                onChange={(e) => setCategoryForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter category name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="categoryDescription">Description</Label>
+              <Textarea
+                id="categoryDescription"
+                value={categoryForm.description}
+                onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter category description"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCategoryDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveCategory}>
+              {editingCategory ? 'Update' : 'Create'} Category
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Dialog */}
+      <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
+        <DialogContent className="max-w-2xl overflow-auto h-full max-h-[95vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingProduct ? 'Edit Product' : 'Add Product'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingProduct ? 'Update product information' : 'Add a new product to your catalogue'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="productName">Product Name</Label>
+              <Input
+                id="productName"
+                value={productForm.name}
+                onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter product name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="productDescription">Description</Label>
+              <div className="space-y-2">
                 <Textarea
-                  id="categoryDescription"
-                  value={categoryForm.description}
-                  onChange={(e) => setCategoryForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter category description"
+                  id="productDescription"
+                  value={productForm.description}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter product description"
                   rows={3}
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                  disabled={isGeneratingDescription || !productForm.name.trim()}
+                  onClick={async () => {
+                    if (!productForm.name.trim()) {
+                      toast.error("Please enter a product name first");
+                      return;
+                    }
+
+                    setIsGeneratingDescription(true);
+
+                    try {
+                      const category = catalogue?.categories.find(cat => cat.id === productForm.categoryId);
+
+                      const response = await fetch('/api/ai/description', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          productName: productForm.name,
+                          category: category?.name,
+                          tags: productForm.tags,
+                          price: productForm.price > 0 ? productForm.price : undefined
+                        })
+                      });
+
+                      if (!response.ok) {
+                        throw new Error(`Failed to generate description: ${response.status}`);
+                      }
+
+                      const data = await response.json();
+
+                      if (data.success && data.description) {
+                        setProductForm(prev => ({ ...prev, description: data.description }));
+                        toast.success("AI description generated successfully!");
+                      } else {
+                        throw new Error(data.error || 'Failed to generate description');
+                      }
+                    } catch (error) {
+                      console.error('AI Generation Error:', error);
+                      toast.error(error instanceof Error ? error.message : 'Failed to generate description');
+                    } finally {
+                      setIsGeneratingDescription(false);
+                    }
+                  }}
+                >
+                  {isGeneratingDescription ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3 mr-1" /> AI Generate
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowCategoryDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveCategory}>
-                {editingCategory ? 'Update' : 'Create'} Category
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Product Dialog */}
-        <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-          <DialogContent className="max-w-2xl overflow-auto h-full max-h-[95vh]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingProduct ? 'Edit Product' : 'Add Product'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingProduct ? 'Update product information' : 'Add a new product to your catalogue'}
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="productName">Product Name</Label>
-                <Input
-                  id="productName"
-                  value={productForm.name}
-                  onChange={(e) => setProductForm(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter product name"
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Product Image</Label>
+              {!productForm.imageUrl ? (
+                <FileUpload
+                  uploadType="product"
+                  catalogueId={catalogueId}
+                  productId={editingProduct?.id}
+                  maxFiles={1}
+                  accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                  onUpload={(files) => {
+                    if (files.length > 0) {
+                      setProductForm(prev => ({ ...prev, imageUrl: files[0].url }))
+                    }
+                  }}
+                  onError={(error) => {
+                    setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
+                  }}
+                  className="mt-2"
                 />
-              </div>
-
-              <div>
-                <Label htmlFor="productDescription">Description</Label>
-                <div className="space-y-2">
-                  <Textarea
-                    id="productDescription"
-                    value={productForm.description}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter product description"
-                    rows={3}
+              ) : (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                  <p className="text-sm text-gray-600 mb-2">Current image:</p>
+                  <img
+                    src={productForm.imageUrl}
+                    alt="Product Image"
+                    className="w-20 h-20 object-cover border rounded"
                   />
                   <Button
                     type="button"
                     variant="outline"
-                    size="xs"
-                    className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"  
-                    disabled={isGeneratingDescription || !productForm.name.trim()}
-                    onClick={async () => {
-                      if (!productForm.name.trim()) {
-                        toast.error("Please enter a product name first");
-                        return;
-                      }
+                    size="sm"
+                    onClick={() => setProductForm(prev => ({ ...prev, imageUrl: '' }))}
+                    className="text-xs"
+                  >
+                    Change Image
+                  </Button>
+                </div>
+              )}
+            </div>
 
-                      setIsGeneratingDescription(true);
-                      
+            <div>
+              <Label htmlFor="productTags">Tags</Label>
+              <Input
+                id="productTags"
+                value={productForm.tags?.join(', ') || ''}
+                onChange={(e) => {
+                  const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+                  setProductForm(prev => ({ ...prev, tags: tagsArray }));
+                }}
+                placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productPrice">Price</Label>
+                <Input
+                  id="productPrice"
+                  type="number"
+                  value={productForm.price}
+                  onChange={(e) => setProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="productPriceDisplay">Price Display</Label>
+                <Select
+                  value={productForm.priceDisplay}
+                  onValueChange={(value: 'show' | 'hide' | 'contact') => setProductForm(prev => ({ ...prev, priceDisplay: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select price display" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="show">Show Price</SelectItem>
+                    <SelectItem value="hide">Hide Price</SelectItem>
+                    <SelectItem value="contact">Contact for Price</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="productCategory">Category</Label>
+                <div className="flex items-center gap-2">
+                  <Select value={productForm.categoryId} onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {catalogue.categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                    disabled={!productForm.name || !productForm.description}
+                    onClick={async () => {
                       try {
-                        const category = catalogue?.categories.find(cat => cat.id === productForm.categoryId);
-                        
-                        const response = await fetch('/api/ai/description', {
+                        const response = await fetch('/api/ai/category', {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
                           },
                           body: JSON.stringify({
-                            productName: productForm.name,
-                            category: category?.name,
-                            tags: productForm.tags,
-                            price: productForm.price > 0 ? productForm.price : undefined
-                          })
+                            text: `${productForm.name} ${productForm.description}`,
+                            existingCategories: catalogue.categories
+                          }),
                         });
 
-                        if (!response.ok) {
-                          throw new Error(`Failed to generate description: ${response.status}`);
-                        }
-
                         const data = await response.json();
-                        
-                        if (data.success && data.description) {
-                          setProductForm(prev => ({ ...prev, description: data.description }));
-                          toast.success("AI description generated successfully!");
+
+                        if (data.success && data.category) {
+                          setProductForm(prev => ({
+                            ...prev,
+                            categoryId: data.category.id
+                          }));
+                          toast.success('Category suggested successfully!');
                         } else {
-                          throw new Error(data.error || 'Failed to generate description');
+                          throw new Error(data.error || 'Failed to suggest category');
                         }
                       } catch (error) {
-                        console.error('AI Generation Error:', error);
-                        toast.error(error instanceof Error ? error.message : 'Failed to generate description');
-                      } finally {
-                        setIsGeneratingDescription(false);
+                        console.error('AI Category Suggestion Error:', error);
+                        toast.error(error instanceof Error ? error.message : 'Failed to suggest category');
                       }
                     }}
                   >
                     {isGeneratingDescription ? (
                       <>
                         <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                        Generating...
+                        Suggesting...
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-3 h-3 mr-1" /> AI Generate
+                        <Sparkles className="w-3 h-3 mr-1" /> Suggest Category
                       </>
                     )}
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter product name and description first for better category suggestions
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="productActive"
+                  checked={productForm.isActive}
+                  onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
+                />
+                <Label htmlFor="productActive">Active</Label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowProductDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveProduct}>
+              {editingProduct ? 'Update' : 'Add'} Product
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Settings Dialog */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Settings</DialogTitle>
+            <DialogDescription>
+              Configure display and visibility settings for your catalogue
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Display Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Display Settings</h3>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Show Prices</Label>
+                  <p className="text-sm text-gray-600">Display product prices in the catalogue</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showPrices || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showPrices: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Show Categories</Label>
+                  <p className="text-sm text-gray-600">Group products by categories</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showCategories || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showCategories: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Allow Search</Label>
+                  <p className="text-sm text-gray-600">Enable search functionality</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.allowSearch || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        allowSearch: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Show Product Codes</Label>
+                  <p className="text-sm text-gray-600">Display product SKU/codes</p>
+                </div>
+                <Switch
+                  checked={catalogue?.settings?.displaySettings?.showProductCodes || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? {
+                    ...prev,
+                    settings: {
+                      ...prev.settings,
+                      displaySettings: {
+                        ...prev.settings?.displaySettings,
+                        showProductCodes: checked
+                      }
+                    }
+                  } : null)}
+                />
+              </div>
+            </div>
+
+            {/* Visibility Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Visibility Settings</h3>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base font-medium">Catalogue Visibility</Label>
+                  <p className="text-sm text-gray-600">Control who can see your catalogue</p>
+                </div>
+                <Switch
+                  checked={catalogue?.isPublic || false}
+                  onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                />
+              </div>
+              <p className="text-sm text-gray-600">
+                {catalogue?.isPublic ? 'Public - Visible to everyone' : 'Private - Only visible to you'}
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowSettingsDialog(false)
+              saveCatalogue()
+            }}>
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Details Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Catalogue Details</DialogTitle>
+            <DialogDescription>
+              Update your catalogue branding and information
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Basic Information</h3>
+              <div>
+                <Label htmlFor="catalogueName">Catalogue Name</Label>
+                <Input
+                  id="catalogueName"
+                  value={catalogue?.name || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, name: e.target.value } : null)}
+                  placeholder="Enter catalogue name"
+                />
               </div>
 
               <div>
-                <Label className="text-sm font-medium mb-2 block">Product Image</Label>
-                {!productForm.imageUrl ? (
+                <Label htmlFor="catalogueDescription">Description</Label>
+                <Textarea
+                  id="catalogueDescription"
+                  value={catalogue?.description || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  placeholder="Describe your catalogue"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="catalogueTagline">Tagline</Label>
+                <Input
+                  id="catalogueTagline"
+                  value={catalogue?.tagline || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, tagline: e.target.value } : null)}
+                  placeholder="Enter a catchy tagline for your catalogue"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="catalogueQuote">Quote</Label>
+                <Textarea
+                  id="catalogueQuote"
+                  value={catalogue?.quote || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, quote: e.target.value } : null)}
+                  placeholder="Enter an inspiring quote for your catalogue"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="catalogueYear">Catalogue Year</Label>
+                <Input
+                  id="catalogueYear"
+                  value={(catalogue as any)?.year || ''}
+                  onChange={(e) => setCatalogue(prev => prev ? { ...prev, year: e.target.value } as any : null)}
+                  placeholder="2025"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Intro Image</Label>
+                {!catalogue?.introImage ? (
                   <FileUpload
-                    uploadType="product"
+                    uploadType="catalogue"
                     catalogueId={catalogueId}
-                    productId={editingProduct?.id}
                     maxFiles={1}
                     accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
                     onUpload={(files) => {
                       if (files.length > 0) {
-                        setProductForm(prev => ({ ...prev, imageUrl: files[0].url }))
+                        setCatalogue(prev => prev ? { ...prev, introImage: files[0].url } : null)
                       }
                     }}
                     onError={(error) => {
-                      setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
+                      setErrorWithAutoDismiss(`Intro image upload failed: ${error}`)
                     }}
                     className="mt-2"
                   />
                 ) : (
                   <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                    <p className="text-sm text-gray-600 mb-2">Current image:</p>
+                    <p className="text-sm text-gray-600 mb-2">Current intro image:</p>
                     <img
-                      src={productForm.imageUrl}
-                      alt="Product Image"
-                      className="w-20 h-20 object-cover border rounded"
+                      src={catalogue.introImage}
+                      alt="Intro Image"
+                      className="w-32 h-24 object-cover border rounded"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => setProductForm(prev => ({ ...prev, imageUrl: '' }))}
+                      onClick={() => setCatalogue(prev => prev ? { ...prev, introImage: '' } : null)}
                       className="text-xs"
                     >
                       Change Image
@@ -1708,642 +2616,394 @@ export default function EditCataloguePage() {
                   </div>
                 )}
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="productTags">Tags</Label>
-                <Input
-                  id="productTags"
-                  value={productForm.tags?.join(', ') || ''}
-                  onChange={(e) => {
-                    const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-                    setProductForm(prev => ({ ...prev, tags: tagsArray }));
-                  }}
-                  placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
-                />
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
+
+            {/* Media & Assets */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Media & Assets</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="productPrice">Price</Label>
-                  <Input
-                    id="productPrice"
-                    type="number"
-                    value={productForm.price}
-                    onChange={(e) => setProductForm(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0.00"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="productPriceDisplay">Price Display</Label>
-                  <Select
-                    value={productForm.priceDisplay}
-                    onValueChange={(value: 'show' | 'hide' | 'contact') => setProductForm(prev => ({ ...prev, priceDisplay: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select price display" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="show">Show Price</SelectItem>
-                      <SelectItem value="hide">Hide Price</SelectItem>
-                      <SelectItem value="contact">Contact for Price</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="productCategory">Category</Label>
-                  <div className="flex items-center gap-2">
-                    <Select value={productForm.categoryId} onValueChange={(value) => setProductForm(prev => ({ ...prev, categoryId: value }))}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalogue.categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="xs" 
-                      className="text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
-                      disabled={!productForm.name || !productForm.description}
-                      onClick={async () => {
-                        try {
-                          const response = await fetch('/api/ai/category', {
-                            method: 'POST',
-                            headers: {
-                              'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                              text: `${productForm.name} ${productForm.description}`,
-                              existingCategories: catalogue.categories
-                            }),
-                          });
-
-                          const data = await response.json();
-
-                          if (data.success && data.category) {
-                            setProductForm(prev => ({ 
-                              ...prev, 
-                              categoryId: data.category.id 
-                            }));
-                            toast.success('Category suggested successfully!');
-                          } else {
-                            throw new Error(data.error || 'Failed to suggest category');
-                          }
-                        } catch (error) {
-                          console.error('AI Category Suggestion Error:', error);
-                          toast.error(error instanceof Error ? error.message : 'Failed to suggest category');
+                  <Label className="text-sm font-medium mb-2 block">Company Logo</Label>
+                  {!catalogue?.settings?.mediaAssets?.logoUrl ? (
+                    <FileUpload
+                      uploadType="catalogue"
+                      catalogueId={catalogueId}
+                      maxFiles={1}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      onUpload={(files) => {
+                        if (files.length > 0) {
+                          setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              mediaAssets: {
+                                ...prev.settings?.mediaAssets,
+                                logoUrl: files[0].url
+                              }
+                            }
+                          } : null)
                         }
                       }}
-                    >
-                      {isGeneratingDescription ? (
-                        <>
-                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                          Suggesting...
-                        </>
-                      ) : (
-                        <>
-                         <Sparkles className="w-3 h-3 mr-1" /> Suggest Category
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Enter product name and description first for better category suggestions
-                  </p>
+                      onError={(error) => {
+                        setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
+                      }}
+                      className="mt-2"
+                    />
+                  ) : (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <p className="text-sm text-gray-600 mb-2">Current logo:</p>
+                      <img
+                        src={catalogue.settings.mediaAssets.logoUrl}
+                        alt="Company Logo"
+                        className="w-20 h-20 object-contain border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCatalogue(prev => prev ? {
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            mediaAssets: {
+                              ...prev.settings?.mediaAssets,
+                              logoUrl: ''
+                            }
+                          }
+                        } : null)}
+                        className="text-xs"
+                      >
+                        Change Logo
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="productActive"
-                    checked={productForm.isActive}
-                    onCheckedChange={(checked) => setProductForm(prev => ({ ...prev, isActive: checked }))}
-                  />
-                  <Label htmlFor="productActive">Active</Label>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowProductDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={saveProduct}>
-                {editingProduct ? 'Update' : 'Add'} Product
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Settings Dialog */}
-        <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Edit Settings</DialogTitle>
-              <DialogDescription>
-                Configure display and visibility settings for your catalogue
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Display Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Display Settings</h3>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Prices</Label>
-                    <p className="text-sm text-gray-600">Display product prices in the catalogue</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showPrices || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showPrices: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Categories</Label>
-                    <p className="text-sm text-gray-600">Group products by categories</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showCategories || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showCategories: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Allow Search</Label>
-                    <p className="text-sm text-gray-600">Enable search functionality</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.allowSearch || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          allowSearch: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Show Product Codes</Label>
-                    <p className="text-sm text-gray-600">Display product SKU/codes</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.settings?.displaySettings?.showProductCodes || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? {
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        displaySettings: {
-                          ...prev.settings?.displaySettings,
-                          showProductCodes: checked
-                        }
-                      }
-                    } : null)}
-                  />
-                </div>
-              </div>
-
-              {/* Visibility Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Visibility Settings</h3>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-base font-medium">Catalogue Visibility</Label>
-                    <p className="text-sm text-gray-600">Control who can see your catalogue</p>
-                  </div>
-                  <Switch
-                    checked={catalogue?.isPublic || false}
-                    onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
-                  />
-                </div>
-                <p className="text-sm text-gray-600">
-                  {catalogue?.isPublic ? 'Public - Visible to everyone' : 'Private - Only visible to you'}
-                </p>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                setShowSettingsDialog(false)
-                saveCatalogue()
-              }}>
-                Save Settings
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Edit Details Dialog */}
-        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Catalogue Details</DialogTitle>
-              <DialogDescription>
-                Update your catalogue branding and information
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Basic Information</h3>
                 <div>
-                  <Label htmlFor="catalogueName">Catalogue Name</Label>
+                  <Label className="text-sm font-medium mb-2 block">Cover Image</Label>
+                  {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
+                    <FileUpload
+                      uploadType="catalogue"
+                      catalogueId={catalogueId}
+                      maxFiles={1}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      onUpload={(files) => {
+                        if (files.length > 0) {
+                          setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              mediaAssets: {
+                                ...prev.settings?.mediaAssets,
+                                coverImageUrl: files[0].url
+                              }
+                            }
+                          } : null)
+                        }
+                      }}
+                      onError={(error) => {
+                        setErrorWithAutoDismiss(`Cover image upload failed: ${error}`)
+                      }}
+                      className="mt-2"
+                    />
+                  ) : (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                      <p className="text-sm text-gray-600 mb-2">Current cover image:</p>
+                      <img
+                        src={catalogue.settings.mediaAssets.coverImageUrl}
+                        alt="Cover Image"
+                        className="w-full h-32 object-cover border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCatalogue(prev => prev ? {
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            mediaAssets: {
+                              ...prev.settings?.mediaAssets,
+                              coverImageUrl: ''
+                            }
+                          }
+                        } : null)}
+                        className="text-xs"
+                      >
+                        Change Cover Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Company Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Company Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="companyName">Company Name</Label>
                   <Input
-                    id="catalogueName"
-                    value={catalogue?.name || ''}
-                    onChange={(e) => setCatalogue(prev => prev ? { ...prev, name: e.target.value } : null)}
-                    placeholder="Enter catalogue name"
+                    id="companyName"
+                    value={catalogue?.settings?.companyInfo?.companyName || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        companyInfo: {
+                          ...(prev.settings?.companyInfo || {}),
+                          companyName: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="Enter your company name"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="catalogueDescription">Description</Label>
+                  <Label htmlFor="companyDescription">Company Description</Label>
                   <Textarea
-                    id="catalogueDescription"
-                    value={catalogue?.description || ''}
-                    onChange={(e) => setCatalogue(prev => prev ? { ...prev, description: e.target.value } : null)}
-                    placeholder="Describe your catalogue"
+                    id="companyDescription"
+                    value={catalogue?.settings?.companyInfo?.companyDescription || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        companyInfo: {
+                          ...(prev.settings?.companyInfo || {}),
+                          companyDescription: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="Describe your company"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Details */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Contact Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="contactEmail">Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    value={catalogue?.settings?.contactDetails?.email || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          email: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="contact@company.com"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactPhone">Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    value={catalogue?.settings?.contactDetails?.phone || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          phone: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactWebsite">Website</Label>
+                  <Input
+                    id="contactWebsite"
+                    value={catalogue?.settings?.contactDetails?.website || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings?.contactDetails || {}),
+                          website: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://www.company.com"
+                  />
+                </div>
+              </div>
+
+              {/* Address and Contact Description */}
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="contactAddress">Address</Label>
+                  <Input
+                    id="contactAddress"
+                    value={(catalogue?.settings as any)?.contactDetails?.address || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDetails: {
+                          ...(prev.settings as any)?.contactDetails,
+                          address: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="123 Main Street, City, State 12345"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contactDescription">Contact Page Description</Label>
+                  <Textarea
+                    id="contactDescription"
+                    value={(catalogue?.settings as any)?.contactDescription || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        contactDescription: e.target.value
+                      }
+                    } : null)}
+                    placeholder="Get in touch with us for more information about our products"
                     rows={3}
                   />
                 </div>
               </div>
 
-
-
-              {/* Media & Assets */}
+              {/* Contact Page Customization */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Media & Assets</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Company Logo</Label>
-                    {!catalogue?.settings?.mediaAssets?.logoUrl ? (
-                      <FileUpload
-                        uploadType="catalogue"
-                        catalogueId={catalogueId}
-                        maxFiles={1}
-                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                        onUpload={(files) => {
-                          if (files.length > 0) {
-                            setCatalogue(prev => prev ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                mediaAssets: {
-                                  ...prev.settings?.mediaAssets,
-                                  logoUrl: files[0].url
-                                }
-                              }
-                            } : null)
-                          }
-                        }}
-                        onError={(error) => {
-                          setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
-                        }}
-                        className="mt-2"
-                      />
-                    ) : (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                        <p className="text-sm text-gray-600 mb-2">Current logo:</p>
-                        <img
-                          src={catalogue.settings.mediaAssets.logoUrl}
-                          alt="Company Logo"
-                          className="w-20 h-20 object-contain border rounded"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCatalogue(prev => prev ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              mediaAssets: {
-                                ...prev.settings?.mediaAssets,
-                                logoUrl: ''
-                              }
-                            }
-                          } : null)}
-                          className="text-xs"
-                        >
-                          Change Logo
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Cover Image</Label>
-                    {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
-                      <FileUpload
-                        uploadType="catalogue"
-                        catalogueId={catalogueId}
-                        maxFiles={1}
-                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
-                        onUpload={(files) => {
-                          if (files.length > 0) {
-                            setCatalogue(prev => prev ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                mediaAssets: {
-                                  ...prev.settings?.mediaAssets,
-                                  coverImageUrl: files[0].url
-                                }
-                              }
-                            } : null)
-                          }
-                        }}
-                        onError={(error) => {
-                          setErrorWithAutoDismiss(`Cover image upload failed: ${error}`)
-                        }}
-                        className="mt-2"
-                      />
-                    ) : (
-                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
-                        <p className="text-sm text-gray-600 mb-2">Current cover image:</p>
-                        <img
-                          src={catalogue.settings.mediaAssets.coverImageUrl}
-                          alt="Cover Image"
-                          className="w-full h-32 object-cover border rounded"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setCatalogue(prev => prev ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              mediaAssets: {
-                                ...prev.settings?.mediaAssets,
-                                coverImageUrl: ''
-                              }
-                            }
-                          } : null)}
-                          className="text-xs"
-                        >
-                          Change Cover Image
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Company Information */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Company Information</h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="companyName">Company Name</Label>
-                    <Input
-                      id="companyName"
-                      value={catalogue?.settings?.companyInfo?.companyName || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          companyInfo: {
-                            ...(prev.settings?.companyInfo || {}),
-                            companyName: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="Enter your company name"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="companyDescription">Company Description</Label>
-                    <Textarea
-                      id="companyDescription"
-                      value={catalogue?.settings?.companyInfo?.companyDescription || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          companyInfo: {
-                            ...(prev.settings?.companyInfo || {}),
-                            companyDescription: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="Describe your company"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Contact Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Contact Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="contactEmail">Email</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={catalogue?.settings?.contactDetails?.email || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            email: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="contact@company.com"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactPhone">Phone</Label>
-                    <Input
-                      id="contactPhone"
-                      value={catalogue?.settings?.contactDetails?.phone || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            phone: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="contactWebsite">Website</Label>
-                    <Input
-                      id="contactWebsite"
-                      value={catalogue?.settings?.contactDetails?.website || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          contactDetails: {
-                            ...(prev.settings?.contactDetails || {}),
-                            website: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://www.company.com"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Media */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Social Media</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="socialFacebook">Facebook</Label>
-                    <Input
-                      id="socialFacebook"
-                      value={catalogue?.settings?.socialMedia?.facebook || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            facebook: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://facebook.com/yourpage"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialTwitter">Twitter</Label>
-                    <Input
-                      id="socialTwitter"
-                      value={catalogue?.settings?.socialMedia?.twitter || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            twitter: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://twitter.com/yourhandle"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialInstagram">Instagram</Label>
-                    <Input
-                      id="socialInstagram"
-                      value={catalogue?.settings?.socialMedia?.instagram || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            instagram: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://instagram.com/yourhandle"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="socialLinkedin">LinkedIn</Label>
-                    <Input
-                      id="socialLinkedin"
-                      value={catalogue?.settings?.socialMedia?.linkedin || ''}
-                      onChange={(e) => setCatalogue(prev => prev ? {
-                        ...prev,
-                        settings: {
-                          ...(prev.settings || {}),
-                          socialMedia: {
-                            ...(prev.settings?.socialMedia || {}),
-                            linkedin: e.target.value
-                          }
-                        }
-                      } : null)}
-                      placeholder="https://linkedin.com/company/yourcompany"
-                    />
+                <h4 className="text-md font-medium">Contact Page Customization</h4>
+                <div className="grid grid-cols-1 gap-4">
+                  {/* Note: Contact image, quote, and quote by features can be added later */}
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      Additional contact customization features will be available in future updates.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-                Cancel
-              </Button>
-              <Button onClick={() => {
-                setShowEditDialog(false)
-                saveCatalogue()
-              }}>
-                Save Changes
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            {/* Social Media */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Social Media</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="socialFacebook">Facebook</Label>
+                  <Input
+                    id="socialFacebook"
+                    value={catalogue?.settings?.socialMedia?.facebook || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          facebook: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://facebook.com/yourpage"
+                  />
+                </div>
 
-        <UpgradePrompt
-          isOpen={showUpgradePrompt}
-          onClose={() => setShowUpgradePrompt(false)}
-          feature="product and category management"
-          currentPlan={currentPlan}
-        />
-      </div>
+                <div>
+                  <Label htmlFor="socialTwitter">Twitter</Label>
+                  <Input
+                    id="socialTwitter"
+                    value={catalogue?.settings?.socialMedia?.twitter || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          twitter: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://twitter.com/yourhandle"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Input
+                    id="socialInstagram"
+                    value={catalogue?.settings?.socialMedia?.instagram || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          instagram: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://instagram.com/yourhandle"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Input
+                    id="socialLinkedin"
+                    value={catalogue?.settings?.socialMedia?.linkedin || ''}
+                    onChange={(e) => setCatalogue(prev => prev ? {
+                      ...prev,
+                      settings: {
+                        ...(prev.settings || {}),
+                        socialMedia: {
+                          ...(prev.settings?.socialMedia || {}),
+                          linkedin: e.target.value
+                        }
+                      }
+                    } : null)}
+                    placeholder="https://linkedin.com/company/yourcompany"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              setShowEditDialog(false)
+              saveCatalogue()
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <UpgradePrompt
+        isOpen={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        feature="product and category management"
+        currentPlan={currentPlan}
+      />
     </>
   )
 }

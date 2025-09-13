@@ -172,7 +172,7 @@ async function calculateThemeAdoptionRates() {
 export async function GET(request: NextRequest) {
   try {
     // Authenticate user via Supabase
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
@@ -325,7 +325,7 @@ export async function GET(request: NextRequest) {
 // Track theme selection
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
