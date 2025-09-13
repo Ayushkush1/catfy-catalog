@@ -861,7 +861,7 @@ export default function CataloguePreviewPage() {
                 )}
               </Button>
 
-              <ShareDialog 
+              <ShareDialog
                 shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/catalogue/${catalogue.id}/preview`}
                 catalogueName={catalogue.name}
               >
@@ -898,7 +898,7 @@ export default function CataloguePreviewPage() {
             {/* Get viewport styles */}
             {(() => {
               const viewportStyles = getViewportStyles(viewportMode)
-              
+
               return (
                 <div style={viewportStyles.wrapper}>
                   <div
@@ -910,8 +910,8 @@ export default function CataloguePreviewPage() {
                       '--theme-secondary': themeColors.secondary,
                       '--theme-accent': themeColors.accent,
                       minHeight: viewportMode === 'desktop' ? '800px' : 'auto',
-                      boxShadow: viewportMode !== 'desktop' 
-                        ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)' 
+                      boxShadow: viewportMode !== 'desktop'
+                        ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
                         : isEditMode
                           ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
                           : '0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
