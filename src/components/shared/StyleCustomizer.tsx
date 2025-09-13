@@ -1290,6 +1290,8 @@ export function StyleCustomizer({
                               accept="image/*"
                               onChange={(e) => handleImageUpload(e, product.id)}
                               className="text-xs"
+                              placeholder="Upload product image"
+                              title="Upload product image"
                             />
                             {product.imageUrl && (
                               <p className="text-xs text-gray-500 mt-1 truncate">
@@ -1337,6 +1339,8 @@ export function StyleCustomizer({
                               className="flex-1 text-sm p-2 border rounded resize-none"
                               rows={3}
                               autoFocus
+                              placeholder="Enter product description"
+                              title="Product Description"
                             />
                             <Button size="sm" onClick={() => handleProductFieldSave(product.id, 'description')}>Save</Button>
                           </div>

@@ -5,6 +5,7 @@ import StyleCustomizer, { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, D
 import { ColorCustomization } from '@/components/catalog-templates/skincare-catalogue/types/ColorCustomization'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import { ShareDialog } from '@/components/shared/ShareDialog'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { ContentMapper } from '@/lib/content-schema'
 import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
@@ -850,15 +851,19 @@ export default function CataloguePreviewPage() {
                 )}
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={shareCatalogue}
-                className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300"
+              <ShareDialog 
+                shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/catalogue/${catalogue.id}/preview`}
+                catalogueName={catalogue.name}
               >
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </ShareDialog>
               <Button
                 variant="outline"
                 size="sm"
