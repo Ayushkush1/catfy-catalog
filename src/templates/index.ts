@@ -3,11 +3,13 @@ import { TemplateRegistry } from '@/lib/template-registry'
 import { SkincareCatalogueTemplateWrapper } from '@/components/catalog-templates/skincare-catalogue/SkincareCatalogueTemplate'
 import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/fashion-catalogue/FashionCatalogueTemplate'
 import { FmcgCatalogueTemplateWrapper } from '@/components/catalog-templates/fmcg-catalogue/FmcgCatalogueTemplate'
+import { FurnitureCatalogueTemplateWrapper } from '@/components/catalog-templates/furniture-catalogue/FurnitureCatalogueTemplate'
 
 // Import template configurations
 import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
 import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-catalogue/template.config'
 import { fmcgCatalogueConfig } from '@/components/catalog-templates/fmcg-catalogue/template.config'
+import { furnitureCatalogueConfig } from '@/components/catalog-templates/furniture-catalogue/template.config'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
@@ -36,6 +38,9 @@ function registerAllTemplates() {
 
   // Register FMCG catalogue template
   templateRegistry.registerTemplate(fmcgCatalogueConfig, FmcgCatalogueTemplateWrapper)
+
+  // Register furniture catalogue template
+  templateRegistry.registerTemplate(furnitureCatalogueConfig, FurnitureCatalogueTemplateWrapper)
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
@@ -124,7 +129,9 @@ export function getTemplateSupportedFields(templateId: string) {
 // Export template configurations for direct access
 export {
   skincareCatalogueConfig,
-  fashionCatalogueConfig
+  fashionCatalogueConfig,
+  fmcgCatalogueConfig,
+  furnitureCatalogueConfig
 }
 
 // Export types

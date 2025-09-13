@@ -2,6 +2,7 @@ import { Catalogue, Product, Category, Profile } from '@prisma/client'
 import { SkincareCatalogueTemplate } from './skincare-catalogue/SkincareCatalogueTemplate'
 import { FashionCatalogueTemplate } from './fashion-catalogue/FashionCatalogueTemplate'
 import { FmcgCatalogueTemplate } from './fmcg-catalogue/FmcgCatalogueTemplate'
+import { FurnitureCatalogueTemplate } from './furniture-catalogue/FurnitureCatalogueTemplate'
 import { TemplateRegistry, type TemplateConfig as RegistryTemplateConfig } from '@/lib/template-registry'
 import { ContentMapper, type StandardizedContent } from '@/lib/content-schema'
 
@@ -130,6 +131,33 @@ export const CATALOG_TEMPLATES: TemplateConfig[] = [
       categories: ['name', 'description', 'color'],
       profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
     }
+  },
+  {
+    id: 'furniture-catalogue',
+    name: 'Furniture Catalogue',
+    description: 'An elegant 4-page template designed specifically for furniture brands and home decor retailers to showcase their products with sophisticated layouts and professional craftsmanship presentation',
+    category: 'product',
+    isPremium: false,
+    previewImage: '/templates/furniture-catalogue-preview.svg',
+    component: FurnitureCatalogueTemplate,
+    features: [
+      'Elegant dark theme design',
+      'Product catalog display',
+      'Craftsmanship details showcase',
+      'Category organization',
+      'Contact information',
+      'Professional layout',
+      'Theme color integration',
+      'Responsive design',
+      'Print optimization',
+      'Premium furniture branding'
+    ],
+    pageCount: 4,
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay', 'dimensions', 'materials', 'finishes'],
+      categories: ['name', 'description', 'color'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+    }
   }
   // Future templates can be added here:
   // {
@@ -236,4 +264,4 @@ export function validateContentStructure(content: StandardizedContent): boolean 
   }
 }
 
-export { SkincareCatalogueTemplate, FashionCatalogueTemplate, FmcgCatalogueTemplate }
+export { SkincareCatalogueTemplate, FashionCatalogueTemplate, FmcgCatalogueTemplate, FurnitureCatalogueTemplate }
