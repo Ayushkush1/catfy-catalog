@@ -8,7 +8,7 @@ import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } f
 
 interface ProductCategoryPageProps {
     catalogue: Catalogue & {
-        products: (Product & { category: Category | null })[]
+        products: (Product & { category: Category | null; imageUrl?: string | null })[]
         categories: Category[]
     };
     profile: Profile;
@@ -98,211 +98,221 @@ export function ProductCategoryPage({
     ];
 
     // Use real products if available, otherwise use sample products
-    const displayProducts = content.products.length > 0 ? content.products : sampleProducts;
+    const displayProducts = catalogue.products.length > 0 ? catalogue.products : sampleProducts;
 
     // Categories from the images
     const categories = ['Living Room', 'Dining', 'Bedroom', 'Office', 'Outdoor'];
 
+    // Split products into pages of 3 products each
+    const productsPerPage = 3;
+    const totalProducts = displayProducts.length;
+    const totalPages = Math.ceil(totalProducts / productsPerPage);
+
+    // Create pages array
+    const productPages = [];
+    for (let i = 0; i < totalPages; i++) {
+        const startIndex = i * productsPerPage;
+        const endIndex = startIndex + productsPerPage;
+        productPages.push(displayProducts.slice(startIndex, endIndex));
+    }
+
     return (
-        <div className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page bg-neutral-50">
+        <>
+            {productPages.map((pageProducts, pageIndex) => (
+                <div key={`product-page-${pageIndex}`} className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page bg-neutral-50">
 
-            {/* Header */}
-            <div className="bg-white px-16 py-8 border-b border-neutral-200">
-                <div className="flex items-center justify-between">
-                    {/* Company name/logo */}
-                    <div>
-                        <h1
-                            className="text-3xl font-bold text-neutral-800 tracking-wider"
-                            style={{
-                                fontFamily: fontCustomization?.fontFamily?.title || 'serif',
-                                fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title}px` : 'inherit'
-                            }}
-                        >
-                            {content.profile.companyName?.toUpperCase() || 'MAISON'}
-                        </h1>
-                        <p
-                            className="text-neutral-500 text-sm tracking-[0.2em] mt-1"
-                            style={{
-                                fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                            }}
-                        >
-                            Curated Living Collections
-                        </p>
-                    </div>
-
-                    {/* Navigation */}
-                    <nav className="flex space-x-8">
-                        {categories.map((category, index) => (
-                            <button
-                                key={category}
-                                className={`text-sm tracking-wider uppercase transition-colors ${index === 0 ? 'text-neutral-800 border-b border-neutral-800 pb-1' : 'text-neutral-500 hover:text-neutral-800'
-                                    }`}
-                                style={{
-                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                }}
-                            >
-                                {category}
-                            </button>
-                        ))}
-                    </nav>
-                </div>
-            </div>
-
-            {/* Product grid */}
-            <div className="px-16 py-12 overflow-y-auto" style={{ height: 'calc(100vh - 120px)' }}>
-                <div className="grid grid-cols-3 gap-8">
-
-                    {displayProducts.slice(0, 6).map((product, index) => {
-                        const isProduct = 'images' in product;
-                        const productName = isProduct ? product.name : product.name;
-                        const productPrice = isProduct ? product.priceDisplay || `${product.currency || '$'}${product.price}` : product.price;
-                        const productImage = isProduct ? product.images?.[0] : null;
-
-                        return (
-                            <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-
-                                {/* Product image */}
-                                <div
-                                    className="w-full h-64 relative"
+                    {/* Header */}
+                    <div className="bg-white px-16 py-8 border-b border-neutral-200">
+                        <div className="flex items-center justify-between">
+                            {/* Company name/logo */}
+                            <div>
+                                <h1
+                                    className="text-3xl font-bold text-neutral-800 tracking-wider"
                                     style={{
-                                        backgroundColor: !isProduct ? product.color : '#f5f5f5'
+                                        fontFamily: fontCustomization?.fontFamily?.title || 'serif',
+                                        fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title}px` : 'inherit'
                                     }}
                                 >
-                                    {productImage ? (
-                                        <img
-                                            src={productImage}
-                                            alt={productName}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            {/* Furniture icon representation */}
-                                            <div className="text-white text-4xl opacity-60">
-                                                {index % 3 === 0 ? '🪑' : index % 3 === 1 ? '🛏️' : '🪞'}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                    {content.profile?.companyName || profile.companyName || (catalogue?.settings as any)?.companyInfo?.companyName || 'AURUM'}
 
-                                {/* Product details */}
-                                <div className="p-6">
-                                    <h3
-                                        className="text-lg font-semibold text-neutral-800 mb-2"
-                                        style={{
-                                            fontFamily: fontCustomization?.fontFamily?.title || 'serif'
-                                        }}
-                                    >
-                                        {productName}
-                                    </h3>
+                                </h1>
+                                <p
+                                    className="text-neutral-500 text-sm tracking-[0.2em] mt-1"
+                                    style={{
+                                        fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                    }}
+                                >
+                                    {content.catalogue.description}
+                                    {totalPages > 1 ? `- Page ${pageIndex + 1}` : ''}
+                                </p>
+                            </div>
 
-                                    <p
-                                        className="text-orange-600 text-xl font-bold mb-3"
+                            {/* Page indicator */}
+                            {totalPages > 1 && (
+                                <div className="text-right">
+                                    <span
+                                        className="text-neutral-400 text-sm tracking-wider"
                                         style={{
                                             fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                                         }}
                                     >
-                                        {productPrice}
-                                    </p>
+                                        {pageIndex + 1} of {totalPages}
+                                    </span>
+                                </div>
+                            )}
 
-                                    {/* Specifications */}
-                                    <div className="space-y-1 text-sm text-neutral-600">
-                                        {!isProduct && (
-                                            <>
-                                                <div className="flex justify-between">
-                                                    <span
-                                                        style={{
-                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                                        }}
-                                                    >
-                                                        Dimensions:
-                                                    </span>
-                                                    <span
-                                                        className="font-medium"
-                                                        style={{
-                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                                        }}
-                                                    >
-                                                        {product.dimensions}
-                                                    </span>
+
+                        </div>
+                    </div>
+
+                    {/* Product grid - Single row of 3 products */}
+                    <div className="px-16 py-12 flex-1">
+                        <div className="grid grid-cols-3 gap-8 h-full">
+
+                            {pageProducts.map((product, index) => {
+                                // Check if it's a real product from database or sample product
+                                const isRealProduct = 'images' in product && Array.isArray(product.images);
+                                const productName = product.name;
+                                const productPrice = isRealProduct
+                                    ? (product.priceDisplay || `${product.currency || '$'}${product.price}`)
+                                    : (product as any).price;
+                                const productImage = isRealProduct
+                                    ? (product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : null))
+                                    : null;
+
+                                return (
+                                    <div key={product.id} className="bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow h-fit">
+
+                                        {/* Product image */}
+                                        <div className="w-full h-64 relative bg-neutral-100">
+                                            {productImage ? (
+                                                <img
+                                                    src={productImage}
+                                                    alt={productName}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="w-full h-full flex items-center justify-center"
+                                                    style={{
+                                                        backgroundColor: !isRealProduct ? (product as any).color || '#f5f5f5' : '#f5f5f5'
+                                                    }}
+                                                >
+                                                    {/* Furniture icon representation */}
+                                                    <div className="text-white text-4xl opacity-60">
+                                                        {index % 3 === 0 ? '🪑' : index % 3 === 1 ? '🛏️' : '🪞'}
+                                                    </div>
                                                 </div>
-                                                <div className="flex justify-between">
-                                                    <span
-                                                        style={{
-                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                                        }}
-                                                    >
-                                                        Finishes:
-                                                    </span>
-                                                    <span
-                                                        className="font-medium"
-                                                        style={{
-                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                                        }}
-                                                    >
-                                                        {product.finishes}
-                                                    </span>
-                                                </div>
-                                            </>
-                                        )}
-                                        {isProduct && product.description && (
+                                            )}
+                                        </div>
+
+                                        {/* Product details */}
+                                        <div className="p-6">
+                                            <h3
+                                                className="text-lg font-semibold text-neutral-800 mb-2"
+                                                style={{
+                                                    fontFamily: fontCustomization?.fontFamily?.title || 'serif'
+                                                }}
+                                            >
+                                                {productName}
+                                            </h3>
+
                                             <p
-                                                className="text-neutral-600 text-sm"
+                                                className="text-orange-600 text-xl font-bold mb-3"
                                                 style={{
                                                     fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                                                 }}
                                             >
-                                                {product.description}
+                                                {isRealProduct
+                                                    ? (product.price ? `₹${product.price.toLocaleString()}` : '₹2,450')
+                                                    : productPrice
+                                                }
                                             </p>
-                                        )}
+
+                                            {/* Specifications */}
+                                            <div className="space-y-1 text-sm text-neutral-600">
+                                                {!isRealProduct && (
+                                                    <>
+                                                        <div className="flex justify-between">
+                                                            <span
+                                                                style={{
+                                                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                                }}
+                                                            >
+                                                                Dimensions:
+                                                            </span>
+                                                            <span
+                                                                className="font-medium"
+                                                                style={{
+                                                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                                }}
+                                                            >
+                                                                {(product as any).dimensions}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex justify-between">
+                                                            <span
+                                                                style={{
+                                                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                                }}
+                                                            >
+                                                                Finishes:
+                                                            </span>
+                                                            <span
+                                                                className="font-medium"
+                                                                style={{
+                                                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                                }}
+                                                            >
+                                                                {(product as any).finishes}
+                                                            </span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                                {isRealProduct && product.description && (
+                                                    <p
+                                                        className="text-neutral-600 text-sm"
+                                                        style={{
+                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                        }}
+                                                    >
+                                                        {product.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                );
+                            })}
+
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-white px-16 py-4  border-b border-neutral-100">
+                        <div className="flex justify-between items-center">
+                            <span
+                                className="text-neutral-400 text-sm"
+                                style={{
+                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                }}
+                            >
+                                {content.profile?.companyName || profile.companyName || (catalogue?.settings as any)?.companyInfo?.companyName || 'AURUM'}
+
+                            </span>
+                            <span
+                                className="text-neutral-400 text-sm"
+                                style={{
+                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                }}
+                            >
+                                © 2025 All rights reserved
+                            </span>
+                        </div>
+                    </div>
 
                 </div>
-
-                {/* Pagination */}
-                <div className="flex justify-center mt-12 space-x-4">
-                    {[1, 2, 3, 4, 5].map((page, index) => (
-                        <button
-                            key={page}
-                            className={`w-8 h-8 rounded-full text-sm font-medium transition-colors ${index === 0
-                                    ? 'bg-neutral-800 text-white'
-                                    : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
-                                }`}
-                            style={{
-                                fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                            }}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Footer */}
-            <div className="absolute bottom-0 left-0 right-0 bg-white px-16 py-4 border-t border-neutral-200">
-                <div className="flex justify-between items-center">
-                    <span
-                        className="text-neutral-400 text-sm"
-                        style={{
-                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                        }}
-                    >
-                        {content.profile.companyName || 'MAISON'}
-                    </span>
-                    <span
-                        className="text-neutral-400 text-sm"
-                        style={{
-                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                        }}
-                    >
-                        © 2025 All rights reserved
-                    </span>
-                </div>
-            </div>
-
-        </div>
+            ))}
+        </>
     );
 }

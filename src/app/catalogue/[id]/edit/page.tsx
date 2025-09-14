@@ -2891,10 +2891,111 @@ export default function EditCataloguePage() {
               <div className="space-y-4">
                 <h4 className="text-md font-medium">Contact Page Customization</h4>
                 <div className="grid grid-cols-1 gap-4">
-                  {/* Note: Contact image, quote, and quote by features can be added later */}
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      Additional contact customization features will be available in future updates.
+                  {/* Contact Image */}
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Contact Image</Label>
+                    {!(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+                      <FileUpload
+                        uploadType="catalogue"
+                        catalogueId={catalogueId}
+                        maxFiles={1}
+                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                        onUpload={(files) => {
+                          if (files.length > 0) {
+                            setCatalogue(prev => prev ? {
+                              ...prev,
+                              settings: {
+                                ...(prev.settings || {}),
+                                contactDetails: {
+                                  ...(prev.settings as any)?.contactDetails,
+                                  contactImage: files[0].url
+                                }
+                              }
+                            } : null)
+                          }
+                        }}
+                        onError={(error) => {
+                          setErrorWithAutoDismiss(`Contact image upload failed: ${error}`)
+                        }}
+                        className="mt-2"
+                      />
+                    ) : (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                        <p className="text-sm text-gray-600 mb-2">Current contact image:</p>
+                        <img
+                          src={(catalogue.settings as any).contactDetails.contactImage}
+                          alt="Contact Image"
+                          className="w-32 h-24 object-cover border rounded"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...(prev.settings || {}),
+                              contactDetails: {
+                                ...(prev.settings as any)?.contactDetails,
+                                contactImage: ''
+                              }
+                            }
+                          } : null)}
+                          className="text-xs"
+                        >
+                          Change Contact Image
+                        </Button>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload an image to display on the contact page (e.g., office, team photo, or workspace)
+                    </p>
+                  </div>
+
+                  {/* Contact Quote */}
+                  <div>
+                    <Label htmlFor="contactQuote">Contact Quote</Label>
+                    <Textarea
+                      id="contactQuote"
+                      value={(catalogue?.settings as any)?.contactDetails?.contactQuote || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings as any)?.contactDetails,
+                            contactQuote: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter an inspiring quote for the contact page (e.g., 'Where creativity meets craftsmanship')"
+                      rows={2}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      A quote or message that will be displayed over the contact image
+                    </p>
+                  </div>
+
+                  {/* Contact Quote By */}
+                  <div>
+                    <Label htmlFor="contactQuoteBy">Quote Attribution</Label>
+                    <Input
+                      id="contactQuoteBy"
+                      value={(catalogue?.settings as any)?.contactDetails?.contactQuoteBy || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings as any)?.contactDetails,
+                            contactQuoteBy: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter who the quote is from (e.g., 'John Smith, CEO' or 'COMPANY NAME')"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Attribution for the contact quote (company name, founder, or team member)
                     </p>
                   </div>
                 </div>

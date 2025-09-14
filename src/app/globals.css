@@ -88,6 +88,18 @@
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  * {
+    box-sizing: border-box !important;
   }
   
   .no-print {
@@ -104,6 +116,27 @@
   
   .print-break-inside-avoid {
     page-break-inside: avoid;
+  }
+  
+  /* Remove any wrapper padding/margins for PDF */
+  [style*="padding"] {
+    padding: 0 !important;
+  }
+  
+  /* Ensure full width for preview containers */
+  .preview-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Remove viewport styling wrapper padding */
+  div[style*="padding"] {
+    padding: 0 !important;
   }
 }
 

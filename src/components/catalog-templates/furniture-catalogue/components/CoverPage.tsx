@@ -5,6 +5,7 @@ import { Catalogue, Profile } from '@prisma/client';
 import { StandardizedContent } from '@/lib/content-schema';
 import { ColorCustomization } from '../types/ColorCustomization';
 import { FontCustomization, SpacingCustomization, AdvancedStyleCustomization } from '@/components/shared/StyleCustomizer';
+import { ArrowBigRight, ArrowRightIcon } from 'lucide-react';
 
 interface CoverPageProps {
     catalogue: Catalogue;
@@ -38,57 +39,73 @@ export function CoverPage({
 
     return (
         <div className="relative w-full h-screen overflow-hidden print:h-screen print:break-after-page bg-neutral-900">
-            {/* Dark textured background */}
+            {/* Dark textured wall background matching the image */}
             <div
-                className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black"
+                className="absolute inset-0"
                 style={{
-                    backgroundImage: `
-            radial-gradient(circle at 25% 25%, rgba(255,255,255,0.02) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(255,255,255,0.01) 0%, transparent 50%),
-            linear-gradient(135deg, rgba(139,115,85,0.05) 0%, transparent 50%)
-          `
+                    background: `
+            radial-gradient(circle at 20% 30%, rgba(45,45,45,0.3) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(35,35,35,0.4) 0%, transparent 40%),
+            linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%),
+            repeating-linear-gradient(
+              45deg,
+              rgba(255,255,255,0.005) 0px,
+              rgba(255,255,255,0.005) 1px,
+              transparent 1px,
+              transparent 3px
+            ),
+            repeating-linear-gradient(
+              -45deg,
+              rgba(0,0,0,0.1) 0px,
+              rgba(0,0,0,0.1) 1px,
+              transparent 1px,
+              transparent 4px
+            )
+          `,
+                    backgroundSize: '100% 100%, 100% 100%, 100% 100%, 20px 20px, 25px 25px'
                 }}
             />
 
             {/* Top brand indicator */}
-            <div className="absolute top-8 left-8 z-10">
+            <div className="absolute top-6 left-8 z-10">
                 <span
-                    className="text-neutral-400 text-sm tracking-[0.3em] uppercase font-light"
+                    className="text-neutral-400 text-xs tracking-[0.25em] uppercase font-light"
                     style={{
                         fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                     }}
                 >
-                    ELEGANCE
+                    {content.profile?.companyName || profile.companyName || (catalogue?.settings as any)?.companyInfo?.companyName || 'AURUM'}
                 </span>
             </div>
 
             {/* Top right year */}
-            <div className="absolute top-8 right-8 z-10">
+            <div className="absolute top-6 right-8 z-10">
                 <span
-                    className="text-neutral-400 text-sm tracking-[0.3em] uppercase font-light"
+                    className="text-neutral-400 text-xs tracking-[0.25em] uppercase font-light"
                     style={{
                         fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                     }}
                 >
-                    2025 COLLECTION
+                    {content.catalogue?.year ? `Catalogue ${content.catalogue.year}` : 'Catalogue 2025'}
+
                 </span>
             </div>
 
             {/* Main content area */}
-            <div className="relative z-10 flex items-center justify-between h-full px-16">
+            <div className="relative z-10 flex items-center justify-between h-full px-20">
 
                 {/* Left side - Text content */}
-                <div className="w-1/2 space-y-8">
+                <div className="w-1/2 space-y-6">
                     {/* Decorative border frame */}
-                    <div className="border border-neutral-600 p-16 max-w-md">
-                        <div className="space-y-8">
+                    <div className="border border-neutral-600 p-12 max-w-sm">
+                        <div className="space-y-6">
                             <h1
-                                className="text-white text-6xl font-bold tracking-widest"
+                                className="text-white text-4xl font-bold tracking-widest"
                                 style={{
                                     fontFamily: fontCustomization?.fontFamily?.title || 'serif',
-                                    fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title * 2}px` : 'inherit',
-                                    letterSpacing: '0.2em',
-                                    lineHeight: '1.2',
+                                    fontSize: fontCustomization?.fontSize?.title ? `${fontCustomization.fontSize.title * 1.5}px` : 'inherit',
+                                    letterSpacing: '0.15em',
+                                    lineHeight: '1.1',
                                     ...(advancedStyles && Object.fromEntries(
                                         Object.entries(advancedStyles).filter(([key]) =>
                                             [
@@ -98,22 +115,22 @@ export function CoverPage({
                                     ))
                                 }}
                             >
-                                {content.catalogue.name?.toUpperCase() || 'FURNITURE'}
+                                {content.catalogue.name?.toUpperCase() || 'CRAFTED'}
                             </h1>
 
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 <h2
-                                    className="text-white text-4xl font-bold tracking-[0.3em]"
+                                    className="text-white text-2xl font-bold tracking-[0.25em]"
                                     style={{
                                         fontFamily: fontCustomization?.fontFamily?.title || 'serif',
-                                        letterSpacing: '0.3em'
+                                        letterSpacing: '0.25em'
                                     }}
                                 >
                                     CATALOG
                                 </h2>
 
                                 <p
-                                    className="text-neutral-300 text-sm leading-relaxed"
+                                    className="text-neutral-300 text-xs leading-relaxed"
                                     style={{
                                         fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                                     }}
@@ -123,22 +140,15 @@ export function CoverPage({
                             </div>
 
                             {/* Call to action button */}
-                            <div className="pt-6">
+                            <div className="pt-4">
                                 <button
-                                    className="flex items-center space-x-3 text-white text-sm tracking-[0.2em] uppercase group"
+                                    className="flex items-center space-x-2 text-white text-xs tracking-[0.15em] uppercase group"
                                     style={{
                                         fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
                                     }}
                                 >
                                     <span>EXPLORE COLLECTION</span>
-                                    <svg
-                                        className="w-4 h-4 transition-transform group-hover:translate-x-1"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
+                                    <ArrowRightIcon className='w-4 h-4' />
                                 </button>
                             </div>
                         </div>
@@ -150,20 +160,21 @@ export function CoverPage({
                     <div className="relative">
                         {/* Main product image container */}
                         <div className="relative">
-                            <div
-                                className="w-96 h-96 bg-gradient-to-br from-orange-500 to-orange-600 rounded-sm"
-                                style={{
-                                    background: 'linear-gradient(135deg, #D97706 0%, #EA580C 100%)'
-                                }}
-                            >
-                                {/* Furniture silhouette or product image */}
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="text-white opacity-20 text-8xl">🪑</div>
-                                </div>
+                            {/* Main product image container */}
+                            <div className="w-80 h-80 rounded-sm">
+                                <img
+                                    src={settings.mediaAssets.coverImageUrl}
+                                    alt="Product Detail"
+                                    className="w-full h-full object-cover object-center rounded-sm"
+                                    style={{
+                                        filter: 'brightness(1.1) contrast(1.1) saturate(1.1)',
+                                        transform: 'scale(1.0)'
+                                    }}
+                                />
                             </div>
 
                             {/* "NEW ARRIVALS" badge */}
-                            <div className="absolute -bottom-6 -right-6 bg-yellow-500 text-black px-6 py-2 font-bold text-sm tracking-wider">
+                            <div className="absolute -bottom-4 -right-4 bg-yellow-500 text-black px-5 py-3 font-bold text-xs tracking-wider">
                                 NEW ARRIVALS
                             </div>
                         </div>
@@ -171,24 +182,16 @@ export function CoverPage({
                 </div>
             </div>
 
+
+
             {/* Bottom branding */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10 flex items-center space-x-8">
-                <div className="text-neutral-500 text-xs tracking-[0.3em] uppercase">
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 flex items-center space-x-6">
+                <div className="text-neutral-500 text-xs tracking-[0.2em] uppercase">
                     PREMIUM QUALITY • SUSTAINABLE MATERIALS • TIMELESS DESIGN
                 </div>
             </div>
 
-            {/* Bottom right website */}
-            <div className="absolute bottom-8 right-8 z-10">
-                <span
-                    className="text-neutral-400 text-sm tracking-[0.2em] uppercase"
-                    style={{
-                        fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                    }}
-                >
-                    {content.profile.website || 'WWW.ELEGANCEFURNITURE.COM'}
-                </span>
-            </div>
+
         </div>
     );
 }

@@ -123,10 +123,10 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
         />
 
         {/* Responsive Container */}
-        <div style={viewportStyles.wrapper}>
+        <div style={viewportStyles.wrapper} className="print:p-0 print:m-0">
           <div
             data-pdf-ready="true"
-            className="preview-container print:bg-white"
+            className="preview-container print:bg-white print:w-full print:h-auto"
             style={{
               ...viewportStyles.container,
               '--theme-primary': themeColors.primary,
@@ -160,6 +160,13 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
               box-shadow: none !important;
               border-radius: 0 !important;
               margin: 0 !important;
+            }
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            * {
+              box-sizing: border-box;
             }
           }
           
@@ -241,9 +248,9 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
       />
 
       {/* Responsive Container */}
-      <div style={viewportStyles.wrapper}>
+      <div style={viewportStyles.wrapper} className="print:p-0 print:m-0">
         <div
-          className={`preview-container ${getThemeClasses(catalogue.theme)} print:bg-white`}
+          className={`preview-container ${getThemeClasses(catalogue.theme)} print:bg-white print:w-full print:h-auto`}
           data-pdf-ready="true"
           style={{
             ...viewportStyles.container,
@@ -533,6 +540,13 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
             box-shadow: none !important;
             border-radius: 0 !important;
             margin: 0 !important;
+          }
+          body {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          * {
+            box-sizing: border-box;
           }
         }
         
