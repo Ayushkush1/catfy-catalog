@@ -299,7 +299,7 @@ export default function EditCataloguePage() {
     setSelectedTemplate(templateId)
     const compatibleThemes = themeRegistry.getCompatibleThemes(templateId)
     setAvailableThemes(compatibleThemes)
-    
+
     // Auto-select default theme instead of going to theme step
     const defaultTheme = 'modern-blue'
     setSelectedTheme(defaultTheme)
@@ -1666,7 +1666,7 @@ export default function EditCataloguePage() {
                 {/* Template Tab */}
                 {activeTab === 'theme' && (
                   <div className="space-y-6">
-                   
+
 
                     {templateStep === 'template' ? (
                       <div>

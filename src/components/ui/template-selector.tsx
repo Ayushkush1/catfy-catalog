@@ -104,14 +104,14 @@ export function TemplateSelector({
                   </div>
                 </div>
               )}
-              
+
               {/* Selection Indicator */}
               {selectedTemplateId === template.id && (
                 <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
                   <Check className="w-4 h-4" />
                 </div>
               )}
-              
+
               {/* Premium Badge */}
               {template.isPremium && (
                 <div className="absolute top-2 left-2">
@@ -121,7 +121,7 @@ export function TemplateSelector({
                   </Badge>
                 </div>
               )}
-              
+
               {/* Preview Button */}
               {showPreview && (
                 <div className="absolute bottom-2 right-2">
@@ -139,7 +139,7 @@ export function TemplateSelector({
                 </div>
               )}
             </div>
-            
+
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -151,7 +151,7 @@ export function TemplateSelector({
                   </CardDescription>
                 </div>
               </div>
-              
+
               {/* Template Metadata */}
               <div className="flex items-center gap-2 mt-3">
                 <Badge variant="outline" className="text-xs">
@@ -167,7 +167,7 @@ export function TemplateSelector({
                 )}
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-0">
               {/* Features */}
               {template.features && template.features.length > 0 && (
@@ -187,7 +187,7 @@ export function TemplateSelector({
                   </div>
                 </div>
               )}
-              
+
               {/* Action Button */}
               <Button
                 className={cn(
@@ -214,7 +214,7 @@ export function TemplateSelector({
           </Card>
         ))}
       </div>
-      
+
       {templates.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-gray-400 text-lg mb-2">No templates found</div>

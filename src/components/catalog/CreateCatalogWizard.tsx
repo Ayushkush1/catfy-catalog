@@ -322,10 +322,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             {[1, 2, 3, 4].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all duration-300 ${step < currentStep
-                    ? 'bg-white text-[#301F70] shadow-sm'
-                    : step === currentStep
-                      ? 'bg-white text-[#1A1B41] shadow-md ring-2 ring-white/30'
-                      : 'bg-white/20 text-white/60'
+                  ? 'bg-white text-[#301F70] shadow-sm'
+                  : step === currentStep
+                    ? 'bg-white text-[#1A1B41] shadow-md ring-2 ring-white/30'
+                    : 'bg-white/20 text-white/60'
                   }`}>
                   {step < currentStep ? (
                     <CheckCircle className="h-4 w-4" />
@@ -335,8 +335,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 </div>
                 {step < 4 && (
                   <div className={`w-12 h-1 mx-2 rounded-full transition-all duration-300 ${step < currentStep
-                      ? 'bg-white/60'
-                      : 'bg-white/20'
+                    ? 'bg-white/60'
+                    : 'bg-white/20'
                     }`} />
                 )}
               </div>
@@ -353,8 +353,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             ].map(({ step, label }) => (
               <div key={step} className="text-center">
                 <span className={`text-xs transition-all duration-300 ${currentStep >= step
-                    ? 'text-white font-medium'
-                    : 'text-white/60'
+                  ? 'text-white font-medium'
+                  : 'text-white/60'
                   }`}>
                   {label}
                 </span>
@@ -844,8 +844,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   <div className="space-y-4">
                     <div
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${!data.isPublic
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
                         }`}
                       onClick={() => updateData('isPublic', false)}
                     >
@@ -860,8 +860,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
                     <div
                       className={`p-4 border rounded-lg cursor-pointer transition-all ${data.isPublic
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
                         }`}
                       onClick={() => updateData('isPublic', true)}
                     >
