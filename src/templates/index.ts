@@ -4,12 +4,14 @@ import { SkincareCatalogueTemplateWrapper } from '@/components/catalog-templates
 import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/fashion-catalogue/FashionCatalogueTemplate'
 import { FmcgCatalogueTemplateWrapper } from '@/components/catalog-templates/fmcg-catalogue/FmcgCatalogueTemplate'
 import { FurnitureCatalogueTemplateWrapper } from '@/components/catalog-templates/furniture-catalogue/FurnitureCatalogueTemplate'
+import { HomeDecorCatalogueTemplateWrapper } from '@/components/catalog-templates/home-decor-catalogue/HomeDecorCatalogueTemplate'
 
 // Import template configurations
 import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
 import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-catalogue/template.config'
 import { fmcgCatalogueConfig } from '@/components/catalog-templates/fmcg-catalogue/template.config'
 import { furnitureCatalogueConfig } from '@/components/catalog-templates/furniture-catalogue/template.config'
+import { homeDecorCatalogueConfig } from '@/components/catalog-templates/home-decor-catalogue/template.config'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
@@ -41,6 +43,9 @@ function registerAllTemplates() {
 
   // Register furniture catalogue template
   templateRegistry.registerTemplate(furnitureCatalogueConfig, FurnitureCatalogueTemplateWrapper)
+
+  // Register home decor catalogue template
+  templateRegistry.registerTemplate(homeDecorCatalogueConfig, HomeDecorCatalogueTemplateWrapper)
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
@@ -131,7 +136,8 @@ export {
   skincareCatalogueConfig,
   fashionCatalogueConfig,
   fmcgCatalogueConfig,
-  furnitureCatalogueConfig
+  furnitureCatalogueConfig,
+  homeDecorCatalogueConfig
 }
 
 // Export types

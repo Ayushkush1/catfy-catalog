@@ -3,6 +3,7 @@ import { SkincareCatalogueTemplate } from './skincare-catalogue/SkincareCatalogu
 import { FashionCatalogueTemplate } from './fashion-catalogue/FashionCatalogueTemplate'
 import { FmcgCatalogueTemplate } from './fmcg-catalogue/FmcgCatalogueTemplate'
 import { FurnitureCatalogueTemplate } from './furniture-catalogue/FurnitureCatalogueTemplate'
+import { HomeDecorCatalogueTemplate } from './home-decor-catalogue/HomeDecorCatalogueTemplate'
 import { TemplateRegistry, type TemplateConfig as RegistryTemplateConfig } from '@/lib/template-registry'
 import { ContentMapper, type StandardizedContent } from '@/lib/content-schema'
 
@@ -158,6 +159,33 @@ export const CATALOG_TEMPLATES: TemplateConfig[] = [
       categories: ['name', 'description', 'color'],
       profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
     }
+  },
+  {
+    id: 'home-decor-catalogue',
+    name: 'Home Decor Catalogue',
+    description: 'An elegant 4-page template designed specifically for home decor and interior design brands to showcase their products with sophisticated layouts and artistic presentation',
+    category: 'product',
+    isPremium: false,
+    previewImage: '/templates/home-decor-catalogue-preview.svg',
+    component: HomeDecorCatalogueTemplate,
+    features: [
+      'Elegant artistic design',
+      'Home decor product showcase',
+      'Interior design inspiration',
+      'Sophisticated layouts',
+      'Contact information',
+      'Professional branding',
+      'Theme color integration',
+      'Responsive design',
+      'Print optimization',
+      'Artisan craftsmanship focus'
+    ],
+    pageCount: 4,
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay', 'materials', 'dimensions'],
+      categories: ['name', 'description', 'color'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+    }
   }
   // Future templates can be added here:
   // {
@@ -264,4 +292,4 @@ export function validateContentStructure(content: StandardizedContent): boolean 
   }
 }
 
-export { SkincareCatalogueTemplate, FashionCatalogueTemplate, FmcgCatalogueTemplate, FurnitureCatalogueTemplate }
+export { SkincareCatalogueTemplate, FashionCatalogueTemplate, FmcgCatalogueTemplate, FurnitureCatalogueTemplate, HomeDecorCatalogueTemplate }
