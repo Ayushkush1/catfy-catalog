@@ -1,0 +1,33 @@
+<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="300" fill="#f8f9fa"/>
+  
+  <!-- Header -->
+  <rect x="20" y="20" width="360" height="40" fill="#e9ecef" rx="4"/>
+  <text x="200" y="45" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#495057">Fashion Catalogue</text>
+  
+  <!-- Product Grid -->
+  <rect x="20" y="80" width="110" height="90" fill="#dee2e6" rx="4"/>
+  <rect x="145" y="80" width="110" height="90" fill="#dee2e6" rx="4"/>
+  <rect x="270" y="80" width="110" height="90" fill="#dee2e6" rx="4"/>
+  
+  <!-- Product Labels -->
+  <text x="75" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Product 1</text>
+  <text x="200" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Product 2</text>
+  <text x="325" y="190" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Product 3</text>
+  
+  <!-- Fashion Icons -->
+  <circle cx="75" cy="125" r="20" fill="#fff"/>
+  <text x="75" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="18">👗</text>
+  
+  <circle cx="200" cy="125" r="20" fill="#fff"/>
+  <text x="200" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="18">👜</text>
+  
+  <circle cx="325" cy="125" r="20" fill="#fff"/>
+  <text x="325" y="132" text-anchor="middle" font-family="Arial, sans-serif" font-size="18">👠</text>
+  
+  <!-- Footer -->
+  <rect x="20" y="220" width="360" height="60" fill="#e9ecef" rx="4"/>
+  <text x="200" y="240" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#495057">Elegant Fashion Display</text>
+  <text x="200" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">Professional layouts for clothing retailers</text>
+  <text x="200" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#6c757d">3 pages • Responsive design</text>
+</svg>
