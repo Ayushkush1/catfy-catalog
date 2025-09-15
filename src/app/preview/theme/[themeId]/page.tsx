@@ -173,19 +173,19 @@ export default function ThemePreviewPage() {
   const params = useParams()
   const themeId = params.themeId as string
   const [selectedCategory, setSelectedCategory] = useState('All')
-  
+
   const theme = THEMES[themeId as keyof typeof THEMES] || THEMES.modern
-  
-  const filteredProducts = selectedCategory === 'All' 
-    ? DUMMY_CATALOG.products 
+
+  const filteredProducts = selectedCategory === 'All'
+    ? DUMMY_CATALOG.products
     : DUMMY_CATALOG.products.filter(product => product.category === selectedCategory)
-  
+
   const featuredProducts = DUMMY_CATALOG.products.filter(product => product.featured)
 
   return (
-    <div 
+    <div
       className="min-h-screen"
-      style={{ 
+      style={{
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
         fontFamily: theme.fonts.body
@@ -214,14 +214,14 @@ export default function ThemePreviewPage() {
 
       {/* Hero Section */}
       <section className="relative">
-        <div 
+        <div
           className="h-64 bg-gradient-to-r flex items-center justify-center"
-          style={{ 
-            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})` 
+          style={{
+            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`
           }}
         >
           <div className="text-center text-white">
-            <h1 
+            <h1
               className="text-4xl font-bold mb-4"
               style={{ fontFamily: theme.fonts.heading }}
             >
@@ -238,11 +238,10 @@ export default function ThemePreviewPage() {
           <div className="flex items-center space-x-8 py-4">
             <button
               onClick={() => setSelectedCategory('All')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                selectedCategory === 'All'
+              className={`px-4 py-2 rounded-lg transition-colors ${selectedCategory === 'All'
                   ? 'text-white'
                   : 'hover:bg-gray-100'
-              }`}
+                }`}
               style={{
                 backgroundColor: selectedCategory === 'All' ? theme.colors.primary : 'transparent',
                 color: selectedCategory === 'All' ? 'white' : theme.colors.text
@@ -254,11 +253,10 @@ export default function ThemePreviewPage() {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
-                  selectedCategory === category
+                className={`px-4 py-2 rounded-lg transition-colors ${selectedCategory === category
                     ? 'text-white'
                     : 'hover:bg-gray-100'
-                }`}
+                  }`}
                 style={{
                   backgroundColor: selectedCategory === category ? theme.colors.primary : 'transparent',
                   color: selectedCategory === category ? 'white' : theme.colors.text
@@ -275,9 +273,9 @@ export default function ThemePreviewPage() {
       {selectedCategory === 'All' && (
         <section className="py-12">
           <div className="container mx-auto px-4">
-            <h2 
+            <h2
               className="text-3xl font-bold mb-8 text-center"
-              style={{ 
+              style={{
                 fontFamily: theme.fonts.heading,
                 color: theme.colors.primary
               }}
@@ -295,7 +293,7 @@ export default function ThemePreviewPage() {
                       height={300}
                       className="w-full h-48 object-cover"
                     />
-                    <Badge 
+                    <Badge
                       className="absolute top-2 right-2"
                       style={{ backgroundColor: theme.colors.accent }}
                     >
@@ -303,7 +301,7 @@ export default function ThemePreviewPage() {
                     </Badge>
                   </div>
                   <CardContent className="p-4">
-                    <h3 
+                    <h3
                       className="font-semibold text-lg mb-2"
                       style={{ color: theme.colors.text }}
                     >
@@ -311,13 +309,13 @@ export default function ThemePreviewPage() {
                     </h3>
                     <p className="text-gray-600 text-sm mb-3">{product.description}</p>
                     <div className="flex items-center justify-between">
-                      <span 
+                      <span
                         className="text-2xl font-bold"
                         style={{ color: theme.colors.primary }}
                       >
-                        ${product.price}
+                        ₹{Number(product.price).toLocaleString('en-IN')}
                       </span>
-                      <Button 
+                      <Button
                         size="sm"
                         style={{ backgroundColor: theme.colors.primary }}
                       >
@@ -336,9 +334,9 @@ export default function ThemePreviewPage() {
       {/* All Products */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          <h2 
+          <h2
             className="text-3xl font-bold mb-8 text-center"
-            style={{ 
+            style={{
               fontFamily: theme.fonts.heading,
               color: theme.colors.primary
             }}
@@ -357,7 +355,7 @@ export default function ThemePreviewPage() {
                     className="w-full h-48 object-cover"
                   />
                   {product.featured && (
-                    <Badge 
+                    <Badge
                       className="absolute top-2 right-2"
                       style={{ backgroundColor: theme.colors.accent }}
                     >
@@ -366,7 +364,7 @@ export default function ThemePreviewPage() {
                   )}
                 </div>
                 <CardContent className="p-4">
-                  <h3 
+                  <h3
                     className="font-semibold mb-2"
                     style={{ color: theme.colors.text }}
                   >
@@ -374,13 +372,13 @@ export default function ThemePreviewPage() {
                   </h3>
                   <p className="text-gray-600 text-sm mb-3">{product.description}</p>
                   <div className="flex items-center justify-between">
-                    <span 
+                    <span
                       className="text-xl font-bold"
                       style={{ color: theme.colors.primary }}
                     >
-                      ${product.price}
+                      ₹{Number(product.price).toLocaleString('en-IN')}
                     </span>
-                    <Button 
+                    <Button
                       size="sm"
                       style={{ backgroundColor: theme.colors.primary }}
                     >
@@ -395,7 +393,7 @@ export default function ThemePreviewPage() {
       </section>
 
       {/* Footer */}
-      <footer 
+      <footer
         className="py-12 mt-12"
         style={{ backgroundColor: theme.colors.primary }}
       >

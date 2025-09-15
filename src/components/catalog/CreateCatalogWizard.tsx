@@ -501,6 +501,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   onTemplateSelect={(templateId) => {
                     updateData('templateId', templateId)
                     updateData('settings.templateId', templateId)
+                    // Auto-select default theme when template is selected
+                    updateData('theme', 'modern-blue')
                   }}
                   showPreview={true}
                   className="mt-4"

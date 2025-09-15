@@ -29,8 +29,8 @@ export function formatDate(date: Date | string): string {
   })
 }
 
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(amount: number, currency: string = 'INR'): string {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
   }).format(amount / 100) // Stripe amounts are in cents

@@ -157,11 +157,21 @@ export function ProductCategoryPage({
           </div>
 
           {/* Price */}
-          <div className="text-right">
-            <p className="text-3xl font-light">
-              {product.price ? `₹${product.price.toLocaleString()}` : '₹2,450'}
-            </p>
-          </div>
+          {(product.priceDisplay === 'show' && product.price) ||
+            (product.priceDisplay === 'contact') ||
+            (!product.priceDisplay && product.price) ? (
+            <div className="text-right">
+              <p className="text-3xl font-light">
+                {product.priceDisplay === 'show' && product.price ?
+                  `₹${product.price.toLocaleString()}`
+                  : product.priceDisplay === 'contact' ?
+                    'Contact for Price'
+                    : product.price ?
+                      `₹${product.price.toLocaleString()}`
+                      : '₹2,450'}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     );

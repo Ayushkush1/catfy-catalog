@@ -299,12 +299,17 @@ export default function EditCataloguePage() {
     setSelectedTemplate(templateId)
     const compatibleThemes = themeRegistry.getCompatibleThemes(templateId)
     setAvailableThemes(compatibleThemes)
-    setTemplateStep('theme')
+    
+    // Auto-select default theme instead of going to theme step
+    const defaultTheme = 'modern-blue'
+    setSelectedTheme(defaultTheme)
 
-    // Update catalogue template
+    // Update catalogue template and theme
     if (catalogue) {
       setCatalogue(prev => prev ? {
         ...prev,
+        template: templateId,
+        theme: defaultTheme,
         settings: {
           ...(prev.settings as Record<string, any> || {}),
           templateId: templateId
@@ -319,6 +324,8 @@ export default function EditCataloguePage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            template: templateId,
+            theme: defaultTheme,
             settings: {
               ...(catalogue.settings as object || {}),
               templateId: templateId
@@ -330,6 +337,8 @@ export default function EditCataloguePage() {
           throw new Error('Failed to update template')
         }
 
+        // Show success toast
+        toast.success(`Template updated to ${templates.find(t => t.id === templateId)?.name || templateId}`)
         console.log('Template saved successfully:', templateId)
       } catch (error: any) {
         console.error('Error saving template:', error)
@@ -975,7 +984,7 @@ export default function EditCataloguePage() {
                     }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
-                  Theme
+                  Template
                 </button>
 
                 <button
@@ -1654,28 +1663,10 @@ export default function EditCataloguePage() {
                   </div>
                 )}
 
-                {/* Theme Tab */}
+                {/* Template Tab */}
                 {activeTab === 'theme' && (
                   <div className="space-y-6">
-                    <div className="flex items-center space-x-4 mb-6">
-                      <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-[#301F70]' : selectedTemplate ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-[#301F70]/10 text-[#301F70]' :
-                          selectedTemplate ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
-                          }`}>
-                          {selectedTemplate ? '✓' : '1'}
-                        </div>
-                        <span className="font-medium">Choose Template</span>
-                      </div>
-                      <div className="flex-1 h-px bg-gray-200"></div>
-                      <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-[#301F70]' : selectedTheme ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-[#301F70]/10 text-[#301F70]' :
-                          selectedTheme ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
-                          }`}>
-                          {selectedTheme ? '✓' : '2'}
-                        </div>
-                        <span className="font-medium">Choose Theme</span>
-                      </div>
-                    </div>
+                   
 
                     {templateStep === 'template' ? (
                       <div>

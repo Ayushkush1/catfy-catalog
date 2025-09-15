@@ -44,7 +44,7 @@ export function ProductCategoryPage({
         {
             id: '1',
             name: 'Langley Armchair',
-            price: '$1,895',
+            price: '₹1,52,450',
             dimensions: 'W30" × D30" × H32"',
             finishes: 'Oak, Walnut, Mahogany',
             category: 'Living Room',
@@ -53,7 +53,7 @@ export function ProductCategoryPage({
         {
             id: '2',
             name: 'Vienna Dining Table',
-            price: '$3,450',
+            price: '₹2,78,250',
             dimensions: 'L72" × W42" × H30"',
             finishes: 'Oak, Cherry, Birch',
             category: 'Dining',
@@ -62,7 +62,7 @@ export function ProductCategoryPage({
         {
             id: '3',
             name: 'Montauk Lounge Chair',
-            price: '$2,375',
+            price: '₹1,91,250',
             dimensions: 'W32" × D32" × H30"',
             finishes: 'Natural Steel, Charcoal',
             category: 'Bedroom',
@@ -71,7 +71,7 @@ export function ProductCategoryPage({
         {
             id: '4',
             name: 'Kensington Cabinet',
-            price: '$4,195',
+            price: '₹3,38,450',
             dimensions: 'W54" × D18" × H72"',
             finishes: 'Oak, Maple, Walnut',
             category: 'Office',
@@ -80,7 +80,7 @@ export function ProductCategoryPage({
         {
             id: '5',
             name: 'Chelsea Coffee Table',
-            price: '$1,650',
+            price: '₹1,33,250',
             dimensions: 'L48" × W28" × H18"',
             finishes: 'Mahogany, Walnut, Birch',
             category: 'Outdoor',
@@ -89,7 +89,7 @@ export function ProductCategoryPage({
         {
             id: '6',
             name: 'Hudson Sideboard',
-            price: '$3,895',
+            price: '₹3,14,450',
             dimensions: 'W85" × D20" × H32"',
             finishes: 'Oak, Ebony, Rosewood',
             category: 'Living Room',
@@ -174,7 +174,7 @@ export function ProductCategoryPage({
                                 const isRealProduct = 'images' in product && Array.isArray(product.images);
                                 const productName = product.name;
                                 const productPrice = isRealProduct
-                                    ? (product.priceDisplay || `${product.currency || '$'}${product.price}`)
+                                    ? (product.priceDisplay || `${product.currency || '₹'}${product.price}`)
                                     : (product as any).price;
                                 const productImage = isRealProduct
                                     ? (product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : null))
@@ -217,17 +217,45 @@ export function ProductCategoryPage({
                                                 {productName}
                                             </h3>
 
-                                            <p
-                                                className="text-orange-600 text-xl font-bold mb-3"
-                                                style={{
-                                                    fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
-                                                }}
-                                            >
-                                                {isRealProduct
-                                                    ? (product.price ? `₹${product.price.toLocaleString()}` : '₹2,450')
-                                                    : productPrice
-                                                }
-                                            </p>
+                                            {isRealProduct ? (
+                                                product.priceDisplay === 'show' && product.price ? (
+                                                    <p
+                                                        className="text-orange-600 text-xl font-bold mb-3"
+                                                        style={{
+                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                        }}
+                                                    >
+                                                        ₹{product.price.toLocaleString()}
+                                                    </p>
+                                                ) : product.priceDisplay === 'contact' ? (
+                                                    <p
+                                                        className="text-orange-600 text-xl font-bold mb-3"
+                                                        style={{
+                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                        }}
+                                                    >
+                                                        Contact for Price
+                                                    </p>
+                                                ) : (!product.priceDisplay && product.price) ? (
+                                                    <p
+                                                        className="text-orange-600 text-xl font-bold mb-3"
+                                                        style={{
+                                                            fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                        }}
+                                                    >
+                                                        ₹{product.price.toLocaleString()}
+                                                    </p>
+                                                ) : null
+                                            ) : (
+                                                <p
+                                                    className="text-orange-600 text-xl font-bold mb-3"
+                                                    style={{
+                                                        fontFamily: fontCustomization?.fontFamily?.description || 'Arial, sans-serif'
+                                                    }}
+                                                >
+                                                    {productPrice}
+                                                </p>
+                                            )}
 
                                             {/* Specifications */}
                                             <div className="space-y-1 text-sm text-neutral-600">

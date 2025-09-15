@@ -56,7 +56,7 @@ export function TemplateSelector({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <div className="h-48 bg-gray-200 rounded-t-lg" />
@@ -72,7 +72,7 @@ export function TemplateSelector({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {templates.map((template) => (
           <Card
             key={template.id}

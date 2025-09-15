@@ -1392,7 +1392,7 @@ export function StyleCustomizer({
                               setEditValues(prev => ({ ...prev, [`product-price-${product.id}`]: product.price?.toString() || '0' }))
                             }}
                           >
-                            {product.price ? `$${product.price}` : 'Click to set price...'}
+                            {product.price ? `₹${Number(product.price).toLocaleString('en-IN')}` : 'Click to set price...'}
                           </div>
                         )}
                       </div>

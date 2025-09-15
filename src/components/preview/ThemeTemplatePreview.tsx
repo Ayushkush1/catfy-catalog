@@ -69,11 +69,11 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
         // Build compatibility matrix
         loadedThemes.forEach(theme => {
           loadedTemplates.forEach(template => {
-            const isCompatible = template.compatibleThemes.includes('*') || 
-                               template.compatibleThemes.includes(theme.id) ||
-                               theme.compatibleTemplates.includes('*') ||
-                               theme.compatibleTemplates.includes(template.id)
-            
+            const isCompatible = template.compatibleThemes.includes('*') ||
+              template.compatibleThemes.includes(theme.id) ||
+              theme.compatibleTemplates.includes('*') ||
+              theme.compatibleTemplates.includes(template.id)
+
             matrix.addRule({
               themeId: theme.id,
               templateId: template.id,
@@ -125,7 +125,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
   // Get compatible combinations
   const compatibleCombinations = useMemo(() => {
     const combinations: Array<{ theme: ThemeConfig, template: TemplateConfig }> = []
-    
+
     themes.forEach(theme => {
       templates.forEach(template => {
         const isCompatible = compatibilityMatrix.isCompatible(theme.id, template.id)
@@ -134,7 +134,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
         }
       })
     })
-    
+
     return combinations
   }, [themes, templates, compatibilityMatrix, state.showIncompatible])
 
@@ -148,7 +148,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
       // This would dynamically import and render the template component
       // For now, we'll show a placeholder
       return (
-        <div 
+        <div
           className={`
             border rounded-lg overflow-hidden bg-white shadow-sm
             ${size === 'small' ? 'h-32' : size === 'medium' ? 'h-48' : 'h-96'}
@@ -161,41 +161,51 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
         >
           <div className="h-full flex flex-col">
             {/* Header */}
-            <div 
+            <div
               className="h-8 flex items-center px-3 text-white text-sm font-medium"
               style={{ backgroundColor: theme.colors.primary }}
             >
               {standardizedContent.catalogue.name}
             </div>
-            
+
             {/* Content */}
             <div className="flex-1 p-3 space-y-2">
               <div className="text-xs text-gray-600">
                 {template.name} • {theme.name}
               </div>
-              
+
               {/* Sample product grid */}
               <div className="grid grid-cols-2 gap-1">
                 {standardizedContent.products.slice(0, 4).map((product: any, idx: number) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="border rounded p-1 text-xs"
                     style={{ borderColor: theme.colors.secondary }}
                   >
                     <div className="font-medium truncate">{product.name}</div>
-                    <div 
-                      className="text-xs"
-                      style={{ color: theme.colors.accent }}
-                    >
-                      {product.priceDisplay}
-                    </div>
+                    {(product.priceDisplay === 'show' && product.price) ||
+                      (product.priceDisplay === 'contact') ||
+                      (!product.priceDisplay && product.price) ? (
+                      <div
+                        className="text-xs"
+                        style={{ color: theme.colors.accent }}
+                      >
+                        {product.priceDisplay === 'show' && product.price ?
+                          `₹${Number(product.price).toLocaleString('en-IN')}`
+                          : product.priceDisplay === 'contact' ?
+                            'Contact for Price'
+                            : product.price ?
+                              `₹${Number(product.price).toLocaleString('en-IN')}`
+                              : 'No Price'}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>
             </div>
-            
+
             {/* Footer */}
-            <div 
+            <div
               className="h-6 flex items-center px-3 text-xs"
               style={{ backgroundColor: theme.colors.secondary, color: 'white' }}
             >
@@ -246,16 +256,16 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             Preview and test all theme-template combinations
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          
+
           <div className="flex items-center space-x-2">
-            <Switch 
-              id="auto-refresh" 
+            <Switch
+              id="auto-refresh"
               checked={state.autoRefresh}
               onCheckedChange={(checked) => setState(prev => ({ ...prev, autoRefresh: checked }))}
             />
@@ -277,8 +287,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             {/* Theme Selection */}
             <div>
               <Label className="text-sm font-medium mb-2 block">Theme</Label>
-              <Select 
-                value={state.selectedTheme || ''} 
+              <Select
+                value={state.selectedTheme || ''}
                 onValueChange={(value) => setState(prev => ({ ...prev, selectedTheme: value }))}
               >
                 <SelectTrigger>
@@ -288,7 +298,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
                   {themes.map(theme => (
                     <SelectItem key={theme.id} value={theme.id}>
                       <div className="flex items-center gap-2">
-                        <div 
+                        <div
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: theme.colors.primary }}
                         />
@@ -303,8 +313,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             {/* Template Selection */}
             <div>
               <Label className="text-sm font-medium mb-2 block">Template</Label>
-              <Select 
-                value={state.selectedTemplate || ''} 
+              <Select
+                value={state.selectedTemplate || ''}
                 onValueChange={(value) => setState(prev => ({ ...prev, selectedTemplate: value }))}
               >
                 <SelectTrigger>
@@ -327,8 +337,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             {/* Preview Mode */}
             <div>
               <Label className="text-sm font-medium mb-2 block">Preview Mode</Label>
-              <Select 
-                value={state.previewMode} 
+              <Select
+                value={state.previewMode}
                 onValueChange={(value: any) => setState(prev => ({ ...prev, previewMode: value }))}
               >
                 <SelectTrigger>
@@ -345,8 +355,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             {/* Options */}
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
-                <Switch 
-                  id="show-incompatible" 
+                <Switch
+                  id="show-incompatible"
                   checked={state.showIncompatible}
                   onCheckedChange={(checked) => setState(prev => ({ ...prev, showIncompatible: checked }))}
                 />
@@ -359,9 +369,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
           {state.selectedTheme && state.selectedTemplate && (
             <div className="mt-4 pt-4 border-t">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  state.isCompatible ? 'bg-green-500' : 'bg-red-500'
-                }`} />
+                <div className={`w-2 h-2 rounded-full ${state.isCompatible ? 'bg-green-500' : 'bg-red-500'
+                  }`} />
                 <span className="text-sm font-medium">
                   {state.isCompatible ? 'Compatible' : 'Incompatible'}
                 </span>
@@ -427,14 +436,13 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             {compatibleCombinations.map(({ theme, template }, idx) => {
               const isCompatible = compatibilityMatrix.isCompatible(theme.id, template.id)
               return (
-                <Card 
-                  key={`${theme.id}-${template.id}`} 
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    !isCompatible ? 'opacity-60 border-red-200' : ''
-                  }`}
-                  onClick={() => setState(prev => ({ 
-                    ...prev, 
-                    selectedTheme: theme.id, 
+                <Card
+                  key={`${theme.id}-${template.id}`}
+                  className={`cursor-pointer transition-all hover:shadow-md ${!isCompatible ? 'opacity-60 border-red-200' : ''
+                    }`}
+                  onClick={() => setState(prev => ({
+                    ...prev,
+                    selectedTheme: theme.id,
                     selectedTemplate: template.id,
                     previewMode: 'single'
                   }))}
@@ -512,7 +520,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {compatibleCombinations.filter(({ theme, template }) => 
+                {compatibleCombinations.filter(({ theme, template }) =>
                   compatibilityMatrix.isCompatible(theme.id, template.id)
                 ).length}
               </div>

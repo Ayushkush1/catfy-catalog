@@ -497,11 +497,15 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
                     </CardHeader>
 
                     <CardContent>
-                      {product.price && (
+                      {(product.priceDisplay === 'show' && product.price) || (!product.priceDisplay && product.price) ? (
                         <div className="text-lg font-semibold text-primary">
-                          ${product.price.toString()}
+                          ₹{Number(product.price).toLocaleString('en-IN')}
                         </div>
-                      )}
+                      ) : product.priceDisplay === 'contact' ? (
+                        <div className="text-lg font-semibold text-blue-600">
+                          Contact for Price
+                        </div>
+                      ) : null}
 
                       {product.category && (
                         <Badge variant="secondary" className="mt-2">
