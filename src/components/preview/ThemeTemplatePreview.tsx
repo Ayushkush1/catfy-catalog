@@ -151,9 +151,11 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
         <div
           className={`
             border rounded-lg overflow-hidden bg-white shadow-sm
-            ${size === 'small' ? 'h-32' : size === 'medium' ? 'h-48' : 'h-96'}
+            ${size === 'small' ? 'h-32 w-24' : size === 'medium' ? 'h-48 w-36' : 'h-96 w-72'}
           `}
           style={{
+            aspectRatio: '210/297', // A4 aspect ratio
+            maxWidth: size === 'small' ? '96px' : size === 'medium' ? '144px' : '288px',
             '--primary-color': theme.colors.primary,
             '--secondary-color': theme.colors.secondary,
             '--accent-color': theme.colors.accent

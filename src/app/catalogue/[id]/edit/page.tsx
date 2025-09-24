@@ -433,7 +433,7 @@ export default function EditCataloguePage() {
 
   useEffect(() => {
     fetchCatalogue()
-  }, [catalogueId])
+  }, [params.id])
 
   // Load selected theme from localStorage and catalogue data
   useEffect(() => {
@@ -985,6 +985,9 @@ export default function EditCataloguePage() {
                 >
                   <Palette className="mr-3 h-4 w-4" />
                   Template
+                  {templateRegistry.isGrapesJSTemplate(catalogue.templateId || '') && (
+                    <Badge className="ml-2 bg-blue-100 text-blue-800">GrapesJS</Badge>
+                  )}
                 </button>
 
                 <button
@@ -1666,7 +1669,38 @@ export default function EditCataloguePage() {
                 {/* Template Tab */}
                 {activeTab === 'theme' && (
                   <div className="space-y-6">
-
+                    {/* GrapesJS Editor Button */}
+                    {catalogue.templateId && templateRegistry.isGrapesJSTemplate(catalogue.templateId) ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium text-lg text-blue-800">GrapesJS Editor</h3>
+                            <p className="text-sm text-blue-600">You're using our new drag-and-drop editor</p>
+                          </div>
+                          <Button 
+                            onClick={() => router.push(`/editor/${catalogueId}`)}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            Open Editor
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="font-medium text-lg text-amber-800">Try Our New Editor</h3>
+                            <p className="text-sm text-amber-600">Switch to our new drag-and-drop editor for more flexibility</p>
+                          </div>
+                          <Button 
+                            onClick={() => handleTemplateSelect('grapesjs-template')}
+                            className="bg-amber-600 hover:bg-amber-700"
+                          >
+                            Switch to GrapesJS
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     {templateStep === 'template' ? (
                       <div>
@@ -1676,7 +1710,16 @@ export default function EditCataloguePage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {templates.map((template) => (
+                          {templates
+                            // Sort templates to show GrapesJS templates first
+                            .sort((a, b) => {
+                              const aIsGrapesJS = templateRegistry.isGrapesJSTemplate(a.id);
+                              const bIsGrapesJS = templateRegistry.isGrapesJSTemplate(b.id);
+                              if (aIsGrapesJS && !bIsGrapesJS) return -1;
+                              if (!aIsGrapesJS && bIsGrapesJS) return 1;
+                              return 0;
+                            })
+                            .map((template) => (
                             <div
                               key={template.id}
                               onClick={() => handleTemplateSelect(template.id)}
@@ -1694,6 +1737,16 @@ export default function EditCataloguePage() {
                                   </div>
                                 </div>
                               )}
+                              
+                              {/* GrapesJS Badge */}
+                              {templateRegistry.isGrapesJSTemplate(template.id) && (
+                                <div className="absolute top-2 left-2 z-10">
+                                  <div className="flex items-center gap-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                                    <Edit className="h-3 w-3" />
+                                    NEW EDITOR
+                                  </div>
+                                </div>
+                              )}
 
                               {/* Selection Check */}
                               {selectedTemplate === template.id && (
@@ -1707,7 +1760,7 @@ export default function EditCataloguePage() {
                               <div className="space-y-4">
                                 {/* Template Preview */}
                                 <div className="relative rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-                                  <div className="aspect-[4/3] relative bg-white">
+                                  <div className="relative bg-white" style={{ aspectRatio: '210/297', height: '280px' }}>
                                     {template.previewImage ? (
                                       <>
                                         <object

@@ -85,7 +85,13 @@ export function TemplateSelector({
             onClick={() => handleTemplateSelect(template.id)}
           >
             {/* Preview Image */}
-            <div className="relative h-48 overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div 
+              className="relative overflow-hidden rounded-t-lg bg-gradient-to-br from-blue-50 to-indigo-100"
+              style={{ 
+                aspectRatio: '210/297', // A4 aspect ratio
+                height: '240px' // Fixed height for consistent display
+              }}
+            >
               {template.previewImage ? (
                 <img
                   src={template.previewImage}

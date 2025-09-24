@@ -2,6 +2,7 @@ import { z } from 'zod'
 import React from 'react'
 import { StandardizedContent } from './content-schema'
 import { ThemeConfig } from './theme-registry'
+import { GrapesJSTemplate } from './grapesjs-template-converter'
 
 // Template configuration schema
 export const TemplateConfigSchema = z.object({
@@ -28,11 +29,35 @@ export const TemplateConfigSchema = z.object({
     customizable: z.boolean().default(true)
   }).optional(),
   customProperties: z.record(z.any()).optional(),
+  // GrapesJS specific properties
+  isGrapesJSTemplate: z.boolean().default(false),
+  grapesJSData: z.object({
+    html: z.string().optional(),
+    css: z.string().optional(),
+    js: z.string().optional(),
+    components: z.array(z.any()).optional(),
+  }).optional(),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date())
 })
 
 export type TemplateConfig = z.infer<typeof TemplateConfigSchema>
+
+// This interface is used for backward compatibility
+export interface ITemplateConfig {
+  id: string;
+  name: string;
+  description: string;
+  category: 'modern' | 'classic' | 'minimal' | 'creative' | 'industry' | 'specialized' | 'product';
+  pageCount: number;
+  version: string;
+  author?: string;
+  isPremium: boolean;
+  previewImage?: string;
+  features: string[];
+  compatibleThemes: string[];
+  isGrapesJSTemplate?: boolean;
+}
 
 // Template component interface
 export interface TemplateComponentProps {
@@ -53,6 +78,7 @@ export class TemplateRegistry {
   private static instance: TemplateRegistry
   private templates: Map<string, TemplateConfig> = new Map()
   private components: Map<string, TemplateComponent> = new Map()
+  private defaultEditor: string = 'grapesjs-template'; // Set GrapesJS as default editor
 
   private constructor() {
     // Templates are now registered statically via registerTemplate method
@@ -71,7 +97,7 @@ export class TemplateRegistry {
 
   // Public methods
   getAllTemplates(): TemplateConfig[] {
-    return Array.from(this.templates.values())
+    return Array.from(this.templates.values());
   }
 
   getTemplate(id: string): TemplateConfig | undefined {
@@ -99,6 +125,35 @@ export class TemplateRegistry {
       template.compatibleThemes.includes('*') || 
       template.compatibleThemes.includes(themeId)
     )
+  }
+
+  /**
+   * Get the default editor template ID
+   */
+  getDefaultEditorTemplate(): string {
+    return this.defaultEditor;
+  }
+  
+  /**
+   * Set the default editor template ID
+   */
+  setDefaultEditorTemplate(templateId: string): void {
+    this.defaultEditor = templateId;
+  }
+
+  /**
+   * Check if a template is a GrapesJS template
+   */
+  isGrapesJSTemplate(templateId: string): boolean {
+    const template = this.getTemplate(templateId);
+    return template ? !!template.isGrapesJSTemplate : false;
+  }
+
+  /**
+   * Get all GrapesJS templates
+   */
+  getAllGrapesJSTemplates(): TemplateConfig[] {
+    return this.getAllTemplates().filter(template => template.isGrapesJSTemplate);
   }
 
   isTemplateThemeCompatible(templateId: string, themeId: string, theme?: ThemeConfig): boolean {

@@ -5,6 +5,8 @@ import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/
 import { FmcgCatalogueTemplateWrapper } from '@/components/catalog-templates/fmcg-catalogue/FmcgCatalogueTemplate'
 import { FurnitureCatalogueTemplateWrapper } from '@/components/catalog-templates/furniture-catalogue/FurnitureCatalogueTemplate'
 import { HomeDecorCatalogueTemplateWrapper } from '@/components/catalog-templates/home-decor-catalogue/HomeDecorCatalogueTemplate'
+import GrapesJSTemplate from '@/components/catalog-templates/grapesjs-template/GrapesJSTemplate'
+import { ModernGrapesJSTemplate } from '@/components/catalog-templates/modern-grapesjs/ModernGrapesJSTemplate'
 
 // Import template configurations
 import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
@@ -12,6 +14,8 @@ import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-c
 import { fmcgCatalogueConfig } from '@/components/catalog-templates/fmcg-catalogue/template.config'
 import { furnitureCatalogueConfig } from '@/components/catalog-templates/furniture-catalogue/template.config'
 import { homeDecorCatalogueConfig } from '@/components/catalog-templates/home-decor-catalogue/template.config'
+import { grapesJSTemplateConfig } from '@/components/catalog-templates/grapesjs-template/template.config'
+import { modernGrapesJSConfig } from '@/components/catalog-templates/modern-grapesjs/template.config'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
@@ -46,6 +50,15 @@ function registerAllTemplates() {
 
   // Register home decor catalogue template
   templateRegistry.registerTemplate(homeDecorCatalogueConfig, HomeDecorCatalogueTemplateWrapper)
+
+  // Register GrapesJS template (new editor)
+  templateRegistry.registerTemplate(grapesJSTemplateConfig, GrapesJSTemplate)
+  
+  // Register Modern GrapesJS template
+  templateRegistry.registerTemplate(modernGrapesJSConfig, ModernGrapesJSTemplate)
+  
+  // Set GrapesJS as default editor
+  templateRegistry.setDefaultEditorTemplate('grapesjs-template')
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
