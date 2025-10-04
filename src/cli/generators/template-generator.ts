@@ -13,7 +13,7 @@ const TemplateGeneratorOptionsSchema = z.object({
   author: z.string().default('Unknown'),
   pageCount: z.number().min(1).default(4),
   features: z.array(z.string()).default([]),
-  outputDir: z.string().default('src/components/catalog-templates')
+  outputDir: z.string().default('src/templates')
 })
 
 type TemplateGeneratorOptions = z.infer<typeof TemplateGeneratorOptionsSchema>
@@ -45,6 +45,7 @@ export class TemplateGenerator {
         'Print-optimized',
         ...this.options.features
       ],
+      tags: [this.options.category, 'generated', 'custom'],
       pageCount: this.options.pageCount,
       supportedFields: {
         products: [
@@ -268,7 +269,7 @@ ${Array.from({ length: this.options.pageCount }, (_, i) => `${i + 1}. ${this.get
 
 ## Usage
 \`\`\`typescript
-import { ${this.toPascalCase(this.options.id)} } from '@/components/catalog-templates/${this.options.id}'
+import { ${this.toPascalCase(this.options.id)} } from '@/templates/${this.options.id}'
 
 // Use in your component
 <${this.toPascalCase(this.options.id)}

@@ -1,20 +1,63 @@
 // Template auto-discovery and registration
 import { TemplateRegistry } from '@/lib/template-registry'
-import { SkincareCatalogueTemplateWrapper } from '@/components/catalog-templates/skincare-catalogue/SkincareCatalogueTemplate'
-import { FashionCatalogueTemplateWrapper } from '@/components/catalog-templates/fashion-catalogue/FashionCatalogueTemplate'
-import { FmcgCatalogueTemplateWrapper } from '@/components/catalog-templates/fmcg-catalogue/FmcgCatalogueTemplate'
-import { FurnitureCatalogueTemplateWrapper } from '@/components/catalog-templates/furniture-catalogue/FurnitureCatalogueTemplate'
-import { HomeDecorCatalogueTemplateWrapper } from '@/components/catalog-templates/home-decor-catalogue/HomeDecorCatalogueTemplate'
 
-// Import template configurations
-import { skincareCatalogueConfig } from '@/components/catalog-templates/skincare-catalogue/template.config'
-import { fashionCatalogueConfig } from '@/components/catalog-templates/fashion-catalogue/template.config'
-import { fmcgCatalogueConfig } from '@/components/catalog-templates/fmcg-catalogue/template.config'
-import { furnitureCatalogueConfig } from '@/components/catalog-templates/furniture-catalogue/template.config'
-import { homeDecorCatalogueConfig } from '@/components/catalog-templates/home-decor-catalogue/template.config'
+// Import editor templates
+import { PrebuiltTemplates } from '@/components/editor/templates/PrebuiltTemplates'
+import { getAllModularTemplates } from '@/components/editor/templates/ModularTemplates'
+import { Template as EditorTemplate } from '@/components/editor/templates/types'
+import { TemplateConfig } from '@/lib/template-registry'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
+
+// Convert editor template to registry template config
+function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): TemplateConfig {
+  // Map editor categories to template registry categories
+  const categoryMap: Record<string, TemplateConfig['category']> = {
+    'test': 'minimal',
+    'landing': 'modern',
+    'content': 'modern',
+    'business': 'classic',
+    'catalog': 'product',
+    'fashion': 'product'
+  }
+
+  // Detect multi-page editor templates
+  const isMultiPage = !!editorTemplate.customProperties?.isMultiPageTemplate
+  const multiPageData = editorTemplate.customProperties?.multiPageData
+
+  return {
+    id: editorTemplate.id,
+    name: editorTemplate.name,
+    description: editorTemplate.description,
+    category: categoryMap[editorTemplate.category] || 'modern',
+    isPremium: false, // Editor templates are free by default
+    version: '1.0.0',
+    previewImage: editorTemplate.thumbnail || `/templates/${editorTemplate.id}-preview.svg`,
+    features: editorTemplate.tags,
+    tags: editorTemplate.tags || [],
+    // Prefer explicit pageCount; fall back to multiPageData length; default to 1
+    pageCount: editorTemplate.pageCount ?? (Array.isArray(multiPageData) ? multiPageData.length : 1),
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay'],
+      categories: ['name', 'description', 'color'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+    },
+    compatibleThemes: ['modern-blue', 'classic-warm', 'minimal-mono'],
+    requiredThemeFeatures: [],
+    customProperties: {
+      isEditorTemplate: true,
+      originalCategory: editorTemplate.category,
+      // Map single-page and multi-page data appropriately for the editor
+      ...(isMultiPage
+        ? { isMultiPageTemplate: true, multiPageData }
+        : { editorData: editorTemplate.data }
+      )
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+}
 
 // Initialize template registry with auto-discovery
 export function initializeTemplateRegistry(): TemplateRegistry {
@@ -32,20 +75,36 @@ export function initializeTemplateRegistry(): TemplateRegistry {
 function registerAllTemplates() {
   if (!templateRegistry) return
 
-  // Register skincare catalogue template
-  templateRegistry.registerTemplate(skincareCatalogueConfig, SkincareCatalogueTemplateWrapper)
+  // Get all templates (both legacy and modular)
+  const allModularTemplates = getAllModularTemplates();
+  const allTemplates = [...PrebuiltTemplates, ...allModularTemplates];
 
-  // Register fashion catalogue template
-  templateRegistry.registerTemplate(fashionCatalogueConfig, FashionCatalogueTemplateWrapper)
-
-  // Register FMCG catalogue template
-  templateRegistry.registerTemplate(fmcgCatalogueConfig, FmcgCatalogueTemplateWrapper)
-
-  // Register furniture catalogue template
-  templateRegistry.registerTemplate(furnitureCatalogueConfig, FurnitureCatalogueTemplateWrapper)
-
-  // Register home decor catalogue template
-  templateRegistry.registerTemplate(homeDecorCatalogueConfig, HomeDecorCatalogueTemplateWrapper)
+  // Register editor templates
+  console.log('📝 Registering all templates:', allTemplates.length);
+  console.log('📝 PrebuiltTemplates:', PrebuiltTemplates.length);
+  console.log('📝 ModularTemplates:', allModularTemplates.length);
+  
+  allTemplates.forEach(editorTemplate => {
+    const config = convertEditorTemplateToConfig(editorTemplate)
+    console.log('📝 Registering template:', {
+      id: editorTemplate.id,
+      name: editorTemplate.name,
+      category: editorTemplate.category,
+      isModular: allModularTemplates.some(t => t.id === editorTemplate.id),
+      hasData: !!editorTemplate.data,
+      dataType: typeof editorTemplate.data,
+      dataKeys: editorTemplate.data ? Object.keys(editorTemplate.data) : [],
+      configId: config.id,
+      hasEditorData: !!config.customProperties?.editorData,
+      editorDataType: typeof config.customProperties?.editorData,
+      editorDataKeys: config.customProperties?.editorData ? Object.keys(config.customProperties.editorData) : []
+    });
+    // Create a simple wrapper component for editor templates
+    const EditorTemplateWrapper = () => {
+      return null // Editor templates are handled differently
+    }
+    templateRegistry!.registerTemplate(config, EditorTemplateWrapper)
+  })
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
@@ -67,7 +126,24 @@ export function getAllTemplates() {
 
 export function getTemplateById(templateId: string) {
   const registry = getTemplateRegistry()
-  return registry.getTemplate(templateId)
+  const template = registry.getTemplate(templateId)
+  
+  console.log('🔍 getTemplateById Debug:', {
+    templateId,
+    templateFound: !!template,
+    allTemplateIds: registry.getAllTemplates().map(t => t.id),
+    totalTemplates: registry.getAllTemplates().length,
+    templateData: template ? {
+      id: template.id,
+      name: template.name,
+      hasCustomProperties: !!template.customProperties,
+      hasEditorData: !!template.customProperties?.editorData,
+      editorDataType: typeof template.customProperties?.editorData,
+      editorDataKeys: template.customProperties?.editorData ? Object.keys(template.customProperties.editorData) : []
+    } : null
+  });
+  
+  return template
 }
 
 export function getTemplatesByCategory(category: 'modern' | 'classic' | 'minimal' | 'creative' | 'industry' | 'specialized' | 'product') {
@@ -131,14 +207,7 @@ export function getTemplateSupportedFields(templateId: string) {
   }
 }
 
-// Export template configurations for direct access
-export {
-  skincareCatalogueConfig,
-  fashionCatalogueConfig,
-  fmcgCatalogueConfig,
-  furnitureCatalogueConfig,
-  homeDecorCatalogueConfig
-}
+// Template configurations are now handled through the registry
 
 // Export types
 export type { TemplateConfig } from '@/lib/template-registry'

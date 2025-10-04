@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Check, Crown, Eye, Star } from 'lucide-react'
 import { TemplateConfig } from '@/lib/template-registry'
 import { getAllTemplates } from '@/templates'
+import { TemplateEditorPreview } from '@/components/ui/template-editor-preview'
 import { cn } from '@/lib/utils'
 
 interface TemplateSelectorProps {
   selectedTemplateId?: string
+  selectedThemeId?: string
   onTemplateSelect: (templateId: string) => void
   showPreview?: boolean
   filterCategory?: TemplateConfig['category']
@@ -19,6 +21,7 @@ interface TemplateSelectorProps {
 
 export function TemplateSelector({
   selectedTemplateId,
+  selectedThemeId,
   onTemplateSelect,
   showPreview = true,
   filterCategory,
@@ -26,16 +29,16 @@ export function TemplateSelector({
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<TemplateConfig[]>([])
   const [loading, setLoading] = useState(true)
-  const [previewTemplate, setPreviewTemplate] = useState<string | null>(null)
+  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>([])
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         const allTemplates = getAllTemplates()
-        const filteredTemplates = filterCategory
-          ? allTemplates.filter(t => t.category === filterCategory)
-          : allTemplates
-        setTemplates(filteredTemplates)
+        setTemplates(allTemplates)
+        setFilteredTemplates(allTemplates)
       } catch (error) {
         console.error('Failed to load templates:', error)
       } finally {
@@ -44,14 +47,27 @@ export function TemplateSelector({
     }
 
     loadTemplates()
-  }, [filterCategory])
+  }, [])
+
+  useEffect(() => {
+    const filtered = filterCategory
+      ? templates.filter(t => t.category === filterCategory)
+      : templates
+    setFilteredTemplates(filtered)
+  }, [templates, filterCategory])
 
   const handleTemplateSelect = (templateId: string) => {
     onTemplateSelect(templateId)
   }
 
   const handlePreview = (templateId: string) => {
-    setPreviewTemplate(templateId)
+    setPreviewTemplateId(templateId)
+    setIsPreviewOpen(true)
+  }
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false)
+    setPreviewTemplateId(null)
   }
 
   if (loading) {
@@ -72,8 +88,8 @@ export function TemplateSelector({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {templates.map((template) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredTemplates.map((template) => (
           <Card
             key={template.id}
             className={cn(
@@ -225,6 +241,13 @@ export function TemplateSelector({
           </div>
         </div>
       )}
+
+      <TemplateEditorPreview
+        templateId={previewTemplateId}
+        themeId={selectedThemeId}
+        isOpen={isPreviewOpen}
+        onClose={handleClosePreview}
+      />
     </div>
   )
 }

@@ -13,24 +13,21 @@ interface ViewportToggleProps {
 
 const VIEWPORT_CONFIGS = {
     desktop: {
-        width: '100%',
-        maxWidth: '1200px',
+        width: '210mm', // A4 width
+        maxWidth: '210mm',
         icon: Monitor,
-
         scale: 1
     },
     tablet: {
-        width: '768px',
-        maxWidth: '768px',
+        width: '210mm', // Keep A4 width for consistency
+        maxWidth: '210mm',
         icon: Tablet,
-
         scale: 0.8
     },
     mobile: {
-        width: '375px',
-        maxWidth: '375px',
+        width: '210mm', // Keep A4 width for consistency
+        maxWidth: '210mm',
         icon: Smartphone,
-
         scale: 0.6
     }
 }
@@ -84,15 +81,17 @@ export function getViewportStyles(mode: ViewportMode) {
             transform: `scale(${config.scale})`,
             transformOrigin: 'top center',
             margin: '0 auto',
-            transition: 'all 0.3s ease-in-out'
+            transition: 'all 0.3s ease-in-out',
+            minHeight: '297mm', // A4 height
+            backgroundColor: '#ffffff'
         } as React.CSSProperties,
         wrapper: {
             minHeight: '100vh',
             display: 'flex',
             justifyContent: 'center',
-            alignItems: mode === 'desktop' ? 'flex-start' : 'center',
-            padding: mode === 'desktop' ? '2rem' : '1rem',
-            background: mode === 'desktop' ? 'transparent' : '#f8fafc'
+            alignItems: 'flex-start',
+            padding: '2rem',
+            background: '#f8fafc'
         } as React.CSSProperties
     }
 }

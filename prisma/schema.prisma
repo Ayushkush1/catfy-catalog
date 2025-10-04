@@ -51,6 +51,7 @@ model Catalogue {
   year           String?
   introImage     String?
   theme          String          @default("modern")
+  template       String?
   isPublic       Boolean         @default(false)
   slug           String?         @unique
   status         CatalogueStatus @default(DRAFT)

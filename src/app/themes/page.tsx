@@ -47,10 +47,11 @@ export default function ThemesPage() {
     }
   }
 
-  const handleSelectionComplete = (templateId: string, themeId: string) => {
-    // Store selections in localStorage for use in catalogue creation
+  const handleSelectionComplete = (templateId: string) => {
+    // Store template selection in localStorage for use in catalogue creation
     localStorage.setItem('selectedTemplate', templateId)
-    localStorage.setItem('selectedTheme', themeId)
+    // Use default theme for now - theme selection can be handled separately
+    localStorage.setItem('selectedTheme', 'default')
     router.push('/catalogue/new')
   }
 

@@ -14,6 +14,7 @@ export const TemplateConfigSchema = z.object({
   author: z.string().optional(),
   previewImage: z.string().optional(),
   features: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
   pageCount: z.number().default(1),
   supportedFields: z.object({
     products: z.array(z.string()).default([]),

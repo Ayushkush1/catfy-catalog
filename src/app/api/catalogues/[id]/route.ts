@@ -161,6 +161,8 @@ const updateCatalogueSchema = z.object({
         }).optional(),
       }).optional(),
     }).optional(),
+    // Editor template data
+    editorData: z.string().optional(),
   }).optional(),
 })
 

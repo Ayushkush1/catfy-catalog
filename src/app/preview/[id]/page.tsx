@@ -1,15 +1,16 @@
 'use client'
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import { Badge } from '@/components/ui/badge'
+import { prisma } from '@/lib/prisma'               
+import { CraftJSEditor } from '@/components/editor/CraftJSEditor'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Mail, Phone, Globe, ExternalLink, Facebook, Twitter, Instagram, Linkedin, MapPin, Monitor, Smartphone } from 'lucide-react'
-import { prisma } from '@/lib/prisma'
-import { getTemplateComponent, getTemplateById } from '@/components/catalog-templates'
-import { DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, DEFAULT_ADVANCED_STYLES } from '@/components/shared/StyleCustomizer'
-import { ViewportToggle, getViewportStyles, type ViewportMode } from '@/components/preview/ViewportToggle'
+import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
+import { Twitter, Instagram, Linkedin, Mail, Phone, Globe, ExternalLink, MapPin, Facebook } from 'lucide-react'
+import { ViewportToggle, ViewportMode, getViewportStyles } from '@/components/preview/ViewportToggle'
+import { DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION } from '@/components/shared/StyleCustomizer'
+import { getTemplateComponent, getTemplateById } from '@/templates'
+import { getThemeColors as getRegistryThemeColors } from '@/lib/theme-registry'
 
 interface PreviewPageProps {
   params: {
@@ -80,160 +81,7 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
   // Get viewport styles
   const viewportStyles = getViewportStyles(viewportMode)
 
-  // If template is found, use it; otherwise fall back to legacy rendering
-  if (TemplateComponent && templateConfig) {
-    const themeColors = {
-      primary: getThemeColors(catalogue.theme || 'modern').primary,
-      secondary: getThemeColors(catalogue.theme || 'modern').secondary,
-      accent: '#f1f5f9'
-    }
-
-    // Transform profile data to match expected structure
-    const profileData = {
-      id: catalogue.profile?.id || catalogue.profileId || '',
-      email: catalogue.profile?.email || '',
-      fullName: catalogue.profile?.fullName || null,
-      firstName: null,
-      lastName: null,
-      avatarUrl: null,
-      accountType: 'INDIVIDUAL' as const,
-      companyName: catalogue.profile?.companyName || null,
-      phone: catalogue.profile?.phone || null,
-      website: catalogue.profile?.website || null,
-      address: catalogue.profile?.address || null,
-      city: catalogue.profile?.city || null,
-      state: catalogue.profile?.state || null,
-      country: catalogue.profile?.country || null,
-      postalCode: catalogue.profile?.postalCode || null,
-      logo: null, // Remove logo property
-      tagline: null, // Remove tagline property
-      socialLinks: null, // Remove socialLinks property
-      stripeCustomerId: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    }
-
-    return (
-      <>
-        {/* Viewport Toggle */}
-        <ViewportToggle
-          currentMode={viewportMode}
-          onModeChange={setViewportMode}
-          className="print:hidden"
-        />
-
-        {/* Responsive Container */}
-        <div style={viewportStyles.wrapper} className="print:p-0 print:m-0">
-          <div
-            data-pdf-ready="true"
-            className="preview-container print:bg-white print:w-full print:h-auto"
-            style={{
-              ...viewportStyles.container,
-              '--theme-primary': themeColors.primary,
-              '--theme-secondary': themeColors.secondary,
-              '--theme-accent': themeColors.accent,
-              minHeight: viewportMode === 'desktop' ? '800px' : 'auto',
-              boxShadow: viewportMode !== 'desktop' ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : 'none',
-              borderRadius: viewportMode !== 'desktop' ? '12px' : '0',
-              overflow: 'hidden',
-              background: 'white'
-            } as React.CSSProperties}
-          >
-            <TemplateComponent
-              catalogue={catalogue}
-              profile={profileData}
-              themeColors={themeColors}
-              fontCustomization={settings.fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
-              spacingCustomization={settings.spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION}
-              advancedStyles={settings.advancedStyles || DEFAULT_ADVANCED_STYLES}
-            />
-          </div>
-        </div>
-
-        {/* Global styles for responsive preview */}
-        <style jsx global>{`
-          @media print {
-            .preview-container {
-              transform: none !important;
-              width: auto !important;
-              max-width: none !important;
-              box-shadow: none !important;
-              border-radius: 0 !important;
-              margin: 0 !important;
-            }
-            body {
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            * {
-              box-sizing: border-box;
-            }
-          }
-          
-          body {
-            overflow-x: ${viewportMode !== 'desktop' ? 'hidden' : 'auto'};
-          }
-          
-          /* Mobile-specific styles */
-          ${viewportMode === 'mobile' ? `
-            .preview-container .grid {
-              grid-template-columns: 1fr !important;
-            }
-            .preview-container .md\\:grid-cols-2 {
-              grid-template-columns: 1fr !important;
-            }
-            .preview-container .lg\\:grid-cols-3 {
-              grid-template-columns: 1fr !important;
-            }
-            .preview-container .xl\\:grid-cols-4 {
-              grid-template-columns: 1fr !important;
-            }
-            .preview-container .text-4xl {
-              font-size: 2rem !important;
-            }
-            .preview-container .text-3xl {
-              font-size: 1.875rem !important;
-            }
-            .preview-container .text-2xl {
-              font-size: 1.5rem !important;
-            }
-            .preview-container .p-8 {
-              padding: 1rem !important;
-            }
-            .preview-container .p-6 {
-              padding: 0.75rem !important;
-            }
-            .preview-container .py-8 {
-              padding-top: 1rem !important;
-              padding-bottom: 1rem !important;
-            }
-            .preview-container .mb-8 {
-              margin-bottom: 1rem !important;
-            }
-            .preview-container .gap-6 {
-              gap: 0.75rem !important;
-            }
-          ` : ''}
-          
-          /* Tablet-specific styles */
-          ${viewportMode === 'tablet' ? `
-            .preview-container .xl\\:grid-cols-4 {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-            .preview-container .lg\\:grid-cols-3 {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-            .preview-container .text-4xl {
-              font-size: 2.25rem !important;
-            }
-            .preview-container .p-8 {
-              padding: 1.5rem !important;
-            }
-          ` : ''}
-        `}</style>
-      </>
-    )
-  }
+  // Registry template components are not currently used - using legacy rendering only
 
   // Legacy rendering for backward compatibility
   const themeColors = getThemeColors(catalogue.theme || 'modern')
@@ -254,15 +102,13 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
           data-pdf-ready="true"
           style={{
             ...viewportStyles.container,
-            minHeight: viewportMode === 'desktop' ? '800px' : 'auto',
-            boxShadow: viewportMode !== 'desktop' ? '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' : 'none',
-            borderRadius: viewportMode !== 'desktop' ? '12px' : '0',
-            overflow: 'hidden',
-            background: 'white'
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            borderRadius: '8px',
+            overflow: 'hidden'
           }}
         >
           {/* Catalogue Content */}
-          <div className="container mx-auto py-8 px-4">
+          <div className="py-8 px-8">
             {/* Header */}
             <div className="text-center mb-8">
               <h1 className="text-4xl font-bold text-gray-900 mb-4">

@@ -37,7 +37,7 @@ import { toast } from 'sonner'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { ThemeSelector } from './ThemeSelector'
-import { TemplateSelector } from '@/components/ui/template-selector'
+import { TemplateThemeWorkflow } from '@/components/ui/template-theme-workflow'
 
 interface CatalogueData {
   title: string | number | readonly string[] | undefined
@@ -78,6 +78,9 @@ interface CatalogueData {
 }
 
 interface UserProfile {
+  id: string
+  fullName: string
+  email: string
   subscriptionPlan: 'free' | 'monthly' | 'yearly'
   subscriptionStatus: 'active' | 'inactive' | 'cancelled'
   subscription: {
@@ -347,7 +350,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           <div className="flex justify-center mt-3 space-x-14">
             {[
               { step: 1, label: 'Plan' },
-              { step: 2, label: 'Template' },
+              { step: 2, label: 'Design' },
               { step: 3, label: 'Branding' },
               { step: 4, label: 'Settings' }
             ].map(({ step, label }) => (
@@ -479,7 +482,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Layout className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-[#1A1B41]">Choose Your Template</CardTitle>
+                    <CardTitle className="text-lg text-[#1A1B41]">Choose Template</CardTitle>
                     <CardDescription className="text-gray-600 text-sm">
                       Select a template layout that best showcases your products
                     </CardDescription>
@@ -496,13 +499,12 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     Each template is professionally designed to highlight different types of products and business styles.
                   </p>
                 </div>
-                <TemplateSelector
-                  selectedTemplateId={data.templateId}
-                  onTemplateSelect={(templateId) => {
+                <TemplateThemeWorkflow
+                  userProfile={profile}
+                  initialTemplateId={data.templateId}
+                  onSelectionComplete={(templateId) => {
                     updateData('templateId', templateId)
                     updateData('settings.templateId', templateId)
-                    // Auto-select default theme when template is selected
-                    updateData('theme', 'modern-blue')
                   }}
                   showPreview={true}
                   className="mt-4"

@@ -154,8 +154,8 @@ export async function POST(request: NextRequest) {
     try {
       const page = await browser.newPage()
 
-      // Set viewport for consistent rendering
-      await page.setViewportSize({ width: 1200, height: 800 })
+      // Set viewport for consistent rendering with A4 dimensions
+      await page.setViewportSize({ width: 794, height: 1123 }) // A4 in pixels at 96 DPI
 
       // Navigate to preview page
       await page.goto(previewUrl, {
@@ -171,10 +171,9 @@ export async function POST(request: NextRequest) {
         return page.waitForTimeout(3000)
       })
 
-      // Generate PDF with custom dimensions matching desktop preview
+      // Generate PDF with A4 dimensions matching preview
       const pdfBuffer = await page.pdf({
-        width: '1200px',
-        height: '800px',
+        format: 'A4',
         printBackground: true,
         margin: {
           top: '0px',
