@@ -1,4 +1,4 @@
-import { Template } from '../types';
+import { Template, CraftData } from '../types';
 
 /**
  * Base template builder utility for creating consistent templates
@@ -64,9 +64,9 @@ export class TemplateBuilder {
   }
 
   /**
-   * Set the template data (CraftJS serialized data)
+   * Set the template data (Craft.js serialized data)
    */
-  setData(data: any): TemplateBuilder {
+  setData(data: CraftData | string): TemplateBuilder {
     this.template.data = data;
     return this;
   }
@@ -90,14 +90,24 @@ export class TemplateBuilder {
   /**
    * Set multi-page data for templates with multiple pages
    */
-  setMultiPageData(pages: any[]): TemplateBuilder {
-    // Store multi-page data in customProperties for the template manager to detect
+  setMultiPageData(pages: Array<{ id: string; name: string; data: CraftData | string }>): TemplateBuilder {
+    if (pages && pages.length > 0) {
+      this.template.multiPageData = pages;
+      this.template.pageCount = pages.length;
+      // Automatically mark as multi-page template
+      this.setCustomProperty('isMultiPageTemplate', true);
+    }
+    return this;
+  }
+
+  /**
+   * Set custom properties for the template
+   */
+  setCustomProperty(key: string, value: any): TemplateBuilder {
     if (!this.template.customProperties) {
       this.template.customProperties = {};
     }
-    this.template.customProperties.isMultiPageTemplate = true;
-    this.template.customProperties.multiPageData = pages;
-    this.template.customProperties.isEditorTemplate = true;
+    this.template.customProperties[key] = value;
     return this;
   }
 
@@ -129,11 +139,11 @@ export class TemplateBuilder {
 export const createTemplate = (): TemplateBuilder => new TemplateBuilder();
 
 /**
- * Common CraftJS node structure helpers
+ * Create a CraftJS node with the given type and properties
  */
 export const createNode = (
   type: string,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   isCanvas: boolean = false,
   nodes: string[] = [],
@@ -155,7 +165,7 @@ export const createNode = (
  */
 export const createContainer = (
   id: string,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   nodes: string[] = [],
   parent?: string
@@ -166,7 +176,7 @@ export const createContainer = (
  */
 export const createText = (
   text: string,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   parent?: string
 ) => createNode('TextBlock', { text, ...props }, displayName, false, [], parent);
@@ -177,7 +187,7 @@ export const createText = (
 export const createHeading = (
   text: string,
   level: number = 1,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   parent?: string
 ) => createNode('HeadingBlock', { text, level, ...props }, displayName, false, [], parent);
@@ -188,7 +198,7 @@ export const createHeading = (
 export const createImage = (
   src: string,
   alt: string,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   parent?: string
 ) => createNode('ImageBlock', { src, alt, ...props }, displayName, false, [], parent);
@@ -198,7 +208,7 @@ export const createImage = (
  */
 export const createButton = (
   text: string,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   parent?: string
 ) => createNode('ButtonBlock', { text, ...props }, displayName, false, [], parent);
@@ -208,7 +218,7 @@ export const createButton = (
  */
 export const createGrid = (
   columns: number,
-  props: any = {},
+  props: Record<string, unknown> = {},
   displayName?: string,
   nodes: string[] = [],
   parent?: string

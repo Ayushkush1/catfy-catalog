@@ -346,7 +346,7 @@ export const TextBlockSettings: React.FC = () => {
 };
 
 // Craft.js configuration
-(TextBlock as any).craft = {
+TextBlock.craft = {
   props: defaultProps,
   related: {
     settings: TextBlockSettings

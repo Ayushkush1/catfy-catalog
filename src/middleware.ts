@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { Database } from '@/types/supabase'
 import { getSupabaseConfig } from '@/lib/env'
+import { isAdminEmail } from '@/lib/admin-config'
 
 // Note: Prisma cannot be used in middleware due to Edge Runtime limitations
 
@@ -90,16 +91,35 @@ export async function middleware(request: NextRequest) {
 
   // Admin routes (exclude admin login page)
   if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
+    console.log('🔍 [MIDDLEWARE] Admin route detected:', request.nextUrl.pathname)
+    
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('🔍 [MIDDLEWARE] User from Supabase:', user ? { id: user.id, email: user.email } : 'No user')
     
     if (!user) {
+      console.log('❌ [MIDDLEWARE] No user found, returning auth error')
+      // For API routes, return JSON error instead of redirect
+      if (request.nextUrl.pathname.startsWith('/api/admin')) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      }
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
-    // Check if user is admin - only admin@catfy.com is allowed
-    if (user.email !== 'admin@catfy.com') {
+    // Check if user is admin
+    console.log('🔍 [MIDDLEWARE] Checking admin status for email:', user.email)
+    const isAdmin = user.email && isAdminEmail(user.email)
+    console.log('🔍 [MIDDLEWARE] Is admin?', isAdmin)
+    
+    if (!isAdmin) {
+      console.log('❌ [MIDDLEWARE] User is not admin, returning access denied')
+      // For API routes, return JSON error instead of redirect
+      if (request.nextUrl.pathname.startsWith('/api/admin')) {
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+      }
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
+    
+    console.log('✅ [MIDDLEWARE] Admin access granted for:', request.nextUrl.pathname)
   }
 
   // Redirect authenticated users away from auth pages

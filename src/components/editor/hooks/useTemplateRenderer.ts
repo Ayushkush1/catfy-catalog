@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useEditor } from '@craftjs/core';
 import { templateManager, TemplateLoadResult } from '@/lib/template-manager';
+import { Page } from '../ui';
 
 export interface TemplateRenderState {
   isLoading: boolean;
@@ -15,7 +16,7 @@ export interface UseTemplateRendererOptions {
   onTemplateError?: (error: string) => void;
   autoLoadFromStorage?: boolean;
   multiPageHook?: {
-    loadPages: (pages: any[], initialPageId?: string) => void;
+    loadPages: (pages: Page[], initialPageId?: string) => void;
   };
 }
 
@@ -74,7 +75,7 @@ export const useTemplateRenderer = (options: UseTemplateRendererOptions = {}) =>
             return false;
           }
         },
-        multiPageHook ? (pages: any[]) => {
+        multiPageHook ? (pages: Page[]) => {
           try {
             console.log('🔄 Loading multi-page template with', pages.length, 'pages');
             
@@ -150,7 +151,7 @@ export const useTemplateRenderer = (options: UseTemplateRendererOptions = {}) =>
             return false;
           }
         },
-        multiPageHook ? (pages: any[]) => {
+        multiPageHook ? (pages: Page[]) => {
           try {
             console.log('🔄 Loading multi-page template from storage with', pages.length, 'pages');
             multiPageHook.loadPages(pages);

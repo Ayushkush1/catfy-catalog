@@ -41,14 +41,15 @@ import {
   CarouselBlock,
   FormBlock
 } from '../blocks';
+import type { Template } from '../templates';
 
 interface ToolboxProps {
   selectedTool: string;
   onToolSelect: (tool: string) => void;
   onShowAssetManager: () => void;
   onShowTemplateManager?: () => void;
-  templates: any[];
-  onLoadTemplate: (template: any) => void;
+  templates: Template[];
+  onLoadTemplate: (template: Template) => void;
   className?: string;
 }
 
@@ -64,7 +65,7 @@ interface BlockItem {
   name: string;
   icon: React.ReactNode;
   component: React.ComponentType<any>;
-  props?: any;
+  props?: Record<string, unknown>;
   description: string;
 }
 
@@ -283,14 +284,14 @@ export const Toolbox: React.FC<ToolboxProps> = ({
           connectors.create(ref, React.createElement(block.component, block.props));
         }
       }}
-      className="cursor-move p-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded transition-colors group"
+      className="cursor-move p-2 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors group"
     >
       <div className="flex justify-center items-center">
-        <div className="text-gray-500 group-hover:text-gray-900 w-3 h-3">
+        <div className="text-gray-600 group-hover:text-gray-800 w-3 h-3">
           {block.icon}
         </div>
         <div className="ml-3 flex-1 min-w-0">
-          <div className="text-[13px] font-medium text-gray-700 truncate">
+          <div className="text-[11px] font-medium text-gray-800 truncate">
             {block.name}
           </div>
         </div>
@@ -322,14 +323,14 @@ export const Toolbox: React.FC<ToolboxProps> = ({
         <div className="grid grid-cols-2 gap-1">
           <button
             onClick={onShowAssetManager}
-            className="flex items-center justify-center p-2 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors text-xs"
+            className="flex items-center justify-center p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-xs"
           >
             <Upload className="w-3 h-3 mr-1" />
             Assets
           </button>
           <button
             onClick={onShowTemplateManager}
-            className="flex items-center justify-center p-2 bg-green-50 text-green-700 rounded hover:bg-green-100 transition-colors text-xs"
+            className="flex items-center justify-center p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-xs"
           >
             <FileText className="w-3 h-3 mr-1" />
             Templates
@@ -344,7 +345,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
             <div key={category.id} className="space-y-1">
               <button
                 onClick={() => toggleCategory(category.id)}
-                className="w-full flex items-center justify-between p-2 text-left text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                className="w-full flex items-center justify-between p-2 text-left text-xs font-medium text-gray-800 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
               >
                 <div className="flex items-center">
                   {category.icon}
@@ -376,7 +377,7 @@ export const Toolbox: React.FC<ToolboxProps> = ({
               <button
                 key={index}
                 onClick={() => onLoadTemplate(template)}
-                className="w-full p-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 rounded transition-colors truncate"
+                className="w-full p-1.5 text-left text-xs text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors truncate"
               >
                 {template.name}
               </button>

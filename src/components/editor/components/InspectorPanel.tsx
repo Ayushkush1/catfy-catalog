@@ -5,7 +5,6 @@ import { useEditor, useNode } from '@craftjs/core';
 import {
   Settings,
   Palette,
-  Code,
   Type,
   Layout,
   Image as ImageIcon,
@@ -35,7 +34,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     selected: state.events.selected
   }));
 
-  const [activeTab, setActiveTab] = useState<'content' | 'style' | 'advanced'>('content');
+  const [activeTab, setActiveTab] = useState<'content' | 'style'>('content');
 
   const selectedNodeId = selected.size > 0 ? Array.from(selected)[0] : null;
 
@@ -48,8 +47,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
 
   const tabs = [
     { id: 'content' as const, label: 'Content', icon: <Settings className="w-4 h-4" /> },
-    { id: 'style' as const, label: 'Style', icon: <Palette className="w-4 h-4" /> },
-    { id: 'advanced' as const, label: 'Advanced', icon: <Code className="w-4 h-4" /> }
+    { id: 'style' as const, label: 'Style', icon: <Palette className="w-4 h-4" /> }
   ];
 
   const SelectedNodeSettings = () => {
@@ -170,8 +168,6 @@ const NodeInspector: React.FC<{ nodeId: string; activeTab: string }> = ({ nodeId
         return <ContentPanelWrapper nodeId={nodeId} nodeType={nodeType} />;
       case 'style':
         return <StylePanelWrapper nodeId={nodeId} nodeType={nodeType} />;
-      case 'advanced':
-        return <AdvancedPanel nodeType={nodeType} props={props} setProp={setProp} />;
       default:
         return null;
     }
@@ -244,7 +240,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
       case 'HeadingBlock':
       case 'Heading':
         return (
-          <div className="space-y-3">
+          <div className="space-y-3 bg-gray-100 p-3 rounded">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
                 Heading Text
@@ -255,7 +251,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.text = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-xs bg-white border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Enter heading text..."
               />
             </div>
@@ -268,7 +264,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.level = parseInt(e.target.value);
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-xs border bg-white rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value={1}>H1</option>
                 <option value={2}>H2</option>
@@ -427,32 +423,32 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
     <div className="p-2 space-y-4">
       {/* Typography (for text elements) */}
       {(nodeType === 'TextBlock' || nodeType === 'Text' || nodeType === 'HeadingBlock' || nodeType === 'Heading' || nodeType === 'ButtonBlock' || nodeType === 'Button') && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">Typography</h4>
+        <div className="bg-gray-100 rounded-md p-3 space-y-3">
+          <h4 className="text-xs font-medium text-gray-800 mb-2">Typography</h4>
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Font Size</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Font Size</label>
               <input
                 type="number"
                 value={props.fontSize || 16}
                 onChange={(e) => setProp((props: any) => {
                   props.fontSize = parseInt(e.target.value) || 16;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 min="8"
                 max="72"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Font Weight</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Font Weight</label>
               <select
                 value={props.fontWeight || 'normal'}
                 onChange={(e) => setProp((props: any) => {
                   props.fontWeight = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="normal">Normal</option>
                 <option value="bold">Bold</option>
@@ -470,25 +466,25 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Text Color</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Text Color</label>
             <input
               type="color"
               value={props.color || '#000000'}
               onChange={(e) => setProp((props: any) => {
                 props.color = e.target.value;
               })}
-              className="w-full h-8 border border-gray-300 rounded"
+              className="w-full h-6 border border-gray-300 rounded"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Text Align</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Text Align</label>
             <select
               value={props.textAlign || 'left'}
               onChange={(e) => setProp((props: any) => {
                 props.textAlign = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
             >
               <option value="left">Left</option>
               <option value="center">Center</option>
@@ -500,32 +496,32 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
       )}
 
       {/* Base Styles */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">Dimensions & Position</h4>
+      <div className="bg-gray-100 rounded-md p-3 space-y-3">
+        <h4 className="text-xs font-medium text-gray-800 mb-2">Dimensions & Position</h4>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Width</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Width</label>
             <input
               type="text"
               value={props.width || 'auto'}
               onChange={(e) => setProp((props: any) => {
                 props.width = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="auto, 100px, 50%"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Height</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Height</label>
             <input
               type="text"
               value={props.height || 'auto'}
               onChange={(e) => setProp((props: any) => {
                 props.height = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="auto, 100px, 50%"
             />
           </div>
@@ -533,27 +529,27 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Min Width</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Min Width</label>
             <input
               type="text"
               value={props.minWidth || ''}
               onChange={(e) => setProp((props: any) => {
                 props.minWidth = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="0, 100px, 50%"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Min Height</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Min Height</label>
             <input
               type="text"
               value={props.minHeight || ''}
               onChange={(e) => setProp((props: any) => {
                 props.minHeight = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="0, 100px, 50%"
             />
           </div>
@@ -561,40 +557,40 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Max Width</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Max Width</label>
             <input
               type="text"
               value={props.maxWidth || ''}
               onChange={(e) => setProp((props: any) => {
                 props.maxWidth = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="none, 100px, 50%"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Max Height</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Max Height</label>
             <input
               type="text"
               value={props.maxHeight || ''}
               onChange={(e) => setProp((props: any) => {
                 props.maxHeight = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="none, 100px, 50%"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Display</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Display</label>
           <select
             value={props.display || 'block'}
             onChange={(e) => setProp((props: any) => {
               props.display = e.target.value;
             })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
           >
             <option value="block">Block</option>
             <option value="inline">Inline</option>
@@ -608,13 +604,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Position</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Position</label>
           <select
             value={props.position || 'static'}
             onChange={(e) => setProp((props: any) => {
               props.position = e.target.value;
             })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
           >
             <option value="static">Static</option>
             <option value="relative">Relative</option>
@@ -627,53 +623,53 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
         {(props.position === 'absolute' || props.position === 'fixed' || props.position === 'relative' || props.position === 'sticky') && (
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Top</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Top</label>
               <input
                 type="text"
                 value={props.top || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.top = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="auto, 10px, 50%"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Right</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Right</label>
               <input
                 type="text"
                 value={props.right || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.right = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="auto, 10px, 50%"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Bottom</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Bottom</label>
               <input
                 type="text"
                 value={props.bottom || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.bottom = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="auto, 10px, 50%"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Left</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Left</label>
               <input
                 type="text"
                 value={props.left || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.left = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="auto, 10px, 50%"
               />
             </div>
@@ -681,26 +677,26 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
         )}
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Z-Index</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Z-Index</label>
           <input
             type="number"
             value={props.zIndex || ''}
             onChange={(e) => setProp((props: any) => {
               props.zIndex = e.target.value;
             })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
             placeholder="auto"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Overflow</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Overflow</label>
           <select
             value={props.overflow || 'visible'}
             onChange={(e) => setProp((props: any) => {
               props.overflow = e.target.value;
             })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
           >
             <option value="visible">Visible</option>
             <option value="hidden">Hidden</option>
@@ -711,24 +707,24 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
       </div>
 
       {/* Background & Border */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">Background & Border</h4>
+      <div className="bg-gray-100 rounded-md p-3 space-y-3">
+        <h4 className="text-xs font-medium text-gray-800 mb-2">Background & Border</h4>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Background Color</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Background Color</label>
           <input
             type="color"
             value={props.backgroundColor || '#ffffff'}
             onChange={(e) => setProp((props: any) => {
               props.backgroundColor = e.target.value;
             })}
-            className="w-full h-8 border border-gray-300 rounded"
+            className="w-full h-6 border border-gray-300 rounded"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Border Width</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Border Width</label>
             <input
               type="number"
               value={border.width}
@@ -736,27 +732,27 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
                 if (!props.border) props.border = { width: 0, style: 'solid', color: '#000000' };
                 props.border.width = parseInt(e.target.value) || 0;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               min="0"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Border Radius</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Border Radius</label>
             <input
               type="number"
               value={props.borderRadius || 0}
               onChange={(e) => setProp((props: any) => {
                 props.borderRadius = parseInt(e.target.value) || 0;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               min="0"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Border Color</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Border Color</label>
           <input
             type="color"
             value={border.color}
@@ -764,19 +760,19 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
               if (!props.border) props.border = { width: 0, style: 'solid', color: '#000000' };
               props.border.color = e.target.value;
             })}
-            className="w-full h-8 border border-gray-300 rounded"
+            className="w-full h-6 border border-gray-300 rounded"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Border Style</label>
+          <label className="block text-[10px] text-gray-600 mb-1">Border Style</label>
           <select
             value={border.style}
             onChange={(e) => setProp((props: any) => {
               if (!props.border) props.border = { width: 0, style: 'solid', color: '#000000' };
               props.border.style = e.target.value;
             })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
           >
             <option value="solid">Solid</option>
             <option value="dashed">Dashed</option>
@@ -787,12 +783,12 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
       </div>
 
       {/* Spacing */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Spacing</h4>
+      <div className="bg-gray-100 rounded-md p-3 space-y-4">
+        <h4 className="text-xs font-medium text-gray-800 pb-2">Spacing</h4>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Margin</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Margin</label>
             <div className="grid grid-cols-2 gap-1">
               <input
                 type="number"
@@ -838,7 +834,7 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Padding</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Padding</label>
             <div className="grid grid-cols-2 gap-1">
               <input
                 type="number"
@@ -888,12 +884,12 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
       {/* Flexbox Layout Controls */}
       {(props.display === 'flex' || props.display === 'inline-flex') && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">Flexbox Layout</h4>
+        <div className="bg-gray-100 rounded-md p-3 space-y-3">
+          <h4 className="text-xs font-medium text-gray-800 pb-1">Flexbox Layout</h4>
 
           {/* Quick Layout Presets */}
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Quick Layouts</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Quick Layouts</label>
             <div className="grid grid-cols-2 gap-1">
               <button
                 onClick={() => setProp((props: any) => {
@@ -940,13 +936,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Direction</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Direction</label>
               <select
                 value={props.flexDirection || 'row'}
                 onChange={(e) => setProp((props: any) => {
                   props.flexDirection = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="row">Row</option>
                 <option value="row-reverse">Row Reverse</option>
@@ -956,13 +952,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Wrap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Wrap</label>
               <select
                 value={props.flexWrap || 'nowrap'}
                 onChange={(e) => setProp((props: any) => {
                   props.flexWrap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="nowrap">No Wrap</option>
                 <option value="wrap">Wrap</option>
@@ -972,13 +968,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Justify Content</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Justify Content</label>
             <select
               value={props.justifyContent || 'flex-start'}
               onChange={(e) => setProp((props: any) => {
                 props.justifyContent = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
             >
               <option value="flex-start">Flex Start</option>
               <option value="flex-end">Flex End</option>
@@ -990,13 +986,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Align Items</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Align Items</label>
             <select
               value={props.alignItems || 'stretch'}
               onChange={(e) => setProp((props: any) => {
                 props.alignItems = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
             >
               <option value="stretch">Stretch</option>
               <option value="flex-start">Flex Start</option>
@@ -1007,13 +1003,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Align Content</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Align Content</label>
             <select
               value={props.alignContent || 'stretch'}
               onChange={(e) => setProp((props: any) => {
                 props.alignContent = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
             >
               <option value="stretch">Stretch</option>
               <option value="flex-start">Flex Start</option>
@@ -1026,40 +1022,40 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Gap</label>
               <input
                 type="text"
                 value={props.gap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.gap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="0, 10px, 1rem"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Row Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Row Gap</label>
               <input
                 type="text"
                 value={props.rowGap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.rowGap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="0, 10px, 1rem"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Column Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Column Gap</label>
               <input
                 type="text"
                 value={props.columnGap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.columnGap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="0, 10px, 1rem"
               />
             </div>
@@ -1067,57 +1063,57 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
           {/* Flex Item Properties */}
           <div className="pt-2 border-t border-gray-100">
-            <h5 className="text-xs font-medium text-gray-700 mb-2">Flex Item Properties</h5>
+            <h5 className="text-[10px] font-medium text-gray-700 mb-2">Flex Item Properties</h5>
 
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Flex Grow</label>
+                <label className="block text-[10px] text-gray-600 mb-1">Flex Grow</label>
                 <input
                   type="number"
                   value={props.flexGrow || 0}
                   onChange={(e) => setProp((props: any) => {
                     props.flexGrow = parseInt(e.target.value) || 0;
                   })}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                   min="0"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Flex Shrink</label>
+                <label className="block text-[10px] text-gray-600 mb-1">Flex Shrink</label>
                 <input
                   type="number"
                   value={props.flexShrink || 1}
                   onChange={(e) => setProp((props: any) => {
                     props.flexShrink = parseInt(e.target.value) || 1;
                   })}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                   min="0"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Flex Basis</label>
+                <label className="block text-[10px] text-gray-600 mb-1">Flex Basis</label>
                 <input
                   type="text"
                   value={props.flexBasis || 'auto'}
                   onChange={(e) => setProp((props: any) => {
                     props.flexBasis = e.target.value;
                   })}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                   placeholder="auto, 100px, 50%"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1 mt-2">Align Self</label>
+              <label className="block text-[10px] text-gray-600 mb-1 mt-2">Align Self</label>
               <select
                 value={props.alignSelf || 'auto'}
                 onChange={(e) => setProp((props: any) => {
                   props.alignSelf = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="auto">Auto</option>
                 <option value="flex-start">Flex Start</option>
@@ -1133,12 +1129,12 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
       {/* Grid Layout Controls */}
       {(props.display === 'grid' || props.display === 'inline-grid') && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-1">Grid Layout</h4>
+        <div className="bg-gray-100 rounded-md p-3 space-y-3">
+          <h4 className="text-xs font-medium text-gray-800 pb-1">Grid Layout</h4>
 
           {/* Quick Grid Presets */}
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Quick Grid Layouts</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Quick Grid Layouts</label>
             <div className="grid grid-cols-2 gap-1">
               <button
                 onClick={() => setProp((props: any) => {
@@ -1204,67 +1200,67 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Grid Template Columns</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Grid Template Columns</label>
             <input
               type="text"
               value={props.gridTemplateColumns || ''}
               onChange={(e) => setProp((props: any) => {
                 props.gridTemplateColumns = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="1fr 1fr, repeat(3, 1fr), 200px auto 1fr"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Grid Template Rows</label>
+            <label className="block text-[10px] text-gray-600 mb-1">Grid Template Rows</label>
             <input
               type="text"
               value={props.gridTemplateRows || ''}
               onChange={(e) => setProp((props: any) => {
                 props.gridTemplateRows = e.target.value;
               })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               placeholder="auto, 100px 200px, repeat(2, 1fr)"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Gap</label>
               <input
                 type="text"
                 value={props.gap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.gap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="10px, 1rem"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Row Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Row Gap</label>
               <input
                 type="text"
                 value={props.rowGap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.rowGap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="10px, 1rem"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Column Gap</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Column Gap</label>
               <input
                 type="text"
                 value={props.columnGap || ''}
                 onChange={(e) => setProp((props: any) => {
                   props.columnGap = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                 placeholder="10px, 1rem"
               />
             </div>
@@ -1272,13 +1268,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Justify Items</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Justify Items</label>
               <select
                 value={props.justifyItems || 'stretch'}
                 onChange={(e) => setProp((props: any) => {
                   props.justifyItems = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="stretch">Stretch</option>
                 <option value="start">Start</option>
@@ -1288,13 +1284,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Align Items</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Align Items</label>
               <select
                 value={props.alignItems || 'stretch'}
                 onChange={(e) => setProp((props: any) => {
                   props.alignItems = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="stretch">Stretch</option>
                 <option value="start">Start</option>
@@ -1306,13 +1302,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Justify Content</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Justify Content</label>
               <select
                 value={props.justifyContent || 'stretch'}
                 onChange={(e) => setProp((props: any) => {
                   props.justifyContent = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="stretch">Stretch</option>
                 <option value="start">Start</option>
@@ -1325,13 +1321,13 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
             </div>
 
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Align Content</label>
+              <label className="block text-[10px] text-gray-600 mb-1">Align Content</label>
               <select
                 value={props.alignContent || 'stretch'}
                 onChange={(e) => setProp((props: any) => {
                   props.alignContent = e.target.value;
                 })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
               >
                 <option value="stretch">Stretch</option>
                 <option value="start">Start</option>
@@ -1355,181 +1351,7 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
   );
 };
 
-// Advanced Panel Component
-const AdvancedPanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (props: any) => void) => void }> = ({ nodeType, props, setProp }) => {
-  // Initialize default values for nested objects
-  const shadow = props.shadow || { enabled: false, x: 0, y: 0, blur: 0, color: '#fffff' };
-  const animation = props.animation || { type: 'none', duration: 300, delay: 0 };
 
-  return (
-    <div className="p-3 space-y-6">
-
-
-      {/* Shadow Effects */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Shadow Effects</h4>
-
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="shadow-enabled"
-            checked={shadow.enabled}
-            onChange={(e) => setProp((props: any) => {
-              if (!props.shadow) props.shadow = { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' };
-              props.shadow.enabled = e.target.checked;
-            })}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <label htmlFor="shadow-enabled" className="text-sm text-gray-700">
-            Enable Shadow
-          </label>
-        </div>
-
-        {shadow.enabled && (
-          <div className="grid grid-cols-2 gap-3 ml-6">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">X Offset</label>
-              <input
-                type="number"
-                value={shadow.x}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.shadow) props.shadow = { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' };
-                  props.shadow.x = parseInt(e.target.value) || 0;
-                })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Y Offset</label>
-              <input
-                type="number"
-                value={shadow.y}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.shadow) props.shadow = { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' };
-                  props.shadow.y = parseInt(e.target.value) || 0;
-                })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Blur</label>
-              <input
-                type="number"
-                value={shadow.blur}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.shadow) props.shadow = { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' };
-                  props.shadow.blur = parseInt(e.target.value) || 0;
-                })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                min="0"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Shadow Color</label>
-              <input
-                type="color"
-                value={shadow.color}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.shadow) props.shadow = { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' };
-                  props.shadow.color = e.target.value;
-                })}
-                className="w-full h-8 border border-gray-300 rounded"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Animation */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Animation</h4>
-
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">Animation Type</label>
-          <select
-            value={animation.type}
-            onChange={(e) => setProp((props: any) => {
-              if (!props.animation) props.animation = { type: 'none', duration: 300, delay: 0 };
-              props.animation.type = e.target.value;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-          >
-            <option value="none">None</option>
-            <option value="fadeIn">Fade In</option>
-            <option value="slideIn">Slide In</option>
-            <option value="bounce">Bounce</option>
-          </select>
-        </div>
-
-        {animation.type !== 'none' && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Duration (ms)</label>
-              <input
-                type="number"
-                value={animation.duration}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.animation) props.animation = { type: 'none', duration: 300, delay: 0 };
-                  props.animation.duration = parseInt(e.target.value) || 300;
-                })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                min="100"
-                max="3000"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Delay (ms)</label>
-              <input
-                type="number"
-                value={animation.delay}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.animation) props.animation = { type: 'none', duration: 300, delay: 0 };
-                  props.animation.delay = parseInt(e.target.value) || 0;
-                })}
-                className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                min="0"
-                max="5000"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Custom CSS */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium text-gray-900 border-b border-gray-200 pb-2">Custom CSS</h4>
-
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">CSS Classes</label>
-          <input
-            type="text"
-            value={props.className || ''}
-            onChange={(e) => setProp((props: any) => {
-              props.className = e.target.value;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-            placeholder="custom-class another-class"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs text-gray-600 mb-1">Custom Styles</label>
-          <textarea
-            value={props.customStyles || ''}
-            onChange={(e) => setProp((props: any) => {
-              props.customStyles = e.target.value;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm resize-none"
-            rows={3}
-            placeholder="color: red; font-size: 18px;"
-          />
-        </div>
-      </div>
-
-
-    </div>
-  );
-};
 
 const NodeQuickActions: React.FC<{ nodeId: string }> = ({ nodeId }) => {
   const { actions, query } = useEditor();

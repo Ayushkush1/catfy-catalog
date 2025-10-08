@@ -282,35 +282,88 @@ export const useExportImport = () => {
       
       reader.onload = (e) => {
         try {
+          console.log('📁 Starting import of file:', file.name, 'Size:', file.size);
+          
           const content = e.target?.result as string;
+          console.log('📄 File content length:', content.length);
+          console.log('📄 File content preview:', content.substring(0, 200) + '...');
+          
           const importData = JSON.parse(content);
+          console.log('✅ JSON parsed successfully');
+          console.log('📊 Data structure keys:', Object.keys(importData));
 
-          // Validate the imported data structure
-          if (validateData) {
-            if (!importData.pages || !Array.isArray(importData.pages)) {
-              throw new Error('Invalid file format: missing pages array');
+          let pages: Page[] = [];
+
+          // Handle different JSON formats
+          if (importData.pages && Array.isArray(importData.pages)) {
+            console.log('📚 Multi-page format detected, pages:', importData.pages.length);
+            
+            // Standard export format with pages array
+            if (validateData) {
+              importData.pages.forEach((page: any, index: number) => {
+                if (!page.id || !page.name || !page.data) {
+                  throw new Error(`Invalid page data at index ${index}`);
+                }
+              });
             }
 
-            // Validate each page
-            importData.pages.forEach((page: any, index: number) => {
-              if (!page.id || !page.name || !page.data) {
-                throw new Error(`Invalid page data at index ${index}`);
+            pages = importData.pages.map((pageData: any) => ({
+              id: pageData.id || `imported-${Date.now()}-${Math.random()}`,
+              name: pageData.name || 'Imported Page',
+              data: pageData.data || '{}',
+              createdAt: pageData.createdAt ? new Date(pageData.createdAt) : new Date(),
+              updatedAt: new Date(),
+              thumbnail: pageData.thumbnail,
+            }));
+            
+            console.log('📦 Created pages:', pages.map(p => ({ id: p.id, name: p.name, dataLength: p.data.length })));
+          } else if (importData.ROOT || (typeof importData === 'object' && importData !== null)) {
+            console.log('📄 Single page CraftJS format detected');
+            console.log('🏗️ ROOT node type:', importData.ROOT?.type?.resolvedName);
+            console.log('📦 ROOT node children:', importData.ROOT?.nodes?.length || 0);
+            
+            // Direct CraftJS data format or template JSON
+            if (validateData && importData.ROOT) {
+              // Basic validation for CraftJS structure
+              if (typeof importData.ROOT !== 'object') {
+                throw new Error('Invalid CraftJS data: ROOT must be an object');
               }
-            });
+            }
+
+            // Create a single page from the CraftJS data
+            const pageId = `imported-${Date.now()}-${Math.random()}`;
+            const pageName = file.name.replace('.json', '') || 'Imported Template';
+            
+            pages = [{
+              id: pageId,
+              name: pageName,
+              data: JSON.stringify(importData),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              thumbnail: undefined,
+            }];
+            
+            console.log('📦 Created single page:', { id: pageId, name: pageName, dataLength: JSON.stringify(importData).length });
+          } else {
+            console.error('❌ Invalid JSON format - missing ROOT or pages');
+            console.error('📊 Available keys:', Object.keys(importData));
+            throw new Error('Invalid JSON format: Expected either pages array or CraftJS data structure');
           }
 
-          // Convert imported data to Page objects
-          const pages: Page[] = importData.pages.map((pageData: any) => ({
-            id: pageData.id || `imported-${Date.now()}-${Math.random()}`,
-            name: pageData.name || 'Imported Page',
-            data: pageData.data || '{}',
-            createdAt: pageData.createdAt ? new Date(pageData.createdAt) : new Date(),
-            updatedAt: new Date(),
-            thumbnail: pageData.thumbnail,
-          }));
+          if (pages.length === 0) {
+            throw new Error('No valid page data found in the imported file');
+          }
 
+          console.log('🚀 Import completed successfully, returning pages:', pages.length);
           resolve(pages);
         } catch (error) {
+          console.error('❌ Import error:', error);
+          console.error('📊 Error details:', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+            stack: error instanceof Error ? error.stack : undefined,
+            fileName: file.name,
+            fileSize: file.size
+          });
           reject(new Error(`Failed to import JSON: ${error instanceof Error ? error.message : 'Unknown error'}`));
         }
       };

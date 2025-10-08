@@ -6,8 +6,6 @@ export interface Page {
   name: string;
   thumbnail?: string;
   data: string; // JSON serialized data
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 /**
@@ -26,8 +24,6 @@ export const furnitureCatalogTemplate: Template = createTemplate()
     {
       id: 'cover-page',
       name: 'Cover Page',
-      createdAt: new Date(),
-      updatedAt: new Date(),
       data: JSON.stringify({
         "ROOT": {
           ...createContainer('ROOT', {
@@ -285,8 +281,6 @@ export const furnitureCatalogTemplate: Template = createTemplate()
     {
       id: 'intro-page',
       name: 'Intro Page',
-      createdAt: new Date(),
-      updatedAt: new Date(),
       data: JSON.stringify({
         "ROOT": {
           ...createContainer('ROOT', {
@@ -406,8 +400,6 @@ export const furnitureCatalogTemplate: Template = createTemplate()
     {
       id: 'product-page',
       name: 'Product Page',
-      createdAt: new Date(),
-      updatedAt: new Date(),
       data: JSON.stringify({
         "ROOT": {
           ...createContainer('ROOT', {
@@ -728,8 +720,6 @@ export const furnitureCatalogTemplate: Template = createTemplate()
     {
       id: 'contact-page',
       name: 'Contact Page',
-      createdAt: new Date(),
-      updatedAt: new Date(),
       data: JSON.stringify({
         "ROOT": {
           ...createContainer('ROOT', {

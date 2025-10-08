@@ -35,9 +35,10 @@ export async function getUserProfile(userId?: string) {
   }
   
   // Handle admin profile - create in database if it doesn't exist
-  if (user.id === 'admin-profile-id' || (user as User).email === 'admin@catfy.com') {
+  const userEmail = (user as User).email || ''
+  if (ADMIN_EMAILS.includes(userEmail)) {
     let adminProfile = await prisma.profile.findUnique({
-      where: { id: 'admin-profile-id' },
+      where: { id: user.id },
       include: {
         catalogues: {
           orderBy: { updatedAt: 'desc' },
@@ -54,8 +55,8 @@ export async function getUserProfile(userId?: string) {
     if (!adminProfile) {
       adminProfile = await prisma.profile.create({
         data: {
-          id: 'admin-profile-id',
-          email: 'admin@catfy.com',
+          id: user.id,
+          email: userEmail,
           firstName: 'Admin',
           lastName: 'User',
           fullName: 'Admin User',
@@ -155,20 +156,32 @@ export async function signOut() {
 }
 
 export async function isAdmin(userId?: string) {
-  const user = userId ? { id: userId } : await getUser()
+  console.log('🔍 [AUTH] isAdmin called with userId:', userId)
+  
+  // Always get the current authenticated user from the session
+  const user = await getUser()
+  console.log('🔍 [AUTH] Retrieved user:', user ? { id: user.id, email: user.email } : 'null')
   
   if (!user) {
+    console.log('❌ [AUTH] No user found, returning false')
     return false
   }
   
   // Check if user is admin using the admin configuration
-  const userEmail = (user as User).email || ''
-  return ADMIN_EMAILS.includes(userEmail) || userEmail.includes('admin') || false
+  const userEmail = user.email || ''
+  console.log('🔍 [AUTH] User email:', userEmail)
+  console.log('🔍 [AUTH] ADMIN_EMAILS:', ADMIN_EMAILS)
+  console.log('🔍 [AUTH] Email includes admin:', userEmail.includes('admin'))
+  console.log('🔍 [AUTH] Email in ADMIN_EMAILS:', ADMIN_EMAILS.includes(userEmail))
+  
+  const isAdminResult = ADMIN_EMAILS.includes(userEmail) || userEmail.includes('admin') || false
+  console.log('🔍 [AUTH] Final isAdmin result:', isAdminResult)
+  return isAdminResult
 }
 
 export async function requireAdmin() {
   const user = await requireAuth()
-  const admin = await isAdmin(user.id)
+  const admin = await isAdmin()
   
   if (!admin) {
     redirect('/dashboard')

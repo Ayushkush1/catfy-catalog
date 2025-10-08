@@ -28,6 +28,7 @@ import Link from 'next/link';
 interface ToolbarProps {
   onSave: () => void;
   onExport: (type: 'pdf' | 'png' | 'json' | 'html') => void;
+  onImport?: () => void;
   onUndo: () => void;
   onRedo: () => void;
   canUndo: boolean;
@@ -41,8 +42,12 @@ interface ToolbarProps {
   onDeviceModeChange: (mode: 'desktop' | 'tablet' | 'mobile') => void;
   previewMode: boolean;
   onPreviewModeToggle: () => void;
+  onShowLeftSidebar: () => void;
+  showLeftSidebar: boolean;
   onShowLayers: () => void;
   showLayers: boolean;
+  onShowInspector: () => void;
+  showInspector: boolean;
   onTogglePagesTab?: () => void;
   showPagesTab?: boolean;
   backButton?: {
@@ -54,6 +59,7 @@ interface ToolbarProps {
 export const Toolbar: React.FC<ToolbarProps> = ({
   onSave,
   onExport,
+  onImport,
   onUndo,
   onRedo,
   canUndo,
@@ -67,8 +73,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onDeviceModeChange,
   previewMode,
   onPreviewModeToggle,
+  onShowLeftSidebar,
+  showLeftSidebar,
   onShowLayers,
   showLayers,
+  onShowInspector,
+  showInspector,
   onTogglePagesTab,
   showPagesTab = true,
   backButton
@@ -89,14 +99,25 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   ];
 
   return (
-    <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4">
+    <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-3">
       {/* Left Section - File Actions */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
+        {/* Back to Templates Button - Always visible */}
+        <Link 
+          href="/themes"
+          className="flex items-center px-2 py-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors text-sm"
+          title="Back to Templates"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to Templates
+        </Link>
+        
         {backButton && (
           <>
+            <div className="w-px h-6 bg-gray-300 mx-2"></div>
             <Link 
               href={backButton.href}
-              className="flex items-center p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              className="flex items-center p-1.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
               title="Back to Edit"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -109,18 +130,18 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         
         <button
           onClick={onSave}
-          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="flex items-center px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
         >
-          <Save className="w-4 h-4 mr-2" />
+          <Save className="w-4 h-4 mr-1.5" />
           Save
         </button>
 
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(!showExportMenu)}
-            className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
+            className="flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-4 h-4 mr-1.5" />
             Export
           </button>
 
@@ -143,20 +164,24 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           )}
         </div>
 
-        <button className="flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm">
-          <Upload className="w-4 h-4 mr-2" />
+        <button 
+          onClick={onImport}
+          disabled={!onImport}
+          className="flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Upload className="w-4 h-4 mr-1.5" />
           Import
         </button>
       </div>
 
       {/* Center Section - History & Zoom */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
         {/* History Controls */}
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-0.5">
           <button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Undo"
           >
             <Undo className="w-4 h-4" />
@@ -164,7 +189,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           <button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             title="Redo"
           >
             <Redo className="w-4 h-4" />
@@ -172,22 +197,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
 
         {/* Zoom Controls */}
-        <div className="flex items-center space-x-1 border-l border-gray-200 pl-4">
+        <div className="flex items-center space-x-0.5 border-l border-gray-200 pl-2">
           <button
             onClick={onZoomOut}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
           
-          <div className="px-3 py-1 bg-gray-100 rounded-md text-sm font-medium text-gray-700 min-w-[60px] text-center">
+          <div className="px-2 py-0.5 bg-gray-100 rounded-md text-xs font-medium text-gray-700 min-w-[50px] text-center">
             {Math.round(zoom * 100)}%
           </div>
           
           <button
             onClick={onZoomIn}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
@@ -195,7 +220,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           
           <button
             onClick={onFitToScreen}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
             title="Fit to Screen"
           >
             <Maximize className="w-4 h-4" />
@@ -203,7 +228,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           
           <button
             onClick={onResetZoom}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
             title="Reset Zoom"
           >
             <RotateCcw className="w-4 h-4" />
@@ -212,14 +237,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       </div>
 
       {/* Right Section - View Controls */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
         {/* Device Mode Switcher */}
-        <div className="flex items-center bg-gray-100 rounded-md p-1">
+        <div className="flex items-center bg-gray-100 rounded-md p-0.5">
           {deviceModes.map((device) => (
             <button
               key={device.mode}
               onClick={() => onDeviceModeChange(device.mode)}
-              className={`p-2 rounded-md transition-colors ${
+              className={`p-1.5 rounded-md transition-colors ${
                 deviceMode === device.mode
                   ? 'bg-white text-blue-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
@@ -234,29 +259,53 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         {/* Preview Mode Toggle */}
         <button
           onClick={onPreviewModeToggle}
-          className={`flex items-center px-3 py-2 rounded-md transition-colors text-sm ${
+          className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
             previewMode
               ? 'bg-green-100 text-green-700 hover:bg-green-200'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          {previewMode ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+          {previewMode ? <EyeOff className="w-4 h-4 mr-1.5" /> : <Eye className="w-4 h-4 mr-1.5" />}
           {previewMode ? 'Edit' : 'Preview'}
         </button>
 
-        {/* Pages Toggle removed per UI update */}
+        {/* Left Sidebar Toggle (Pages/Components) */}
+        <button
+          onClick={onShowLeftSidebar}
+          className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
+            showLeftSidebar
+              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <FileText className="w-4 h-4 mr-1.5" />
+          Pages
+        </button>
 
         {/* Layers Toggle */}
         <button
           onClick={onShowLayers}
-          className={`flex items-center px-3 py-2 rounded-md transition-colors text-sm ${
+          className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
             showLayers
               ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
-          <Layers className="w-4 h-4 mr-2" />
+          <Layers className="w-4 h-4 mr-1.5" />
           Layers
+        </button>
+
+        {/* Inspector Toggle */}
+        <button
+          onClick={onShowInspector}
+          className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
+            showInspector
+              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <Code className="w-4 h-4 mr-1.5" />
+          Style
         </button>
       </div>
     </div>

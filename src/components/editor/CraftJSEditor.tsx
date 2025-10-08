@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useImperativeHandle } from 'react';
 import { Editor, Frame, Element, useEditor } from '@craftjs/core';
 import { Layers } from '@craftjs/layers';
 
@@ -31,10 +31,10 @@ import { TemplateManager } from './templates';
 import type { Template } from './templates';
 
 // Import custom hooks
-import { useMultiPage, useZoom, useDeviceMode, useExportImport } from './hooks';
+import { useMultiPage, useZoom, useDeviceMode, useExportImport, useHistory } from './hooks';
 import { useTemplateRenderer } from './hooks/useTemplateRenderer';
 import type { DeviceMode } from './hooks/useDeviceMode';
-import type { UseMultiPageReturn, UseZoomReturn, UseDeviceModeReturn, UseExportImportReturn } from './hooks';
+import type { UseMultiPageReturn, UseZoomReturn, UseDeviceModeReturn, UseExportImportReturn, UseHistoryReturn } from './hooks';
 
 // Import types
 import type { Page, Asset } from './ui';
@@ -48,6 +48,10 @@ interface CraftJSEditorProps {
     href: string;
     catalogueName: string;
   };
+}
+
+export interface CraftJSEditorRef {
+  getCurrentData: () => string;
 }
 
 
@@ -94,23 +98,31 @@ const Canvas: React.FC<{
 
   return (
     <div 
-      className="flex-1 overflow-auto bg-gray-100 p-4 min-w-0"
-      style={deviceMode.getContainerStyle()}
+      className="flex-1 overflow-auto bg-gray-50 p-2 min-w-0 h-full"
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start',
+        minHeight: '100%',
+        padding: '2rem'
+      }}
     >
       <div
           ref={zoom.canvasRef}
-          className={`bg-white shadow-lg mx-auto transition-all duration-300 max-w-full ${
+          className={`bg-white shadow-sm transition-all duration-300 ${
             isPreviewMode ? 'cursor-default' : 'cursor-pointer'
           }`}
           style={{
             ...zoom.getCanvasStyle(),
-            ...deviceMode.getCanvasDimensions(),
-            minHeight: '600px',
+            width: '210mm', // A4 width
+            height: '297mm', // A4 height
+            minHeight: '297mm',
+            maxWidth: '210mm',
             backgroundColor: '#ffffff',
             border: '1px solid #e5e7eb',
-            borderRadius: '12px',
+            borderRadius: '8px',
             overflow: 'visible',
-            maxWidth: '100%'
+            margin: '0 auto'
           }}
         >
         <Frame>
@@ -121,13 +133,14 @@ const Canvas: React.FC<{
               displayName: 'App Container'
             }}
             backgroundColor="transparent"
-            minHeight={600}
+            minHeight={1123} // A4 height in pixels (297mm)
             width="100%"
+            height="100%"
             padding={{
-              top: 20,
-              right: 20,
-              bottom: 20,
-              left: 20
+              top: 16,
+              right: 16,
+              bottom: 16,
+              left: 16
             }}
           />
         </Frame>
@@ -136,12 +149,14 @@ const Canvas: React.FC<{
   );
 };
 
-// Inner component that uses Editor hooks (must be inside Editor)
-const EditorInner: React.FC<{
+// Props interface for EditorInner component
+interface EditorInnerProps {
   isPreviewMode: boolean;
   setIsPreviewMode: (value: boolean) => void;
   showAssetManager: boolean;
   setShowAssetManager: (value: boolean) => void;
+  showLeftSidebar: boolean;
+  setShowLeftSidebar: (value: boolean) => void;
   showLayers: boolean;
   setShowLayers: (value: boolean) => void;
   showTemplateManager: boolean;
@@ -160,11 +175,16 @@ const EditorInner: React.FC<{
     href: string;
     catalogueName: string;
   };
-}> = ({
+}
+
+// Inner component that uses Editor hooks (must be inside Editor)
+const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
   isPreviewMode,
   setIsPreviewMode,
   showAssetManager,
   setShowAssetManager,
+  showLeftSidebar,
+  setShowLeftSidebar,
   showLayers,
   setShowLayers,
   showTemplateManager,
@@ -180,7 +200,7 @@ const EditorInner: React.FC<{
   onSave,
   initialData,
   backButton
-}) => {
+}, ref) => {
   // Custom hooks that require Editor context
   const multiPage: UseMultiPageReturn = useMultiPage({
     onPageChange: (pageId) => {
@@ -207,6 +227,20 @@ const EditorInner: React.FC<{
 
   const exportImport: UseExportImportReturn = useExportImport();
   const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'components'>('pages');
+
+  // History hook for undo/redo functionality
+  const history: UseHistoryReturn = useHistory({
+    maxHistorySize: 50,
+    debounceDelay: 500,
+    onHistoryChange: (canUndo, canRedo) => {
+      console.log('History changed:', { canUndo, canRedo });
+    }
+  });
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    getCurrentData: () => exportImport.getCurrentPageData()
+  }), [exportImport]);
 
   // Template renderer hook
   const templateRenderer = useTemplateRenderer({
@@ -237,6 +271,11 @@ const EditorInner: React.FC<{
       }
     }
   });
+
+  // Handle left sidebar toggle - allow independent toggling
+  const handleLeftSidebarToggle = () => {
+    setShowLeftSidebar(!showLeftSidebar);
+  };
 
   // Handle asset upload
   const handleAssetUpload = useCallback(async (files: FileList): Promise<Asset[]> => {
@@ -497,15 +536,11 @@ const EditorInner: React.FC<{
           }
         }}
         onExport={handleExport}
-        onUndo={() => {
-          // Craft.js doesn't have built-in undo/redo, you'd need to implement this
-          console.log('Undo triggered');
-        }}
-        onRedo={() => {
-          console.log('Redo triggered');
-        }}
-        canUndo={false}
-        canRedo={false}
+        onImport={handleImport}
+        onUndo={history.undo}
+        onRedo={history.redo}
+        canUndo={history.canUndo}
+        canRedo={history.canRedo}
         onZoomIn={zoom.zoomIn}
         onZoomOut={zoom.zoomOut}
         onResetZoom={zoom.resetZoom}
@@ -515,33 +550,37 @@ const EditorInner: React.FC<{
         deviceMode={deviceMode.currentMode}
         onPreviewModeToggle={() => setIsPreviewMode(!isPreviewMode)}
         previewMode={isPreviewMode}
+        onShowLeftSidebar={handleLeftSidebarToggle}
+        showLeftSidebar={showLeftSidebar}
         onShowLayers={() => setShowLayers(!showLayers)}
         showLayers={showLayers}
+        onShowInspector={() => setShowInspector(!showInspector)}
+        showInspector={showInspector}
         backButton={backButton}
       />
 
-        <div className="flex flex-1 overflow-hidden min-h-0">
+        <div className="flex flex-1 overflow-hidden min-h-0 h-full">
           {/* Left Sidebar - Toolbox */}
-          {!isPreviewMode && (
-            <div className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col min-h-0">
+          {!isPreviewMode && showLeftSidebar && (
+            <div className="w-60 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm">
               {/* Sidebar Tab Header */}
-              <div className="p-2 border-b border-gray-200 flex space-x-2">
+              <div className="px-2 py-1 border-b border-gray-200 flex justify-between flex-shrink-0">
                 <button
                   onClick={() => setActiveLeftTab('pages')}
-                  className={`px-3 py-1 text-sm rounded ${
+                  className={`px-4 py-0.5 text-[12px] rounded transition-colors ${
                     activeLeftTab === 'pages'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-100 text-blue-700 font-medium '
+                      : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   Pages
                 </button>
                 <button
                   onClick={() => setActiveLeftTab('components')}
-                  className={`px-3 py-1 text-sm rounded ${
+                  className={`px-4 py-0.5 text-[12px] rounded transition-colors ${
                     activeLeftTab === 'components'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-100 text-blue-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   Components
@@ -549,7 +588,7 @@ const EditorInner: React.FC<{
               </div>
 
               {/* Tab Content */}
-              <div className="flex-1 overflow-hidden min-h-0">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 {activeLeftTab === 'pages' ? (
                   multiPage.currentPageId ? (
                     <PageNavigator
@@ -564,7 +603,7 @@ const EditorInner: React.FC<{
                       className="h-full"
                     />
                   ) : (
-                    <div className="p-3 text-xs text-gray-500">No pages loaded</div>
+                    <div className="p-2 text-xs text-gray-500">No pages loaded</div>
                   )
                 ) : (
                   <Toolbox
@@ -582,7 +621,7 @@ const EditorInner: React.FC<{
           )}
 
           {/* Main Canvas Area */}
-          <div className="flex-1 flex flex-col min-w-0">
+          <div className="flex-1 flex flex-col min-w-0 h-full">
             <Canvas 
               zoom={zoom}
               deviceMode={deviceMode}
@@ -591,22 +630,22 @@ const EditorInner: React.FC<{
           </div>
 
           {/* Right Sidebar - Inspector and Layers */}
-          {!isPreviewMode && (
-            <div className="flex flex-shrink-0">
+          {!isPreviewMode && (showInspector || showLayers) && (
+            <div className="flex flex-shrink-0 h-full">
               {showInspector && (
-                <div className={`${inspectorCollapsed ? 'w-auto' : 'w-80'} border-l border-gray-200 transition-all duration-200`}>
+                <div className={`${inspectorCollapsed ? 'w-auto' : 'w-60'} border-l border-gray-200 transition-all duration-200 bg-white shadow-sm h-full`}>
                   <InspectorPanel 
                     isCollapsed={inspectorCollapsed}
                     onToggle={() => setInspectorCollapsed(!inspectorCollapsed)}
                   />
                 </div>
               )}
-              {showLayers && (
-                <div className="w-64 border-l border-gray-200 bg-white">
-                  <div className="p-3 border-b border-gray-200">
-                    <h3 className="font-medium text-sm">Layers</h3>
+              {showLayers && !showInspector && (
+                <div className="w-60 border-l border-gray-200 bg-white shadow-sm h-full">
+                  <div className="px-2 py-1.5 border-b border-gray-200">
+                    <h3 className="font-medium text-xs text-gray-700">Layers</h3>
                   </div>
-                  <div className="p-2">
+                  <div className="p-1.5">
                     <Layers expandRootOnLoad />
                   </div>
                 </div>
@@ -657,10 +696,12 @@ const EditorInner: React.FC<{
         )}
     </>
   );
-};
+});
 
 // EditorContent component that wraps the Editor and renders EditorInner inside
-const EditorContent: React.FC<{
+const EditorContent = React.forwardRef<CraftJSEditorRef, {
+  showLeftSidebar: boolean;
+  setShowLeftSidebar: (value: boolean) => void;
   setInspectorCollapsed: (value: boolean) => void;
   inspectorCollapsed: boolean;
   isPreviewMode: boolean;
@@ -684,7 +725,7 @@ const EditorContent: React.FC<{
     href: string;
     catalogueName: string;
   };
-}> = (props) => {
+}>((props, ref) => {
   return (
     <div className={`h-full flex flex-col bg-gray-50 ${props.className || ''}`}>
       <Editor
@@ -728,10 +769,13 @@ const EditorContent: React.FC<{
         onRender={({ render }) => render}
       >
         <EditorInner
+          ref={ref}
           isPreviewMode={props.isPreviewMode}
           setIsPreviewMode={props.setIsPreviewMode}
           showAssetManager={props.showAssetManager}
           setShowAssetManager={props.setShowAssetManager}
+          showLeftSidebar={props.showLeftSidebar}
+          setShowLeftSidebar={props.setShowLeftSidebar}
           showLayers={props.showLayers}
           setShowLayers={props.setShowLayers}
           showTemplateManager={props.showTemplateManager}
@@ -751,44 +795,37 @@ const EditorContent: React.FC<{
       </Editor>
     </div>
   );
-};
+});
 
 // Main component that manages state and wraps EditorContent
-export const CraftJSEditor: React.FC<CraftJSEditorProps> = ({
+export const CraftJSEditor = React.forwardRef<CraftJSEditorRef, CraftJSEditorProps>(({
   initialData,
   onSave,
   className = '',
   initialPreviewMode = false,
   backButton
-}) => {
+}, ref) => {
   const [isPreviewMode, setIsPreviewMode] = useState(initialPreviewMode);
   const [showAssetManager, setShowAssetManager] = useState(false);
+  // Changed: Sidebars hidden by default for minimal interface
+  const [showLeftSidebar, setShowLeftSidebar] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showPagesTab, setShowPagesTab] = useState(false);
-  const [showInspector, setShowInspector] = useState(true);
+  // Changed: Inspector hidden by default for minimal interface
+  const [showInspector, setShowInspector] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
 
-  // Handle layers toggle - when layers is shown, hide inspector and vice versa
-  const handleLayersToggle = () => {
-    if (showLayers) {
-      // If layers is currently shown, hide it and show inspector
-      setShowLayers(false);
-      setShowInspector(true);
-    } else {
-      // If layers is not shown, show it and hide inspector
-      setShowLayers(true);
-      setShowInspector(false);
-    }
-  };
-
   return (
     <EditorContent
+      ref={ref}
       isPreviewMode={isPreviewMode}
       setIsPreviewMode={setIsPreviewMode}
       showAssetManager={showAssetManager}
       setShowAssetManager={setShowAssetManager}
+      showLeftSidebar={showLeftSidebar}
+      setShowLeftSidebar={setShowLeftSidebar}
       showLayers={showLayers}
       setShowLayers={setShowLayers}
       showTemplateManager={showTemplateManager}
@@ -807,4 +844,4 @@ export const CraftJSEditor: React.FC<CraftJSEditorProps> = ({
       backButton={backButton}
     />
   );
-};
+});

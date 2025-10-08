@@ -195,6 +195,9 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
 
   // Load pages from external source
   const loadPages = useCallback((newPages: Page[], initialPageId?: string) => {
+    console.log('🔄 Loading pages:', newPages.length);
+    console.log('📄 Pages data:', newPages.map(p => ({ id: p.id, name: p.name, dataLength: p.data.length })));
+    
     if (newPages.length === 0) return;
 
     setPages(newPages);
@@ -205,14 +208,44 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
     
     if (targetPage) {
       try {
+        console.log('🎯 Loading target page:', targetPage.name);
+        console.log('📊 Page data preview:', targetPage.data.substring(0, 200) + '...');
+        
         const parsed = typeof targetPage.data === 'string'
           ? JSON.parse(targetPage.data)
           : targetPage.data;
+          
+        console.log('✅ Parsed data structure:', Object.keys(parsed));
+        console.log('🏗️ ROOT node exists:', !!parsed.ROOT);
+        
+        if (parsed.ROOT) {
+          console.log('🔧 ROOT node type:', parsed.ROOT.type?.resolvedName);
+          console.log('📦 ROOT node children:', parsed.ROOT.nodes?.length || 0);
+        }
+        
+        console.log('🚀 Calling actions.deserialize...');
         actions.deserialize(parsed);
+        console.log('✅ Deserialization completed successfully');
+        
         setCurrentPageId(targetPageId);
         onPageChange?.(targetPageId);
+        
+        // Force a re-render after a short delay
+        setTimeout(() => {
+          console.log('🔄 Forcing editor refresh...');
+          const currentNodes = query.getNodes();
+          console.log('📊 Current editor nodes:', Object.keys(currentNodes).length);
+          console.log('🏗️ Node types:', Object.values(currentNodes).map(n => n.data.displayName || n.data.type));
+        }, 100);
+        
       } catch (error) {
-        console.error('Failed to load page data:', error);
+        console.error('❌ Failed to load page data:', error);
+        console.error('📊 Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          pageData: targetPage.data.substring(0, 500)
+        });
+        
         const emptyState = {
           ROOT: {
             type: { resolvedName: 'ContainerBlock' },
@@ -228,8 +261,10 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
         } as any;
         actions.deserialize(emptyState);
       }
+    } else {
+      console.error('❌ Target page not found:', targetPageId);
     }
-  }, [actions, onPageChange, onPagesUpdate]);
+  }, [actions, query, onPageChange, onPagesUpdate]);
 
   // Get all pages data for export
   const getAllPagesData = useCallback(() => {

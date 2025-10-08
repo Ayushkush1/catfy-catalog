@@ -113,7 +113,7 @@ export const TemplateManager: React.FC<TemplateManagerProps> = ({
                 description: templateConfig.description,
                 category: templateConfig.category,
                 thumbnail: templateConfig.previewImage,
-                data: null, // Will be loaded by the template renderer
+                data: '', // Will be loaded by the template renderer
                 tags: templateConfig.tags || [],
                 isCustom: false,
                 createdAt: templateConfig.createdAt || new Date(),

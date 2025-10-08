@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { TemplateEditorPreview } from './template-editor-preview'
 import { templateManager, TemplateSelectionContext } from '@/lib/template-manager'
+import { loadDbTemplatesIntoRegistry } from '@/templates'
 import { TemplateConfig } from '@/lib/template-registry'
 import { cn } from '@/lib/utils'
 
@@ -57,17 +58,24 @@ export function UnifiedTemplateSelector({
 
   // Load templates on mount
   useEffect(() => {
-    setIsLoading(true)
-    try {
-      const availableTemplates = templateManager.getAvailableTemplates(userPlan)
-      setTemplates(availableTemplates)
-      setFilteredTemplates(availableTemplates)
-    } catch (error) {
-      console.error('Failed to load templates:', error)
-      context.onError?.('Failed to load templates')
-    } finally {
-      setIsLoading(false)
+    let mounted = true
+    const load = async () => {
+      setIsLoading(true)
+      try {
+        await loadDbTemplatesIntoRegistry()
+        const availableTemplates = templateManager.getAvailableTemplates(userPlan)
+        if (!mounted) return
+        setTemplates(availableTemplates)
+        setFilteredTemplates(availableTemplates)
+      } catch (error) {
+        console.error('Failed to load templates:', error)
+        context.onError?.('Failed to load templates')
+      } finally {
+        if (mounted) setIsLoading(false)
+      }
     }
+    load()
+    return () => { mounted = false }
   }, [userPlan, context])
 
   // Get categories for filtering

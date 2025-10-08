@@ -9,6 +9,7 @@ import { TemplateConfig } from '@/lib/template-registry'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
+let dbTemplatesLoaded = false
 
 // Convert editor template to registry template config
 function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): TemplateConfig {
@@ -185,6 +186,28 @@ export async function discoverTemplates(): Promise<void> {
   // This function can be extended to dynamically discover template files
   // For now, it ensures all static templates are registered
   initializeTemplateRegistry()
+}
+
+// Load templates from DB (published) and register into registry
+export async function loadDbTemplatesIntoRegistry(): Promise<void> {
+  initializeTemplateRegistry()
+  if (dbTemplatesLoaded) return
+  try {
+    const res = await fetch('/api/templates', { cache: 'no-store' })
+    if (!res.ok) {
+      console.warn('Failed to fetch DB templates:', res.status)
+      return
+    }
+    const json = await res.json()
+    const items: TemplateConfig[] = json.templates || []
+    items.forEach((config) => {
+      const EditorTemplateWrapper = () => null
+      templateRegistry!.registerTemplate(config, EditorTemplateWrapper)
+    })
+    dbTemplatesLoaded = true
+  } catch (err) {
+    console.error('Error loading DB templates:', err)
+  }
 }
 
 // Template validation helpers

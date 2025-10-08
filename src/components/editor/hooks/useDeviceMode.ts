@@ -18,25 +18,29 @@ export interface UseDeviceModeOptions {
   customDevices?: Record<string, DeviceConfig>;
 }
 
+// A4 dimensions in pixels (210mm x 297mm at 96 DPI)
+const A4_WIDTH_PX = 794; // 210mm * 96 DPI / 25.4
+const A4_HEIGHT_PX = 1123; // 297mm * 96 DPI / 25.4
+
 const DEFAULT_DEVICES: Record<DeviceMode, DeviceConfig> = {
   desktop: {
     name: 'Desktop',
-    width: 1920,
-    height: 1080,
+    width: A4_WIDTH_PX,
+    height: A4_HEIGHT_PX,
     icon: '🖥️',
     breakpoint: 'lg',
   },
   tablet: {
     name: 'Tablet',
-    width: 768,
-    height: 1024,
+    width: A4_WIDTH_PX,
+    height: A4_HEIGHT_PX,
     icon: '📱',
     breakpoint: 'md',
   },
   mobile: {
     name: 'Mobile',
-    width: 375,
-    height: 667,
+    width: A4_WIDTH_PX,
+    height: A4_HEIGHT_PX,
     icon: '📱',
     breakpoint: 'sm',
   },

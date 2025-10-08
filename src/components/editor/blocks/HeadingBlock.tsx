@@ -377,7 +377,7 @@ export const HeadingBlockSettings: React.FC = () => {
 };
 
 // Craft.js configuration
-(HeadingBlock as any).craft = {
+HeadingBlock.craft = {
   props: defaultProps,
   related: {
     settings: HeadingBlockSettings
