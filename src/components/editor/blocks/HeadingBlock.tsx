@@ -184,7 +184,7 @@ export const HeadingBlockSettings: React.FC = () => {
           onChange={(e) => setProp((props: HeadingBlockProps) => {
             props.text = e.target.value;
           })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
@@ -201,7 +201,7 @@ export const HeadingBlockSettings: React.FC = () => {
             const fontSizes = { 1: 32, 2: 28, 3: 24, 4: 20, 5: 18, 6: 16 };
             props.fontSize = fontSizes[props.level];
           })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         >
           <option value={1}>H1</option>
           <option value={2}>H2</option>

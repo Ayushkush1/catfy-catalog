@@ -302,7 +302,7 @@ export const ImageBlockSettings: React.FC = () => {
             props.src = e.target.value;
           })}
           placeholder="https://example.com/image.jpg"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
@@ -317,7 +317,7 @@ export const ImageBlockSettings: React.FC = () => {
           onChange={(e) => setProp((props: ImageBlockProps) => {
             props.alt = e.target.value;
           })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 

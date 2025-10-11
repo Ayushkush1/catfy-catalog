@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { BlockWrapper } from '../components/BlockWrapper';
 import * as LucideIcons from 'lucide-react';
 
 export interface IconBlockProps {
@@ -107,17 +108,19 @@ export const IconBlock: UserComponent<IconBlockProps> = ({
   );
 
   return (
-    <div
-      ref={(ref) => {
-        if (ref) {
-          connect(drag(ref));
-        }
-      }}
-      className={`icon-block ${selected ? 'ring-2 ring-blue-500' : ''} ${className}`}
-      style={containerStyle}
-    >
-      {content}
-    </div>
+    <BlockWrapper>
+      <div
+        ref={(ref) => {
+          if (ref) {
+            connect(drag(ref));
+          }
+        }}
+        className={`icon-block ${className}`}
+        style={containerStyle}
+      >
+        {content}
+      </div>
+    </BlockWrapper>
   );
 };
 

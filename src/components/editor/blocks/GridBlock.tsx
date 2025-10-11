@@ -129,7 +129,7 @@ export const GridBlock: UserComponent<GridBlockProps> = ({
           connect(drag(ref));
         }
       }}
-      className={`grid-block ${selected ? 'ring-2 ring-blue-500' : ''} ${className}`}
+      className={`grid-block ${selected ? 'ring-2 ring-[#2D1B69]' : ''} ${className}`}
       style={gridStyle}
     >
       {gridItems}

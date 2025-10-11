@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useEditor } from '@craftjs/core';
 import { Page } from '../ui';
 
@@ -24,6 +24,15 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
       updatedAt: new Date(),
     }
   ]);
+
+  // Debug: Log pages state changes
+  useEffect(() => {
+    console.log('🔍 Pages state changed:', {
+      count: pages.length,
+      pageIds: pages.map(p => p.id),
+      pageNames: pages.map(p => p.name)
+    });
+  }, [pages]);
   
   const [currentPageId, setCurrentPageId] = useState<string>('page-1');
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -65,19 +74,47 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
       const currentPageData = query.serialize();
       updatePageData(currentPageId, currentPageData);
 
-      // Load target page data only if it's not empty
+      // Load target page data or clear editor if empty
       try {
         if (targetPage.data && targetPage.data !== '{}') {
           const parsed = typeof targetPage.data === 'string'
             ? JSON.parse(targetPage.data)
             : targetPage.data;
           actions.deserialize(parsed);
+        } else {
+          // Clear the editor for blank pages
+          actions.deserialize({
+            ROOT: {
+              type: { resolvedName: "Container" },
+              isCanvas: true,
+              props: {},
+              displayName: "Container",
+              custom: {},
+              hidden: false,
+              nodes: [],
+              linkedNodes: {},
+              parent: null
+            }
+          });
         }
         setCurrentPageId(pageId);
         onPageChange?.(pageId);
       } catch (error) {
         console.error('Failed to load page data:', error);
-        // Don't fallback to empty canvas, just switch the page ID
+        // Fallback to empty canvas
+        actions.deserialize({
+          ROOT: {
+            type: { resolvedName: "Container" },
+            isCanvas: true,
+            props: {},
+            displayName: "Container",
+            custom: {},
+            hidden: false,
+            nodes: [],
+            linkedNodes: {},
+            parent: null
+          }
+        });
         setCurrentPageId(pageId);
         onPageChange?.(pageId);
       }
@@ -91,9 +128,23 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
   // Add a new page
   const addPage = useCallback((name?: string, templateData?: string) => {
     const newPageId = `page-${Date.now()}`;
+    
+    // Generate a unique name if none provided
+    let pageName = name;
+    if (!pageName) {
+      let pageNumber = pages.length + 1;
+      pageName = `Page ${pageNumber}`;
+      
+      // Ensure the name is unique
+      while (pages.some(page => page.name === pageName)) {
+        pageNumber++;
+        pageName = `Page ${pageNumber}`;
+      }
+    }
+    
     const newPage: Page = {
       id: newPageId,
-      name: name || `Page ${pages.length + 1}`,
+      name: pageName,
       data: templateData || '{}',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -116,10 +167,21 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
     const sourcePage = pages.find(page => page.id === pageId);
     if (!sourcePage) return;
 
+    // Generate a unique name for the copy
+    const baseName = sourcePage.name.replace(/ \(Copy( \d+)?\)$/, ''); // Remove existing copy suffix
+    let copyName = `${baseName} (Copy)`;
+    let copyNumber = 1;
+    
+    // Check if the name already exists and increment the number
+    while (pages.some(page => page.name === copyName)) {
+      copyNumber++;
+      copyName = `${baseName} (Copy ${copyNumber})`;
+    }
+
     const newPageId = `page-${Date.now()}`;
     const newPage: Page = {
       id: newPageId,
-      name: `${sourcePage.name} (Copy)`,
+      name: copyName,
       data: sourcePage.data,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -193,14 +255,52 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
     });
   }, [onPagesUpdate]);
 
-  // Load pages from external source
-  const loadPages = useCallback((newPages: Page[], initialPageId?: string) => {
-    console.log('🔄 Loading pages:', newPages.length);
-    console.log('📄 Pages data:', newPages.map(p => ({ id: p.id, name: p.name, dataLength: p.data.length })));
+  // Add pages to existing pages (for import functionality)
+  const addPages = useCallback((newPages: Page[], switchToFirstImported: boolean = true) => {
+    console.log('➕ Adding pages to existing:', newPages.length);
+    console.log('📄 New pages data:', newPages.map(p => ({ id: p.id, name: p.name, dataLength: p.data.length })));
     
     if (newPages.length === 0) return;
 
+    // Ensure unique page IDs by checking against existing pages
+    const existingIds = new Set(pages.map(p => p.id));
+    const uniqueNewPages = newPages.map(page => {
+      if (existingIds.has(page.id)) {
+        // Generate a new unique ID if there's a conflict
+        const newId = `${page.id}-imported-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`🔄 ID conflict resolved: ${page.id} -> ${newId}`);
+        return { ...page, id: newId };
+      }
+      return page;
+    });
+
+    setPages(prevPages => {
+      const updatedPages = [...prevPages, ...uniqueNewPages];
+      onPagesUpdate?.(updatedPages);
+      return updatedPages;
+    });
+
+    // Switch to the first imported page if requested
+    if (switchToFirstImported && uniqueNewPages.length > 0) {
+      const firstImportedPage = uniqueNewPages[0];
+      switchToPage(firstImportedPage.id);
+    }
+  }, [pages, onPagesUpdate, switchToPage]);
+
+  // Load pages from external source (replaces all existing pages)
+  const loadPages = useCallback((newPages: Page[], initialPageId?: string) => {
+    console.log('🔄 Loading pages (replacing all):', newPages.length);
+    console.log('📄 Pages data:', newPages.map(p => ({ id: p.id, name: p.name, dataLength: p.data.length })));
+    console.log('📊 Current pages before loading:', pages.map(p => ({ id: p.id, name: p.name })));
+    
+    if (newPages.length === 0) {
+      console.log('⚠️ No pages to load, keeping current pages');
+      return;
+    }
+
+    console.log('🔄 Setting new pages state...');
     setPages(newPages);
+    console.log('✅ Pages state updated, calling onPagesUpdate...');
     onPagesUpdate?.(newPages);
 
     const targetPageId = initialPageId || newPages[0].id;
@@ -304,6 +404,7 @@ export const useMultiPage = (options: UseMultiPageOptions = {}) => {
     // Actions
     switchToPage,
     addPage,
+    addPages,
     duplicatePage,
     deletePage,
     renamePage,

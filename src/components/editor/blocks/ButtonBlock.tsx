@@ -282,7 +282,7 @@ export const ButtonBlockSettings: React.FC = () => {
           onChange={(e) => setProp((props: ButtonBlockProps) => {
             props.text = e.target.value;
           })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
@@ -298,7 +298,7 @@ export const ButtonBlockSettings: React.FC = () => {
             props.href = e.target.value;
           })}
           placeholder="https://example.com"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
@@ -312,7 +312,7 @@ export const ButtonBlockSettings: React.FC = () => {
           onChange={(e) => setProp((props: ButtonBlockProps) => {
             props.target = e.target.value as any;
           })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         >
           <option value="_self">Same window</option>
           <option value="_blank">New window</option>

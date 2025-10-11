@@ -1,0 +1,816 @@
+{
+  "ROOT": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": 0,
+      "backgroundColor": "#2a2a2a",
+      "minHeight": "100vh",
+      "color": "#ffffff",
+      "fontFamily": "system-ui, -apple-system, sans-serif"
+    },
+    "displayName": "Root Container",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["page-header", "page-content", "page-footer"],
+    "linkedNodes": {}
+  },
+  "page-header": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "30px 40px",
+      "backgroundColor": "transparent",
+      "display": "flex",
+      "justifyContent": "space-between",
+      "alignItems": "center",
+      "borderBottom": "1px solid #444444"
+    },
+    "displayName": "Page Header",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["header-left", "header-center", "header-right"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "header-left": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "alignItems": "center",
+      "gap": "20px"
+    },
+    "displayName": "Header Left",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["brand-name", "catalog-title"],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "brand-name": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "SMELLADDA",
+      "fontSize": 14,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "letterSpacing": "0.2em"
+    },
+    "displayName": "Brand Name",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "header-left"
+  },
+  "catalog-title": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Premium selections for the discerning palate",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Catalog Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "header-left"
+  },
+  "header-center": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "FEATURED & CONTACT",
+      "fontSize": 16,
+      "fontWeight": "500",
+      "color": "#ffffff",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Page Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "header-right": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Page 2 of 2",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Page Number",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "page-content": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "60px 40px",
+      "backgroundColor": "transparent",
+      "minHeight": "calc(100vh - 200px)",
+      "display": "flex",
+      "gap": "60px"
+    },
+    "displayName": "Page Content",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["featured-section", "contact-section"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "featured-section": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "60%",
+      "display": "flex",
+      "flexDirection": "column"
+    },
+    "displayName": "Featured Section",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["featured-title", "featured-product"],
+    "linkedNodes": {},
+    "parent": "page-content"
+  },
+  "featured-title": {
+    "type": { "resolvedName": "HeadingBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "FEATURED COLLECTION",
+      "level": 2,
+      "fontSize": 32,
+      "fontWeight": "700",
+      "color": "#ffffff",
+      "marginBottom": "40px",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Featured Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-section"
+  },
+  "featured-product": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "gap": "40px",
+      "alignItems": "center"
+    },
+    "displayName": "Featured Product",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["featured-image", "featured-details"],
+    "linkedNodes": {},
+    "parent": "featured-section"
+  },
+  "featured-image": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "300px",
+      "height": "400px",
+      "position": "relative",
+      "borderRadius": "8px",
+      "overflow": "hidden"
+    },
+    "displayName": "Featured Image Container",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["featured-img", "featured-badge"],
+    "linkedNodes": {},
+    "parent": "featured-product"
+  },
+  "featured-img": {
+    "type": { "resolvedName": "ImageBlock" },
+    "isCanvas": false,
+    "props": {
+      "src": "https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=300&h=400&fit=crop&crop=center",
+      "alt": "Featured Living Room Setup",
+      "width": "100%",
+      "height": "100%",
+      "objectFit": "cover"
+    },
+    "displayName": "Featured Image",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-image"
+  },
+  "featured-badge": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "position": "absolute",
+      "top": "20px",
+      "left": "20px",
+      "backgroundColor": "#ff6b35",
+      "padding": "8px 16px",
+      "borderRadius": "4px"
+    },
+    "displayName": "Featured Badge",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["badge-text"],
+    "linkedNodes": {},
+    "parent": "featured-image"
+  },
+  "badge-text": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "BESTSELLER",
+      "fontSize": 10,
+      "fontWeight": "700",
+      "color": "#ffffff",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Badge Text",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-badge"
+  },
+  "featured-details": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "flex": "1",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "20px"
+    },
+    "displayName": "Featured Details",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["featured-quote", "featured-description", "featured-specs"],
+    "linkedNodes": {},
+    "parent": "featured-product"
+  },
+  "featured-quote": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "\"Be yourself everyone else is already taken.scscsacscsc\"",
+      "fontSize": 24,
+      "fontWeight": "300",
+      "color": "#ffffff",
+      "fontStyle": "italic",
+      "lineHeight": "1.4",
+      "marginBottom": "16px"
+    },
+    "displayName": "Featured Quote",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-details"
+  },
+  "featured-description": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "OSCAR WILDE ASCASCAC",
+      "fontSize": 12,
+      "fontWeight": "500",
+      "color": "#ff6b35",
+      "letterSpacing": "0.2em",
+      "marginBottom": "24px"
+    },
+    "displayName": "Featured Description",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-details"
+  },
+  "featured-specs": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "12px",
+      "padding": "24px",
+      "backgroundColor": "#333333",
+      "borderRadius": "8px"
+    },
+    "displayName": "Featured Specs",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["spec-title", "spec-dimensions", "spec-materials", "spec-colors"],
+    "linkedNodes": {},
+    "parent": "featured-details"
+  },
+  "spec-title": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "PRODUCT SPECIFICATIONS",
+      "fontSize": 14,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "letterSpacing": "0.1em",
+      "marginBottom": "8px"
+    },
+    "displayName": "Spec Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-specs"
+  },
+  "spec-dimensions": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Dimensions: 180cm × 90cm × 75cm",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Spec Dimensions",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-specs"
+  },
+  "spec-materials": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Materials: Solid Oak, Premium Leather",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Spec Materials",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-specs"
+  },
+  "spec-colors": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Available Colors: Cognac, Black, Natural",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Spec Colors",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "featured-specs"
+  },
+  "contact-section": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "40%",
+      "display": "flex",
+      "flexDirection": "column",
+      "justifyContent": "center"
+    },
+    "displayName": "Contact Section",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["contact-title", "contact-info", "contact-social"],
+    "linkedNodes": {},
+    "parent": "page-content"
+  },
+  "contact-title": {
+    "type": { "resolvedName": "HeadingBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "CONTACT",
+      "level": 2,
+      "fontSize": 32,
+      "fontWeight": "700",
+      "color": "#ffffff",
+      "marginBottom": "40px",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Contact Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "contact-section"
+  },
+  "contact-info": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "32px",
+      "marginBottom": "40px"
+    },
+    "displayName": "Contact Info",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["address-block", "phone-block", "email-block", "website-block"],
+    "linkedNodes": {},
+    "parent": "contact-section"
+  },
+  "address-block": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Address Block",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["address-label", "address-text"],
+    "linkedNodes": {},
+    "parent": "contact-info"
+  },
+  "address-label": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "ADDRESS",
+      "fontSize": 12,
+      "fontWeight": "600",
+      "color": "#888888",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Address Label",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "address-block"
+  },
+  "address-text": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Bahadurpur, saralinayat, Allahabad.",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#ffffff",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Address Text",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "address-block"
+  },
+  "phone-block": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Phone Block",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["phone-label", "phone-text"],
+    "linkedNodes": {},
+    "parent": "contact-info"
+  },
+  "phone-label": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "TELEPHONE",
+      "fontSize": 12,
+      "fontWeight": "600",
+      "color": "#888888",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Phone Label",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "phone-block"
+  },
+  "phone-text": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "ddada",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#ffffff",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Phone Text",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "phone-block"
+  },
+  "email-block": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Email Block",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["email-label", "email-text"],
+    "linkedNodes": {},
+    "parent": "contact-info"
+  },
+  "email-label": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "EMAIL",
+      "fontSize": 12,
+      "fontWeight": "600",
+      "color": "#888888",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Email Label",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "email-block"
+  },
+  "email-text": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "admin@ubantu.com",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#ffffff",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Email Text",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "email-block"
+  },
+  "website-block": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Website Block",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["website-label", "website-text"],
+    "linkedNodes": {},
+    "parent": "contact-info"
+  },
+  "website-label": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "WEBSITE",
+      "fontSize": 12,
+      "fontWeight": "600",
+      "color": "#888888",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Website Label",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "website-block"
+  },
+  "website-text": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "https://ayushkushwaha.com",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#ff6b35",
+      "lineHeight": "1.5"
+    },
+    "displayName": "Website Text",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "website-block"
+  },
+  "contact-social": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "gap": "16px",
+      "alignItems": "center"
+    },
+    "displayName": "Contact Social",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["social-instagram", "social-facebook", "social-twitter"],
+    "linkedNodes": {},
+    "parent": "contact-section"
+  },
+  "social-instagram": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "40px",
+      "height": "40px",
+      "backgroundColor": "#333333",
+      "borderRadius": "50%",
+      "display": "flex",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "cursor": "pointer",
+      "transition": "background-color 0.3s ease"
+    },
+    "displayName": "Social Instagram",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["instagram-icon"],
+    "linkedNodes": {},
+    "parent": "contact-social"
+  },
+  "instagram-icon": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "📷",
+      "fontSize": 16,
+      "color": "#ffffff"
+    },
+    "displayName": "Instagram Icon",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "social-instagram"
+  },
+  "social-facebook": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "40px",
+      "height": "40px",
+      "backgroundColor": "#333333",
+      "borderRadius": "50%",
+      "display": "flex",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "cursor": "pointer",
+      "transition": "background-color 0.3s ease"
+    },
+    "displayName": "Social Facebook",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["facebook-icon"],
+    "linkedNodes": {},
+    "parent": "contact-social"
+  },
+  "facebook-icon": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "📘",
+      "fontSize": 16,
+      "color": "#ffffff"
+    },
+    "displayName": "Facebook Icon",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "social-facebook"
+  },
+  "social-twitter": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "width": "40px",
+      "height": "40px",
+      "backgroundColor": "#333333",
+      "borderRadius": "50%",
+      "display": "flex",
+      "justifyContent": "center",
+      "alignItems": "center",
+      "cursor": "pointer",
+      "transition": "background-color 0.3s ease"
+    },
+    "displayName": "Social Twitter",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["twitter-icon"],
+    "linkedNodes": {},
+    "parent": "contact-social"
+  },
+  "twitter-icon": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "🐦",
+      "fontSize": 16,
+      "color": "#ffffff"
+    },
+    "displayName": "Twitter Icon",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "social-twitter"
+  },
+  "page-footer": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "30px 40px",
+      "backgroundColor": "transparent",
+      "borderTop": "1px solid #444444",
+      "display": "flex",
+      "justifyContent": "space-between",
+      "alignItems": "center"
+    },
+    "displayName": "Page Footer",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["footer-brand", "footer-tagline"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "footer-brand": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "SmellAdda",
+      "fontSize": 14,
+      "fontWeight": "500",
+      "color": "#ffffff",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Footer Brand",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-footer"
+  },
+  "footer-tagline": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "© 2025 All rights reserved",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Footer Tagline",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-footer"
+  }
+}

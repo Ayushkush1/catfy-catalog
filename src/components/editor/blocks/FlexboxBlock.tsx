@@ -116,7 +116,7 @@ export const FlexboxBlock: UserComponent<FlexboxBlockProps> = ({
           connect(drag(ref));
         }
       }}
-      className={`flexbox-block ${selected ? 'ring-2 ring-blue-500' : ''} ${className}`}
+      className={`flexbox-block ${selected ? 'ring-2 ring-[#2D1B69]' : ''} ${className}`}
       style={flexStyle}
     >
       {flexItems}

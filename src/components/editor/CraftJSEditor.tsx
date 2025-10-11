@@ -25,6 +25,8 @@ import {
 
 // Import UI components
 import { Toolbox, Toolbar, InspectorPanel, PageNavigator, AssetManager, StatusBar } from './ui';
+import { CanvaSidebar } from './components/CanvaSidebar';
+import { CanvaToolbar } from './components/CanvaToolbar';
 
 // Import template system
 import { TemplateManager } from './templates';
@@ -44,6 +46,7 @@ interface CraftJSEditorProps {
   onSave?: (data: string) => void;
   className?: string;
   initialPreviewMode?: boolean;
+  templateName?: string;
   backButton?: {
     href: string;
     catalogueName: string;
@@ -97,55 +100,45 @@ const Canvas: React.FC<{
   const frameRef = React.useRef<HTMLDivElement>(null);
 
   return (
-    <div 
-      className="flex-1 overflow-auto bg-gray-50 p-2 min-w-0 h-full"
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'flex-start',
-        minHeight: '100%',
-        padding: '2rem'
-      }}
-    >
-      <div
+      <div className="w-full h-full flex items-start justify-center p-8 overflow-auto">
+        <div
           ref={zoom.canvasRef}
-          className={`bg-white shadow-sm transition-all duration-300 ${
-            isPreviewMode ? 'cursor-default' : 'cursor-pointer'
+          className={`bg-white shadow-lg transition-all duration-200 ${
+            deviceMode.currentMode === 'mobile'
+              ? 'w-[375px] h-[667px]'
+              : deviceMode.currentMode === 'tablet'
+              ? 'w-[768px] h-[1024px]'
+              : 'w-full max-w-[1200px] min-h-[800px]'
           }`}
           style={{
             ...zoom.getCanvasStyle(),
-            width: '210mm', // A4 width
-            height: '297mm', // A4 height
-            minHeight: '297mm',
-            maxWidth: '210mm',
-            backgroundColor: '#ffffff',
-            border: '1px solid #e5e7eb',
+            transformOrigin: 'top center',
+            border: 'none',
             borderRadius: '8px',
-            overflow: 'visible',
-            margin: '0 auto'
+            overflow: 'visible'
           }}
         >
-        <Frame>
-          <Element
-            is={ContainerBlock}
-            canvas
-            custom={{
-              displayName: 'App Container'
-            }}
-            backgroundColor="transparent"
-            minHeight={1123} // A4 height in pixels (297mm)
-            width="100%"
-            height="100%"
-            padding={{
-              top: 16,
-              right: 16,
-              bottom: 16,
-              left: 16
-            }}
-          />
-        </Frame>
+          <Frame>
+            <Element
+              is={ContainerBlock}
+              canvas
+              custom={{
+                displayName: 'App Container'
+              }}
+              backgroundColor="transparent"
+              minHeight={800}
+              width="100%"
+              height="100%"
+              padding={{
+                top: 8,
+                right: 8,
+                bottom: 8,
+                left: 8
+              }}
+            />
+          </Frame>
+        </div>
       </div>
-    </div>
   );
 };
 
@@ -171,6 +164,7 @@ interface EditorInnerProps {
   setAssets: React.Dispatch<React.SetStateAction<Asset[]>>;
   onSave?: (data: string) => void;
   initialData?: string;
+  templateName?: string;
   backButton?: {
     href: string;
     catalogueName: string;
@@ -199,6 +193,7 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
   setAssets,
   onSave,
   initialData,
+  templateName,
   backButton
 }, ref) => {
   // Custom hooks that require Editor context
@@ -394,7 +389,8 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
           throw new Error('No valid page data found in the imported file');
         }
         
-        multiPage.loadPages(pages);
+        // Use addPages instead of loadPages to add imported pages to existing ones
+        multiPage.addPages(pages, true);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown import error';
         console.error('Import failed:', errorMessage);
@@ -459,11 +455,15 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
       initialDataType: typeof initialData,
       initialDataLength: initialData?.length,
       exportImportExists: !!exportImport,
-      multiPageExists: !!multiPage
+      multiPageExists: !!multiPage,
+      currentPagesCount: multiPage.pages.length,
+      currentPageNames: multiPage.pages.map(p => p.name)
     });
     
     // Avoid re-running if we've already processed the same initialData
-    if (initialData && !hasLoadedInitialDataRef.current) {
+    // Also check if we already have multiple pages loaded (indicating data was already processed)
+    if (initialData && !hasLoadedInitialDataRef.current && 
+        (multiPage.pages.length === 1 && multiPage.pages[0].name === 'Page 1' && multiPage.pages[0].data === '{}')) {
       try {
         console.log('🔍 Processing initialData:', {
           data: initialData,
@@ -499,6 +499,8 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
             thumbnail: pageData.thumbnail
           }));
           
+          console.log('📦 Loading', pages.length, 'pages:', pages.map(p => p.name));
+          
           multiPage.loadPages(pages);
           setShowPagesTab(true); // Show pages tab for multi-page content
           console.log('✅ Multi-page data loaded successfully');
@@ -522,17 +524,33 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
       console.log('⚠️ No initialData provided to CraftJSEditor');
     }
   // Depend only on the initialData value and stable hook functions
-  }, [initialData, exportImport.loadPageData, multiPage.loadPages, setShowPagesTab]);
+  }, [initialData, exportImport.loadPageData, multiPage.loadPages, multiPage.pages, setShowPagesTab]);
 
   return (
     <>
-      {/* Top Toolbar */}
-      <Toolbar
+      {/* Top Toolbar - Canva Style */}
+      <CanvaToolbar
         onSave={() => {
-          const data = exportImport.getCurrentPageData();
-          onSave?.(data);
-          if (multiPage.currentPageId) {
-            multiPage.updatePageData(multiPage.currentPageId, data);
+          // For multipage: save all pages data, for single page: save current page data
+          if (multiPage.pages.length > 1) {
+            // Save current page data first, then get all pages data
+            const currentPageData = exportImport.getCurrentPageData();
+            if (multiPage.currentPageId) {
+              multiPage.updatePageData(multiPage.currentPageId, currentPageData);
+            }
+            
+            // Get all pages data and serialize it for saving
+            const allPagesData = multiPage.getAllPagesData();
+            console.log('💾 Saving multipage data with', allPagesData.length, 'pages');
+            const serializedData = JSON.stringify(allPagesData);
+            onSave?.(serializedData);
+          } else {
+            // Single page mode - save current page data only
+            const data = exportImport.getCurrentPageData();
+            onSave?.(data);
+            if (multiPage.currentPageId) {
+              multiPage.updatePageData(multiPage.currentPageId, data);
+            }
           }
         }}
         onExport={handleExport}
@@ -550,106 +568,38 @@ const EditorInner = React.forwardRef<CraftJSEditorRef, EditorInnerProps>(({
         deviceMode={deviceMode.currentMode}
         onPreviewModeToggle={() => setIsPreviewMode(!isPreviewMode)}
         previewMode={isPreviewMode}
-        onShowLeftSidebar={handleLeftSidebarToggle}
-        showLeftSidebar={showLeftSidebar}
-        onShowLayers={() => setShowLayers(!showLayers)}
-        showLayers={showLayers}
-        onShowInspector={() => setShowInspector(!showInspector)}
-        showInspector={showInspector}
+        templateName={templateName}
         backButton={backButton}
       />
 
         <div className="flex flex-1 overflow-hidden min-h-0 h-full">
-          {/* Left Sidebar - Toolbox */}
-          {!isPreviewMode && showLeftSidebar && (
-            <div className="w-60 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col h-full shadow-sm">
-              {/* Sidebar Tab Header */}
-              <div className="px-2 py-1 border-b border-gray-200 flex justify-between flex-shrink-0">
-                <button
-                  onClick={() => setActiveLeftTab('pages')}
-                  className={`px-4 py-0.5 text-[12px] rounded transition-colors ${
-                    activeLeftTab === 'pages'
-                      ? 'bg-blue-100 text-blue-700 font-medium '
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Pages
-                </button>
-                <button
-                  onClick={() => setActiveLeftTab('components')}
-                  className={`px-4 py-0.5 text-[12px] rounded transition-colors ${
-                    activeLeftTab === 'components'
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  Components
-                </button>
-              </div>
-
-              {/* Tab Content */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden">
-                {activeLeftTab === 'pages' ? (
-                  multiPage.currentPageId ? (
-                    <PageNavigator
-                      pages={multiPage.pages}
-                      currentPageId={multiPage.currentPageId}
-                      onPageSelect={multiPage.switchToPage}
-                      onPageAdd={() => multiPage.addPage()}
-                      onPageDuplicate={multiPage.duplicatePage}
-                      onPageDelete={multiPage.deletePage}
-                      onPageRename={multiPage.renamePage}
-                      onPageReorder={multiPage.reorderPages}
-                      className="h-full"
-                    />
-                  ) : (
-                    <div className="p-2 text-xs text-gray-500">No pages loaded</div>
-                  )
-                ) : (
-                  <Toolbox
-                    selectedTool=""
-                    onToolSelect={() => {}}
-                    onShowAssetManager={() => setShowAssetManager(true)}
-                    onShowTemplateManager={() => setShowTemplateManager(true)}
-                    templates={[]}
-                    onLoadTemplate={handleTemplateLoad}
-                    className="h-full"
-                  />
-                )}
-              </div>
-            </div>
-          )}
+          {/* Left Sidebar - Canva Style */}
+          <CanvaSidebar
+            onShowAssetManager={() => setShowAssetManager(true)}
+            onShowTemplateManager={() => setShowTemplateManager(true)}
+            onHideInspector={() => setInspectorCollapsed(true)}
+            multiPage={multiPage}
+          />
 
           {/* Main Canvas Area */}
-          <div className="flex-1 flex flex-col min-w-0 h-full">
-            <Canvas 
-              zoom={zoom}
-              deviceMode={deviceMode}
-              isPreviewMode={isPreviewMode}
-            />
+          <div className="flex-1 flex flex-col min-w-0">
+            {/* Canvas Container - Simplified for focused zoom */}
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <Canvas 
+                zoom={zoom}
+                deviceMode={deviceMode}
+                isPreviewMode={isPreviewMode}
+              />
+            </div>
           </div>
 
-          {/* Right Sidebar - Inspector and Layers */}
-          {!isPreviewMode && (showInspector || showLayers) && (
-            <div className="flex flex-shrink-0 h-full">
-              {showInspector && (
-                <div className={`${inspectorCollapsed ? 'w-auto' : 'w-60'} border-l border-gray-200 transition-all duration-200 bg-white shadow-sm h-full`}>
-                  <InspectorPanel 
-                    isCollapsed={inspectorCollapsed}
-                    onToggle={() => setInspectorCollapsed(!inspectorCollapsed)}
-                  />
-                </div>
-              )}
-              {showLayers && !showInspector && (
-                <div className="w-60 border-l border-gray-200 bg-white shadow-sm h-full">
-                  <div className="px-2 py-1.5 border-b border-gray-200">
-                    <h3 className="font-medium text-xs text-gray-700">Layers</h3>
-                  </div>
-                  <div className="p-1.5">
-                    <Layers expandRootOnLoad />
-                  </div>
-                </div>
-              )}
+          {/* Right Sidebar - Inspector Panel */}
+          {showInspector && (
+            <div className={`${inspectorCollapsed ? 'w-0' : 'w-72 '} bg-white transition-all duration-200 relative`}>
+              <InspectorPanel
+                isCollapsed={inspectorCollapsed}
+                onToggle={() => setInspectorCollapsed(!inspectorCollapsed)}
+              />
             </div>
           )}
         </div>
@@ -721,6 +671,7 @@ const EditorContent = React.forwardRef<CraftJSEditorRef, {
   onSave?: (data: string) => void;
   initialData?: string;
   className?: string;
+  templateName?: string;
   backButton?: {
     href: string;
     catalogueName: string;
@@ -790,6 +741,7 @@ const EditorContent = React.forwardRef<CraftJSEditorRef, {
           setAssets={props.setAssets}
           onSave={props.onSave}
           initialData={props.initialData}
+          templateName={props.templateName}
           backButton={props.backButton}
         />
       </Editor>
@@ -803,6 +755,7 @@ export const CraftJSEditor = React.forwardRef<CraftJSEditorRef, CraftJSEditorPro
   onSave,
   className = '',
   initialPreviewMode = false,
+  templateName,
   backButton
 }, ref) => {
   const [isPreviewMode, setIsPreviewMode] = useState(initialPreviewMode);
@@ -816,6 +769,17 @@ export const CraftJSEditor = React.forwardRef<CraftJSEditorRef, CraftJSEditorPro
   const [showInspector, setShowInspector] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
+
+  // Auto-show/hide inspector based on preview mode
+  React.useEffect(() => {
+    if (!isPreviewMode) {
+      setShowInspector(true);
+      setInspectorCollapsed(true); // Start collapsed by default in edit mode
+      setShowLeftSidebar(true); // Also show left sidebar for better editing experience
+    } else {
+      setShowInspector(false); // Hide inspector in preview mode
+    }
+  }, [isPreviewMode]);
 
   return (
     <EditorContent
@@ -841,6 +805,7 @@ export const CraftJSEditor = React.forwardRef<CraftJSEditorRef, CraftJSEditorPro
       onSave={onSave}
       initialData={initialData}
       className={className}
+      templateName={templateName}
       backButton={backButton}
     />
   );

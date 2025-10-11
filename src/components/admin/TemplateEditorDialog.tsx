@@ -238,7 +238,7 @@ export default function TemplateCreationDialog({ isOpen, onClose, onTemplateCrea
               min="1"
               placeholder="1"
               value={pageCount}
-              onChange={(e) => setPageCount(e.target.value ? parseInt(e.target.value) : '')}
+              onChange={(e) => setPageCount(e.target.value ? parseInt(e.target.value) : 1)}
               className="w-full"
             />
           </div>

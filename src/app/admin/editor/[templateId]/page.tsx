@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { CraftJSEditor, CraftJSEditorRef } from '@/components/editor/CraftJSEditor'
 
@@ -31,8 +29,6 @@ export default function AdminEditorPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editorData, setEditorData] = useState('')
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
-  const [currentEditorData, setCurrentEditorData] = useState('')
   const editorRef = useRef<CraftJSEditorRef>(null)
 
   // Load template data
@@ -94,15 +90,15 @@ export default function AdminEditorPage() {
   }, [templateId, router])
 
   // Save template
-  const handleSave = async () => {
+  const handleSave = async (currentData?: string) => {
     if (!template) {
       toast.error('Template not loaded')
       return
     }
 
-    // Get current data directly from the editor
-    const currentData = editorRef.current?.getCurrentData()
-    if (!currentData) {
+    // Get current data from parameter or directly from the editor
+    const dataToSave = currentData || editorRef.current?.getCurrentData()
+    if (!dataToSave) {
       toast.error('No editor data to save')
       return
     }
@@ -121,7 +117,7 @@ export default function AdminEditorPage() {
           tags: template.tags,
           content: {
             type: template.contentType || 'SINGLE_PAGE_JSON',
-            data: JSON.parse(currentData)
+            data: JSON.parse(dataToSave)
           }
         })
       })
@@ -169,27 +165,29 @@ export default function AdminEditorPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Template not found</p>
-          <Button onClick={() => router.push('/admin?tab=templates')}>
+          <button 
+            onClick={() => router.push('/admin?tab=templates')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
             Back to Templates
-          </Button>
+          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
-     
-
-      {/* Editor */}
-      <div className="flex-1 overflow-hidden h-full">
-        <CraftJSEditor
-          ref={editorRef}
-          initialData={editorData}
-          onSave={setCurrentEditorData}
-          initialPreviewMode={isPreviewMode}
-        />
-      </div>
+    <div className="h-screen bg-gray-50">
+      <CraftJSEditor
+        ref={editorRef}
+        initialData={editorData}
+        onSave={handleSave}
+        templateName={template?.name}
+        backButton={{
+          catalogueName: "Back to Templates",
+          href: "/admin?tab=templates"
+        }}
+      />
     </div>
   )
 }

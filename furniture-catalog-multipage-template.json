@@ -1,0 +1,658 @@
+{
+  "ROOT": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": 0,
+      "backgroundColor": "#2a2a2a",
+      "minHeight": "100vh",
+      "color": "#ffffff",
+      "fontFamily": "system-ui, -apple-system, sans-serif"
+    },
+    "displayName": "Root Container",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["page-header", "page-content", "page-footer"],
+    "linkedNodes": {}
+  },
+  "page-header": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "30px 40px",
+      "backgroundColor": "transparent",
+      "display": "flex",
+      "justifyContent": "space-between",
+      "alignItems": "center",
+      "borderBottom": "1px solid #444444"
+    },
+    "displayName": "Page Header",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["header-left", "header-center", "header-right"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "header-left": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "alignItems": "center",
+      "gap": "20px"
+    },
+    "displayName": "Header Left",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["brand-name", "catalog-title"],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "brand-name": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "SMELLADDA",
+      "fontSize": 14,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "letterSpacing": "0.2em"
+    },
+    "displayName": "Brand Name",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "header-left"
+  },
+  "catalog-title": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Premium selections for the discerning palate",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Catalog Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "header-left"
+  },
+  "header-center": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "FURNITURE COLLECTION",
+      "fontSize": 16,
+      "fontWeight": "500",
+      "color": "#ffffff",
+      "letterSpacing": "0.15em"
+    },
+    "displayName": "Page Title",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "header-right": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Page 1 of 2",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Page Number",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-header"
+  },
+  "page-content": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "60px 40px",
+      "backgroundColor": "transparent",
+      "minHeight": "calc(100vh - 200px)"
+    },
+    "displayName": "Page Content",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["products-grid"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "products-grid": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "grid",
+      "gridTemplateColumns": "repeat(3, 1fr)",
+      "gap": "40px",
+      "width": "100%"
+    },
+    "displayName": "Products Grid",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-1", "product-2", "product-3"],
+    "linkedNodes": {},
+    "parent": "page-content"
+  },
+  "product-1": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "backgroundColor": "#333333",
+      "borderRadius": "8px",
+      "overflow": "hidden",
+      "transition": "transform 0.3s ease"
+    },
+    "displayName": "Product 1",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-1-image", "product-1-details"],
+    "linkedNodes": {},
+    "parent": "products-grid"
+  },
+  "product-1-image": {
+    "type": { "resolvedName": "ImageBlock" },
+    "isCanvas": false,
+    "props": {
+      "src": "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&crop=center",
+      "alt": "Zex Perfumerjhv - Premium Armchair",
+      "width": "100%",
+      "height": "250px",
+      "objectFit": "cover"
+    },
+    "displayName": "Product 1 Image",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1"
+  },
+  "product-1-details": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "24px",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "12px"
+    },
+    "displayName": "Product 1 Details",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-1-name", "product-1-description", "product-1-price", "product-1-options"],
+    "linkedNodes": {},
+    "parent": "product-1"
+  },
+  "product-1-name": {
+    "type": { "resolvedName": "HeadingBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Zex Perfumerjhv",
+      "level": 3,
+      "fontSize": 20,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "marginBottom": "8px",
+      "letterSpacing": "0.02em"
+    },
+    "displayName": "Product 1 Name",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1-details"
+  },
+  "product-1-description": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Your recently tech of the Innovative solution that combines style with functionality.",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5",
+      "marginBottom": "12px"
+    },
+    "displayName": "Product 1 Description",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1-details"
+  },
+  "product-1-price": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "₹100",
+      "fontSize": 24,
+      "fontWeight": "700",
+      "color": "#ff6b35",
+      "marginBottom": "16px"
+    },
+    "displayName": "Product 1 Price",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1-details"
+  },
+  "product-1-options": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Product 1 Options",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-1-colors", "product-1-materials"],
+    "linkedNodes": {},
+    "parent": "product-1-details"
+  },
+  "product-1-colors": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Colors: Orange, Beige, Navy",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 1 Colors",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1-options"
+  },
+  "product-1-materials": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Materials: Premium Fabric, Oak Wood",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 1 Materials",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-1-options"
+  },
+  "product-2": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "backgroundColor": "#333333",
+      "borderRadius": "8px",
+      "overflow": "hidden",
+      "transition": "transform 0.3s ease"
+    },
+    "displayName": "Product 2",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-2-image", "product-2-details"],
+    "linkedNodes": {},
+    "parent": "products-grid"
+  },
+  "product-2-image": {
+    "type": { "resolvedName": "ImageBlock" },
+    "isCanvas": false,
+    "props": {
+      "src": "https://images.unsplash.com/photo-1549497538-303791108f95?w=400&h=300&fit=crop&crop=center",
+      "alt": "Rosemaryh - Dining Set",
+      "width": "100%",
+      "height": "250px",
+      "objectFit": "cover"
+    },
+    "displayName": "Product 2 Image",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2"
+  },
+  "product-2-details": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "24px",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "12px"
+    },
+    "displayName": "Product 2 Details",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-2-name", "product-2-description", "product-2-price", "product-2-options"],
+    "linkedNodes": {},
+    "parent": "product-2"
+  },
+  "product-2-name": {
+    "type": { "resolvedName": "HeadingBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Rosemaryh",
+      "level": 3,
+      "fontSize": 20,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "marginBottom": "8px",
+      "letterSpacing": "0.02em"
+    },
+    "displayName": "Product 2 Name",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2-details"
+  },
+  "product-2-description": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Invigorate your senses with our Rosemary fragrance from the EuPerfume collection.",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5",
+      "marginBottom": "12px"
+    },
+    "displayName": "Product 2 Description",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2-details"
+  },
+  "product-2-price": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "₹50",
+      "fontSize": 24,
+      "fontWeight": "700",
+      "color": "#ff6b35",
+      "marginBottom": "16px"
+    },
+    "displayName": "Product 2 Price",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2-details"
+  },
+  "product-2-options": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Product 2 Options",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-2-colors", "product-2-materials"],
+    "linkedNodes": {},
+    "parent": "product-2-details"
+  },
+  "product-2-colors": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Colors: Natural Wood, Dark Walnut",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 2 Colors",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2-options"
+  },
+  "product-2-materials": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Materials: Solid Oak, Steel Frame",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 2 Materials",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-2-options"
+  },
+  "product-3": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "backgroundColor": "#333333",
+      "borderRadius": "8px",
+      "overflow": "hidden",
+      "transition": "transform 0.3s ease"
+    },
+    "displayName": "Product 3",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-3-image", "product-3-details"],
+    "linkedNodes": {},
+    "parent": "products-grid"
+  },
+  "product-3-image": {
+    "type": { "resolvedName": "ImageBlock" },
+    "isCanvas": false,
+    "props": {
+      "src": "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop&crop=center",
+      "alt": "Mr. X - Modern Shelving Unit",
+      "width": "100%",
+      "height": "250px",
+      "objectFit": "cover"
+    },
+    "displayName": "Product 3 Image",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3"
+  },
+  "product-3-details": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "24px",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "12px"
+    },
+    "displayName": "Product 3 Details",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-3-name", "product-3-description", "product-3-price", "product-3-options"],
+    "linkedNodes": {},
+    "parent": "product-3"
+  },
+  "product-3-name": {
+    "type": { "resolvedName": "HeadingBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Mr. X",
+      "level": 3,
+      "fontSize": 20,
+      "fontWeight": "600",
+      "color": "#ffffff",
+      "marginBottom": "8px",
+      "letterSpacing": "0.02em"
+    },
+    "displayName": "Product 3 Name",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3-details"
+  },
+  "product-3-description": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Mr. X: Ultra sensual fragrance. Premium scent, unforgettable allure.",
+      "fontSize": 14,
+      "fontWeight": "400",
+      "color": "#cccccc",
+      "lineHeight": "1.5",
+      "marginBottom": "12px"
+    },
+    "displayName": "Product 3 Description",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3-details"
+  },
+  "product-3-price": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "₹100",
+      "fontSize": 24,
+      "fontWeight": "700",
+      "color": "#ff6b35",
+      "marginBottom": "16px"
+    },
+    "displayName": "Product 3 Price",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3-details"
+  },
+  "product-3-options": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "8px"
+    },
+    "displayName": "Product 3 Options",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["product-3-colors", "product-3-materials"],
+    "linkedNodes": {},
+    "parent": "product-3-details"
+  },
+  "product-3-colors": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Colors: White, Black, Natural",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 3 Colors",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3-options"
+  },
+  "product-3-materials": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "Materials: Engineered Wood, Metal Brackets",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Product 3 Materials",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "product-3-options"
+  },
+  "page-footer": {
+    "type": { "resolvedName": "ContainerBlock" },
+    "isCanvas": true,
+    "props": {
+      "padding": "30px 40px",
+      "backgroundColor": "transparent",
+      "borderTop": "1px solid #444444",
+      "display": "flex",
+      "justifyContent": "space-between",
+      "alignItems": "center"
+    },
+    "displayName": "Page Footer",
+    "custom": {},
+    "hidden": false,
+    "nodes": ["footer-brand", "footer-tagline"],
+    "linkedNodes": {},
+    "parent": "ROOT"
+  },
+  "footer-brand": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "SmellAdda",
+      "fontSize": 14,
+      "fontWeight": "500",
+      "color": "#ffffff",
+      "letterSpacing": "0.1em"
+    },
+    "displayName": "Footer Brand",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-footer"
+  },
+  "footer-tagline": {
+    "type": { "resolvedName": "TextBlock" },
+    "isCanvas": false,
+    "props": {
+      "text": "© 2025 All rights reserved",
+      "fontSize": 12,
+      "fontWeight": "400",
+      "color": "#888888",
+      "letterSpacing": "0.05em"
+    },
+    "displayName": "Footer Tagline",
+    "custom": {},
+    "hidden": false,
+    "nodes": [],
+    "linkedNodes": {},
+    "parent": "page-footer"
+  }
+}

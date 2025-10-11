@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Save, 
   Download, 
@@ -24,6 +24,8 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/components/auth-provider';
+import { isClientAdmin } from '@/lib/client-auth';
 
 interface ToolbarProps {
   onSave: () => void;
@@ -84,6 +86,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   backButton
 }) => {
   const [showExportMenu, setShowExportMenu] = React.useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { user } = useAuth();
+
+  // Check if current user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        const adminStatus = await isClientAdmin();
+        setIsAdmin(adminStatus);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   const exportOptions = [
     { type: 'pdf' as const, label: 'Export as PDF', icon: <FileText className="w-4 h-4" /> },
@@ -102,15 +120,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     <div className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-3">
       {/* Left Section - File Actions */}
       <div className="flex items-center space-x-1">
-        {/* Back to Templates Button - Always visible */}
-        <Link 
-          href="/themes"
-          className="flex items-center px-2 py-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors text-sm"
-          title="Back to Templates"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Back to Templates
-        </Link>
+        {/* Back to Templates Button - Only visible for admin users */}
+        {isAdmin && (
+          <Link 
+            href="/themes"
+            className="flex items-center px-2 py-1 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors text-sm"
+            title="Back to Templates"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Back to Templates
+          </Link>
+        )}
         
         {backButton && (
           <>
@@ -130,7 +150,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         
         <button
           onClick={onSave}
-          className="flex items-center px-2 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+          className="flex items-center px-2 py-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-md hover:from-[#1E1338] hover:to-[#4F46E5] transition-all duration-200 text-sm font-medium"
         >
           <Save className="w-4 h-4 mr-1.5" />
           Save
@@ -246,7 +266,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               onClick={() => onDeviceModeChange(device.mode)}
               className={`p-1.5 rounded-md transition-colors ${
                 deviceMode === device.mode
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-[#2D1B69] shadow-sm'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
               title={device.label}
@@ -274,7 +294,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={onShowLeftSidebar}
           className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
             showLeftSidebar
-              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] hover:from-[#2D1B69]/20 hover:to-[#6366F1]/20'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
@@ -287,7 +307,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={onShowLayers}
           className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
             showLayers
-              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] hover:from-[#2D1B69]/20 hover:to-[#6366F1]/20'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >
@@ -300,7 +320,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onClick={onShowInspector}
           className={`flex items-center px-2 py-1 rounded-md transition-colors text-sm ${
             showInspector
-              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] hover:from-[#2D1B69]/20 hover:to-[#6366F1]/20'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           }`}
         >

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Copy, Trash2, ChevronLeft, ChevronRight, MoreVertical, Eye } from 'lucide-react';
+import { PagePreview } from './PagePreview';
 
 export interface Page {
   id: string;
@@ -15,6 +16,7 @@ export interface Page {
 interface PageNavigatorProps {
   pages: Page[];
   currentPageId: string;
+  currentPageData?: string; // Current page data for real-time thumbnail updates
   onPageSelect: (pageId: string) => void;
   onPageAdd: () => void;
   onPageDuplicate: (pageId: string) => void;
@@ -27,6 +29,7 @@ interface PageNavigatorProps {
 export const PageNavigator: React.FC<PageNavigatorProps> = ({
   pages,
   currentPageId,
+  currentPageData,
   onPageSelect,
   onPageAdd,
   onPageDuplicate,
@@ -86,16 +89,27 @@ export const PageNavigator: React.FC<PageNavigatorProps> = ({
     setDropTargetIndex(null);
   };
 
-  const generateThumbnail = (pageData: string): string => {
-    // In a real implementation, you would generate a thumbnail from the page data
-    // For now, return a placeholder
-    return `data:image/svg+xml;base64,${btoa(`
-      <svg width="120" height="80" xmlns="http://www.w3.org/2000/svg">
-        <rect width="120" height="80" fill="#f3f4f6"/>
-        <text x="60" y="40" text-anchor="middle" fill="#6b7280" font-size="12">Page</text>
-      </svg>
-    `)}`;
+  // State to store generated thumbnails
+  const [thumbnailCache, setThumbnailCache] = useState<Record<string, string>>({});
+
+  const handleThumbnailGenerated = (pageId: string, dataUrl: string) => {
+    setThumbnailCache(prev => ({
+      ...prev,
+      [pageId]: dataUrl
+    }));
   };
+
+  // Update current page thumbnail when data changes
+  useEffect(() => {
+    if (currentPageData && currentPageId) {
+      // Clear the current page thumbnail to trigger regeneration
+      setThumbnailCache(prev => {
+        const newCache = { ...prev };
+        delete newCache[currentPageId];
+        return newCache;
+      });
+    }
+  }, [currentPageData, currentPageId]);
 
   return (
     <div className={`bg-white border-r border-gray-200 flex flex-col max-h-[100vh] ${className}`}>
@@ -109,7 +123,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = ({
         
         {isExpanded && (
           <button
-            onClick={onPageAdd}
+            onClick={() => onPageAdd()}
             className="p-1 hover:bg-gray-100 rounded text-blue-600"
             title="Add new page"
           >
@@ -146,12 +160,28 @@ export const PageNavigator: React.FC<PageNavigatorProps> = ({
                   onClick={() => onPageSelect(page.id)}
                 >
                   {/* Thumbnail */}
-                  <div className="w-full h-16 bg-gray-100 rounded mb-2 overflow-hidden">
-                    <img
-                      src={page.thumbnail || generateThumbnail(page.data)}
-                      alt={`${page.name} thumbnail`}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-full h-32 bg-gray-100 rounded mb-2 overflow-hidden relative">
+                    {thumbnailCache[page.id] ? (
+                      <img
+                        src={thumbnailCache[page.id]}
+                        alt={`${page.name} thumbnail`}
+                        className="w-full h-full object-contain bg-white"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 opacity-0 pointer-events-none">
+                         <PagePreview
+                           pageData={page.id === currentPageId && currentPageData ? currentPageData : page.data}
+                           width={240}
+                           height={120}
+                           onPreviewGenerated={(dataUrl) => handleThumbnailGenerated(page.id, dataUrl)}
+                         />
+                       </div>
+                    )}
+                    {!thumbnailCache[page.id] && (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                        <div className="text-xs text-gray-500">Loading...</div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Page Name */}
@@ -166,7 +196,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = ({
                           if (e.key === 'Enter') handleRenameSubmit();
                           if (e.key === 'Escape') handleRenameCancel();
                         }}
-                        className="flex-1 px-1 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="flex-1 px-1 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -225,7 +255,7 @@ export const PageNavigator: React.FC<PageNavigatorProps> = ({
                     {currentPageId === page.id && (
                       <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                     )}
-                    Updated {page.updatedAt.toISOString().split('T')[0]}
+                    Updated {page.updatedAt instanceof Date ? page.updatedAt.toISOString().split('T')[0] : new Date(page.updatedAt).toISOString().split('T')[0]}
                   </div>
                 </div>
               </div>

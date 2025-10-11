@@ -26,6 +26,7 @@ export interface UseMultiPageReturn {
   // Actions
   switchToPage: (pageId: string) => void;
   addPage: (name?: string) => void;
+  addPages: (newPages: Page[], switchToFirstImported?: boolean) => void;
   duplicatePage: (pageId: string) => void;
   deletePage: (pageId: string) => void;
   renamePage: (pageId: string, newName: string) => void;

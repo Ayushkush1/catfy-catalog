@@ -15,7 +15,7 @@ export const useZoom = (options: UseZoomOptions = {}) => {
     initialZoom = 1,
     minZoom = 0.1,
     maxZoom = 5,
-    zoomStep = 0.1,
+    zoomStep = 0.03,
     onZoomChange
   } = options;
 
@@ -162,7 +162,7 @@ export const useZoom = (options: UseZoomOptions = {}) => {
   // Get transform style for canvas
   const getCanvasStyle = useCallback(() => ({
     transform: `scale(${zoom})`,
-    transformOrigin: 'center center',
+    transformOrigin: 'top center',
     transition: 'transform 0.2s ease-out',
   }), [zoom]);
 

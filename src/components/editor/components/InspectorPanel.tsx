@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import { NumberInput } from './NumberInput';
 
 // Import property panels - simplified for now
 
@@ -45,6 +46,13 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
     }
   }, [selectedNodeId, isCollapsed, onToggle]);
 
+  // Auto-switch to style tab when an element is selected
+  React.useEffect(() => {
+    if (selectedNodeId) {
+      setActiveTab('style'); // Switch to style tab when element is selected
+    }
+  }, [selectedNodeId]);
+
   const tabs = [
     { id: 'content' as const, label: 'Content', icon: <Settings className="w-4 h-4" /> },
     { id: 'style' as const, label: 'Style', icon: <Palette className="w-4 h-4" /> }
@@ -53,7 +61,7 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   const SelectedNodeSettings = () => {
     if (!selectedNodeId) {
       return (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
+        <div className="flex-1 flex items-center justify-center mt-10 text-gray-500">
           <div className="text-center">
             <Settings className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p className="text-sm">Select an element to edit its properties</p>
@@ -68,20 +76,34 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
   };
 
   return (
-    <div className={`relative h-full flex flex-col bg-white ${isCollapsed ? 'w-0' : 'w-full'} transition-all duration-200`}>
-      <div className="absolute top-0 -left-4 z-10">
+    <div className={`relative h-full rounded-xl flex flex-col bg-white ${isCollapsed ? 'w-0' : 'w-full'} transition-all duration-200`}>
+      <div className="absolute top-14 -left-6 z-10">
         <button
-          onClick={onToggle}
-          className="py-1 bg-white transition-colors border-l border-gray-200 rounded-r rounded-full"
+          onClick={() => {
+            // Clear selected element when collapsing the inspector
+            if (!isCollapsed) {
+              actions.clearEvents();
+            }
+            onToggle?.();
+          }}
+          className="w-6 h-8 bg-white hover:bg-gray-50 transition-colors border-l border-t border-b  rounded-l-md  flex items-center justify-center"
           title={isCollapsed ? "Expand Inspector" : "Collapse Inspector"}
         >
           {isCollapsed ? (
-            <ChevronLeft className="w-4 h-4  text-gray-600" />
+            <ChevronLeft className="w-3 h-3 text-gray-600" />
           ) : (
-            <ChevronRight className="w-4 h-4 ml-1 text-gray-600" />
+            <ChevronRight className="w-3 h-3 text-gray-600" />
           )}
         </button>
       </div>
+
+      {/* Show guide message when collapsed */}
+      {isCollapsed && (
+        <div className="absolute top-16 -left-48 z-10 bg-gray-800 text-white text-xs px-3 py-2 rounded-md shadow-lg opacity-0 hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          Click to expand inspector or select an element to edit its properties
+          <div className="absolute top-1/2 right-0 transform translate-x-full -translate-y-1/2 w-0 h-0 border-l-4 border-l-gray-800 border-t-2 border-b-2 border-t-transparent border-b-transparent"></div>
+        </div>
+      )}
 
       {/* Tabs and Content - Only show when not collapsed */}
       {!isCollapsed && (
@@ -94,8 +116,8 @@ export const InspectorPanel: React.FC<InspectorPanelProps> = ({
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 flex items-center justify-center px-2 py-3 text-xs font-medium transition-colors ${activeTab === tab.id
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                    className={`flex-1 flex items-center justify-center m-1 px-2 py-3 rounded-xl text-xs font-medium transition-colors ${activeTab === tab.id
+                        ? 'text-[#2D1B69] border-b-2 border-[#2D1B69] bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10'
                         : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                       }`}
                   >
@@ -229,7 +251,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.text = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 rows={3}
                 placeholder="Enter your text here..."
               />
@@ -251,7 +273,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.text = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-xs bg-white border rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-xs bg-white border rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 placeholder="Enter heading text..."
               />
             </div>
@@ -264,7 +286,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.level = parseInt(e.target.value);
                 })}
-                className="w-full px-2 py-1.5 text-xs border bg-white rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-xs border bg-white rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
               >
                 <option value={1}>H1</option>
                 <option value={2}>H2</option>
@@ -291,7 +313,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.src = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
@@ -305,7 +327,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.alt = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 placeholder="Describe the image..."
               />
             </div>
@@ -314,28 +336,28 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Width
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   value={props.width || 200}
-                  onChange={(e) => setProp((props: any) => {
-                    props.width = parseInt(e.target.value) || 200;
+                  onChange={(value) => setProp((props: any) => {
+                    props.width = value;
                   })}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  min="1"
+                  min={1}
+                  step={1}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Height
                 </label>
-                <input
-                  type="number"
+                <NumberInput
                   value={props.height || 150}
-                  onChange={(e) => setProp((props: any) => {
-                    props.height = parseInt(e.target.value) || 150;
+                  onChange={(value) => setProp((props: any) => {
+                    props.height = value;
                   })}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  min="1"
+                  min={1}
+                  step={1}
+                  className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 />
               </div>
             </div>
@@ -356,7 +378,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.text = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 placeholder="Enter button text..."
               />
             </div>
@@ -370,7 +392,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.href = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
                 placeholder="https://example.com"
               />
             </div>
@@ -383,7 +405,7 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
                 onChange={(e) => setProp((props: any) => {
                   props.variant = e.target.value;
                 })}
-                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#2D1B69]"
               >
                 <option value="primary">Primary</option>
                 <option value="secondary">Secondary</option>
@@ -415,8 +437,13 @@ const ContentPanel: React.FC<{ nodeType: string; props: any; setProp: (callback:
 // Style Panel Component
 const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (props: any) => void) => void }> = ({ nodeType, props, setProp }) => {
   // Initialize default values for nested objects
-  const margin = props.margin || { top: 0, right: 0, bottom: 0, left: 0 };
-  const padding = props.padding || { top: 0, right: 0, bottom: 0, left: 0 };
+  // Handle cases where margin/padding might be numbers instead of objects
+  const margin = (typeof props.margin === 'object' && props.margin !== null) 
+    ? props.margin 
+    : { top: 0, right: 0, bottom: 0, left: 0 };
+  const padding = (typeof props.padding === 'object' && props.padding !== null) 
+    ? props.padding 
+    : { top: 0, right: 0, bottom: 0, left: 0 };
   const border = props.border || { width: 0, style: 'solid', color: '#000000' };
 
   return (
@@ -429,15 +456,15 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[10px] text-gray-600 mb-1">Font Size</label>
-              <input
-                type="number"
+              <NumberInput
                 value={props.fontSize || 16}
-                onChange={(e) => setProp((props: any) => {
-                  props.fontSize = parseInt(e.target.value) || 16;
+                onChange={(value) => setProp((props: any) => {
+                  props.fontSize = value;
                 })}
+                min={8}
+                max={72}
+                step={1}
                 className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                min="8"
-                max="72"
               />
             </div>
 
@@ -678,14 +705,14 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
 
         <div>
           <label className="block text-[10px] text-gray-600 mb-1">Z-Index</label>
-          <input
-            type="number"
-            value={props.zIndex || ''}
-            onChange={(e) => setProp((props: any) => {
-              props.zIndex = e.target.value;
+          <NumberInput
+            value={props.zIndex || 0}
+            onChange={(value) => setProp((props: any) => {
+              props.zIndex = value;
             })}
+            step={1}
             className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-            placeholder="auto"
+            placeholder="0"
           />
         </div>
 
@@ -725,28 +752,28 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
         <div className="grid grid-cols-2 gap-2">
           <div>
             <label className="block text-[10px] text-gray-600 mb-1">Border Width</label>
-            <input
-              type="number"
+            <NumberInput
               value={border.width}
-              onChange={(e) => setProp((props: any) => {
+              onChange={(value) => setProp((props: any) => {
                 if (!props.border) props.border = { width: 0, style: 'solid', color: '#000000' };
-                props.border.width = parseInt(e.target.value) || 0;
+                props.border.width = value;
               })}
+              min={0}
+              step={1}
               className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-              min="0"
             />
           </div>
 
           <div>
             <label className="block text-[10px] text-gray-600 mb-1">Border Radius</label>
-            <input
-              type="number"
+            <NumberInput
               value={props.borderRadius || 0}
-              onChange={(e) => setProp((props: any) => {
-                props.borderRadius = parseInt(e.target.value) || 0;
+              onChange={(value) => setProp((props: any) => {
+                props.borderRadius = value;
               })}
+              min={0}
+              step={1}
               className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-              min="0"
             />
           </div>
         </div>
@@ -790,44 +817,44 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           <div>
             <label className="block text-[10px] text-gray-600 mb-1">Margin</label>
             <div className="grid grid-cols-2 gap-1">
-              <input
-                type="number"
-                placeholder="Top"
+              <NumberInput
                 value={margin.top}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.margin) props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.margin.top = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.margin || typeof props.margin !== 'object') props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.margin.top = value;
                 })}
+                step={1}
+                placeholder="Top"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Right"
+              <NumberInput
                 value={margin.right}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.margin) props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.margin.right = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.margin || typeof props.margin !== 'object') props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.margin.right = value;
                 })}
+                step={1}
+                placeholder="Right"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Bottom"
+              <NumberInput
                 value={margin.bottom}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.margin) props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.margin.bottom = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.margin || typeof props.margin !== 'object') props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.margin.bottom = value;
                 })}
+                step={1}
+                placeholder="Bottom"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Left"
+              <NumberInput
                 value={margin.left}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.margin) props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.margin.left = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.margin || typeof props.margin !== 'object') props.margin = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.margin.left = value;
                 })}
+                step={1}
+                placeholder="Left"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
             </div>
@@ -836,44 +863,44 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
           <div>
             <label className="block text-[10px] text-gray-600 mb-1">Padding</label>
             <div className="grid grid-cols-2 gap-1">
-              <input
-                type="number"
-                placeholder="Top"
+              <NumberInput
                 value={padding.top}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.padding) props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.padding.top = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.padding || typeof props.padding !== 'object') props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.padding.top = value;
                 })}
+                step={1}
+                placeholder="Top"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Right"
+              <NumberInput
                 value={padding.right}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.padding) props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.padding.right = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.padding || typeof props.padding !== 'object') props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.padding.right = value;
                 })}
+                step={1}
+                placeholder="Right"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Bottom"
+              <NumberInput
                 value={padding.bottom}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.padding) props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.padding.bottom = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.padding || typeof props.padding !== 'object') props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.padding.bottom = value;
                 })}
+                step={1}
+                placeholder="Bottom"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
-              <input
-                type="number"
-                placeholder="Left"
+              <NumberInput
                 value={padding.left}
-                onChange={(e) => setProp((props: any) => {
-                  if (!props.padding) props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
-                  props.padding.left = parseInt(e.target.value) || 0;
+                onChange={(value) => setProp((props: any) => {
+                  if (!props.padding || typeof props.padding !== 'object') props.padding = { top: 0, right: 0, bottom: 0, left: 0 };
+                  props.padding.left = value;
                 })}
+                step={1}
+                placeholder="Left"
                 className="px-1 py-1 border border-gray-300 rounded text-xs"
               />
             </div>
@@ -1068,27 +1095,27 @@ const StylePanel: React.FC<{ nodeType: string; props: any; setProp: (callback: (
             <div className="grid grid-cols-3 gap-2">
               <div>
                 <label className="block text-[10px] text-gray-600 mb-1">Flex Grow</label>
-                <input
-                  type="number"
+                <NumberInput
                   value={props.flexGrow || 0}
-                  onChange={(e) => setProp((props: any) => {
-                    props.flexGrow = parseInt(e.target.value) || 0;
+                  onChange={(value) => setProp((props: any) => {
+                    props.flexGrow = value;
                   })}
+                  min={0}
+                  step={1}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                  min="0"
                 />
               </div>
 
               <div>
                 <label className="block text-[10px] text-gray-600 mb-1">Flex Shrink</label>
-                <input
-                  type="number"
+                <NumberInput
                   value={props.flexShrink || 1}
-                  onChange={(e) => setProp((props: any) => {
-                    props.flexShrink = parseInt(e.target.value) || 1;
+                  onChange={(value) => setProp((props: any) => {
+                    props.flexShrink = value;
                   })}
+                  min={0}
+                  step={1}
                   className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                  min="0"
                 />
               </div>
 

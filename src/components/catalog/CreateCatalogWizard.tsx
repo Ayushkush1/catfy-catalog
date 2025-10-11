@@ -40,41 +40,52 @@ import { ThemeSelector } from './ThemeSelector'
 import { TemplateThemeWorkflow } from '@/components/ui/template-theme-workflow'
 
 interface CatalogueData {
-  title: string | number | readonly string[] | undefined
+  // Catalogue basic info
+  title: string
   id?: string
   name: string
   description: string
   quote: string
   tagline: string
+  year: string
+  introImage: string
   templateId: string
   theme: string
   isPublic: boolean
-  settings: {
-    showPrices: boolean
-    showCategories: boolean
-    allowSearch: boolean
-    showProductCodes: boolean
-    templateId: string
-    companyInfo: {
-      companyName: string
-      companyDescription: string
-    }
-    mediaAssets: {
-      logoUrl: string
-      coverImageUrl: string
-    }
-    contactDetails: {
-      email: string
-      phone: string
-      website: string
-    }
-    socialMedia: {
-      facebook: string
-      twitter: string
-      instagram: string
-      linkedin: string
-    }
-  }
+  
+  // Consolidated company/profile information
+  companyName: string
+  companyDescription: string
+  fullName: string
+  email: string
+  phone: string
+  website: string
+  address: string
+  city: string
+  state: string
+  country: string
+  
+  // Media assets
+  logoUrl: string
+  coverImageUrl: string
+  
+  // Contact page specific fields
+  contactImage: string
+  contactQuote: string
+  contactQuoteBy: string
+  contactDescription: string
+  
+  // Social media
+  facebook: string
+  twitter: string
+  instagram: string
+  linkedin: string
+  
+  // Template settings
+  showPrices: boolean
+  showCategories: boolean
+  allowSearch: boolean
+  showProductCodes: boolean
 }
 
 interface UserProfile {
@@ -98,40 +109,51 @@ interface CreateCatalogWizardProps {
 export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [data, setData] = useState<CatalogueData>({
+    // Catalogue basic info
     title: '',
     name: '',
     description: '',
     quote: '',
     tagline: '',
+    year: new Date().getFullYear().toString(),
+    introImage: '',
     templateId: 'modern-4page',
     theme: 'modern',
     isPublic: false,
-    settings: {
-      showPrices: true,
-      showCategories: true,
-      allowSearch: true,
-      showProductCodes: false,
-      templateId: 'modern-4page',
-      companyInfo: {
-        companyName: '',
-        companyDescription: '',
-      },
-      mediaAssets: {
-        logoUrl: '',
-        coverImageUrl: '',
-      },
-      contactDetails: {
-        email: '',
-        phone: '',
-        website: '',
-      },
-      socialMedia: {
-        facebook: '',
-        twitter: '',
-        instagram: '',
-        linkedin: '',
-      },
-    },
+    
+    // Consolidated company/profile information
+    companyName: '',
+    companyDescription: '',
+    fullName: '',
+    email: '',
+    phone: '',
+    website: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    
+    // Media assets
+    logoUrl: '',
+    coverImageUrl: '',
+    
+    // Contact page specific fields
+    contactImage: '',
+    contactQuote: '',
+    contactQuoteBy: '',
+    contactDescription: '',
+    
+    // Social media
+    facebook: '',
+    twitter: '',
+    instagram: '',
+    linkedin: '',
+    
+    // Template settings
+    showPrices: true,
+    showCategories: true,
+    allowSearch: true,
+    showProductCodes: false,
   })
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -158,31 +180,30 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
         const profileData = await profileResponse.json()
         setProfile(profileData.profile)
 
-        // Pre-fill branding info from profile
+        // Pre-fill data from profile
         setData(prev => ({
           ...prev,
-          settings: {
-            ...prev.settings,
-            companyInfo: {
-              companyName: profileData.profile?.companyName || '',
-              companyDescription: profileData.profile?.companyDescription || '',
-            },
-            mediaAssets: {
-              logoUrl: profileData.profile?.logoUrl || '',
-              coverImageUrl: profileData.profile?.coverImageUrl || '',
-            },
-            contactDetails: {
-              email: profileData.user?.email || '',
-              phone: profileData.profile?.phone || '',
-              website: profileData.profile?.website || '',
-            },
-            socialMedia: {
-              facebook: profileData.profile?.facebook || '',
-              twitter: profileData.profile?.twitter || '',
-              instagram: profileData.profile?.instagram || '',
-              linkedin: profileData.profile?.linkedin || '',
-            },
-          },
+          // Company/profile information
+          companyName: profileData.profile?.companyName || '',
+          companyDescription: profileData.profile?.companyDescription || '',
+          fullName: profileData.profile?.fullName || '',
+          email: profileData.user?.email || '',
+          phone: profileData.profile?.phone || '',
+          website: profileData.profile?.website || '',
+          address: profileData.profile?.address || '',
+          city: profileData.profile?.city || '',
+          state: profileData.profile?.state || '',
+          country: profileData.profile?.country || '',
+          
+          // Media assets
+          logoUrl: profileData.profile?.logoUrl || '',
+          coverImageUrl: profileData.profile?.coverImageUrl || '',
+          
+          // Social media
+          facebook: profileData.profile?.facebook || '',
+          twitter: profileData.profile?.twitter || '',
+          instagram: profileData.profile?.instagram || '',
+          linkedin: profileData.profile?.linkedin || '',
         }))
       }
     } catch (err) {
@@ -194,21 +215,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   }
 
   const updateData = (field: string, value: any) => {
-    if (field.includes('.')) {
-      const [parent, child, grandchild] = field.split('.')
-      setData(prev => ({
-        ...prev,
-        [parent]: {
-          ...(prev[parent as keyof CatalogueData] as any),
-          [child]: grandchild ? {
-            ...((prev[parent as keyof CatalogueData] as any)[child] || {}),
-            [grandchild]: value,
-          } : value,
-        },
-      }))
-    } else {
-      setData(prev => ({ ...prev, [field]: value }))
-    }
+    setData(prev => ({ ...prev, [field]: value }))
   }
 
   const validateStep = (step: number) => {
@@ -456,6 +463,20 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   </div>
 
                   <div className="space-y-3">
+                    <Label htmlFor="year" className="text-base font-medium text-[#1A1B41]">
+                      Catalogue Year
+                    </Label>
+                    <Input
+                      id="year"
+                      value={data.year}
+                      onChange={(e) => updateData('year', e.target.value)}
+                      placeholder="2024"
+                      className="h-12 border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20"
+                    />
+                    <p className="text-sm text-gray-500">Year for this catalogue edition</p>
+                  </div>
+
+                  <div className="space-y-3">
                     <Label htmlFor="quote" className="text-base font-medium text-[#1A1B41]">
                       Quote
                     </Label>
@@ -535,8 +556,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="companyName" className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Name</Label>
                     <Input
                       id="companyName"
-                      value={data.settings.companyInfo?.companyName || ''}
-                      onChange={(e) => updateData('settings.companyInfo.companyName', e.target.value)}
+                      value={data.companyName || ''}
+                      onChange={(e) => updateData('companyName', e.target.value)}
                       placeholder="Enter your company name"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -546,8 +567,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="companyDescription" className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Description</Label>
                     <Textarea
                       id="companyDescription"
-                      value={data.settings.companyInfo?.companyDescription || ''}
-                      onChange={(e) => updateData('settings.companyInfo.companyDescription', e.target.value)}
+                      value={data.companyDescription || ''}
+                      onChange={(e) => updateData('companyDescription', e.target.value)}
                       placeholder="Describe your company and what you do"
                       rows={3}
                       className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg resize-none"
@@ -574,14 +595,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 <CardContent className="p-5 space-y-4">
                   <div>
                     <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Logo</Label>
-                    {!data.settings.mediaAssets?.logoUrl ? (
+                    {!data.logoUrl ? (
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
                           onUpload={(results) => {
                             if (results.length > 0) {
-                              updateData('settings.mediaAssets.logoUrl', results[0].url)
+                              updateData('logoUrl', results[0].url)
                             }
                           }}
                           maxFiles={1}
@@ -592,7 +613,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     ) : (
                       <div className="space-y-2">
                         <img
-                          src={data.settings.mediaAssets.logoUrl}
+                          src={data.logoUrl}
                           alt="Logo preview"
                           className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
                         />
@@ -600,7 +621,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => updateData('settings.mediaAssets.logoUrl', '')}
+                          onClick={() => updateData('logoUrl', '')}
                           className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Logo
@@ -611,14 +632,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
                   <div>
                     <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Cover Image</Label>
-                    {!data.settings.mediaAssets?.coverImageUrl ? (
+                    {!data.coverImageUrl ? (
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
                           onUpload={(results) => {
                             if (results.length > 0) {
-                              updateData('settings.mediaAssets.coverImageUrl', results[0].url)
+                              updateData('coverImageUrl', results[0].url)
                             }
                           }}
                           maxFiles={1}
@@ -629,7 +650,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     ) : (
                       <div className="space-y-2">
                         <img
-                          src={data.settings.mediaAssets.coverImageUrl}
+                          src={data.coverImageUrl}
                           alt="Cover image preview"
                           className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
                         />
@@ -637,10 +658,47 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => updateData('settings.mediaAssets.coverImageUrl', '')}
+                          onClick={() => updateData('coverImageUrl', '')}
                           className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Cover Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Intro Image</Label>
+                    {!data.introImage ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                        <FileUpload
+                          uploadType="catalogue"
+                          catalogueId={data.id || 'temp'}
+                          onUpload={(results) => {
+                            if (results.length > 0) {
+                              updateData('introImage', results[0].url)
+                            }
+                          }}
+                          maxFiles={1}
+                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          className="w-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <img
+                          src={data.introImage}
+                          alt="Intro image preview"
+                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateData('introImage', '')}
+                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                        >
+                          Change Intro Image
                         </Button>
                       </div>
                     )}
@@ -669,8 +727,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Input
                       id="email"
                       type="email"
-                      value={data.settings.contactDetails?.email || ''}
-                      onChange={(e) => updateData('settings.contactDetails.email', e.target.value)}
+                      value={data.email || ''}
+                      onChange={(e) => updateData('email', e.target.value)}
                       placeholder="contact@company.com"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -680,8 +738,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="phone" className="text-sm font-medium text-[#1A1B41] mb-2 block">Phone</Label>
                     <Input
                       id="phone"
-                      value={data.settings.contactDetails?.phone || ''}
-                      onChange={(e) => updateData('settings.contactDetails.phone', e.target.value)}
+                      value={data.phone || ''}
+                      onChange={(e) => updateData('phone', e.target.value)}
                       placeholder="+1 (555) 123-4567"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -691,10 +749,22 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="website" className="text-sm font-medium text-[#1A1B41] mb-2 block">Website</Label>
                     <Input
                       id="website"
-                      value={data.settings.contactDetails?.website || ''}
-                      onChange={(e) => updateData('settings.contactDetails.website', e.target.value)}
+                      value={data.website || ''}
+                      onChange={(e) => updateData('website', e.target.value)}
                       placeholder="https://www.company.com"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="address" className="text-sm font-medium text-[#1A1B41] mb-2 block">Address</Label>
+                    <Textarea
+                      id="address"
+                      value={data.address || ''}
+                      onChange={(e) => updateData('address', e.target.value)}
+                      placeholder="123 Main Street, City, State, ZIP"
+                      rows={3}
+                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
                   </div>
                 </CardContent>
@@ -720,8 +790,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="facebook" className="text-sm font-medium text-[#1A1B41] mb-2 block">Facebook</Label>
                     <Input
                       id="facebook"
-                      value={data.settings.socialMedia?.facebook || ''}
-                      onChange={(e) => updateData('settings.socialMedia', { ...data.settings.socialMedia, facebook: e.target.value })}
+                      value={data.facebook || ''}
+                      onChange={(e) => updateData('facebook', e.target.value)}
                       placeholder="https://facebook.com/yourpage"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -731,8 +801,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="twitter" className="text-sm font-medium text-[#1A1B41] mb-2 block">Twitter</Label>
                     <Input
                       id="twitter"
-                      value={data.settings.socialMedia?.twitter || ''}
-                      onChange={(e) => updateData('settings.socialMedia', { ...data.settings.socialMedia, twitter: e.target.value })}
+                      value={data.twitter || ''}
+                      onChange={(e) => updateData('twitter', e.target.value)}
                       placeholder="https://twitter.com/yourhandle"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -742,8 +812,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="instagram" className="text-sm font-medium text-[#1A1B41] mb-2 block">Instagram</Label>
                     <Input
                       id="instagram"
-                      value={data.settings.socialMedia?.instagram || ''}
-                      onChange={(e) => updateData('settings.socialMedia', { ...data.settings.socialMedia, instagram: e.target.value })}
+                      value={data.instagram || ''}
+                      onChange={(e) => updateData('instagram', e.target.value)}
                       placeholder="https://instagram.com/yourhandle"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
@@ -753,9 +823,99 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     <Label htmlFor="linkedin" className="text-sm font-medium text-[#1A1B41] mb-2 block">LinkedIn</Label>
                     <Input
                       id="linkedin"
-                      value={data.settings.socialMedia?.linkedin || ''}
-                      onChange={(e) => updateData('settings.socialMedia', { ...data.settings.socialMedia, linkedin: e.target.value })}
+                      value={data.linkedin || ''}
+                      onChange={(e) => updateData('linkedin', e.target.value)}
                       placeholder="https://linkedin.com/company/yourcompany"
+                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Page Details */}
+              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg text-[#1A1B41]">Contact Page Details</CardTitle>
+                      <CardDescription className="text-gray-600 text-sm">
+                        Additional content for your contact page
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-5 space-y-4">
+                  <div>
+                    <Label htmlFor="contactDescription" className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Page Description</Label>
+                    <Textarea
+                      id="contactDescription"
+                      value={data.contactDescription || ''}
+                      onChange={(e) => updateData('contactDescription', e.target.value)}
+                      placeholder="Describe your contact page or add a welcome message..."
+                      rows={3}
+                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Image</Label>
+                    {!data.contactImage ? (
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                        <FileUpload
+                          uploadType="catalogue"
+                          catalogueId={data.id || 'temp'}
+                          onUpload={(results) => {
+                            if (results.length > 0) {
+                              updateData('contactImage', results[0].url)
+                            }
+                          }}
+                          maxFiles={1}
+                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          className="w-full"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <img
+                          src={data.contactImage}
+                          alt="Contact image preview"
+                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateData('contactImage', '')}
+                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                        >
+                          Change Contact Image
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contactQuote" className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Quote</Label>
+                    <Textarea
+                      id="contactQuote"
+                      value={data.contactQuote || ''}
+                      onChange={(e) => updateData('contactQuote', e.target.value)}
+                      placeholder="A quote or message for your contact page..."
+                      rows={3}
+                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contactQuoteBy" className="text-sm font-medium text-[#1A1B41] mb-2 block">Quote Attribution</Label>
+                    <Input
+                      id="contactQuoteBy"
+                      value={data.contactQuoteBy || ''}
+                      onChange={(e) => updateData('contactQuoteBy', e.target.value)}
+                      placeholder="- Author Name"
                       className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
                     />
                   </div>
@@ -788,8 +948,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       <p className="text-xs text-gray-600 mt-1">Display product prices in the catalogue</p>
                     </div>
                     <Switch
-                      checked={data.settings.showPrices}
-                      onCheckedChange={(checked) => updateData('settings.showPrices', checked)}
+                      checked={data.showPrices}
+                      onCheckedChange={(checked) => updateData('showPrices', checked)}
                     />
                   </div>
 
@@ -801,8 +961,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       <p className="text-sm text-gray-600">Group products by categories</p>
                     </div>
                     <Switch
-                      checked={data.settings.showCategories}
-                      onCheckedChange={(checked) => updateData('settings.showCategories', checked)}
+                      checked={data.showCategories}
+                      onCheckedChange={(checked) => updateData('showCategories', checked)}
                     />
                   </div>
 
@@ -814,8 +974,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       <p className="text-sm text-gray-600">Enable search functionality</p>
                     </div>
                     <Switch
-                      checked={data.settings.allowSearch}
-                      onCheckedChange={(checked) => updateData('settings.allowSearch', checked)}
+                      checked={data.allowSearch}
+                      onCheckedChange={(checked) => updateData('allowSearch', checked)}
                     />
                   </div>
 
@@ -827,8 +987,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       <p className="text-sm text-gray-600">Display SKU or product codes</p>
                     </div>
                     <Switch
-                      checked={data.settings.showProductCodes}
-                      onCheckedChange={(checked) => updateData('settings.showProductCodes', checked)}
+                      checked={data.showProductCodes}
+                      onCheckedChange={(checked) => updateData('showProductCodes', checked)}
                     />
                   </div>
                 </CardContent>
