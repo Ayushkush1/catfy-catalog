@@ -106,12 +106,12 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
   return (
     <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4">
       {/* Left Section - Back Button and Navigation */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-3">
         {/* Back Button */}
         {isAdmin ? (
           <Link 
             href="/admin?tab=templates"
-            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10"
             title="Back to Admin Templates"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -120,7 +120,7 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
         ) : backButton ? (
           <Link 
             href={backButton.href}
-            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm"
+            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10"
             title="Back"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -132,7 +132,8 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowResizeMenu(!showResizeMenu)}
-            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+            className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm font-medium hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10"
+            aria-expanded={showResizeMenu}
           >
             Resize
             <ChevronDown className="w-4 h-4 ml-1" />
@@ -164,7 +165,7 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
         {/* Editing Toggle */}
         <button
           onClick={onPreviewModeToggle}
-          className={`flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+          className={`flex items-center px-3 py-2 rounded-md transition-colors text-sm font-medium ${
             previewMode
               ? 'bg-green-100 text-green-700 hover:bg-green-200'
               : 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] hover:from-[#2D1B69]/20 hover:to-[#6366F1]/20'
@@ -207,7 +208,7 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
             <ZoomOut className="w-4 h-4" />
           </button>
           
-          <div className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-medium text-gray-700 min-w-[60px] text-center">
+          <div className="px-3 py-1 bg-gray-100 rounded-md text-sm font-medium text-gray-700 min-w-[60px] text-center">
             {Math.round(zoom * 100)}%
           </div>
           
@@ -246,7 +247,7 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
         {/* Save Button */}
         <button
           onClick={onSave}
-          className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors text-sm font-medium"
+          className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm font-medium hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10"
         >
           <Save className="w-4 h-4 mr-2" />
           Save
@@ -256,7 +257,8 @@ export const CanvaToolbar: React.FC<CanvaToolbarProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
-            className="flex items-center px-4 py-2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-lg hover:from-[#1E1338] hover:to-[#4F46E5] transition-colors text-sm font-medium"
+            className="flex items-center px-4 py-2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-md hover:from-[#1E1338] hover:to-[#4F46E5] transition-colors text-sm font-medium"
+            aria-expanded={showShareMenu}
           >
             <Share2 className="w-4 h-4 mr-2" />
             Share

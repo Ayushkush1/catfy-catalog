@@ -97,12 +97,17 @@ export const ProfileDropdown: React.FC = () => {
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div
+      className="relative"
+      ref={dropdownRef}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 p-1 rounded-lg hover:bg-gray-100 transition-colors"
       >
-        <div className="w-8 h-8 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] rounded-full flex items-center justify-center text-white text-sm font-medium">
+        <div className="w-9 h-9 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] rounded-full flex items-center justify-center text-white text-xs font-medium">
           {getInitials(profile.fullName)}
         </div>
         <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
