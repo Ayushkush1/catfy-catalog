@@ -17,7 +17,7 @@ const createCatalogueSchema = z.object({
   introImage: z.string().optional(),
   theme: z.string().default('modern'),
   isPublic: z.boolean().default(false),
-  
+
   // Company/Profile information (flattened)
   companyName: z.string().optional(),
   companyDescription: z.string().optional(),
@@ -29,23 +29,23 @@ const createCatalogueSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  
+
   // Media assets (flattened)
   logoUrl: z.string().optional(),
   coverImageUrl: z.string().optional(),
-  
+
   // Contact page fields (flattened)
   contactImage: z.string().optional(),
   contactDescription: z.string().optional(),
   contactQuote: z.string().optional(),
   contactQuoteBy: z.string().optional(),
-  
+
   // Social media (flattened)
   facebook: z.string().optional(),
   twitter: z.string().optional(),
   instagram: z.string().optional(),
   linkedin: z.string().optional(),
-  
+
   // Template settings (flattened)
   showPrices: z.boolean().default(true),
   showCategories: z.boolean().default(true),
@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
       catalogues: catalogues.map(catalogue => {
         const isOwner = catalogue.profileId === profile.id
         const teamMemberRole = catalogue.teamMembers.length > 0 ? catalogue.teamMembers[0].role : null
-        
+
         return {
           id: catalogue.id,
           name: catalogue.name,
@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Continue with normal catalogue creation for all users
 
     // Check subscription limits
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createCatalogueSchema.parse(body)
 
     // Extract basic catalogue fields
-    const { 
+    const {
       name, description, quote, tagline, year, introImage, theme, isPublic,
       // Extract flattened fields to reconstruct settings object for database
       companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
@@ -402,6 +402,14 @@ export async function POST(request: NextRequest) {
         instagram,
         linkedin,
       },
+      // IframeEditor settings for HTML templates
+      ...(templateId ? {
+        iframeEditor: {
+          templateId,
+          engine: 'mustache', // Default engine for HTML templates
+          pageCount: 1, // Will be updated when template is loaded
+        }
+      } : {})
     }
 
     const catalogue = await prisma.catalogue.create({
@@ -415,6 +423,7 @@ export async function POST(request: NextRequest) {
         theme,
         isPublic,
         profileId: profile.id,
+        template: templateId, // Save template ID to catalogue.template field
         settings,
       },
       include: {
@@ -475,7 +484,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Catalogue creation error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },

@@ -1,7 +1,8 @@
 'use client'
 
 import IframeEditor from '@/components/editor/IframeEditor'
-import { HtmlTemplates, getTemplateById } from '@/components/editor/iframe-templates'
+import { HtmlTemplates, getTemplateById as getHtmlTemplateById, PrebuiltTemplate } from '@/components/editor/iframe-templates'
+import { getTemplateById as getRegistryTemplateById } from '@/templates'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, EyeOff, Eye, ZoomIn, ZoomOut, Grid3X3, Undo, Redo, Save, Share, Share2, Link as LinkIcon, FileJson, FileType, Printer } from 'lucide-react'
 import Link from 'next/link'
@@ -11,6 +12,41 @@ import { toast } from 'sonner'
 import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
+
+// Helper function to get HTML template from registry or direct lookup
+function getTemplate(templateId: string): PrebuiltTemplate | null {
+  console.log('🔍 getTemplate called with:', templateId)
+
+  // First try direct HTML template lookup
+  const directTemplate = getHtmlTemplateById(templateId)
+  console.log('🔍 Direct HTML template lookup:', {
+    templateId,
+    found: !!directTemplate,
+    templateName: directTemplate?.name,
+    availableTemplates: HtmlTemplates.map(t => ({ id: t.id, name: t.name }))
+  })
+
+  if (directTemplate) {
+    return directTemplate
+  }
+
+  // Then try registry lookup and extract HTML template data
+  const registryTemplate = getRegistryTemplateById(templateId)
+  console.log('🔍 Registry template lookup:', {
+    templateId,
+    found: !!registryTemplate,
+    isHtmlTemplate: !!registryTemplate?.customProperties?.isHtmlTemplate,
+    hasHtmlTemplateData: !!registryTemplate?.customProperties?.htmlTemplateData
+  })
+
+  if (registryTemplate?.customProperties?.isHtmlTemplate) {
+    // Extract the HTML template data from the registry template
+    return registryTemplate.customProperties.htmlTemplateData as PrebuiltTemplate
+  }
+
+  console.warn('❌ Template not found:', templateId)
+  return null
+}
 
 export default function CataloguePreviewPage() {
   const [catalogue, setCatalogue] = useState<any | null>(null)
@@ -90,6 +126,21 @@ export default function CataloguePreviewPage() {
   const params = useParams()
   const catalogueId = params.id as string
 
+  // Timeout fallback: if iframe doesn't load in 10 seconds, show it anyway
+  useEffect(() => {
+    console.log('⏰ Preview: Starting 10-second timeout for editor ready fallback')
+    const timeout = setTimeout(() => {
+      if (!isEditorReady) {
+        console.warn('⚠️ IframeEditor took too long to load (10s timeout), showing it anyway')
+        setIsEditorReady(true)
+      } else {
+        console.log('✅ Preview: Editor already ready before timeout')
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [isEditorReady])
+
   const loadCatalogue = async () => {
     try {
       setIsLoading(true)
@@ -124,9 +175,31 @@ export default function CataloguePreviewPage() {
         setLiveData(initial)
         // Load previous iframe editor state if present
         const iframeEditorSettings = (data.catalogue.settings as any)?.iframeEditor
+
+        // Load template ID from either settings.iframeEditor.templateId or catalogue.template
+        const savedTemplateId = iframeEditorSettings?.templateId || data.catalogue.template
+
+        console.log('📋 Loading template from catalogue:', {
+          templateId: savedTemplateId,
+          source: iframeEditorSettings?.templateId ? 'settings.iframeEditor.templateId' : 'catalogue.template',
+          catalogueName: data.catalogue.name,
+          catalogueTemplate: data.catalogue.template,
+          iframeEditorTemplateId: iframeEditorSettings?.templateId,
+          hasSavedPages: !!iframeEditorSettings?.pages,
+          savedPageCount: iframeEditorSettings?.pages?.length || 0
+        })
+
+        if (savedTemplateId) {
+          setTemplateId(savedTemplateId)
+        } else {
+          console.log('⚠️ No template ID found, using default:', {
+            defaultTemplateId: templateId,
+            catalogueName: data.catalogue.name
+          })
+        }
+
         if (iframeEditorSettings) {
           if (iframeEditorSettings.liveData) setLiveData(iframeEditorSettings.liveData)
-          if (iframeEditorSettings.templateId) setTemplateId(iframeEditorSettings.templateId)
           if (iframeEditorSettings.styleMutations) setStyleMutations(iframeEditorSettings.styleMutations)
           // Load additional editor state
           if (typeof iframeEditorSettings.currentPageIndex === 'number') setPageIndex(iframeEditorSettings.currentPageIndex)
@@ -417,7 +490,26 @@ export default function CataloguePreviewPage() {
             style={{ opacity: isEditorReady ? 1 : 0 }}
           >
             <IframeEditor
-              template={getTemplateById(templateId) || HtmlTemplates[0]}
+              template={(() => {
+                const template = getTemplate(templateId) || HtmlTemplates[0]
+                const foundTemplate = getTemplate(templateId)
+
+                console.log('🎨 Preview - Rendering template:', {
+                  templateId,
+                  templateFound: !!foundTemplate,
+                  templateName: template.name,
+                  templateEngine: template.engine,
+                  pageCount: template.pages?.length || 0,
+                  usingFallback: !foundTemplate
+                })
+
+                if (!foundTemplate) {
+                  console.error(`❌ Template "${templateId}" not found, using fallback: ${HtmlTemplates[0].name}`)
+                  toast.error(`Template "${templateId}" not found, using default template`)
+                }
+
+                return template
+              })()}
               initialData={liveData}
               onLiveDataChange={setLiveData}
               initialStyleMutations={styleMutations}
@@ -447,6 +539,7 @@ export default function CataloguePreviewPage() {
               }}
               onIframeReady={() => {
                 // Mark editor as ready once iframe is fully loaded with user's saved edits
+                console.log('✅ Preview: onIframeReady callback received, hiding loading overlay')
                 setIsEditorReady(true)
               }}
             />

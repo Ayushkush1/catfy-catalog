@@ -7,9 +7,44 @@ import { getAllModularTemplates } from '@/components/editor/templates/ModularTem
 import { Template as EditorTemplate } from '@/components/editor/templates/types'
 import { TemplateConfig } from '@/lib/template-registry'
 
+// Import HTML templates from iframe-templates
+import { HtmlTemplates, PrebuiltTemplate } from '@/components/editor/iframe-templates'
+
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
 let dbTemplatesLoaded = false
+
+// Convert HTML template to registry template config
+function convertHtmlTemplateToConfig(htmlTemplate: PrebuiltTemplate): TemplateConfig {
+  return {
+    id: htmlTemplate.id,
+    name: htmlTemplate.name,
+    description: `HTML ${htmlTemplate.engine} template - ${htmlTemplate.pages.length} page(s)`,
+    category: 'modern', // All HTML templates use modern category
+    isPremium: false,
+    version: '1.0.0',
+    previewImage: `/templates/${htmlTemplate.id}-preview.svg`,
+    features: ['HTML', htmlTemplate.engine, `${htmlTemplate.pages.length} page(s)`],
+    tags: ['html', htmlTemplate.engine, 'iframe'],
+    pageCount: htmlTemplate.pages.length,
+    supportedFields: {
+      products: ['name', 'description', 'price', 'images'],
+      categories: ['name', 'description'],
+      profile: ['companyName', 'logo', 'email', 'phone', 'website']
+    },
+    compatibleThemes: ['modern-blue', 'classic-warm', 'minimal-mono'],
+    requiredThemeFeatures: [],
+    customProperties: {
+      isHtmlTemplate: true,
+      engine: htmlTemplate.engine,
+      htmlTemplateData: htmlTemplate,
+      pages: htmlTemplate.pages,
+      sharedCss: htmlTemplate.sharedCss
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+}
 
 // Convert editor template to registry template config
 function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): TemplateConfig {
@@ -76,36 +111,29 @@ export function initializeTemplateRegistry(): TemplateRegistry {
 function registerAllTemplates() {
   if (!templateRegistry) return
 
-  // Get all templates (both legacy and modular)
-  const allModularTemplates = getAllModularTemplates();
-  const allTemplates = [...PrebuiltTemplates, ...allModularTemplates];
-
-  // Register editor templates
-  console.log('📝 Registering all templates:', allTemplates.length);
-  console.log('📝 PrebuiltTemplates:', PrebuiltTemplates.length);
-  console.log('📝 ModularTemplates:', allModularTemplates.length);
-  
-  allTemplates.forEach(editorTemplate => {
-    const config = convertEditorTemplateToConfig(editorTemplate)
-    console.log('📝 Registering template:', {
-      id: editorTemplate.id,
-      name: editorTemplate.name,
-      category: editorTemplate.category,
-      isModular: allModularTemplates.some(t => t.id === editorTemplate.id),
-      hasData: !!editorTemplate.data,
-      dataType: typeof editorTemplate.data,
-      dataKeys: editorTemplate.data ? Object.keys(editorTemplate.data) : [],
-      configId: config.id,
-      hasEditorData: !!config.customProperties?.editorData,
-      editorDataType: typeof config.customProperties?.editorData,
-      editorDataKeys: config.customProperties?.editorData ? Object.keys(config.customProperties.editorData) : []
+  // Register HTML templates (from iframe-templates) - PRIORITY
+  console.log('📝 Registering HTML templates:', HtmlTemplates.length);
+  HtmlTemplates.forEach(htmlTemplate => {
+    const config = convertHtmlTemplateToConfig(htmlTemplate)
+    console.log('📝 Registering HTML template:', {
+      id: htmlTemplate.id,
+      name: htmlTemplate.name,
+      engine: htmlTemplate.engine,
+      pageCount: htmlTemplate.pages.length,
+      configId: config.id
     });
-    // Create a simple wrapper component for editor templates
-    const EditorTemplateWrapper = () => {
-      return null // Editor templates are handled differently
+    const HtmlTemplateWrapper = () => {
+      return null // HTML templates are handled by IframeEditor
     }
-    templateRegistry!.registerTemplate(config, EditorTemplateWrapper)
+    templateRegistry!.registerTemplate(config, HtmlTemplateWrapper)
   })
+
+  // REMOVED: CraftJS Editor templates are no longer registered
+  // User requested to only show HTML templates and remove other editor templates
+
+  // Get all templates (both legacy and modular) - COMMENTED OUT
+  // const allModularTemplates = getAllModularTemplates();
+  // const allTemplates = [...PrebuiltTemplates, ...allModularTemplates];
 
   // Future templates can be registered here
   // templateRegistry.registerTemplate({
@@ -128,7 +156,7 @@ export function getAllTemplates() {
 export function getTemplateById(templateId: string) {
   const registry = getTemplateRegistry()
   const template = registry.getTemplate(templateId)
-  
+
   console.log('🔍 getTemplateById Debug:', {
     templateId,
     templateFound: !!template,
@@ -143,7 +171,7 @@ export function getTemplateById(templateId: string) {
       editorDataKeys: template.customProperties?.editorData ? Object.keys(template.customProperties.editorData) : []
     } : null
   });
-  
+
   return template
 }
 
@@ -189,9 +217,17 @@ export async function discoverTemplates(): Promise<void> {
 }
 
 // Load templates from DB (published) and register into registry
+// DISABLED: We're only using HTML templates from iframe-templates now
 export async function loadDbTemplatesIntoRegistry(): Promise<void> {
   initializeTemplateRegistry()
   if (dbTemplatesLoaded) return
+
+  // Skip loading DB templates - we only use HTML templates now
+  console.log('📋 Skipping DB templates - using HTML templates only')
+  dbTemplatesLoaded = true
+  return
+
+  /* COMMENTED OUT - DB template loading disabled
   try {
     const res = await fetch('/api/templates', { cache: 'no-store' })
     if (!res.ok) {
@@ -208,6 +244,7 @@ export async function loadDbTemplatesIntoRegistry(): Promise<void> {
   } catch (err) {
     console.error('Error loading DB templates:', err)
   }
+  */
 }
 
 // Template validation helpers

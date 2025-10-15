@@ -22,7 +22,7 @@ export interface TemplateSelectionContext {
  */
 export class TemplateManager {
   private static instance: TemplateManager;
-  
+
   public static getInstance(): TemplateManager {
     if (!TemplateManager.instance) {
       TemplateManager.instance = new TemplateManager();
@@ -35,7 +35,7 @@ export class TemplateManager {
    */
   public getAvailableTemplates(userPlan: 'free' | 'monthly' | 'yearly' = 'free'): TemplateConfig[] {
     const allTemplates = getAllTemplates();
-    
+
     // Filter templates based on user plan
     return allTemplates.filter(template => {
       if (template.isPremium && userPlan === 'free') {
@@ -71,7 +71,7 @@ export class TemplateManager {
   public prepareTemplateData(templateId: string): TemplateLoadResult {
     try {
       const template = this.getTemplate(templateId);
-      
+
       if (!template) {
         return {
           success: false,
@@ -79,7 +79,18 @@ export class TemplateManager {
         };
       }
 
-      // Check if it's an editor template
+      // Check if it's an HTML template (from iframe-templates)
+      if (template.customProperties?.isHtmlTemplate) {
+        console.log('✅ HTML template detected:', templateId);
+        // HTML templates don't need editor data - they're handled by IframeEditor
+        // Just return success - the actual template will be loaded via getTemplate()
+        return {
+          success: true,
+          data: JSON.stringify({ templateId, isHtmlTemplate: true })
+        };
+      }
+
+      // Check if it's a CraftJS editor template
       if (!template.customProperties?.isEditorTemplate) {
         return {
           success: false,
@@ -143,11 +154,11 @@ export class TemplateManager {
     context: TemplateSelectionContext
   ): Promise<TemplateLoadResult> {
     const result = this.prepareTemplateData(templateId);
-    
+
     if (result.success && result.data) {
       // For wizard, we just prepare the data - actual loading happens when editor is created
       context.onTemplateSelected?.(templateId, result.data);
-      
+
       // Store template selection in localStorage for wizard flow
       localStorage.setItem('selectedTemplateId', templateId);
       localStorage.setItem('selectedTemplateData', result.data);
@@ -166,7 +177,7 @@ export class TemplateManager {
     context: TemplateSelectionContext
   ): Promise<TemplateLoadResult> {
     const result = this.prepareTemplateData(templateId);
-    
+
     if (result.success && result.data) {
       context.onTemplateSelected?.(templateId, result.data);
     } else {
@@ -187,21 +198,21 @@ export class TemplateManager {
     try {
       console.log('🎯 TemplateManager: Loading template into editor');
       console.log('📊 Template data length:', templateData.length);
-      
+
       // Parse the data to determine if it's multi-page or single-page
       const parsedData = JSON.parse(templateData);
-      
+
       // Check if it's a multi-page template (array of Page objects)
       if (Array.isArray(parsedData) && parsedData.length > 0 && parsedData[0].id && parsedData[0].data) {
         console.log('🔄 TemplateManager: Detected multi-page template with', parsedData.length, 'pages');
-        
+
         if (!loadMultiPageDataFn) {
           throw new Error('Multi-page template detected but no multi-page loader provided');
         }
 
         // Load multi-page data
         const success = loadMultiPageDataFn(parsedData);
-        
+
         if (success) {
           console.log('✅ TemplateManager: Multi-page template loaded successfully');
         } else {
@@ -210,7 +221,7 @@ export class TemplateManager {
 
         return success;
       }
-      
+
       // Handle single-page template (legacy behavior)
       if (!parsedData.ROOT) {
         throw new Error('Invalid single-page template data: missing ROOT node');
@@ -218,7 +229,7 @@ export class TemplateManager {
 
       // Load single-page data into editor
       const success = loadPageDataFn(templateData);
-      
+
       if (success) {
         console.log('✅ TemplateManager: Single-page template loaded successfully');
       } else {
@@ -238,7 +249,7 @@ export class TemplateManager {
   public getTemplateCategories(): string[] {
     const templates = getAllTemplates();
     const categories = new Set<string>();
-    
+
     templates.forEach(template => {
       if (template.category) {
         categories.add(template.category);
@@ -262,8 +273,8 @@ export class TemplateManager {
   public searchTemplates(query: string): TemplateConfig[] {
     const allTemplates = getAllTemplates();
     const lowercaseQuery = query.toLowerCase();
-    
-    return allTemplates.filter(template => 
+
+    return allTemplates.filter(template =>
       template.name.toLowerCase().includes(lowercaseQuery) ||
       template.description?.toLowerCase().includes(lowercaseQuery) ||
       template.tags?.some((tag: string) => tag.toLowerCase().includes(lowercaseQuery))
@@ -284,11 +295,11 @@ export class TemplateManager {
   public getStoredSelection(): { templateId: string; templateData: string } | null {
     const templateId = localStorage.getItem('selectedTemplateId');
     const templateData = localStorage.getItem('selectedTemplateData');
-    
+
     if (templateId && templateData) {
       return { templateId, templateData };
     }
-    
+
     return null;
   }
 }

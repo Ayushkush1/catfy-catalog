@@ -2,7 +2,7 @@ import type { PrebuiltTemplate } from '../IframeEditor'
 
 // A simple single-product, two-page HTML template using Mustache placeholders
 export const SimpleProductTemplate: PrebuiltTemplate = {
-  id: 'simple-product-template',
+  id: 'simple-product',
   name: 'Simple Product',
   engine: 'mustache',
   sharedCss: `

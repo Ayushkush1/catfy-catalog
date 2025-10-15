@@ -374,9 +374,29 @@ export default function IframeEditor({
           if (iframeEditorSettings.styleMutations && !initialStyleMutations) {
             setStyleMutations(iframeEditorSettings.styleMutations)
           }
-          if (iframeEditorSettings.pages) {
+
+          // 🔥 FIX: Only load saved pages if they belong to the SAME template
+          // Otherwise, use the fresh template pages to avoid showing wrong template
+          const savedTemplateId = iframeEditorSettings.templateId
+          const currentTemplateId = template.id
+
+          if (iframeEditorSettings.pages && savedTemplateId === currentTemplateId) {
+            console.log('✅ Loading saved pages - template matches:', {
+              savedTemplateId,
+              currentTemplateId,
+              pageCount: iframeEditorSettings.pages.length
+            })
             setPages(iframeEditorSettings.pages)
             pagesRef.current = iframeEditorSettings.pages // Keep ref in sync
+          } else if (iframeEditorSettings.pages && savedTemplateId !== currentTemplateId) {
+            console.warn('⚠️ Template changed - using fresh template pages:', {
+              savedTemplateId,
+              currentTemplateId,
+              savedPageCount: iframeEditorSettings.pages.length,
+              freshPageCount: template.pages.length
+            })
+            // Don't load saved pages - they're from a different template!
+            // The template pages will be used from the initial state
           }
           if (typeof iframeEditorSettings.currentPageIndex === 'number') {
             setCurrentPageIndex(iframeEditorSettings.currentPageIndex)
@@ -496,15 +516,19 @@ export default function IframeEditor({
       })
 
       // 🔥 Step 5: Notify parent that iframe is fully loaded and ready
+      console.log('✅ IframeEditor: Calling onIframeReady callback')
       onIframeReady?.()
 
       // Store observer cleanup
       return () => observer.disconnect()
     }
     // Wait a tick for DOM to be ready
-    const timeoutId = setTimeout(applyMutations, 50)
+    const timeoutId = setTimeout(() => {
+      console.log('🔧 IframeEditor: Applying mutations and setting up observers')
+      applyMutations()
+    }, 50)
     return () => clearTimeout(timeoutId)
-  }, [compiledHtml, styleMutations])
+  }, [compiledHtml, styleMutations, onIframeReady])
 
   // Inject interaction styles (disable outlines; we render overlay rectangles)
   const ensureInteractionStyleTag = () => {
@@ -1513,9 +1537,12 @@ export default function IframeEditor({
           ? 'items-center overflow-hidden'
           : 'items-start overflow-auto'
         // Add margin-right to balance the left sidebar when both are collapsed
-        const containerStyle = sidebarsCollapsed && !previewMode ? { marginRight: '80px' } : {}
+        // Also add proper padding to prevent overlap and ensure equal spacing
+        const containerStyle = sidebarsCollapsed && !previewMode
+          ? { marginRight: '80px', padding: '2rem 1rem' }
+          : { padding: '1rem' }
         return (
-          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center p-4 h-full`} style={containerStyle}>
+          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center h-full`} style={containerStyle}>
             <div ref={canvasWrapperRef} style={{ width: BASE_W * scale, height: BASE_H * scale, position: 'relative', overflow: 'visible' }}>
               <div
                 className="bg-white shadow border"

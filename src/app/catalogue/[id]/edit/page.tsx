@@ -302,25 +302,80 @@ export default function EditCataloguePage() {
 
       // Get the template data
       const template = getTemplateById(templateId)
-      
+
       console.log('📋 Template Retrieved:', {
         templateExists: !!template,
         templateId: template?.id,
         templateName: template?.name,
         hasCustomProperties: !!template?.customProperties,
+        isHtmlTemplate: !!template?.customProperties?.isHtmlTemplate,
         hasEditorData: !!template?.customProperties?.editorData,
         customPropertiesKeys: template?.customProperties ? Object.keys(template.customProperties) : [],
         templateKeys: template ? Object.keys(template) : []
       });
-      
+
       if (!template) {
         toast.error('Template not found')
         return
       }
-      
-      // Check if this is a multi-page template
+
+      // Check if this is an HTML template (from iframe-templates)
+      const isHtmlTemplate = template.customProperties?.isHtmlTemplate
+
+      if (isHtmlTemplate) {
+        // Handle HTML templates - save template ID to settings for IframeEditor
+        console.log('✅ HTML template detected, saving template ID:', templateId);
+
+        if (catalogue) {
+          const existingSettings = typeof catalogue.settings === 'string'
+            ? JSON.parse(catalogue.settings || '{}')
+            : (catalogue.settings || {})
+
+          const updatedCatalogue = {
+            ...catalogue,
+            template: templateId,
+            settings: {
+              ...existingSettings,
+              // Store template info for IframeEditor
+              iframeEditor: {
+                ...(existingSettings.iframeEditor || {}),
+                templateId: templateId,
+                engine: template.customProperties?.engine || 'mustache',
+                pageCount: template.customProperties?.pages?.length || 1
+              }
+            }
+          }
+
+          // Save to database
+          const response = await fetch(`/api/catalogues/${catalogue.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              template: templateId,
+              settings: updatedCatalogue.settings
+            })
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            console.error('Error updating catalogue:', errorData)
+            toast.error('Failed to save template selection')
+            return
+          }
+
+          // Update local state
+          setCatalogue(updatedCatalogue)
+
+          toast.success('HTML template selected! Click Preview to edit.')
+        }
+        return
+      }
+
+      // Handle CraftJS editor templates (legacy support)
       const isMultiPageTemplate = template.customProperties?.multiPageData && Array.isArray(template.customProperties.multiPageData)
-      
+
       console.log('📄 Multi-page Template Check:', {
         isMultiPageTemplate,
         hasMultiPageData: !!template.customProperties?.multiPageData,
@@ -330,7 +385,7 @@ export default function EditCataloguePage() {
       // Get template data - handle both single-page and multi-page templates
       let templateData: any
       let isMultiPage = false
-      
+
       if (isMultiPageTemplate) {
         // This is a multi-page template - store the multi-page structure
         templateData = template.customProperties?.multiPageData
@@ -373,10 +428,10 @@ export default function EditCataloguePage() {
       // Update the catalogue with the template data
       if (catalogue && templateData) {
         // Parse existing settings if they're stored as JSON string
-        const existingSettings = typeof catalogue.settings === 'string' 
-          ? JSON.parse(catalogue.settings || '{}') 
+        const existingSettings = typeof catalogue.settings === 'string'
+          ? JSON.parse(catalogue.settings || '{}')
           : (catalogue.settings || {})
-          
+
         const updatedCatalogue = {
           ...catalogue,
           template: templateId,
@@ -409,7 +464,7 @@ export default function EditCataloguePage() {
 
         // Update local state
         setCatalogue(updatedCatalogue)
-        
+
         toast.success('Template loaded successfully!')
       }
     } catch (error) {
@@ -483,7 +538,7 @@ export default function EditCataloguePage() {
     try {
       // Get the template data
       const template = getTemplateById(templateId)
-      
+
       if (!template) {
         toast.error('Template not found')
         return
@@ -503,7 +558,7 @@ export default function EditCataloguePage() {
       }
 
       console.log('Template and theme found:', template.name, theme.name)
-      
+
       // Get template data - check if it's in customProperties.editorData (for editor templates) or data field
       let templateData = null
       if (template.customProperties?.editorData) {
@@ -552,10 +607,10 @@ export default function EditCataloguePage() {
         // Update local state
         setCatalogue(updatedCatalogue)
         setSelectedTheme(themeId)
-        
+
         // Save theme to localStorage for global theme application
         localStorage.setItem('selectedTheme', themeId)
-        
+
         // Track theme selection for analytics
         try {
           await fetch('/api/admin/theme-analytics', {
@@ -573,9 +628,9 @@ export default function EditCataloguePage() {
           console.error('Failed to track theme selection:', analyticsError)
           // Don't show error to user as this is background tracking
         }
-        
+
         toast.success('Template and theme loaded successfully!')
-        
+
         // Redirect to preview page to see the loaded template with theme
         router.push(`/catalogue/${catalogue.id}/preview`)
       }

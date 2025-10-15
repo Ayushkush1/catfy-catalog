@@ -17,7 +17,7 @@ export type PrebuiltHtmlTemplate = {
 }
 
 export const DarkHeroTemplate: PrebuiltHtmlTemplate = {
-  id: 'dark-hero-template',
+  id: 'dark-hero',
   name: 'Dark Hero Section',
   engine: 'mustache',
   sharedCss: `
@@ -313,7 +313,7 @@ export const DarkHeroTemplate: PrebuiltHtmlTemplate = {
     {
       id: 'intro',
       name: 'Intro',
-      html:`
+      html: `
       <div class="intro-page">
 
   <!-- Left Side Image -->
