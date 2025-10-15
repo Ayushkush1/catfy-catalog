@@ -78,7 +78,18 @@ export default function Page() {
         <div className="font-semibold">User Editor · {template.name}</div>
         <div className="text-sm text-gray-500">Engine: {template.engine}</div>
       </div>
-      <IframeEditor template={template} />
+      <IframeEditor 
+        template={template}
+        catalogueId="test-catalogue-id"
+        autoSave={true}
+        autoSaveInterval={3000}
+        onSaveSuccess={() => {
+          console.log('Test: Changes saved successfully')
+        }}
+        onSaveError={(error) => {
+          console.error('Test: Failed to save changes:', error)
+        }}
+      />
     </div>
   )
 }

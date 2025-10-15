@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function CataloguePreviewPage() {
   const [catalogue, setCatalogue] = useState<any | null>(null)
@@ -18,22 +19,30 @@ export default function CataloguePreviewPage() {
   const [templateId, setTemplateId] = useState<string>('default-html')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved')
+  const [isEditorReady, setIsEditorReady] = useState(false) // NEW: Prevent flash on initial load
   const iframeGetterRef = useRef<() => HTMLIFrameElement | null>(() => null)
   const editorControlsRef = useRef<{
-    undo:()=>void,
-    redo:()=>void,
-    setZoom:(z:number)=>void,
-    getZoom:()=>number,
-    zoomIn?:()=>void,
-    zoomOut?:()=>void,
-    toggleGrid?:()=>void,
+    undo: () => void,
+    redo: () => void,
+    setZoom: (z: number) => void,
+    getZoom: () => number,
+    zoomIn?: () => void,
+    zoomOut?: () => void,
+    toggleGrid?: () => void,
     setGrid?: (v: boolean) => void,
-    getGrid?:()=>boolean,
-    hasUndo?:()=>boolean,
-    hasRedo?:()=>boolean,
-    print?:()=>void,
-    exportHTML?:()=>void,
-    exportJSON?:()=>void,
+    getGrid?: () => boolean,
+    hasUndo?: () => boolean,
+    hasRedo?: () => boolean,
+    print?: () => void,
+    exportHTML?: () => void,
+    exportJSON?: () => void,
+    exportPDF?: () => Promise<void>,
+    exportPNG?: () => Promise<void>,
+    saveToDatabase?: () => Promise<void>,
+    getSaveStatus?: () => 'saved' | 'saving' | 'unsaved' | 'error',
+    getLastSaved?: () => Date | null,
+    isDirty?: () => boolean,
     // Pages
     getPages?: () => any[],
     getCurrentPageIndex?: () => number,
@@ -65,6 +74,17 @@ export default function CataloguePreviewPage() {
     }, 250)
     return () => clearInterval(interval)
   }, [pageIndex, pageCount])
+
+  // Poll save status from editor
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const status = editorControlsRef.current?.getSaveStatus?.()
+      if (status && status !== saveStatus) {
+        setSaveStatus(status)
+      }
+    }, 500) // Check every 500ms
+    return () => clearInterval(interval)
+  }, [saveStatus])
 
   const params = useParams()
   const catalogueId = params.id as string
@@ -107,6 +127,12 @@ export default function CataloguePreviewPage() {
           if (iframeEditorSettings.liveData) setLiveData(iframeEditorSettings.liveData)
           if (iframeEditorSettings.templateId) setTemplateId(iframeEditorSettings.templateId)
           if (iframeEditorSettings.styleMutations) setStyleMutations(iframeEditorSettings.styleMutations)
+          // Load additional editor state
+          if (typeof iframeEditorSettings.currentPageIndex === 'number') setPageIndex(iframeEditorSettings.currentPageIndex)
+          if (typeof iframeEditorSettings.userZoom === 'number') {
+            setToolbarZoom(Math.round(iframeEditorSettings.userZoom * 100))
+          }
+          if (typeof iframeEditorSettings.showGrid === 'boolean') setGridOn(iframeEditorSettings.showGrid)
         }
       } else if (response.status === 404) {
         setError('Catalogue not found')
@@ -181,10 +207,24 @@ export default function CataloguePreviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading catalogue...</p>
+      <div className="h-screen overflow-hidden bg-gray-50">
+        {/* Skeleton Toolbar */}
+        <div className="h-16 border-b bg-white flex items-center justify-between px-4">
+          <div className="flex items-center gap-10">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-8 w-48" />
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-9 rounded-full" />
+          </div>
+        </div>
+
+        {/* Skeleton Canvas Area */}
+        <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+          <Skeleton className="h-[90%] w-[80%] max-w-4xl" />
         </div>
       </div>
     )
@@ -213,12 +253,12 @@ export default function CataloguePreviewPage() {
       <div className="h-16 border-b bg-white flex items-center justify-between px-4 relative">
         <div className="flex items-center gap-10">
           <Button asChild variant="ghost" className="px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10">
-            <Link href="/dashboard">
+            <Link href={`/catalogue/${catalogueId}/edit`}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Link>
           </Button>
-          
+
           {/* Edit/Preview toggle */}
           <button
             className={`text-sm px-3 py-2 rounded-lg flex items-center transition-colors ${isPreviewMode ? 'bg-gray-100 text-gray-700' : 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69]'}`}
@@ -231,11 +271,11 @@ export default function CataloguePreviewPage() {
 
         {/* Center Zoom/Grid controls */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-        {/* Undo/Redo icons */}
-          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasUndo?.()} onClick={()=>editorControlsRef.current?.undo?.()} aria-label="Undo">
+          {/* Undo/Redo icons */}
+          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasUndo?.()} onClick={() => editorControlsRef.current?.undo?.()} aria-label="Undo">
             <Undo className="w-4 h-4" />
           </button>
-          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasRedo?.()} onClick={()=>editorControlsRef.current?.redo?.()} aria-label="Redo">
+          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasRedo?.()} onClick={() => editorControlsRef.current?.redo?.()} aria-label="Redo">
             <Redo className="w-4 h-4" />
           </button>
 
@@ -299,29 +339,50 @@ export default function CataloguePreviewPage() {
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
-         
+
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Save Status Indicator */}
+          {saveStatus === 'saving' && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              Saving...
+            </div>
+          )}
+          {saveStatus === 'saved' && (
+            <div className="flex items-center gap-2 text-xs text-green-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              All changes saved
+            </div>
+          )}
+          {saveStatus === 'unsaved' && (
+            <div className="flex items-center gap-2 text-xs text-orange-600">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              Unsaved changes
+            </div>
+          )}
+          {saveStatus === 'error' && (
+            <div className="flex items-center gap-2 text-xs text-red-600">
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+              Save failed
+            </div>
+          )}
+
           <Button
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium"
-            onClick={() => {
-              if (!catalogue?.id || !liveData) return
-              handleCatalogueUpdate(catalogue.id, {
-                settings: {
-                  ...(catalogue.settings as object || {}),
-                  iframeEditor: {
-                    templateId,
-                    liveData,
-                    styleMutations
-                  }
-                } as any
-              })
-              toast.success('Saved iframe editor data')
+            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+            onClick={async () => {
+              try {
+                await editorControlsRef.current?.saveToDatabase?.()
+                toast.success('Changes saved successfully')
+              } catch (error) {
+                toast.error('Failed to save changes')
+              }
             }}
+            disabled={saveStatus === 'saving'}
           >
             <Save className="w-3 h-3 mr-1" />
-            Save
+            {saveStatus === 'saving' ? 'Saving...' : 'Save'}
           </Button>
           {/* Share */}
           <Button
@@ -331,35 +392,64 @@ export default function CataloguePreviewPage() {
             <Share2 className="w-3 h-3 mr-2" />
             Share
           </Button>
-          
+
           <ProfileDropdown />
         </div>
       </div>
 
       {/* Iframe Editor */}
-      <div className="h-[calc(100vh-64px)] overflow-hidden">
+      <div className="h-[calc(100vh-64px)] overflow-hidden relative bg-gray-50">
+        {/* Loading overlay - shows until editor is fully ready with user's edits */}
+        {!isEditorReady && (
+          <div className="absolute inset-0 bg-gray-50 flex items-center justify-center z-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
+              <p className="text-sm text-gray-600 font-medium">Loading your catalogue...</p>
+            </div>
+          </div>
+        )}
+
+        {/* IframeEditor - hidden until fully loaded with user's edits */}
         {liveData && (
-          <IframeEditor
-            template={getTemplateById(templateId) || HtmlTemplates[0]}
-            initialData={liveData}
-            onLiveDataChange={setLiveData}
-            initialStyleMutations={styleMutations}
-            onStyleMutationsChange={setStyleMutations}
-            registerIframeGetter={(getter) => { iframeGetterRef.current = getter }}
-            previewMode={isPreviewMode}
-            onTemplateIdChange={(id) => setTemplateId(id)}
-            registerEditorControls={(controls) => {
-              editorControlsRef.current = controls
-              const pct = Math.round((controls.getZoom?.() || 1) * 100)
-              setToolbarZoom(pct)
-              setGridOn(Boolean(controls.getGrid?.()))
-              // Sync page index/count from editor when controls become available
-              const idx = controls.getCurrentPageIndex?.()
-              if (typeof idx === 'number') setPageIndex(idx)
-              const pages = controls.getPages?.()
-              if (Array.isArray(pages)) setPageCount(pages.length)
-            }}
-          />
+          <div
+            className="h-full transition-opacity duration-300 ease-in-out"
+            style={{ opacity: isEditorReady ? 1 : 0 }}
+          >
+            <IframeEditor
+              template={getTemplateById(templateId) || HtmlTemplates[0]}
+              initialData={liveData}
+              onLiveDataChange={setLiveData}
+              initialStyleMutations={styleMutations}
+              onStyleMutationsChange={setStyleMutations}
+              registerIframeGetter={(getter) => { iframeGetterRef.current = getter }}
+              previewMode={isPreviewMode}
+              onTemplateIdChange={(id) => setTemplateId(id)}
+              catalogueId={catalogueId as string}
+              autoSave={true}
+              autoSaveInterval={10000} // 10 seconds after last change
+              onSaveSuccess={() => {
+                // Don't show toast for auto-save, status indicator is enough
+              }}
+              onSaveError={(error) => {
+                toast.error(`Auto-save failed: ${error}`)
+              }}
+              registerEditorControls={(controls) => {
+                editorControlsRef.current = controls
+                const pct = Math.round((controls.getZoom?.() || 1) * 100)
+                setToolbarZoom(pct)
+                setGridOn(Boolean(controls.getGrid?.()))
+                // Sync page index/count from editor when controls become available
+                const idx = controls.getCurrentPageIndex?.()
+                if (typeof idx === 'number') setPageIndex(idx)
+                const pages = controls.getPages?.()
+                if (Array.isArray(pages)) setPageCount(pages.length)
+              }}
+              onIframeReady={() => {
+                // Mark editor as ready once iframe is fully loaded with user's saved edits
+                setIsEditorReady(true)
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -378,42 +468,32 @@ export default function CataloguePreviewPage() {
               <Button variant="outline" className="flex  items-center gap-2" onClick={() => editorControlsRef.current?.exportJSON?.()}>
                 <FileJson className="w-4 h-4" /> Export JSON
               </Button>
-              <Button variant="outline" className="flex items-center gap-2" onClick={() => editorControlsRef.current?.print?.()}>
-                <Printer className="w-4 h-4" /> Print / PDF
-              </Button>
-              <Button variant="outline" className="flex items-center gap-2" onClick={async () => {
-                try {
-                  const iframe = iframeGetterRef.current?.()
-                  if (!iframe || !iframe.contentDocument) { toast.error('Preview not ready'); return }
-                  const w = iframe.clientWidth || 1200
-                  const h = iframe.clientHeight || 800
-                  const html = iframe.contentDocument.documentElement.outerHTML
-                  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%">${html}</foreignObject></svg>`
-                  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' })
-                  const url = URL.createObjectURL(blob)
-                  const img = new Image()
-                  img.onload = () => {
-                    const canvas = document.createElement('canvas')
-                    canvas.width = w
-                    canvas.height = h
-                    const ctx = canvas.getContext('2d')
-                    if (!ctx) { URL.revokeObjectURL(url); toast.error('Canvas error'); return }
-                    ctx.drawImage(img, 0, 0)
-                    canvas.toBlob((b) => {
-                      if (!b) { URL.revokeObjectURL(url); toast.error('PNG export failed'); return }
-                      const a = document.createElement('a')
-                      a.href = URL.createObjectURL(b)
-                      a.download = 'catalogue.png'
-                      a.click()
-                      URL.revokeObjectURL(url)
-                    }, 'image/png')
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={async () => {
+                  try {
+                    await editorControlsRef.current?.exportPDF?.()
+                    toast.success('PDF exported successfully')
+                  } catch (error) {
+                    toast.error('Failed to export PDF')
                   }
-                  img.crossOrigin = 'anonymous'
-                  img.src = url
-                } catch (e) {
-                  toast.error('PNG export failed')
-                }
-              }}>
+                }}
+              >
+                <Printer className="w-4 h-4" /> Export PDF
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={async () => {
+                  try {
+                    await editorControlsRef.current?.exportPNG?.()
+                    toast.success('PNG exported successfully')
+                  } catch (error) {
+                    toast.error('Failed to export PNG')
+                  }
+                }}
+              >
                 <Share className="w-4 h-4" /> Export PNG
               </Button>
             </div>
@@ -429,9 +509,9 @@ export default function CataloguePreviewPage() {
             <div className="space-y-2">
               <div className="text-sm font-medium">Share to</div>
               <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,'_blank')}>Twitter</Button>
-                <Button variant="secondary" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`,'_blank')}>LinkedIn</Button>
-                <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`,'_blank')}>WhatsApp</Button>
+                <Button variant="secondary" onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')}>Twitter</Button>
+                <Button variant="secondary" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`, '_blank')}>LinkedIn</Button>
+                <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')}>WhatsApp</Button>
               </div>
             </div>
           </div>

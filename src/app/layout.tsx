@@ -64,7 +64,6 @@ export default function RootLayout({
       <body className={`${inter.variable} ${roboto.variable} ${openSans.variable} ${lato.variable} ${montserrat.variable} ${poppins.variable} ${playfairDisplay.variable} ${merriweather.variable} ${inter.className}`}>
         <Providers>
           {children}
-          <Toaster />
           <SonnerToaster position="top-right" richColors />
         </Providers>
       </body>

@@ -4,23 +4,25 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FileText, Layers as LayersIcon, Shapes, Type, Upload, Palette, Star, ChevronRight, ChevronDown, ChevronLeft, Trash2, Copy, ChevronUp } from 'lucide-react'
 import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
- export type IframePage = {
-    id: string
-    name: string
-    html: string
-    css?: string
-    createdAt?: Date
-    updatedAt?: Date
-  }
+export type IframePage = {
+  id: string
+  name: string
+  html: string
+  css?: string
+  createdAt?: Date
+  updatedAt?: Date
+}
 
- export type PrebuiltTemplate = {
-    id: string
-    name: string
-    engine: 'mustache' | 'handlebars'
-    pages: IframePage[]
-    sharedCss?: string
-  }
+export type PrebuiltTemplate = {
+  id: string
+  name: string
+  engine: 'mustache' | 'handlebars'
+  pages: IframePage[]
+  sharedCss?: string
+}
 
 type LiveData = Record<string, any>
 // Sidebar palette element types for drag-and-drop insertion
@@ -39,18 +41,25 @@ type PaletteElementType =
   | 'gallery'
   | 'product-card'
 
-  interface IframeEditorProps {
-    template: PrebuiltTemplate
-    initialData?: LiveData
-    onLiveDataChange?: (data: LiveData) => void
+interface IframeEditorProps {
+  template: PrebuiltTemplate
+  initialData?: LiveData
+  onLiveDataChange?: (data: LiveData) => void
   // Optional style mutation persistence
   initialStyleMutations?: Record<string, Partial<CSSStyleDeclaration>>
   onStyleMutationsChange?: (mutations: Record<string, Partial<CSSStyleDeclaration>>) => void
   // Allow parent to grab iframe element for export/print
-    registerIframeGetter?: (getter: () => HTMLIFrameElement | null) => void
+  registerIframeGetter?: (getter: () => HTMLIFrameElement | null) => void
   // Preview mode: disable interactions and hide sidebars when true
-    previewMode?: boolean
-    onTemplateIdChange?: (id: string) => void
+  previewMode?: boolean
+  onTemplateIdChange?: (id: string) => void
+  // Database persistence
+  catalogueId?: string
+  autoSave?: boolean
+  autoSaveInterval?: number // in milliseconds, default 5000
+  onSaveSuccess?: () => void
+  onSaveError?: (error: string) => void
+  onIframeReady?: () => void // Callback when iframe is fully loaded with content
   // Optional: expose editor controls to parent toolbar
   registerEditorControls?: (controls: {
     undo: () => void
@@ -67,12 +76,16 @@ type PaletteElementType =
     print: () => void
     exportHTML: () => void
     exportJSON: () => void
+    exportPDF: () => Promise<void>
+    exportPNG: () => Promise<void>
     // Page navigation and info
     getPages: () => IframePage[]
     getCurrentPageIndex: () => number
     setCurrentPageIndex: (i: number) => void
     goPrev: () => void
     goNext: () => void
+    // Manual save function
+    saveToDatabase: () => Promise<void>
   }) => void
 }
 
@@ -83,10 +96,26 @@ type PaletteElementType =
  * - Live data inputs bound to Mustache placeholders
  * - Render pages inside a sandboxed iframe via srcdoc
  */
-export default function IframeEditor({ template, initialData, onLiveDataChange, initialStyleMutations, onStyleMutationsChange, registerIframeGetter, previewMode = false, onTemplateIdChange, registerEditorControls }: IframeEditorProps) {
+export default function IframeEditor({
+  template,
+  initialData,
+  onLiveDataChange,
+  initialStyleMutations,
+  onStyleMutationsChange,
+  registerIframeGetter,
+  previewMode = false,
+  onTemplateIdChange,
+  catalogueId,
+  autoSave = true,
+  autoSaveInterval = 5000,
+  onSaveSuccess,
+  onSaveError,
+  onIframeReady,
+  registerEditorControls
+}: IframeEditorProps) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
-  const [activeLeftTab, setActiveLeftTab] = useState<'pages'|'layers'|'elements'|'text'|'assets'|'templates'|'icons'>('pages')
-  const [rightTab, setRightTab] = useState<'content'|'style'>('style')
+  const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'templates' | 'icons'>('pages')
+  const [rightTab, setRightTab] = useState<'content' | 'style'>('style')
   const [liveData, setLiveData] = useState<LiveData>(initialData || {
     product: {
       title: 'Sample Product',
@@ -104,7 +133,7 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
   const stageContainerRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
   const rightSidebarRef = useRef<HTMLDivElement>(null)
-  
+
   // Enable trackpad pinch-to-zoom when hovering over the canvas area
   useEffect(() => {
     const container = stageContainerRef.current
@@ -143,6 +172,250 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
   const [pages, setPages] = useState<IframePage[]>(template.pages)
   const currentPage = pages[currentPageIndex]
 
+  // Use ref to store the latest pages without causing re-renders
+  const pagesRef = useRef<IframePage[]>(pages)
+  useEffect(() => {
+    pagesRef.current = pages
+  }, [pages])
+
+  // Database persistence
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Track if iframe content has been modified (DOM changes)
+  const [isDirty, setIsDirty] = useState(false)
+  const iframeContentRef = useRef<string>('') // Store the actual HTML from iframe
+
+  // Save status: 'saved' | 'saving' | 'unsaved' | 'error'
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved')
+  const lastChangeTimeRef = useRef<number>(Date.now())
+
+  // Function to capture current iframe HTML (including all user edits)
+  const captureIframeHTML = (): string => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc) return ''
+
+    // Clone the body to avoid modifying the live DOM
+    const bodyClone = doc.body.cloneNode(true) as HTMLElement
+
+    // Remove editor-specific attributes that shouldn't be saved
+    bodyClone.querySelectorAll('[data-editor-selected], [data-editor-hover]').forEach(el => {
+      el.removeAttribute('data-editor-selected')
+      el.removeAttribute('data-editor-hover')
+      el.removeAttribute('contenteditable')
+    })
+
+    // Remove editor-specific style tags
+    const editorStyles = bodyClone.querySelectorAll('#editor-interaction-styles, #editor-hover-styles')
+    editorStyles.forEach(style => style.remove())
+
+    return bodyClone.innerHTML
+  }
+
+  // Function to extract CSS from iframe
+  const captureIframeCSS = (): string => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc) return ''
+
+    const styles: string[] = []
+    doc.querySelectorAll('style:not(#editor-interaction-styles):not(#editor-hover-styles)').forEach(styleEl => {
+      styles.push(styleEl.textContent || '')
+    })
+
+    return styles.join('\n')
+  }
+
+  // 🔥 NEW: Assign unique data-id to elements that don't have one
+  const assignDataIds = () => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc) return
+
+    let counter = 0
+    const walk = (el: Element) => {
+      // Skip script, style, svg elements
+      if (['SCRIPT', 'STYLE', 'SVG', 'PATH'].includes(el.tagName)) return
+
+      // Assign ID if not present
+      if (!el.getAttribute('data-id')) {
+        el.setAttribute('data-id', `el-${Date.now()}-${counter++}`)
+      }
+
+      // Also mark as editable if it's a text container
+      const isTextElement = ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'SPAN', 'A', 'LI', 'TD', 'TH', 'LABEL', 'BUTTON'].includes(el.tagName)
+      if (isTextElement && !el.querySelector('img, svg')) {
+        el.setAttribute('data-editable', 'true')
+      }
+
+      // Recurse to children
+      Array.from(el.children).forEach(walk)
+    }
+
+    walk(doc.body)
+  }
+
+  // Save function to persist data to database
+  const saveToDatabase = async () => {
+    if (!catalogueId || isSaving) return
+
+    setIsSaving(true)
+    setSaveStatus('saving')
+
+    try {
+      // Capture the ACTUAL HTML from iframe (with all user edits)
+      const capturedHTML = captureIframeHTML()
+      const capturedCSS = captureIframeCSS()
+
+      console.log('💾 Saving to database...')
+      console.log('📄 Captured HTML length:', capturedHTML.length, 'chars')
+      console.log('🎨 Style mutations:', Object.keys(styleMutations).length, 'elements')
+      console.log('📊 Live data keys:', Object.keys(liveData))
+
+      // Update the current page with captured HTML (use ref to avoid re-render)
+      const updatedPages = pagesRef.current.map((page, idx) => {
+        if (idx === currentPageIndex) {
+          return {
+            ...page,
+            html: capturedHTML,
+            css: capturedCSS,
+            updatedAt: new Date()
+          }
+        }
+        return page
+      })
+
+      const editorState = {
+        liveData,
+        styleMutations,
+        templateId: template.id,
+        pages: updatedPages, // Save updated HTML, not original template
+        currentPageIndex,
+        userZoom,
+        showGrid,
+        lastSaved: new Date().toISOString()
+      }
+
+      const response = await fetch(`/api/catalogues/${catalogueId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          settings: {
+            iframeEditor: editorState
+          }
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save editor state')
+      }
+
+      // ✅ UPDATE: Only update pagesRef, NOT pages state (prevents re-render/blink)
+      pagesRef.current = updatedPages
+
+      setLastSaved(new Date())
+      setIsDirty(false)
+      setSaveStatus('saved')
+      onSaveSuccess?.()
+
+      console.log('✅ Save successful!')
+    } catch (error) {
+      console.error('❌ Error saving editor state:', error)
+      setSaveStatus('error')
+      onSaveError?.(error instanceof Error ? error.message : 'Failed to save')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Improved auto-save with debouncing - only save after user stops editing
+  const scheduleAutoSave = () => {
+    if (!autoSave || !catalogueId || previewMode) return
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+
+    // Mark as unsaved
+    setSaveStatus('unsaved')
+    lastChangeTimeRef.current = Date.now()
+
+    // Schedule save after inactivity period
+    saveTimeoutRef.current = setTimeout(() => {
+      // Only save if there have been no changes for the full interval
+      const timeSinceLastChange = Date.now() - lastChangeTimeRef.current
+      if (timeSinceLastChange >= autoSaveInterval) {
+        saveToDatabase()
+      }
+    }, autoSaveInterval)
+  }
+
+  // Load initial data from database
+  useEffect(() => {
+    const loadInitialData = async () => {
+      if (!catalogueId) return
+
+      try {
+        const response = await fetch(`/api/catalogues/${catalogueId}`)
+        if (!response.ok) return
+
+        const data = await response.json()
+        const iframeEditorSettings = data.catalogue?.settings?.iframeEditor
+
+        if (iframeEditorSettings) {
+          // Load saved editor state
+          if (iframeEditorSettings.liveData && !initialData) {
+            setLiveData(iframeEditorSettings.liveData)
+          }
+          if (iframeEditorSettings.styleMutations && !initialStyleMutations) {
+            setStyleMutations(iframeEditorSettings.styleMutations)
+          }
+          if (iframeEditorSettings.pages) {
+            setPages(iframeEditorSettings.pages)
+            pagesRef.current = iframeEditorSettings.pages // Keep ref in sync
+          }
+          if (typeof iframeEditorSettings.currentPageIndex === 'number') {
+            setCurrentPageIndex(iframeEditorSettings.currentPageIndex)
+          }
+          if (typeof iframeEditorSettings.userZoom === 'number') {
+            setUserZoom(iframeEditorSettings.userZoom)
+          }
+          if (typeof iframeEditorSettings.showGrid === 'boolean') {
+            setShowGrid(iframeEditorSettings.showGrid)
+          }
+          if (iframeEditorSettings.lastSaved) {
+            setLastSaved(new Date(iframeEditorSettings.lastSaved))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading initial editor data:', error)
+      }
+    }
+
+    loadInitialData()
+  }, [catalogueId]) // Only run when catalogueId changes
+
+  // Trigger auto-save when data changes (debounced)
+  useEffect(() => {
+    if (!previewMode && isDirty) {
+      scheduleAutoSave()
+    }
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [isDirty, liveData, styleMutations, currentPageIndex])
+
+  // Separate effect for when user actively changes these settings
+  useEffect(() => {
+    if (!previewMode && (userZoom !== 1 || showGrid !== false)) {
+      scheduleAutoSave()
+    }
+  }, [userZoom, showGrid])
+
   // Compile current page with Mustache
   const compiledHtml = useMemo(() => {
     const cssBlock = `<style>${template?.sharedCss || ''}\n${currentPage?.css || ''}</style>`
@@ -157,24 +430,77 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
     return `${cssBlock}\n${rendered}`
   }, [template, currentPage, liveData])
 
+  // Track the last rendered HTML to prevent unnecessary iframe reloads
+  const lastRenderedHtmlRef = useRef<string>('')
+
   useEffect(() => {
     if (!iframeRef.current) return
+
+    // ✅ OPTIMIZATION: Only update srcdoc if HTML actually changed
+    // This prevents blinking during auto-save when HTML hasn't changed
+    if (lastRenderedHtmlRef.current === compiledHtml) {
+      console.log('⏭️ Skipping iframe update - HTML unchanged')
+      return
+    }
+
+    lastRenderedHtmlRef.current = compiledHtml
+    console.log('🔄 Updating iframe with new HTML')
+
     // Write to iframe via srcdoc for sandboxed DOM
     iframeRef.current.srcdoc = compiledHtml
     // Reapply style mutations when content updates
     const applyMutations = () => {
       const doc = iframeRef.current?.contentDocument
       if (!doc) return
+
+      // 🔥 Step 1: Assign data-id attributes to all elements
+      assignDataIds()
+
+      // Step 2: Apply saved style mutations
       Object.entries(styleMutations).forEach(([path, styles]) => {
         const el = resolvePathToElement(doc, path)
         if (el) Object.assign((el as HTMLElement).style, styles)
       })
-      // Mark ready for PDF if needed
+
+      // Step 3: Mark ready for PDF if needed
       doc.body.setAttribute('data-pdf-ready', 'true')
+
+      // 🔥 Step 4: Set up MutationObserver to track DOM changes
+      const observer = new MutationObserver((mutations) => {
+        // Filter out our own editor changes (data-editor-* attributes)
+        const hasRealChanges = mutations.some(mutation => {
+          if (mutation.type === 'attributes') {
+            const attrName = mutation.attributeName
+            return attrName && !attrName.startsWith('data-editor-') && attrName !== 'contenteditable'
+          }
+          return true // characterData or childList changes are real
+        })
+
+        if (hasRealChanges) {
+          setIsDirty(true)
+        }
+      })
+
+      // Observe the entire iframe body for changes
+      observer.observe(doc.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributeOldValue: true,
+        characterDataOldValue: true
+      })
+
+      // 🔥 Step 5: Notify parent that iframe is fully loaded and ready
+      onIframeReady?.()
+
+      // Store observer cleanup
+      return () => observer.disconnect()
     }
     // Wait a tick for DOM to be ready
-    setTimeout(applyMutations, 50)
-  }, [compiledHtml])
+    const timeoutId = setTimeout(applyMutations, 50)
+    return () => clearTimeout(timeoutId)
+  }, [compiledHtml, styleMutations])
 
   // Inject interaction styles (disable outlines; we render overlay rectangles)
   const ensureInteractionStyleTag = () => {
@@ -268,8 +594,8 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
         setPastMutations(p => [...p, styleMutations])
         setStyleMutations(next)
       },
-      zoomIn: () => setUserZoom(z => Math.min(2, Number((z + 0.1).toFixed(2)))) ,
-      zoomOut: () => setUserZoom(z => Math.max(0.5, Number((z - 0.1).toFixed(2)))) ,
+      zoomIn: () => setUserZoom(z => Math.min(2, Number((z + 0.1).toFixed(2)))),
+      zoomOut: () => setUserZoom(z => Math.max(0.5, Number((z - 0.1).toFixed(2)))),
       setZoom: (z: number) => setUserZoom(Math.max(0.5, Math.min(2, z))),
       getZoom: () => userZoom,
       toggleGrid: () => setShowGrid(g => !g),
@@ -278,19 +604,26 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
       hasUndo: () => pastMutations.length > 0,
       hasRedo: () => futureMutations.length > 0,
       print: () => {
-        try { iframeRef.current?.contentWindow?.print?.() } catch {}
+        try { iframeRef.current?.contentWindow?.print?.() } catch { }
       },
       exportHTML: () => exportCurrentPageAsHTML(),
       exportJSON: () => exportEditorStateAsJSON(),
+      exportPDF: () => exportAllPagesToPDF(),
+      exportPNG: () => exportCurrentPageAsPNG(),
       // Pages
-      getPages: () => pages,
+      getPages: () => pagesRef.current, // Use ref to get latest pages without re-render
       getCurrentPageIndex: () => currentPageIndex,
       setCurrentPageIndex: (i: number) => setCurrentPageIndex(Math.max(0, Math.min(pages.length - 1, i))),
       goPrev: () => setCurrentPageIndex(i => Math.max(0, i - 1)),
       goNext: () => setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1)),
+      // Database persistence
+      saveToDatabase: saveToDatabase,
+      getSaveStatus: () => saveStatus,
+      getLastSaved: () => lastSaved,
+      isDirty: () => isDirty,
     }
     registerEditorControls(controls)
-  }, [registerEditorControls, userZoom, styleMutations, pastMutations, futureMutations, showGrid, pages, currentPageIndex])
+  }, [registerEditorControls, userZoom, styleMutations, pastMutations, futureMutations, showGrid, pages, currentPageIndex, saveToDatabase, saveStatus, lastSaved, isDirty])
 
   // Selection handling inside iframe (disabled in preview mode)
   useEffect(() => {
@@ -328,7 +661,7 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
       target.setAttribute('data-editor-selected', 'true')
       // Always enable inline content editing on selection
       target.setAttribute('contenteditable', 'true')
-      try { target.focus({ preventScroll: true }) } catch {}
+      try { target.focus({ preventScroll: true }) } catch { }
       setSelectedPath(path)
       setSelectedTag(target.tagName.toLowerCase())
       setSelectedContent(target.textContent || '')
@@ -399,7 +732,7 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
     const editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true'
     if (!editable) el.setAttribute('contenteditable', 'true')
     el.setAttribute('data-editor-selected', 'true')
-    try { (el as HTMLElement).focus({ preventScroll: true }) } catch {}
+    try { (el as HTMLElement).focus({ preventScroll: true }) } catch { }
     setSelectedTag(el.tagName.toLowerCase())
     setSelectedContent((el as HTMLElement).textContent || '')
     setIsContentEditable(true)
@@ -453,7 +786,7 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
     lastAppliedPathsRef.current.forEach((path) => {
       const el = resolvePathToElement(doc, path)
       if (el && (el as HTMLElement).style) {
-        ;(el as HTMLElement).removeAttribute('style')
+        ; (el as HTMLElement).removeAttribute('style')
       }
     })
     // Apply new mutations
@@ -578,6 +911,109 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
     downloadFile(`${template.name}-state.json`, JSON.stringify(data, null, 2), 'application/json')
   }
 
+  // Export all pages to a single PDF
+  const exportAllPagesToPDF = async () => {
+    try {
+      const iframe = iframeRef.current
+      if (!iframe || !iframe.contentDocument) {
+        throw new Error('Iframe not ready')
+      }
+
+      let pdf: jsPDF | null = null
+      const totalPages = pages.length
+      const originalPageIndex = currentPageIndex
+
+      for (let i = 0; i < totalPages; i++) {
+        // Navigate to page
+        setCurrentPageIndex(i)
+
+        // Wait for page to render
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        const doc = iframe.contentDocument
+        if (!doc || !doc.body) continue
+
+        // Capture the page as canvas
+        const canvas = await html2canvas(doc.body, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        })
+
+        const imgData = canvas.toDataURL('image/png')
+
+        // Get canvas dimensions
+        const canvasWidth = canvas.width / 2 // Divide by scale factor
+        const canvasHeight = canvas.height / 2
+
+        // Initialize PDF with first page dimensions
+        if (i === 0) {
+          pdf = new jsPDF({
+            orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [canvasWidth, canvasHeight]
+          })
+        } else {
+          // Add new page with same dimensions
+          pdf!.addPage([canvasWidth, canvasHeight])
+        }
+
+        // Add image to fill the entire page
+        pdf!.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight)
+      }
+
+      // Restore original page
+      setCurrentPageIndex(originalPageIndex)
+
+      // Download the PDF
+      if (pdf) {
+        pdf.save(`${template.name}-catalogue.pdf`)
+      }
+    } catch (error) {
+      console.error('PDF export failed:', error)
+      throw error
+    }
+  }
+
+  // Export current page as PNG
+  const exportCurrentPageAsPNG = async () => {
+    try {
+      const iframe = iframeRef.current
+      if (!iframe || !iframe.contentDocument) {
+        throw new Error('Iframe not ready')
+      }
+
+      const doc = iframe.contentDocument
+      if (!doc || !doc.body) {
+        throw new Error('Document not ready')
+      }
+
+      const canvas = await html2canvas(doc.body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          throw new Error('Failed to create image blob')
+        }
+
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${template.name}-${currentPage?.name || 'page'}.png`
+        a.click()
+        URL.revokeObjectURL(url)
+      }, 'image/png')
+    } catch (error) {
+      console.error('PNG export failed:', error)
+      throw error
+    }
+  }
+
   // Utilities: element path by child index
   function computeElementPath(doc: Document, el: Element): string {
     const path: number[] = []
@@ -633,8 +1069,8 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
       }
       case 'input': {
         el = doc.createElement('input') as HTMLInputElement
-        ;(el as HTMLInputElement).type = 'text'
-        ;(el as HTMLInputElement).placeholder = 'Enter text'
+          ; (el as HTMLInputElement).type = 'text'
+          ; (el as HTMLInputElement).placeholder = 'Enter text'
         el.style.padding = '6px 8px'
         el.style.border = '1px solid #d1d5db'
         el.style.borderRadius = '6px'
@@ -643,10 +1079,10 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
       }
       case 'image': {
         el = doc.createElement('img') as HTMLImageElement
-        ;(el as HTMLImageElement).src = liveData.product?.image || 'https://via.placeholder.com/150'
+          ; (el as HTMLImageElement).src = liveData.product?.image || 'https://via.placeholder.com/150'
         el.style.maxWidth = '100%'
         el.style.display = 'block'
-        ;(el as HTMLImageElement).alt = 'Image'
+          ; (el as HTMLImageElement).alt = 'Image'
         break
       }
       case 'icon': {
@@ -675,12 +1111,12 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
         el.style.alignItems = 'stretch'
         const col1 = doc.createElement('div')
         const col2 = doc.createElement('div')
-        ;[col1, col2].forEach((c, i) => {
-          c.style.flex = '1'
-          c.style.border = '1px dashed #d1d5db'
-          c.style.padding = '12px'
-          c.textContent = `Column ${i + 1}`
-        })
+          ;[col1, col2].forEach((c, i) => {
+            c.style.flex = '1'
+            c.style.border = '1px dashed #d1d5db'
+            c.style.padding = '12px'
+            c.textContent = `Column ${i + 1}`
+          })
         el.appendChild(col1)
         el.appendChild(col2)
         break
@@ -690,7 +1126,7 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
         el.style.display = 'flex'
         el.style.gap = '12px'
         el.style.alignItems = 'stretch'
-        const cols = [0,1,2].map(() => doc.createElement('div'))
+        const cols = [0, 1, 2].map(() => doc.createElement('div'))
         cols.forEach((c, i) => {
           c.style.flex = '1'
           c.style.border = '1px dashed #d1d5db'
@@ -858,162 +1294,161 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
     <div className="flex h-[calc(100vh-64px)] overflow-hidden">
       {/* Left Sidebar: Icon nav + panel */}
       {!previewMode && (
-      <div className={`flex ${activeLeftTab ? 'w-80' : 'w-16'} transition-all`}>
-        {/* Icon column */}
-        <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3">
-          {([
-            { id: 'pages', name: 'Pages', icon: <FileText className="w-6 h-6" /> },
-            { id: 'layers', name: 'Layers', icon: <LayersIcon className="w-6 h-6" /> },
-            { id: 'templates', name: 'Templates', icon: <Palette className="w-6 h-6" /> },
-            { id: 'elements', name: 'Elements', icon: <Shapes className="w-6 h-6" /> },
-            { id: 'icons', name: 'Icons', icon: <Star className="w-6 h-6" /> },
-            { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
-            { id: 'assets', name: 'Assets', icon: <Upload className="w-6 h-6" /> },
-          ] as const).map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveLeftTab(prev => (prev === (tab.id as any) ? null : (tab.id as any)))}
-              className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg transition-all duration-200 group relative`}
-              title={tab.name}
-            >
-              <div className={`p-2 rounded-xl ${
-                activeLeftTab === (tab.id as any)
-                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
-              }`}>
-                {tab.icon}
-              </div>
-              <span className="text-[11px] font-medium leading-tight text-center">{tab.name}</span>
-            </button>
-          ))}
-        </div>
-        {/* Panel */}
-        {activeLeftTab && !selectedPath && (
-        <div className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
-          {activeLeftTab === 'pages' && (
-            <div className="flex flex-col h-full bg-white">
-              {/* Header */}
-              <div className="p-3 border-b border-gray-200 flex items-center justify-between">
-                <div className="font-medium text-sm">Pages ({pages.length})</div>
-                <button
-                  onClick={addBlankPage}
-                  className="px-2 py-1 text-xs rounded bg-white border border-gray-300 hover:bg-gray-50"
-                  title="Add Page"
-                >
-                  +
-                </button>
-              </div>
+        <div className={`flex ${activeLeftTab ? 'w-80' : 'w-16'} transition-all`}>
+          {/* Icon column */}
+          <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3">
+            {([
+              { id: 'pages', name: 'Pages', icon: <FileText className="w-6 h-6" /> },
+              { id: 'layers', name: 'Layers', icon: <LayersIcon className="w-6 h-6" /> },
+              { id: 'templates', name: 'Templates', icon: <Palette className="w-6 h-6" /> },
+              { id: 'elements', name: 'Elements', icon: <Shapes className="w-6 h-6" /> },
+              { id: 'icons', name: 'Icons', icon: <Star className="w-6 h-6" /> },
+              { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
+              { id: 'assets', name: 'Assets', icon: <Upload className="w-6 h-6" /> },
+            ] as const).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveLeftTab(prev => (prev === (tab.id as any) ? null : (tab.id as any)))}
+                className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg transition-all duration-200 group relative`}
+                title={tab.name}
+              >
+                <div className={`p-2 rounded-xl ${activeLeftTab === (tab.id as any)
+                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                  }`}>
+                  {tab.icon}
+                </div>
+                <span className="text-[11px] font-medium leading-tight text-center">{tab.name}</span>
+              </button>
+            ))}
+          </div>
+          {/* Panel */}
+          {activeLeftTab && !selectedPath && (
+            <div className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
+              {activeLeftTab === 'pages' && (
+                <div className="flex flex-col h-full bg-white">
+                  {/* Header */}
+                  <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                    <div className="font-medium text-sm">Pages ({pages.length})</div>
+                    <button
+                      onClick={addBlankPage}
+                      className="px-2 py-1 text-xs rounded bg-white border border-gray-300 hover:bg-gray-50"
+                      title="Add Page"
+                    >
+                      +
+                    </button>
+                  </div>
 
-              {/* Pages list */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                {pages.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    className={`group border-2 rounded-lg p-2 transition-all ${idx === currentPageIndex ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
-                    onClick={() => setCurrentPageIndex(idx)}
-                  >
-                    {/* Thumbnail placeholder */}
-                    <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
+                  {/* Pages list */}
+                  <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    {pages.map((p, idx) => (
+                      <div
+                        key={p.id}
+                        className={`group border-2 rounded-lg p-2 transition-all ${idx === currentPageIndex ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                        onClick={() => setCurrentPageIndex(idx)}
+                      >
+                        {/* Thumbnail placeholder */}
+                        <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
 
-                    {/* Name and actions */}
-                    <div className="flex items-center justify-between">
-                      <div className="text-xs font-medium text-gray-700 truncate">{p.name}</div>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
-                        <button
-                          className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-100"
-                          onClick={(e) => { e.stopPropagation(); duplicateCurrentPage() }}
-                        >
-                          Duplicate
-                        </button>
-                        {pages.length > 1 && (
-                          <button
-                            className="px-2 py-1 text-xs rounded border border-red-300 bg-white text-red-600 hover:bg-red-50"
-                            onClick={(e) => { e.stopPropagation(); deleteCurrentPage() }}
-                          >
-                            Delete
-                          </button>
-                        )}
+                        {/* Name and actions */}
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-medium text-gray-700 truncate">{p.name}</div>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                            <button
+                              className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-100"
+                              onClick={(e) => { e.stopPropagation(); duplicateCurrentPage() }}
+                            >
+                              Duplicate
+                            </button>
+                            {pages.length > 1 && (
+                              <button
+                                className="px-2 py-1 text-xs rounded border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                                onClick={(e) => { e.stopPropagation(); deleteCurrentPage() }}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Updated info */}
+                        <div className="mt-1 text-xs text-gray-500">
+                          {idx === currentPageIndex && (
+                            <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1" />
+                          )}
+                          Updated {(() => {
+                            const d = p.updatedAt instanceof Date ? p.updatedAt : (p.updatedAt ? new Date(p.updatedAt) : new Date())
+                            return d.toISOString().split('T')[0]
+                          })()}
+                        </div>
                       </div>
-                    </div>
+                    ))}
+                  </div>
 
-                    {/* Updated info */}
-                    <div className="mt-1 text-xs text-gray-500">
-                      {idx === currentPageIndex && (
-                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1" />
-                      )}
-                      Updated {(() => {
-                        const d = p.updatedAt instanceof Date ? p.updatedAt : (p.updatedAt ? new Date(p.updatedAt) : new Date())
-                        return d.toISOString().split('T')[0]
-                      })()}
+                  {/* Pager */}
+                  <div className="p-3 border-t border-gray-200 flex items-center justify-between text-xs">
+                    <span>Page {currentPageIndex + 1} of {pages.length}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className={`px-2 py-1  ${currentPageIndex === 0 ? 'text-gray-400' : ''}`}
+                        onClick={goPrev}
+                        disabled={currentPageIndex === 0}
+                        title="Previous"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        className={`px-2 py-1 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : ''}`}
+                        onClick={goNext}
+                        disabled={currentPageIndex === pages.length - 1}
+                        title="Next"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-
-              {/* Pager */}
-              <div className="p-3 border-t border-gray-200 flex items-center justify-between text-xs">
-                <span>Page {currentPageIndex + 1} of {pages.length}</span>
-                <div className="flex items-center gap-2">
-                  <button
-                    className={`px-2 py-1  ${currentPageIndex === 0 ? 'text-gray-400' : ''}`}
-                    onClick={goPrev}
-                    disabled={currentPageIndex === 0}
-                    title="Previous"
-                  >
-                    <ChevronLeft className="w-4 h-4" />   
-                  </button>
-                  <button
-                    className={`px-2 py-1 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : ''}`}
-                    onClick={goNext}
-                    disabled={currentPageIndex === pages.length - 1}
-                    title="Next"
-                  >
-                  <ChevronRight className="w-4 h-4" />
-                  </button>
                 </div>
-              </div>
+              )}
+              {activeLeftTab === 'layers' && (
+                <LayersPanel iframeRef={iframeRef} selectedPath={selectedPath} hoveredPath={hoveredPath} onSelectPath={(p) => { setSelectedPath(p); }} />
+              )}
+              {activeLeftTab === 'elements' && (
+                <ElementsPanel onAdd={(type) => addElement(type)} />
+              )}
+              {activeLeftTab === 'text' && (
+                <ElementsPanel onAdd={(type) => addElement(type)} onlyText />
+              )}
+              {activeLeftTab === 'templates' && (
+                <div className="p-3 space-y-3">
+                  <div className="font-semibold">Templates</div>
+                  <div className="text-xs text-gray-500">Select a template to apply</div>
+                  <ul className="space-y-2">
+                    {HtmlTemplates.map((t) => (
+                      <li key={t.id}>
+                        <button
+                          className={`w-full text-left px-3 py-2 rounded border transition-colors ${t.id === template.id ? 'bg-gray-100 border-gray-300' : 'hover:bg-gray-50'}`}
+                          onClick={() => onTemplateIdChange?.(t.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-800">{t.name}</span>
+                            {t.id === template.id && <span className="text-xs text-gray-500">Selected</span>}
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {activeLeftTab === 'icons' && (
+                <div className="p-3 text-sm text-gray-600">Icons library coming soon.</div>
+              )}
+
+              {activeLeftTab === 'assets' && (
+                <div className="p-3 text-sm text-gray-600">Assets manager coming soon.</div>
+              )}
             </div>
-          )}
-          {activeLeftTab === 'layers' && (
-            <LayersPanel iframeRef={iframeRef} selectedPath={selectedPath} hoveredPath={hoveredPath} onSelectPath={(p) => { setSelectedPath(p); }} />
-          )}
-          {activeLeftTab === 'elements' && (
-            <ElementsPanel onAdd={(type) => addElement(type)} />
-          )}
-          {activeLeftTab === 'text' && (
-            <ElementsPanel onAdd={(type) => addElement(type)} onlyText />
-          )}
-          {activeLeftTab === 'templates' && (
-            <div className="p-3 space-y-3">
-              <div className="font-semibold">Templates</div>
-              <div className="text-xs text-gray-500">Select a template to apply</div>
-              <ul className="space-y-2">
-                {HtmlTemplates.map((t) => (
-                  <li key={t.id}>
-                    <button
-                      className={`w-full text-left px-3 py-2 rounded border transition-colors ${t.id === template.id ? 'bg-gray-100 border-gray-300' : 'hover:bg-gray-50'}`}
-                      onClick={() => onTemplateIdChange?.(t.id)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-800">{t.name}</span>
-                        {t.id === template.id && <span className="text-xs text-gray-500">Selected</span>}
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {activeLeftTab === 'icons' && (
-            <div className="p-3 text-sm text-gray-600">Icons library coming soon.</div>
-          )}
-          
-          {activeLeftTab === 'assets' && (
-            <div className="p-3 text-sm text-gray-600">Assets manager coming soon.</div>
           )}
         </div>
-        )}
-      </div>
       )}
 
       {/* Center Canvas: Iframe (auto-fits to viewport) */}
@@ -1065,310 +1500,310 @@ export default function IframeEditor({ template, initialData, onLiveDataChange, 
 
       {/* Right Sidebar: Style editing */}
       {!previewMode && selectedPath && (
-      <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto">
-        {/* Tabs */}
-        <div className="flex items-center justify-between">
-          <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
-            <button
-              className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab==='content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setRightTab('content')}
-            >
-              <FileText size={12} />
-              Content
-            </button>
-            <button
-              className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab==='style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-              onClick={() => setRightTab('style')}
-            >
-              <Palette size={12} />
-              Style
-            </button>
+        <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto">
+          {/* Tabs */}
+          <div className="flex items-center justify-between">
+            <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
+              <button
+                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                onClick={() => setRightTab('content')}
+              >
+                <FileText size={12} />
+                Content
+              </button>
+              <button
+                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                onClick={() => setRightTab('style')}
+              >
+                <Palette size={12} />
+                Style
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Panel */}
-        <div className="space-y-3">
-          {selectedPath ? (
-            <>
+          {/* Panel */}
+          <div className="space-y-3">
+            {selectedPath ? (
+              <>
 
-              {rightTab === 'content' && (
-                <div className="space-y-3">
-                  {/* Content Editing */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
-                    <textarea
-                      className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
-                      value={selectedContent}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setSelectedContent(val)
-                        const doc = iframeRef.current?.contentDocument
-                        if (!doc || !selectedPath) return
-                        const el = resolvePathToElement(doc, selectedPath)
-                        if (el) (el as HTMLElement).textContent = val
-                      }}
-                    />
-                    <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
-                  </div>
-
-                  {/* Typography (in Content tab) */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                    <label className="block text-[11px] text-gray-600">Text Color</label>
-                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ color: e.target.value })} />
-                    <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                    <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
-                    <div className="grid grid-cols-2 gap-1.5 mt-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Font Family</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontFamily: e.target.value })}>
-                          <option value="Inter, system-ui, Arial">Inter</option>
-                          <option value="Arial, Helvetica, sans-serif">Arial</option>
-                          <option value="Georgia, serif">Georgia</option>
-                          <option value="Times New Roman, Times, serif">Times</option>
-                          <option value="Courier New, monospace">Courier</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Font Weight</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontWeight: e.target.value as any })}>
-                          <option>400</option>
-                          <option>500</option>
-                          <option>600</option>
-                          <option>700</option>
-                          <option>800</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Line Height</label>
-                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ lineHeight: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
-                      </div>
+                {rightTab === 'content' && (
+                  <div className="space-y-3">
+                    {/* Content Editing */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
+                      <textarea
+                        className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
+                        value={selectedContent}
+                        onChange={(e) => {
+                          const val = e.target.value
+                          setSelectedContent(val)
+                          const doc = iframeRef.current?.contentDocument
+                          if (!doc || !selectedPath) return
+                          const el = resolvePathToElement(doc, selectedPath)
+                          if (el) (el as HTMLElement).textContent = val
+                        }}
+                      />
+                      <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
                     </div>
-                  </div>
-                </div>
-              )}
 
-              {rightTab === 'style' && (
-                <>
-                  {/* Dimensions & Position */}
-                  <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Width</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e)=>updateSelectedStyles({ width: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Height</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e)=>updateSelectedStyles({ height: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Min Width</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e)=>updateSelectedStyles({ minWidth: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Min Height</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e)=>updateSelectedStyles({ minHeight: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Max Width</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e)=>updateSelectedStyles({ maxWidth: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Max Height</label>
-                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e)=>updateSelectedStyles({ maxHeight: e.target.value || '' })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Display</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ display: e.target.value as any })}>
-                          <option>block</option>
-                          <option>inline</option>
-                          <option>inline-block</option>
-                          <option>flex</option>
-                          <option>grid</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Position</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ position: e.target.value as any })}>
-                          <option>static</option>
-                          <option>relative</option>
-                          <option>absolute</option>
-                          <option>fixed</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Z-Index</label>
-                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ zIndex: e.target.value as any })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Overflow</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ overflow: e.target.value as any })}>
-                          <option>visible</option>
-                          <option>hidden</option>
-                          <option>scroll</option>
-                          <option>auto</option>
-                        </select>
-                      </div>
-                    </div>
-                    {/* Margin & Padding */}
-                    <div className="grid grid-cols-2 gap-1.5 mt-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
-                        <div className="grid grid-cols-4 gap-1">
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e)=>updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e)=>updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e)=>updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e)=>updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                    {/* Typography (in Content tab) */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                      <label className="block text-[11px] text-gray-600">Text Color</label>
+                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
+                      <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
+                      <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Font Family</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontFamily: e.target.value })}>
+                            <option value="Inter, system-ui, Arial">Inter</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="Times New Roman, Times, serif">Times</option>
+                            <option value="Courier New, monospace">Courier</option>
+                          </select>
                         </div>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
-                        <div className="grid grid-cols-4 gap-1">
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e)=>updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e)=>updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e)=>updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e)=>updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Font Weight</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}>
+                            <option>400</option>
+                            <option>500</option>
+                            <option>600</option>
+                            <option>700</option>
+                            <option>800</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Line Height</label>
+                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
                         </div>
                       </div>
                     </div>
                   </div>
+                )}
 
-                  {/* Background & Border */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
-                    <label className="block text-[11px] text-gray-600">Background Color</label>
-                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ backgroundColor: e.target.value })} />
-                    <div className="grid grid-cols-2 gap-1.5 mt-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Border Width</label>
-                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderWidth: `${e.target.value}px` })} />
+                {rightTab === 'style' && (
+                  <>
+                    {/* Dimensions & Position */}
+                    <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Width</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Height</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Min Width</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minWidth: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Min Height</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minHeight: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Max Width</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxWidth: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Max Height</label>
+                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxHeight: e.target.value || '' })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Display</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}>
+                            <option>block</option>
+                            <option>inline</option>
+                            <option>inline-block</option>
+                            <option>flex</option>
+                            <option>grid</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Position</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}>
+                            <option>static</option>
+                            <option>relative</option>
+                            <option>absolute</option>
+                            <option>fixed</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Z-Index</label>
+                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ zIndex: e.target.value as any })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Overflow</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ overflow: e.target.value as any })}>
+                            <option>visible</option>
+                            <option>hidden</option>
+                            <option>scroll</option>
+                            <option>auto</option>
+                          </select>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Border Radius</label>
-                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderRadius: `${e.target.value}px` })} />
+                      {/* Margin & Padding */}
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
+                          <div className="grid grid-cols-4 gap-1">
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
+                          <div className="grid grid-cols-4 gap-1">
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5 mt-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Border Color</label>
-                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ borderColor: e.target.value })} />
+
+                    {/* Background & Border */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
+                      <label className="block text-[11px] text-gray-600">Background Color</label>
+                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })} />
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Border Width</label>
+                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Border Radius</label>
+                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })} />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Border Style</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderStyle: e.target.value as any })}>
-                          <option>solid</option>
-                          <option>dashed</option>
-                          <option>dotted</option>
-                          <option>none</option>
-                        </select>
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Border Color</label>
+                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Border Style</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}>
+                            <option>solid</option>
+                            <option>dashed</option>
+                            <option>dotted</option>
+                            <option>none</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Typography */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                    <label className="block text-[11px] text-gray-600">Text Color</label>
-                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ color: e.target.value })} />
-                    <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                    <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
-                    <div className="grid grid-cols-2 gap-1.5 mt-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Font Family</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontFamily: e.target.value })}>
-                          <option value="Inter, system-ui, Arial">Inter</option>
-                          <option value="Arial, Helvetica, sans-serif">Arial</option>
-                          <option value="Georgia, serif">Georgia</option>
-                          <option value="Times New Roman, Times, serif">Times</option>
-                          <option value="Courier New, monospace">Courier</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Font Weight</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontWeight: e.target.value as any })}>
-                          <option>400</option>
-                          <option>500</option>
-                          <option>600</option>
-                          <option>700</option>
-                          <option>800</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Line Height</label>
-                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ lineHeight: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
+                    {/* Typography */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                      <label className="block text-[11px] text-gray-600">Text Color</label>
+                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
+                      <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
+                      <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Font Family</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontFamily: e.target.value })}>
+                            <option value="Inter, system-ui, Arial">Inter</option>
+                            <option value="Arial, Helvetica, sans-serif">Arial</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="Times New Roman, Times, serif">Times</option>
+                            <option value="Courier New, monospace">Courier</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Font Weight</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}>
+                            <option>400</option>
+                            <option>500</option>
+                            <option>600</option>
+                            <option>700</option>
+                            <option>800</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Line Height</label>
+                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Effects */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
-                    <label className="block text-[11px] text-gray-600">Box Shadow</label>
-                    <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0 4px 10px rgba(0,0,0,0.1)" onChange={(e)=>updateSelectedStyles({ boxShadow: e.target.value })} />
-                    {selectedTag === 'img' && (
-                      <div className="mt-2">
-                        <label className="block text-[11px] text-gray-600">Image Fit</label>
-                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ objectFit: e.target.value as any })}>
-                          <option>cover</option>
-                          <option>contain</option>
-                          <option>fill</option>
-                          <option>none</option>
-                          <option>scale-down</option>
-                        </select>
-                      </div>
-                    )}
-                  </div>
+                    {/* Effects */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
+                      <label className="block text-[11px] text-gray-600">Box Shadow</label>
+                      <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0 4px 10px rgba(0,0,0,0.1)" onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })} />
+                      {selectedTag === 'img' && (
+                        <div className="mt-2">
+                          <label className="block text-[11px] text-gray-600">Image Fit</label>
+                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}>
+                            <option>cover</option>
+                            <option>contain</option>
+                            <option>fill</option>
+                            <option>none</option>
+                            <option>scale-down</option>
+                          </select>
+                        </div>
+                      )}
+                    </div>
 
-                  {/* Hover Styles */}
-                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                    <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Hover Background</label>
-                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateHoverStyles({ backgroundColor: e.target.value })} />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-600">Hover Text</label>
-                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateHoverStyles({ color: e.target.value })} />
+                    {/* Hover Styles */}
+                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                      <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Hover Background</label>
+                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ backgroundColor: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-600">Hover Text</label>
+                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ color: e.target.value })} />
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab==='content' ? 'content' : 'style'}.</div>
-          )}
+                    <div className="flex gap-2">
+                      <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab === 'content' ? 'content' : 'style'}.</div>
+            )}
+          </div>
+
+
+
         </div>
-
-        
-        
-      </div>
       )}
     </div>
   )
 }
 
 // Layers Panel: simple DOM tree
-function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string)=>void }) {
+function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string) => void }) {
   type LayerNode = { label: string; path: string; children: LayerNode[] }
   const [tree, setTree] = useState<LayerNode[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [dragSource, setDragSource] = useState<string | null>(null)
-  const [dropTarget, setDropTarget] = useState<{ path: string; pos: 'before'|'inside'|'after' } | null>(null)
+  const [dropTarget, setDropTarget] = useState<{ path: string; pos: 'before' | 'inside' | 'after' } | null>(null)
 
   const isContainer = (el: Element) => {
     // Consider elements with children as containers
@@ -1436,7 +1871,7 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
     e.preventDefault()
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const y = e.clientY - rect.top
-    const pos = y < rect.height / 3 ? 'before' : y > rect.height * 2/3 ? 'after' : 'inside'
+    const pos = y < rect.height / 3 ? 'before' : y > rect.height * 2 / 3 ? 'after' : 'inside'
     setDropTarget({ path: targetPath, pos })
   }
   const handleDrop = (targetPath: string) => {
@@ -1522,7 +1957,7 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
 }
 
 // Elements Panel
-function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType)=>void, onlyText?: boolean }) {
+function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType) => void, onlyText?: boolean }) {
   return (
     <div>
       <div className="p-3 font-semibold">{onlyText ? 'Text' : 'Elements'}</div>
@@ -1549,7 +1984,7 @@ function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType)=
   )
 }
 
-function PaletteItem({ label, type, onAdd }: { label: string, type: PaletteElementType, onAdd: (t: PaletteElementType)=>void }) {
+function PaletteItem({ label, type, onAdd }: { label: string, type: PaletteElementType, onAdd: (t: PaletteElementType) => void }) {
   const onDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('application/x-editor-element', type)
     e.dataTransfer.setData('text/plain', type)

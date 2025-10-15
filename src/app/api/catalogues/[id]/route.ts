@@ -16,7 +16,7 @@ const updateCatalogueSchema = z.object({
   introImage: z.string().optional(),
   theme: z.string().optional(),
   isPublic: z.boolean().optional(),
-  
+
   // Company/Profile information (flattened)
   companyName: z.string().optional(),
   companyDescription: z.string().optional(),
@@ -28,30 +28,30 @@ const updateCatalogueSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  
+
   // Media assets (flattened)
   logoUrl: z.string().optional(),
   coverImageUrl: z.string().optional(),
-  
+
   // Contact page fields (flattened)
   contactImage: z.string().optional(),
   contactDescription: z.string().optional(),
   contactQuote: z.string().optional(),
   contactQuoteBy: z.string().optional(),
-  
+
   // Social media (flattened)
   facebook: z.string().optional(),
   twitter: z.string().optional(),
   instagram: z.string().optional(),
   linkedin: z.string().optional(),
-  
+
   // Template settings (flattened)
   showPrices: z.boolean().optional(),
   showCategories: z.boolean().optional(),
   allowSearch: z.boolean().optional(),
   showProductCodes: z.boolean().optional(),
   templateId: z.string().optional(),
-  
+
   // Legacy settings object for backward compatibility
   settings: z.object({
     // Style Customizations
@@ -156,6 +156,17 @@ const updateCatalogueSchema = z.object({
     }).optional(),
     // Editor template data
     editorData: z.string().optional(),
+    // IframeEditor persistence data
+    iframeEditor: z.object({
+      liveData: z.record(z.any()).optional(),
+      styleMutations: z.record(z.any()).optional(), // Changed from array to record (object)
+      templateId: z.string().optional(),
+      pages: z.array(z.any()).optional(),
+      currentPageIndex: z.number().optional(),
+      userZoom: z.number().optional(),
+      showGrid: z.boolean().optional(),
+      lastSaved: z.string().optional(),
+    }).optional(),
   }).optional(),
 })
 
@@ -364,17 +375,17 @@ export async function PUT(
     }
 
     const body = await request.json()
-    
+
     console.log('PUT request received for catalogue:', params.id)
     console.log('Request body:', body)
-    
+
     const validatedData = updateCatalogueSchema.parse(body)
     console.log('Validated data:', validatedData)
 
     console.log('Existing catalogue settings:', existingCatalogue.settings)
 
     // Extract flattened fields and reconstruct settings object
-    const { 
+    const {
       name, description, quote, tagline, year, introImage, theme, isPublic,
       // Extract flattened fields
       companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
@@ -386,7 +397,7 @@ export async function PUT(
 
     // Reconstruct settings object, merging with existing settings
     const existingSettings = existingCatalogue.settings as any || {}
-    
+
     // Build new settings object from flat fields (if provided) or legacy settings object
     const newSettingsFromFlat = {
       ...(showPrices !== undefined && { showPrices }),
@@ -394,7 +405,7 @@ export async function PUT(
       ...(allowSearch !== undefined && { allowSearch }),
       ...(showProductCodes !== undefined && { showProductCodes }),
       ...(templateId !== undefined && { templateId }),
-      
+
       // Company Information
       ...(companyName !== undefined || companyDescription !== undefined) && {
         companyInfo: {
@@ -403,7 +414,7 @@ export async function PUT(
           ...(companyDescription !== undefined && { companyDescription }),
         }
       },
-      
+
       // Media & Assets
       ...(logoUrl !== undefined || coverImageUrl !== undefined) && {
         mediaAssets: {
@@ -412,11 +423,11 @@ export async function PUT(
           ...(coverImageUrl !== undefined && { coverImageUrl }),
         }
       },
-      
+
       // Contact Details
-      ...(email !== undefined || phone !== undefined || website !== undefined || address !== undefined || 
-          contactImage !== undefined || contactQuote !== undefined || contactQuoteBy !== undefined ||
-          city !== undefined || state !== undefined || country !== undefined || fullName !== undefined) && {
+      ...(email !== undefined || phone !== undefined || website !== undefined || address !== undefined ||
+        contactImage !== undefined || contactQuote !== undefined || contactQuoteBy !== undefined ||
+        city !== undefined || state !== undefined || country !== undefined || fullName !== undefined) && {
         contactDetails: {
           ...existingSettings.contactDetails,
           ...(email !== undefined && { email }),
@@ -432,10 +443,10 @@ export async function PUT(
           ...(fullName !== undefined && { fullName }),
         }
       },
-      
+
       // Contact Page Description
       ...(contactDescription !== undefined && { contactDescription }),
-      
+
       // Social Media
       ...(facebook !== undefined || twitter !== undefined || instagram !== undefined || linkedin !== undefined) && {
         socialMedia: {
@@ -468,7 +479,7 @@ export async function PUT(
       ...(theme !== undefined && { theme }),
       ...(isPublic !== undefined && { isPublic }),
     }
-    
+
     const updatedCatalogue = await prisma.catalogue.update({
       where: { id: params.id },
       data: {
@@ -522,7 +533,7 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Catalogue update error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -621,7 +632,7 @@ export async function DELETE(
     })
   } catch (error) {
     console.error('Catalogue deletion error:', error)
-    
+
     const message = error instanceof Error ? error.message : 'Failed to delete catalogue'
     return NextResponse.json(
       { error: message },
