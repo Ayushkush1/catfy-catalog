@@ -113,7 +113,7 @@ export default function IframeEditor({
   registerEditorControls
 }: IframeEditorProps) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
-  const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'templates' | 'icons'>('pages')
+  const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'templates' | 'icons' | null>(null)
   const [rightTab, setRightTab] = useState<'content' | 'style'>('style')
   const [liveData, setLiveData] = useState<LiveData>(initialData || {
     product: {
@@ -1512,8 +1512,10 @@ export default function IframeEditor({
         const containerClasses = sidebarsCollapsed
           ? 'items-center overflow-hidden'
           : 'items-start overflow-auto'
+        // Add margin-right to balance the left sidebar when both are collapsed
+        const containerStyle = sidebarsCollapsed && !previewMode ? { marginRight: '80px' } : {}
         return (
-          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center p-4 h-full`}>
+          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center p-4 h-full`} style={containerStyle}>
             <div ref={canvasWrapperRef} style={{ width: BASE_W * scale, height: BASE_H * scale, position: 'relative', overflow: 'visible' }}>
               <div
                 className="bg-white shadow border"
