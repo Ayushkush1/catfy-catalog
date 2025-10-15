@@ -5,7 +5,6 @@ import { FileText, Layers as LayersIcon, Shapes, Type, Upload, Palette, Star, Ch
 import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
 import html2canvas from 'html2canvas'
-import jsPDF from 'jspdf'
 
 export type IframePage = {
   id: string
@@ -232,7 +231,10 @@ export default function IframeEditor({
     if (!doc) return
 
     let counter = 0
-    const walk = (el: Element) => {
+    const walk = (el: Element | null) => {
+      // Null check
+      if (!el || !el.tagName) return
+
       // Skip script, style, svg elements
       if (['SCRIPT', 'STYLE', 'SVG', 'PATH'].includes(el.tagName)) return
 
@@ -451,7 +453,7 @@ export default function IframeEditor({
     // Reapply style mutations when content updates
     const applyMutations = () => {
       const doc = iframeRef.current?.contentDocument
-      if (!doc) return
+      if (!doc || !doc.body) return
 
       // 🔥 Step 1: Assign data-id attributes to all elements
       assignDataIds()
@@ -463,7 +465,9 @@ export default function IframeEditor({
       })
 
       // Step 3: Mark ready for PDF if needed
-      doc.body.setAttribute('data-pdf-ready', 'true')
+      if (doc.body) {
+        doc.body.setAttribute('data-pdf-ready', 'true')
+      }
 
       // 🔥 Step 4: Set up MutationObserver to track DOM changes
       const observer = new MutationObserver((mutations) => {
@@ -911,7 +915,7 @@ export default function IframeEditor({
     downloadFile(`${template.name}-state.json`, JSON.stringify(data, null, 2), 'application/json')
   }
 
-  // Export all pages to a single PDF
+  // Export all pages to a single PDF using Playwright (server-side)
   const exportAllPagesToPDF = async () => {
     try {
       const iframe = iframeRef.current
@@ -919,57 +923,106 @@ export default function IframeEditor({
         throw new Error('Iframe not ready')
       }
 
-      let pdf: jsPDF | null = null
-      const totalPages = pages.length
       const originalPageIndex = currentPageIndex
+      const pagesData: Array<{ html: string; name: string; width?: number; height?: number }> = []
 
-      for (let i = 0; i < totalPages; i++) {
+      // Get iframe dimensions (canvas size)
+      const iframeWidth = iframe.clientWidth || iframe.offsetWidth || 1200
+      const iframeHeight = iframe.clientHeight || iframe.offsetHeight || 1600
+
+      console.log(`Canvas dimensions: ${iframeWidth}x${iframeHeight}`)
+
+      // Collect HTML from all pages
+      for (let i = 0; i < pages.length; i++) {
         // Navigate to page
         setCurrentPageIndex(i)
 
-        // Wait for page to render
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // Wait longer for page to render completely
+        await new Promise(resolve => setTimeout(resolve, 800))
 
         const doc = iframe.contentDocument
-        if (!doc || !doc.body) continue
-
-        // Capture the page as canvas
-        const canvas = await html2canvas(doc.body, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff'
-        })
-
-        const imgData = canvas.toDataURL('image/png')
-
-        // Get canvas dimensions
-        const canvasWidth = canvas.width / 2 // Divide by scale factor
-        const canvasHeight = canvas.height / 2
-
-        // Initialize PDF with first page dimensions
-        if (i === 0) {
-          pdf = new jsPDF({
-            orientation: canvasWidth > canvasHeight ? 'landscape' : 'portrait',
-            unit: 'px',
-            format: [canvasWidth, canvasHeight]
-          })
-        } else {
-          // Add new page with same dimensions
-          pdf!.addPage([canvasWidth, canvasHeight])
+        if (!doc || !doc.body) {
+          console.warn(`Skipping page ${i} - document not ready`)
+          continue
         }
 
-        // Add image to fill the entire page
-        pdf!.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight)
+        // Wait for data-pdf-ready attribute
+        let attempts = 0
+        while (!doc.body.getAttribute('data-pdf-ready') && attempts < 10) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          attempts++
+        }
+
+        // Capture the full HTML including styles
+        const html = captureIframeHTML()
+        const css = captureIframeCSS()
+
+        if (!html) {
+          console.warn(`Skipping page ${i} - no HTML content`)
+          continue
+        }
+
+        // Get actual body dimensions from the rendered content
+        const bodyWidth = doc.body.scrollWidth || iframeWidth
+        const bodyHeight = doc.body.scrollHeight || iframeHeight
+
+        // Create complete HTML document
+        const fullHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>${css}</style>
+          </head>
+          <body>
+            ${html}
+          </body>
+          </html>
+        `
+
+        pagesData.push({
+          html: fullHtml,
+          name: pages[i].name || `Page ${i + 1}`,
+          width: bodyWidth,
+          height: bodyHeight,
+        })
       }
 
       // Restore original page
       setCurrentPageIndex(originalPageIndex)
 
-      // Download the PDF
-      if (pdf) {
-        pdf.save(`${template.name}-catalogue.pdf`)
+      if (pagesData.length === 0) {
+        throw new Error('No pages could be captured for PDF export')
       }
+
+      // Send to server for PDF generation using Playwright
+      const response = await fetch('/api/export/pdf-pages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          pages: pagesData,
+          catalogueName: template.name,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(error.error || 'Failed to generate PDF')
+      }
+
+      // Download the PDF
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${template.name}-catalogue.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
     } catch (error) {
       console.error('PDF export failed:', error)
       throw error
@@ -1313,8 +1366,8 @@ export default function IframeEditor({
                 title={tab.name}
               >
                 <div className={`p-2 rounded-xl ${activeLeftTab === (tab.id as any)
-                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
                   }`}>
                   {tab.icon}
                 </div>

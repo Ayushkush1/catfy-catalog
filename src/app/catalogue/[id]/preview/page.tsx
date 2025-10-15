@@ -21,6 +21,7 @@ export default function CataloguePreviewPage() {
   const [error, setError] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved')
   const [isEditorReady, setIsEditorReady] = useState(false) // NEW: Prevent flash on initial load
+  const [isExportingPDF, setIsExportingPDF] = useState(false) // Loading state for PDF export
   const iframeGetterRef = useRef<() => HTMLIFrameElement | null>(() => null)
   const editorControlsRef = useRef<{
     undo: () => void,
@@ -471,16 +472,22 @@ export default function CataloguePreviewPage() {
               <Button
                 variant="outline"
                 className="flex items-center gap-2"
+                disabled={isExportingPDF}
                 onClick={async () => {
                   try {
+                    setIsExportingPDF(true)
+                    toast.loading('Generating PDF with Playwright...', { id: 'pdf-export' })
                     await editorControlsRef.current?.exportPDF?.()
-                    toast.success('PDF exported successfully')
+                    toast.success('PDF exported successfully', { id: 'pdf-export' })
                   } catch (error) {
-                    toast.error('Failed to export PDF')
+                    toast.error('Failed to export PDF', { id: 'pdf-export' })
+                  } finally {
+                    setIsExportingPDF(false)
                   }
                 }}
               >
-                <Printer className="w-4 h-4" /> Export PDF
+                <Printer className="w-4 h-4" />
+                {isExportingPDF ? 'Exporting...' : 'Export PDF'}
               </Button>
               <Button
                 variant="outline"
