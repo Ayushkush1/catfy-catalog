@@ -181,18 +181,18 @@ html, body {
     overflow: hidden;
     background: #e5e5e5;
   }
-
   .intro-left img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .intro-left::after {
-    content: '';
+  /* Explicit overlay element placed inside .intro-left */
+  .intro-left .intro-overlay {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.1);
+    pointer-events: none;
   }
 
   /* RIGHT SIDE - Content */
@@ -211,6 +211,7 @@ html, body {
     color: var(--text-dark);
     margin-bottom: 20px;
     letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   .intro-right h2 {
@@ -686,17 +687,18 @@ const pages: IframePage[] = [
 
               <!-- Left Side Image -->
               <div class="intro-left">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Intro Image">
+                <img src="{{#catalogue.introImage}}{{catalogue.introImage}}{{/catalogue.introImage}}{{^catalogue.introImage}}https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80{{/catalogue.introImage}}" alt="Intro Image">
               </div>
 
               <!-- Right Side Content -->
               <div class="intro-right">
-                <h1>CATALOG</h1>
-                <h2>Atta mazii satak liiii bolo rosking</h2>
+                <h1>{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}CATALOG{{/catalogue.name}}{{/profile.companyName}}</h1>
+                <h2>{{#catalogue.tagline}}{{catalogue.tagline}}{{/catalogue.tagline}}{{^catalogue.tagline}}{{#profile.tagline}}{{profile.tagline}}{{/profile.tagline}}{{^profile.tagline}}Atta mazii satak liiii bolo rosking{{/profile.tagline}}{{/catalogue.tagline}}</h2>
+                <h2>"{{#catalogue.quote}}{{catalogue.quote}}{{/catalogue.quote}}{{^catalogue.quote}}{{#catalogue.tagline}}{{catalogue.tagline}}{{/catalogue.tagline}}{{^catalogue.tagline}}{{#profile.tagline}}{{profile.tagline}}{{/profile.tagline}}{{^profile.tagline}}We are her to make an impact and make your profile shine{{/profile.tagline}}{{/catalogue.tagline}}{{/catalogue.quote}}"</h2>
 
                 <div class="intro-company">
-                  <span>COMPANY NAME</span>
-                  <p>Curated designs that transform spaces into expressions of elegance and comfort.</p>
+                  <span>{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}AURUM{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</span>
+                  <p>{{#catalogue.settings.companyInfo.description}}{{catalogue.settings.companyInfo.description}}{{/catalogue.settings.companyInfo.description}}{{^catalogue.settings.companyInfo.description}}{{#catalogue.description}}{{catalogue.description}}{{/catalogue.description}}{{^catalogue.description}}Curated designs that transform spaces into expressions of elegance and comfort for us.{{/catalogue.description}}{{/catalogue.settings.companyInfo.description}}</p>
                 </div>
               </div>
 
@@ -715,61 +717,31 @@ const pages: IframePage[] = [
               <!-- Header -->
               <header class="aurum-header">
                 <div class="aurum-header-left">
-                  <h1>AURUM</h1>
-                  <p>LUXURY FURNITURE CATALOGUE – PAGE 1</p>
+                  <h1>{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}AURUM{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</h1>
+                  <p>{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}LUXURY FURNITURE CATALOGUE{{/catalogue.name}} – PAGE {{#page.number}}{{page.number}}{{/page.number}}{{^page.number}}1{{/page.number}}</p>
                 </div>
                 <div class="aurum-header-right">
-                  <span>1 / 2</span>
+                  <span>{{#page.number}}{{page.number}}{{/page.number}}{{^page.number}}1{{/page.number}} / {{#page.total}}{{page.total}}{{/page.total}}{{^page.total}}1{{/page.total}}</span>
                 </div>
               </header>
 
               <!-- Content -->
               <main class="aurum-content">
                 <div class="aurum-grid">
-                  <!-- Card 1 -->
+                  {{#productsPreview}}
                   <div class="aurum-card">
-                    <div class="aurum-card-image" style="background-color:#D2B48C;">
-                      <div class="aurum-card-icon">🪑</div>
+                    <div class="aurum-card-image" style="background-color:#f3f4f6;">
+                      {{#image}}<img src="{{image}}" alt="{{title}}" style="width:100%;height:100%;object-fit:cover" />{{/image}}{{^image}}<div class="aurum-card-icon">�</div>{{/image}}
                     </div>
                     <div class="aurum-card-body">
-                      <h3 class="aurum-card-title">Langley Armchair</h3>
-                      <p class="aurum-card-price">₹1,52,450</p>
+                      <h3 class="aurum-card-title">{{title}}</h3>
+                      <p class="aurum-card-price">{{price}}</p>
                       <div class="aurum-specs">
-                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W30" × D30" × H32"</span></div>
-                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Walnut, Mahogany</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Details:</span><span class="aurum-spec-value">{{description}}</span></div>
                       </div>
                     </div>
                   </div>
-
-                  <!-- Card 2 -->
-                  <div class="aurum-card">
-                    <div class="aurum-card-image" style="background-color:#8B4513;">
-                      <div class="aurum-card-icon">🛏️</div>
-                    </div>
-                    <div class="aurum-card-body">
-                      <h3 class="aurum-card-title">Vienna Dining Table</h3>
-                      <p class="aurum-card-price">₹2,78,250</p>
-                      <div class="aurum-specs">
-                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">L72" × W42" × H30"</span></div>
-                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Cherry, Birch</span></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Card 3 -->
-                  <div class="aurum-card">
-                    <div class="aurum-card-image" style="background-color:#696969;">
-                      <div class="aurum-card-icon">🪞</div>
-                    </div>
-                    <div class="aurum-card-body">
-                      <h3 class="aurum-card-title">Montauk Lounge Chair</h3>
-                      <p class="aurum-card-price">₹1,91,250</p>
-                      <div class="aurum-specs">
-                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W32" × D32" × H30"</span></div>
-                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Natural Steel, Charcoal</span></div>
-                      </div>
-                    </div>
-                  </div>
+                  {{/productsPreview}}
                 </div>
               </main>
 

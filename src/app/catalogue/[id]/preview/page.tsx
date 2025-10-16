@@ -158,6 +158,8 @@ export default function CataloguePreviewPage() {
             name: data.catalogue.name,
             year: data.catalogue.year || ((data.catalogue.settings && data.catalogue.settings.displaySettings && data.catalogue.settings.displaySettings.defaultYear) || undefined),
             nameUpper: data.catalogue.name ? String(data.catalogue.name).toUpperCase() : undefined,
+            // Tagline (template-level) — prefer catalogue.tagline if provided
+            tagline: data.catalogue.tagline || undefined,
             // Split catalogue name into two parts for top/bottom title lines
             titleTop: (() => {
               const n = data.catalogue.name || ''
@@ -172,7 +174,8 @@ export default function CataloguePreviewPage() {
             // Expose selected media assets to templates (cover image)
             settings: {
               mediaAssets: {
-                coverImageUrl: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.coverImageUrl) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.coverImageUrl) || undefined
+                coverImageUrl: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.coverImageUrl) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.coverImageUrl) || undefined,
+                introImage: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.introImage) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.introImage) || undefined
               }
             }
           },
@@ -192,7 +195,19 @@ export default function CataloguePreviewPage() {
             }
           })(),
           products: data.catalogue.products || [],
-          categories: data.catalogue.categories || []
+          // Provide a small preview array limited to 3 items for templates that display a short selection
+          productsPreview: (data.catalogue.products || []).slice(0, 3).map((p: any) => ({
+            title: p.name || '',
+            price: p.priceDisplay || (typeof p.price === 'number' ? `₹${p.price}` : ''),
+            image: p.imageUrl || (Array.isArray(p.images) && p.images[0]) || '',
+            description: p.description || ''
+          })),
+          categories: data.catalogue.categories || [],
+          // Page info usable by templates
+          page: {
+            number: 1,
+            total: 1
+          }
         }
         setLiveData(initial)
         // Load previous iframe editor state if present
@@ -300,6 +315,21 @@ export default function CataloguePreviewPage() {
       clearInterval(interval)
     }
   }, [])
+
+  // Keep page number in liveData in sync with editor's pageIndex/pageCount
+  useEffect(() => {
+    if (!liveData) return
+    setLiveData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        page: {
+          number: Math.min(pageIndex + 1, pageCount || 1),
+          total: pageCount || 1
+        }
+      }
+    })
+  }, [pageIndex, pageCount])
 
   if (isLoading) {
     return (
