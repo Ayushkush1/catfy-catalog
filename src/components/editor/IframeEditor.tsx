@@ -114,7 +114,7 @@ export default function IframeEditor({
 }: IframeEditorProps) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [isPageTransitioning, setIsPageTransitioning] = useState(false)
-  const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'templates' | 'icons' | null>(null)
+  const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'icons' | null>(null)
   const [rightTab, setRightTab] = useState<'content' | 'style'>('style')
   const [liveData, setLiveData] = useState<LiveData>(initialData || {
     product: {
@@ -1411,16 +1411,15 @@ export default function IframeEditor({
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
       {/* Left Sidebar: Icon nav + panel */}
       {!previewMode && (
-        <div className={`flex ${activeLeftTab ? 'w-80' : 'w-16'} transition-all`}>
+        <div className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} transition-all flex-shrink-0`}>
           {/* Icon column */}
-          <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3">
+          <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3 flex-shrink-0">
             {([
               { id: 'pages', name: 'Pages', icon: <FileText className="w-6 h-6" /> },
               { id: 'layers', name: 'Layers', icon: <LayersIcon className="w-6 h-6" /> },
-              { id: 'templates', name: 'Templates', icon: <Palette className="w-6 h-6" /> },
               { id: 'elements', name: 'Elements', icon: <Shapes className="w-6 h-6" /> },
               { id: 'icons', name: 'Icons', icon: <Star className="w-6 h-6" /> },
               { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
@@ -1537,27 +1536,6 @@ export default function IframeEditor({
               )}
               {activeLeftTab === 'text' && (
                 <ElementsPanel onAdd={(type) => addElement(type)} onlyText />
-              )}
-              {activeLeftTab === 'templates' && (
-                <div className="p-3 space-y-3">
-                  <div className="font-semibold">Templates</div>
-                  <div className="text-xs text-gray-500">Select a template to apply</div>
-                  <ul className="space-y-2">
-                    {HtmlTemplates.map((t) => (
-                      <li key={t.id}>
-                        <button
-                          className={`w-full text-left px-3 py-2 rounded border transition-colors ${t.id === template.id ? 'bg-gray-100 border-gray-300' : 'hover:bg-gray-50'}`}
-                          onClick={() => onTemplateIdChange?.(t.id)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-800">{t.name}</span>
-                            {t.id === template.id && <span className="text-xs text-gray-500">Selected</span>}
-                          </div>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               )}
               {activeLeftTab === 'icons' && (
                 <div className="p-3 text-sm text-gray-600">Icons library coming soon.</div>
