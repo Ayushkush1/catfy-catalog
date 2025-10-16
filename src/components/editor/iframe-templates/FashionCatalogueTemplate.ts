@@ -43,8 +43,9 @@ body, html {
   height: 100%;
   width: 100%;
   background: var(--fashion-cover-bg);
-  overflow: hidden;
   font-family: var(--fashion-cover-font-sub);
+  margin: 0;
+  padding: 0;
 }
 
 .fashion-cover {
@@ -556,27 +557,25 @@ const pages: IframePage[] = [
         name: 'Cover',
         html: `
 <section class="fashion-cover">
-    <div class="fashion-cover__background">
-      <img src="https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80" alt="Catalogue Cover">
+  <div class="fashion-cover__background">
+    <img src="https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80" alt="Catalogue Cover">
+  </div>
+
+  <div class="fashion-cover__overlay"></div>
+
+  <div class="fashion-cover__content">
+    <h1 class="fashion-cover__title" data-editor-path="catalogue.name">VERITE</h1>
+    <div class="fashion-cover__divider">
+      <div class="fashion-cover__line"></div>
+      <p class="fashion-cover__subtitle" data-editor-path="catalogue.description">FASHION COLLECTION</p>
+      <div class="fashion-cover__line"></div>
     </div>
+  </div>
 
-    <div class="fashion-cover__overlay"></div>
-
-    <div class="fashion-cover__content">
-      <h1 class="fashion-cover__title" data-editor-path="catalogue.name">VERITE</h1>
-      <div class="fashion-cover__divider">
-        <div class="fashion-cover__line"></div>
-        <p class="fashion-cover__subtitle" data-editor-path="catalogue.description">FASHION COLLECTION</p>
-        <div class="fashion-cover__line"></div>
-      </div>
-    </div>
-
-    <div class="fashion-cover__footer">
-      <span class="fashion-cover__year" data-editor-path="catalogue.year">Catalogue 2025</span>
-    </div>
-  </section>
-
-
+  <div class="fashion-cover__footer">
+    <span class="fashion-cover__year" data-editor-path="catalogue.year">Catalogue 2025</span>
+  </div>
+</section>
     `,
     },
 
@@ -584,42 +583,40 @@ const pages: IframePage[] = [
         id: 'intro',
         name: 'Intro',
         html: `
-  <section class="fashion-intro-container">
-    <!-- Left: Image -->
-    <div class="fashion-intro-left">
-      <div class="fashion-intro-img-wrap">
-        <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Fashion Intro" class="fashion-intro-img" />
-      </div>
-      <div class="fashion-intro-overlay"></div>
+<section class="fashion-intro-container">
+  <!-- Left: Image -->
+  <div class="fashion-intro-left">
+    <div class="fashion-intro-img-wrap">
+      <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Fashion Intro" class="fashion-intro-img" />
     </div>
+    <div class="fashion-intro-overlay"></div>
+  </div>
 
-    <!-- Right: Text -->
-    <div class="fashion-intro-right">
-      <div class="fashion-intro-content">
-        <h1 class="fashion-intro-title">VERITE</h1>
-        <h2 class="fashion-intro-subtitle">FASHION IS FREEDOM</h2>
+  <!-- Right: Text -->
+  <div class="fashion-intro-right">
+    <div class="fashion-intro-content">
+      <h1 class="fashion-intro-title">VERITE</h1>
+      <h2 class="fashion-intro-subtitle">FASHION IS FREEDOM</h2>
 
-        <div class="fashion-intro-quote-wrap">
-          <div class="fashion-intro-quote-line"></div>
-          <div class="fashion-intro-quote-box">
-            <p class="fashion-intro-quote">
-              "The best way to predict the future is to invent it. Distinguishes between a leader and a follower."
-            </p>
-          </div>
-        </div>
-
-        <div class="fashion-intro-company">
-          <span class="fashion-intro-company-name">VERITE HOUSE</span>
-          <p class="fashion-intro-company-desc">
-            We blend timeless design with contemporary fashion, empowering individuals to express their unique style through elegance and simplicity.
+      <div class="fashion-intro-quote-wrap">
+        <div class="fashion-intro-quote-line"></div>
+        <div class="fashion-intro-quote-box">
+          <p class="fashion-intro-quote">
+            "The best way to predict the future is to invent it. Distinguishes between a leader and a follower."
           </p>
-          <p class="fashion-intro-year">Catalogue 2025</p>
         </div>
       </div>
+
+      <div class="fashion-intro-company">
+        <span class="fashion-intro-company-name">VERITE HOUSE</span>
+        <p class="fashion-intro-company-desc">
+          We blend timeless design with contemporary fashion, empowering individuals to express their unique style through elegance and simplicity.
+        </p>
+        <p class="fashion-intro-year">Catalogue 2025</p>
+      </div>
     </div>
-  </section>
-
-
+  </div>
+</section>
     `,
     },
 
@@ -628,66 +625,64 @@ const pages: IframePage[] = [
         name: 'Products',
         html: `
 <!-- Product 1 -->
-  <div class="fashion-product-section">
-    <div class="fashion-product-image">
-      <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Langley Armchair">
-    </div>
-    <div class="fashion-product-details">
-      <h1>Langley Armchair</h1>
-      <p class="fashion-product-category">Modern Comfort</p>
-      <div class="fashion-divider"></div>
-      <p class="fashion-product-description">
-        A modern interpretation of timeless elegance. The Langley Armchair combines minimalist structure with plush upholstery, perfect for creating a relaxing corner in your space.
-      </p>
-      <div class="fashion-bottom-line"></div>
-      <div class="fashion-footer-row">
-        <p>Exclusive Collection</p>
-        <span class="fashion-price">₹12,499</span>
-      </div>
-    </div>
+<div class="fashion-product-section">
+  <div class="fashion-product-image">
+    <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Langley Armchair">
   </div>
-
-  <!-- Product 2 -->
-  <div class="fashion-product-section reverse">
-    <div class="fashion-product-image">
-      <img src="https://images.unsplash.com/photo-1602526217517-18b3b5c6c5eb" alt="Vienna Dining Table">
-    </div>
-    <div class="fashion-product-details">
-      <h1>Vienna Dining Table</h1>
-      <p class="fashion-product-category">Luxury Craft</p>
-      <div class="fashion-divider"></div>
-      <p class="fashion-product-description">
-        Designed for gatherings and crafted with precision, the Vienna Table brings character and warmth to every meal. Its natural oak finish highlights fine craftsmanship.
-      </p>
-      <div class="fashion-bottom-line"></div>
-      <div class="fashion-footer-row">
-        <p>Exclusive Collection</p>
-        <span class="fashion-price">₹24,999</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Product 3 -->
-  <div class="fashion-product-section">
-    <div class="fashion-product-image">
-      <img src="https://images.unsplash.com/photo-1567016544147-6a8c1a2e7f84" alt="Noir Sofa">
-    </div>
-    <div class="fashion-product-details">
-      <h1>Noir Sofa</h1>
-      <p class="fashion-product-category">Urban Classic</p>
-      <div class="fashion-divider"></div>
-      <p class="fashion-product-description">
-        With bold lines and deep tones, the Noir Sofa is an urban centerpiece designed for contemporary homes. A perfect balance of comfort and sophistication.
-      </p>
-      <div class="fashion-bottom-line"></div>
-      <div class="fashion-footer-row">
-        <p>Exclusive Collection</p>
-        <span class="fashion-price">₹18,999</span>
-      </div>
+  <div class="fashion-product-details">
+    <h1>Langley Armchair</h1>
+    <p class="fashion-product-category">Modern Comfort</p>
+    <div class="fashion-divider"></div>
+    <p class="fashion-product-description">
+      A modern interpretation of timeless elegance. The Langley Armchair combines minimalist structure with plush upholstery, perfect for creating a relaxing corner in your space.
+    </p>
+    <div class="fashion-bottom-line"></div>
+    <div class="fashion-footer-row">
+      <p>Exclusive Collection</p>
+      <span class="fashion-price">₹12,499</span>
     </div>
   </div>
 </div>
 
+<!-- Product 2 -->
+<div class="fashion-product-section reverse">
+  <div class="fashion-product-image">
+    <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d" alt="Elegant Fashion">
+  </div>
+  <div class="fashion-product-details">
+    <h1>Vienna Dining Table</h1>
+    <p class="fashion-product-category">Luxury Craft</p>
+    <div class="fashion-divider"></div>
+    <p class="fashion-product-description">
+      Designed for gatherings and crafted with precision, the Vienna Table brings character and warmth to every meal. Its natural oak finish highlights fine craftsmanship.
+    </p>
+    <div class="fashion-bottom-line"></div>
+    <div class="fashion-footer-row">
+      <p>Exclusive Collection</p>
+      <span class="fashion-price">₹24,999</span>
+    </div>
+  </div>
+</div>
+
+<!-- Product 3 -->
+<div class="fashion-product-section">
+  <div class="fashion-product-image">
+    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b" alt="Fashion Collection">
+  </div>
+  <div class="fashion-product-details">
+    <h1>Noir Sofa</h1>
+    <p class="fashion-product-category">Urban Classic</p>
+    <div class="fashion-divider"></div>
+    <p class="fashion-product-description">
+      With bold lines and deep tones, the Noir Sofa is an urban centerpiece designed for contemporary homes. A perfect balance of comfort and sophistication.
+    </p>
+    <div class="fashion-bottom-line"></div>
+    <div class="fashion-footer-row">
+      <p>Exclusive Collection</p>
+      <span class="fashion-price">₹18,999</span>
+    </div>
+  </div>
+</div>
     `,
     },
 
@@ -696,78 +691,77 @@ const pages: IframePage[] = [
         name: 'Contact',
         html: `
 <div class="cp-container">
-    <!-- Left Side -->
-    <div class="cp-left">
-      <!-- Replace this src with your image URL -->
-      <img src="your-contact-image.jpg" alt="Contact" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-      <div class="cp-left-placeholder" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-        </svg>
-        <p>No image uploaded</p>
-      </div>
-      <div class="cp-left-overlay"></div>
-      <div class="cp-quote-box">
-        <div class="cp-quote-inner">
-          <blockquote class="cp-quote-text">"Where creativity meets craftsmanship"</blockquote>
-          <cite class="cp-quote-author">VERITE ATELIER</cite>
-        </div>
-      </div>
+  <!-- Left Side -->
+  <div class="cp-left">
+    <!-- Replace this src with your image URL -->
+    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1" alt="Contact" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="cp-left-placeholder" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      <p>No image uploaded</p>
     </div>
-
-    <!-- Right Side -->
-    <div class="cp-right">
-      <h1 class="cp-contact-title">CONTACT</h1>
-
-      <div class="cp-contact-details">
-        <div class="cp-contact-item">
-          <h3>ADDRESS</h3>
-          <p>123 Fashion District<br>Paris, France 75001</p>
-        </div>
-        <div class="cp-contact-item">
-          <h3>TELEPHONE</h3>
-          <p>+33 1 42 86 87 88</p>
-        </div>
-        <div class="cp-contact-item">
-          <h3>Email</h3>
-          <p>contact@verite.fr</p>
-        </div>
-        <div class="cp-contact-item">
-          <h3>Website</h3>
-          <p>www.verite.fr</p>
-        </div>
-      </div>
-
-      <div class="cp-socials">
-        <!-- Replace # with your social links -->
-        <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
-        <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
-        <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
-      </div>
-
-      <div class="cp-qr">
-        <div class="cp-qr-box">
-          <svg viewBox="0 0 100 100">
-            <rect x="0" y="0" width="100" height="100" fill="white"/>
-            <rect x="10" y="10" width="15" height="15" fill="black"/>
-            <rect x="75" y="10" width="15" height="15" fill="black"/>
-            <rect x="10" y="75" width="15" height="15" fill="black"/>
-            <rect x="30" y="30" width="5" height="5" fill="black"/>
-            <rect x="40" y="20" width="5" height="5" fill="black"/>
-            <rect x="50" y="30" width="5" height="5" fill="black"/>
-            <rect x="60" y="40" width="5" height="5" fill="black"/>
-            <rect x="70" y="50" width="5" height="5" fill="black"/>
-            <rect x="30" y="60" width="5" height="5" fill="black"/>
-            <rect x="45" y="70" width="5" height="5" fill="black"/>
-            <rect x="65" y="65" width="5" height="5" fill="black"/>
-            <rect x="80" y="80" width="5" height="5" fill="black"/>
-          </svg>
-        </div>
-        <p class="cp-qr-text">SCAN FOR DIGITAL CATALOGUE</p>
+    <div class="cp-left-overlay"></div>
+    <div class="cp-quote-box">
+      <div class="cp-quote-inner">
+        <blockquote class="cp-quote-text">"Where creativity meets craftsmanship"</blockquote>
+        <cite class="cp-quote-author">VERITE ATELIER</cite>
       </div>
     </div>
   </div>
 
+  <!-- Right Side -->
+  <div class="cp-right">
+    <h1 class="cp-contact-title">CONTACT</h1>
+
+    <div class="cp-contact-details">
+      <div class="cp-contact-item">
+        <h3>ADDRESS</h3>
+        <p>123 Fashion District<br>Paris, France 75001</p>
+      </div>
+      <div class="cp-contact-item">
+        <h3>TELEPHONE</h3>
+        <p>+33 1 42 86 87 88</p>
+      </div>
+      <div class="cp-contact-item">
+        <h3>Email</h3>
+        <p>contact@verite.fr</p>
+      </div>
+      <div class="cp-contact-item">
+        <h3>Website</h3>
+        <p>www.verite.fr</p>
+      </div>
+    </div>
+
+    <div class="cp-socials">
+      <!-- Replace # with your social links -->
+      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
+      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
+    </div>
+
+    <div class="cp-qr">
+      <div class="cp-qr-box">
+        <svg viewBox="0 0 100 100">
+          <rect x="0" y="0" width="100" height="100" fill="white"/>
+          <rect x="10" y="10" width="15" height="15" fill="black"/>
+          <rect x="75" y="10" width="15" height="15" fill="black"/>
+          <rect x="10" y="75" width="15" height="15" fill="black"/>
+          <rect x="30" y="30" width="5" height="5" fill="black"/>
+          <rect x="40" y="20" width="5" height="5" fill="black"/>
+          <rect x="50" y="30" width="5" height="5" fill="black"/>
+          <rect x="60" y="40" width="5" height="5" fill="black"/>
+          <rect x="70" y="50" width="5" height="5" fill="black"/>
+          <rect x="30" y="60" width="5" height="5" fill="black"/>
+          <rect x="45" y="70" width="5" height="5" fill="black"/>
+          <rect x="65" y="65" width="5" height="5" fill="black"/>
+          <rect x="80" y="80" width="5" height="5" fill="black"/>
+        </svg>
+      </div>
+      <p class="cp-qr-text">SCAN FOR DIGITAL CATALOGUE</p>
+    </div>
+  </div>
+</div>
     `,
     }
 ]
