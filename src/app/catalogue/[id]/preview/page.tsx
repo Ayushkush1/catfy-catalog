@@ -156,8 +156,30 @@ export default function CataloguePreviewPage() {
           catalogue: {
             id: data.catalogue.id,
             name: data.catalogue.name,
+            year: data.catalogue.year || ((data.catalogue.settings && data.catalogue.settings.displaySettings && data.catalogue.settings.displaySettings.defaultYear) || undefined),
+            nameUpper: data.catalogue.name ? String(data.catalogue.name).toUpperCase() : undefined,
+            // Split catalogue name into two parts for top/bottom title lines
+            titleTop: (() => {
+              const n = data.catalogue.name || ''
+              const parts = String(n).trim().split(/\s+/, 2)
+              return parts[0] ? String(parts[0]).toUpperCase() : undefined
+            })(),
+            titleBottom: (() => {
+              const n = data.catalogue.name || ''
+              const parts = String(n).trim().split(/\s+/, 2)
+              return parts[1] ? String(parts[1]).toUpperCase() : undefined
+            })(),
+            // Expose selected media assets to templates (cover image)
+            settings: {
+              mediaAssets: {
+                coverImageUrl: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.coverImageUrl) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.coverImageUrl) || undefined
+              }
+            }
           },
-          profile: data.catalogue.profile || {},
+          profile: {
+            ...(data.catalogue.profile || {}),
+            companyName: (data.catalogue.settings && data.catalogue.settings.companyInfo && data.catalogue.settings.companyInfo.companyName) || (data.catalogue.profile && data.catalogue.profile.companyName) || ''
+          },
           // Use first active product as default context
           product: (() => {
             const products = data.catalogue.products || []

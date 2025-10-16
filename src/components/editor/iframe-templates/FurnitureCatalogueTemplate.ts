@@ -332,8 +332,8 @@ html, body {
   }
 
   .catalogue-hero-product {
-    width: 400px;
-    height: 400px;
+    width: 280px;
+    height: 280px;
     border-radius: 4px;
     overflow: hidden;
   }
@@ -645,32 +645,35 @@ const pages: IframePage[] = [
     id: 'cover',
     name: 'Cover',
     html: `
-<div class="cover"><header class="catalogue-hero-header">
-  <div>SMELLADDA</div>
-  <div>CATALOGUE 2025</div>
-</header>
+          <div class="cover">
+          <header class="catalogue-hero-header">
+            <div>{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}AURUM{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</div>
+            <div>{{#catalogue.year}}Catalogue {{catalogue.year}}{{/catalogue.year}}{{^catalogue.year}}CATALOGUE 2025{{/catalogue.year}}</div>
+          </header>
 
-<div class="catalogue-hero-container">
-  <div class="catalogue-hero-left">
-    <h1>CRAFTED<br>EXCELLENCE</h1>
-    <h2>CATALOG</h2>
-    <p>Curated designs that transform spaces into expressions of elegance and comfort.</p>
-    <a href="#" class="catalogue-hero-btn">EXPLORE COLLECTION</a>
-  </div>
+          <div class="catalogue-hero-container">
+            <div class="catalogue-hero-left">
+              <h1>
+                {{#catalogue.titleTop}}{{catalogue.titleTop}}{{/catalogue.titleTop}}{{^catalogue.titleTop}}CRAFTED{{/catalogue.titleTop}}<br>
+                {{#catalogue.titleBottom}}{{catalogue.titleBottom}}{{/catalogue.titleBottom}}{{^catalogue.titleBottom}}EXCELLENCE{{/catalogue.titleBottom}}
+              </h1>
+              <p>{{#catalogue.description}}{{catalogue.description}}{{/catalogue.description}}{{^catalogue.description}}Curated designs that transform spaces into expressions of elegance and comfort.{{/catalogue.description}}</p>
+              <a href="#" class="catalogue-hero-btn">EXPLORE COLLECTION</a>
+            </div>
 
-  <div class="catalogue-hero-right">
-    <div class="catalogue-hero-product">
-      <img src="https://images.unsplash.com/photo-1616627454908-b60f3e5af327?auto=format&fit=crop&w=600&q=80" alt="Product">
-    </div>
-    <div class="catalogue-hero-badge">NEW ARRIVALS</div>
-  </div>
-</div>
+            <div class="catalogue-hero-right">
+              <div class="catalogue-hero-product">
+                <img src="{{#catalogue.settings.mediaAssets.coverImageUrl}}{{catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}{{^catalogue.settings.mediaAssets.coverImageUrl}}{{#product.image}}{{product.image}}{{/product.image}}{{^product.image}}https://images.unsplash.com/photo-1567016432779-094069958ea5?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=880{{/product.image}}{{/catalogue.settings.mediaAssets.coverImageUrl}}" alt="Product">
+              </div>
+              <div class="catalogue-hero-badge">NEW ARRIVALS</div>
+            </div>
+          </div>
 
-<footer class="catalogue-hero-footer">
-  PREMIUM QUALITY • SUSTAINABLE MATERIALS • TIMELESS DESIGN
-</footer>
+          <footer class="catalogue-hero-footer">
+            PREMIUM QUALITY • SUSTAINABLE MATERIALS • TIMELESS DESIGN
+          </footer>
 
-</div>
+          </div>
     `,
   },
 
@@ -679,25 +682,25 @@ const pages: IframePage[] = [
     id: 'story',
     name: 'Our Story',
     html: `
-<div class="intro-page">
+            <div class="intro-page">
 
-  <!-- Left Side Image -->
-  <div class="intro-left">
-    <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Intro Image">
-  </div>
+              <!-- Left Side Image -->
+              <div class="intro-left">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Intro Image">
+              </div>
 
-  <!-- Right Side Content -->
-  <div class="intro-right">
-    <h1>CATALOG</h1>
-    <h2>Atta mazii satak liiii bolo rosking</h2>
+              <!-- Right Side Content -->
+              <div class="intro-right">
+                <h1>CATALOG</h1>
+                <h2>Atta mazii satak liiii bolo rosking</h2>
 
-    <div class="intro-company">
-      <span>COMPANY NAME</span>
-      <p>Curated designs that transform spaces into expressions of elegance and comfort.</p>
-    </div>
-  </div>
+                <div class="intro-company">
+                  <span>COMPANY NAME</span>
+                  <p>Curated designs that transform spaces into expressions of elegance and comfort.</p>
+                </div>
+              </div>
 
-</div>
+            </div>
 
 
     `,
@@ -708,74 +711,74 @@ const pages: IframePage[] = [
     id: 'products',
     name: 'Products',
     html: `
-<div class="aurum-page">
-  <!-- Header -->
-  <header class="aurum-header">
-    <div class="aurum-header-left">
-      <h1>AURUM</h1>
-      <p>LUXURY FURNITURE CATALOGUE – PAGE 1</p>
-    </div>
-    <div class="aurum-header-right">
-      <span>1 / 2</span>
-    </div>
-  </header>
+            <div class="aurum-page">
+              <!-- Header -->
+              <header class="aurum-header">
+                <div class="aurum-header-left">
+                  <h1>AURUM</h1>
+                  <p>LUXURY FURNITURE CATALOGUE – PAGE 1</p>
+                </div>
+                <div class="aurum-header-right">
+                  <span>1 / 2</span>
+                </div>
+              </header>
 
-  <!-- Content -->
-  <main class="aurum-content">
-    <div class="aurum-grid">
-      <!-- Card 1 -->
-      <div class="aurum-card">
-        <div class="aurum-card-image" style="background-color:#D2B48C;">
-          <div class="aurum-card-icon">🪑</div>
-        </div>
-        <div class="aurum-card-body">
-          <h3 class="aurum-card-title">Langley Armchair</h3>
-          <p class="aurum-card-price">₹1,52,450</p>
-          <div class="aurum-specs">
-            <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W30" × D30" × H32"</span></div>
-            <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Walnut, Mahogany</span></div>
-          </div>
-        </div>
-      </div>
+              <!-- Content -->
+              <main class="aurum-content">
+                <div class="aurum-grid">
+                  <!-- Card 1 -->
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#D2B48C;">
+                      <div class="aurum-card-icon">🪑</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Langley Armchair</h3>
+                      <p class="aurum-card-price">₹1,52,450</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W30" × D30" × H32"</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Walnut, Mahogany</span></div>
+                      </div>
+                    </div>
+                  </div>
 
-      <!-- Card 2 -->
-      <div class="aurum-card">
-        <div class="aurum-card-image" style="background-color:#8B4513;">
-          <div class="aurum-card-icon">🛏️</div>
-        </div>
-        <div class="aurum-card-body">
-          <h3 class="aurum-card-title">Vienna Dining Table</h3>
-          <p class="aurum-card-price">₹2,78,250</p>
-          <div class="aurum-specs">
-            <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">L72" × W42" × H30"</span></div>
-            <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Cherry, Birch</span></div>
-          </div>
-        </div>
-      </div>
+                  <!-- Card 2 -->
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#8B4513;">
+                      <div class="aurum-card-icon">🛏️</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Vienna Dining Table</h3>
+                      <p class="aurum-card-price">₹2,78,250</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">L72" × W42" × H30"</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Oak, Cherry, Birch</span></div>
+                      </div>
+                    </div>
+                  </div>
 
-      <!-- Card 3 -->
-      <div class="aurum-card">
-        <div class="aurum-card-image" style="background-color:#696969;">
-          <div class="aurum-card-icon">🪞</div>
-        </div>
-        <div class="aurum-card-body">
-          <h3 class="aurum-card-title">Montauk Lounge Chair</h3>
-          <p class="aurum-card-price">₹1,91,250</p>
-          <div class="aurum-specs">
-            <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W32" × D32" × H30"</span></div>
-            <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Natural Steel, Charcoal</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+                  <!-- Card 3 -->
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#696969;">
+                      <div class="aurum-card-icon">🪞</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Montauk Lounge Chair</h3>
+                      <p class="aurum-card-price">₹1,91,250</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Dimensions:</span><span class="aurum-spec-value">W32" × D32" × H30"</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Finishes:</span><span class="aurum-spec-value">Natural Steel, Charcoal</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </main>
 
-  <!-- Footer -->
-  <footer class="aurum-footer">
-    <span>AURUM</span>
-    <span>© 2025 All rights reserved</span>
-  </footer>
-</div>
+              <!-- Footer -->
+              <footer class="aurum-footer">
+                <span>AURUM</span>
+                <span>© 2025 All rights reserved</span>
+              </footer>
+            </div>
 
     `,
   },
@@ -785,40 +788,40 @@ const pages: IframePage[] = [
     id: 'contact',
     name: 'Contact',
     html: `
-<section class="aurum-contact-page" data-editor-path="contact-page">
-      <!-- Left section with image & quote -->
-      <div class="aurum-contact-left" data-editor-path="left-section">
-        <div class="aurum-contact-overlay" data-editor-path="overlay"></div>
-        <div class="aurum-contact-quote" data-editor-path="quote">
-          <p class="aurum-contact-quote-text">
-            “Design is the silent ambassador of your brand.”
-          </p>
-          <p class="aurum-contact-quote-author">— Paul Rand</p>
-        </div>
-      </div>
+           <section class="aurum-contact-page" data-editor-path="contact-page">
+              <!-- Left section with image & quote -->
+              <div class="aurum-contact-left" data-editor-path="left-section">
+                <div class="aurum-contact-overlay" data-editor-path="overlay"></div>
+                <div class="aurum-contact-quote" data-editor-path="quote">
+                  <p class="aurum-contact-quote-text">
+                    “Design is the silent ambassador of your brand.”
+                  </p>
+                  <p class="aurum-contact-quote-author">— Paul Rand</p>
+                </div>
+              </div>
 
-      <!-- Right section with info -->
-      <div class="aurum-contact-right" data-editor-path="right-section">
-        <h1 class="aurum-contact-title" data-editor-path="title">Contact Us</h1>
+              <!-- Right section with info -->
+              <div class="aurum-contact-right" data-editor-path="right-section">
+                <h1 class="aurum-contact-title" data-editor-path="title">Contact Us</h1>
 
-        <div class="aurum-contact-details" data-editor-path="details">
-          <p class="aurum-contact-info">Aurum Interiors Studio</p>
-          <p class="aurum-contact-info">123 Serenity Lane, Bangalore, India</p>
-          <p class="aurum-contact-info">+91 98765 43210</p>
-          <p class="aurum-contact-info">hello@aurumstudio.com</p>
-        </div>
+                <div class="aurum-contact-details" data-editor-path="details">
+                  <p class="aurum-contact-info">Aurum Interiors Studio</p>
+                  <p class="aurum-contact-info">123 Serenity Lane, Bangalore, India</p>
+                  <p class="aurum-contact-info">+91 98765 43210</p>
+                  <p class="aurum-contact-info">hello@aurumstudio.com</p>
+                </div>
 
-        <div class="aurum-contact-socials" data-editor-path="socials">
-          <a href="#" class="aurum-social-link">Instagram</a>
-          <a href="#" class="aurum-social-link">LinkedIn</a>
-          <a href="#" class="aurum-social-link">Behance</a>
-        </div>
+                <div class="aurum-contact-socials" data-editor-path="socials">
+                  <a href="#" class="aurum-social-link">Instagram</a>
+                  <a href="#" class="aurum-social-link">LinkedIn</a>
+                  <a href="#" class="aurum-social-link">Behance</a>
+                </div>
 
-        <footer class="aurum-contact-footer" data-editor-path="footer">
-          <p>© 2025 Aurum Studio. All rights reserved.</p>
-        </footer>
-      </div>
-    </section>
+                <footer class="aurum-contact-footer" data-editor-path="footer">
+                  <p>© 2025 Aurum Studio. All rights reserved.</p>
+                </footer>
+              </div>
+            </section>
 
     `,
   },
