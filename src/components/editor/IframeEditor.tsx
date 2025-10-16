@@ -113,6 +113,7 @@ export default function IframeEditor({
   registerEditorControls
 }: IframeEditorProps) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false)
   const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'templates' | 'icons' | null>(null)
   const [rightTab, setRightTab] = useState<'content' | 'style'>('style')
   const [liveData, setLiveData] = useState<LiveData>(initialData || {
@@ -313,7 +314,8 @@ export default function IframeEditor({
         throw new Error('Failed to save editor state')
       }
 
-      // ✅ UPDATE: Only update pagesRef, NOT pages state (prevents re-render/blink)
+      // ✅ FIX: Only update pagesRef, NOT pages state to prevent re-render/blink
+      // The pages state will be synced when user switches pages
       pagesRef.current = updatedPages
 
       setLastSaved(new Date())
@@ -366,6 +368,16 @@ export default function IframeEditor({
         const data = await response.json()
         const iframeEditorSettings = data.catalogue?.settings?.iframeEditor
 
+        console.log('🔍 IframeEditor - Loading initial data:', {
+          hasIframeEditorSettings: !!iframeEditorSettings,
+          savedTemplateId: iframeEditorSettings?.templateId,
+          currentTemplateId: template.id,
+          hasSavedPages: !!iframeEditorSettings?.pages,
+          savedPageCount: iframeEditorSettings?.pages?.length || 0,
+          freshPageCount: template.pages.length,
+          fullSettings: iframeEditorSettings
+        })
+
         if (iframeEditorSettings) {
           // Load saved editor state
           if (iframeEditorSettings.liveData && !initialData) {
@@ -380,6 +392,16 @@ export default function IframeEditor({
           const savedTemplateId = iframeEditorSettings.templateId
           const currentTemplateId = template.id
 
+          console.log('🔍 IframeEditor - Page loading decision:', {
+            savedTemplateId,
+            currentTemplateId,
+            hasSavedPages: !!iframeEditorSettings.pages,
+            savedPageCount: iframeEditorSettings.pages?.length || 0,
+            templateMatch: savedTemplateId === currentTemplateId
+          })
+
+          // 🔥 FIX: Only load saved pages if they belong to the SAME template
+          // This prevents old template pages from overlaying on new templates
           if (iframeEditorSettings.pages && savedTemplateId === currentTemplateId) {
             console.log('✅ Loading saved pages - template matches:', {
               savedTemplateId,
@@ -398,6 +420,9 @@ export default function IframeEditor({
             // Don't load saved pages - they're from a different template!
             // The template pages will be used from the initial state
           }
+          // } else {
+          //   console.log('ℹ️ No saved pages found or no template mismatch')
+          // }
           if (typeof iframeEditorSettings.currentPageIndex === 'number') {
             setCurrentPageIndex(iframeEditorSettings.currentPageIndex)
           }
@@ -568,6 +593,24 @@ export default function IframeEditor({
     setCurrentPageIndex(0)
     clearSelection()
   }, [template?.id])
+
+  // Sync pages state from pagesRef when user switches pages with smooth transition
+  // This ensures saved changes persist across page navigation with fade animation
+  useEffect(() => {
+    // Only sync if pagesRef has different content than pages state
+    if (pagesRef.current !== pages) {
+      // Start fade out
+      setIsPageTransitioning(true)
+
+      // Wait for fade out, then update pages and fade in
+      const timer = setTimeout(() => {
+        setPages([...pagesRef.current])
+        setIsPageTransitioning(false)
+      }, 150) // 150ms fade out, then fade in
+
+      return () => clearTimeout(timer)
+    }
+  }, [currentPageIndex])
 
   const onInputChange = (path: string, value: string) => {
     setLiveData(prev => {
@@ -1551,7 +1594,13 @@ export default function IframeEditor({
                 <iframe
                   ref={iframeRef}
                   title={`Page ${currentPageIndex + 1}`}
-                  style={{ width: BASE_W, height: BASE_H, border: 'none' }}
+                  style={{
+                    width: BASE_W,
+                    height: BASE_H,
+                    border: 'none',
+                    opacity: isPageTransitioning ? 0 : 1,
+                    transition: 'opacity 0.15s ease-in-out'
+                  }}
                   sandbox="allow-same-origin allow-scripts"
                 />
               </div>

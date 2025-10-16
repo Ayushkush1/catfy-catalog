@@ -186,19 +186,19 @@ export default function CataloguePreviewPage() {
           catalogueTemplate: data.catalogue.template,
           iframeEditorTemplateId: iframeEditorSettings?.templateId,
           hasSavedPages: !!iframeEditorSettings?.pages,
-          savedPageCount: iframeEditorSettings?.pages?.length || 0
+          savedPageCount: iframeEditorSettings?.pages?.length || 0,
+          fullIframeEditorSettings: iframeEditorSettings
         })
 
         if (savedTemplateId) {
+          console.log('✅ Setting templateId to:', savedTemplateId)
           setTemplateId(savedTemplateId)
         } else {
           console.log('⚠️ No template ID found, using default:', {
             defaultTemplateId: templateId,
             catalogueName: data.catalogue.name
           })
-        }
-
-        if (iframeEditorSettings) {
+        } if (iframeEditorSettings) {
           if (iframeEditorSettings.liveData) setLiveData(iframeEditorSettings.liveData)
           if (iframeEditorSettings.styleMutations) setStyleMutations(iframeEditorSettings.styleMutations)
           // Load additional editor state
@@ -490,6 +490,7 @@ export default function CataloguePreviewPage() {
             style={{ opacity: isEditorReady ? 1 : 0 }}
           >
             <IframeEditor
+              key={templateId} // 🔥 CRITICAL FIX: Force React to re-mount when template changes
               template={(() => {
                 const template = getTemplate(templateId) || HtmlTemplates[0]
                 const foundTemplate = getTemplate(templateId)
@@ -516,7 +517,93 @@ export default function CataloguePreviewPage() {
               onStyleMutationsChange={setStyleMutations}
               registerIframeGetter={(getter) => { iframeGetterRef.current = getter }}
               previewMode={isPreviewMode}
-              onTemplateIdChange={(id) => setTemplateId(id)}
+              onTemplateIdChange={async (id) => {
+                console.log('� onTemplateIdChange CALLED with id:', id)
+                console.log('�🔄 Template changed:', {
+                  oldTemplateId: templateId,
+                  newTemplateId: id
+                })
+
+                // 🔥 FIX: Immediately update templateId to trigger React re-mount via key prop
+                setTemplateId(id)
+
+                // 🔥 FIX: Reset ALL editor state immediately
+                setStyleMutations({})
+                setLiveData({
+                  catalogue: catalogue ? {
+                    id: catalogue.id,
+                    name: catalogue.name,
+                  } : {},
+                  profile: catalogue?.profile || {},
+                  product: catalogue?.products?.[0] ? {
+                    title: catalogue.products[0].name || '',
+                    price: catalogue.products[0].priceDisplay || '',
+                    image: catalogue.products[0].imageUrl || '',
+                    description: catalogue.products[0].description || ''
+                  } : {},
+                  products: catalogue?.products || [],
+                  categories: catalogue?.categories || []
+                })
+
+                // 🔥 FIX: Save template change to database AND clear ALL saved editor state
+                if (catalogueId) {
+                  try {
+                    // First, get current catalogue data
+                    const getResponse = await fetch(`/api/catalogues/${catalogueId}`)
+                    const currentData = await getResponse.json()
+                    const currentSettings = currentData.catalogue?.settings || {}
+
+                    console.log('📦 Current settings before template change:', currentSettings)
+
+                    // Remove iframeEditor from settings completely
+                    const { iframeEditor, ...restSettings } = currentSettings as any
+
+                    console.log('📦 Settings after removing iframeEditor:', {
+                      restSettings,
+                      removedIframeEditor: iframeEditor
+                    })
+
+                    const updatePayload = {
+                      template: id, // Update catalogue.template field
+                      settings: {
+                        ...restSettings,
+                        iframeEditor: null // 🔥 CRITICAL: Explicitly set to null to remove it
+                      }
+                    }
+
+                    console.log('📤 Sending update payload:', updatePayload)
+
+                    const response = await fetch(`/api/catalogues/${catalogueId}`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(updatePayload)
+                    })
+
+                    console.log('📥 Update response status:', response.status)
+
+                    if (response.ok) {
+                      const responseData = await response.json()
+                      console.log('✅ Template changed and all saved editor state cleared')
+                      console.log('📦 Response data:', responseData)
+                      console.log('📦 Response settings:', responseData.catalogue?.settings)
+                      console.log('📦 Response template:', responseData.catalogue?.template)
+                      toast.success('Template changed - reloading with fresh template')
+
+                      // 🔥 CRITICAL: Force a hard reload to ensure clean state
+                      window.location.href = `/catalogue/${catalogueId}/preview`
+                    } else {
+                      const errorData = await response.json()
+                      console.error('❌ Failed to update template:', errorData)
+                      toast.error(`Failed to change template: ${errorData.error || 'Unknown error'}`)
+                    }
+                  } catch (error) {
+                    console.error('Error updating template:', error)
+                    toast.error('Failed to change template')
+                  }
+                }
+              }}
               catalogueId={catalogueId as string}
               autoSave={true}
               autoSaveInterval={10000} // 10 seconds after last change

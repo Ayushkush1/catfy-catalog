@@ -331,17 +331,21 @@ export default function EditCataloguePage() {
             ? JSON.parse(catalogue.settings || '{}')
             : (catalogue.settings || {})
 
+          // 🔥 FIX: Remove old iframeEditor settings to avoid loading wrong template pages
+          const { iframeEditor, ...restSettings } = existingSettings
+
           const updatedCatalogue = {
             ...catalogue,
             template: templateId,
             settings: {
-              ...existingSettings,
-              // Store template info for IframeEditor
+              ...restSettings,
+              // 🔥 CRITICAL: Create fresh iframeEditor settings for new template
+              // Don't include old pages/styleMutations from previous template
               iframeEditor: {
-                ...(existingSettings.iframeEditor || {}),
                 templateId: templateId,
                 engine: template.customProperties?.engine || 'mustache',
                 pageCount: template.customProperties?.pages?.length || 1
+                // Don't include: pages, styleMutations, liveData, etc.
               }
             }
           }
@@ -368,7 +372,7 @@ export default function EditCataloguePage() {
           // Update local state
           setCatalogue(updatedCatalogue)
 
-          toast.success('HTML template selected! Click Preview to edit.')
+          toast.success('Template changed successfully!')
         }
         return
       }

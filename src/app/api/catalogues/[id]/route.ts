@@ -51,6 +51,7 @@ const updateCatalogueSchema = z.object({
   allowSearch: z.boolean().optional(),
   showProductCodes: z.boolean().optional(),
   templateId: z.string().optional(),
+  template: z.string().optional(), // 🔥 ADD: catalogue.template field
 
   // Legacy settings object for backward compatibility
   settings: z.object({
@@ -390,7 +391,7 @@ export async function PUT(
       // Extract flattened fields
       companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
       logoUrl, coverImageUrl, contactImage, contactDescription, contactQuote, contactQuoteBy,
-      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId,
+      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId, template,
       settings: legacySettings,
       ...rest
     } = validatedData
@@ -478,6 +479,7 @@ export async function PUT(
       ...(introImage !== undefined && { introImage }),
       ...(theme !== undefined && { theme }),
       ...(isPublic !== undefined && { isPublic }),
+      ...(template !== undefined && { template }), // 🔥 ADD: Update catalogue.template field
     }
 
     const updatedCatalogue = await prisma.catalogue.update({

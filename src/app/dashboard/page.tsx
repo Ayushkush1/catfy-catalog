@@ -437,7 +437,7 @@ export default function DashboardPage() {
                       Welcome back to your AI-powered catalogue studio. Effortlessly create, manage, and share beautiful product catalogues.
                       Try out instant PDF export, pro themes, and more!
                     </p>
-                    
+
                     {profile?.subscription?.plan === 'FREE' && (
                       <div className="mt-2">
                         <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 py-1 text-xs font-medium">
@@ -496,15 +496,15 @@ export default function DashboardPage() {
               </div>
 
               {/* Enhanced Floating Catalogue Cards with Micro Animations */}
-              <div className='absolute top-20 right-56 h-[350px] w-[410px] hidden md:block'>
-               <Image
+              <div className='absolute top-16 right-56 h-[350px] w-[410px] hidden xl:block'>
+                <Image
                   height={350}
                   width={410}
                   src="/assets/heroImage.png"
                   alt="Catalogue Hero"
-                  className="w-full h-full object-contain z-10 pointer-events-none select-none drop-shadow-xl animate-float"
+                  className="w-full h-full object-contain z-10 pointer-events-none select-none drop-shadow-xl"
                 />
-                
+
 
 
               </div>
@@ -648,10 +648,10 @@ export default function DashboardPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCatalogues.map((catalogue) => (
-                  <Card 
-                  onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
-                  key={catalogue.id} 
-                  className="group hover:shadow-2xl transition-all cursor-pointer duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
+                  <Card
+                    onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
+                    key={catalogue.id}
+                    className="group hover:shadow-2xl transition-all cursor-pointer duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
                     {/* Enhanced Image Header with Gradient */}
                     <div className="relative h-48 overflow-hidden">
                       {/* Dynamic Theme-based Gradients */}
@@ -718,17 +718,21 @@ export default function DashboardPage() {
                       <div className="absolute top-4 right-4 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
                         <Button
                           size="sm"
-                          onClick={() => router.push(`/catalogue/${catalogue.id}/preview`)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            router.push(`/catalogue/${catalogue.id}/preview`)
+                          }}
                           className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
                           title="Preview Catalogue"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        
+
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               size="sm"
+                              onClick={(e) => e.stopPropagation()}
                               className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
                               title="More Options"
                             >
@@ -737,14 +741,20 @@ export default function DashboardPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 bg-white/95 backdrop-blur-sm">
                             <DropdownMenuItem
-                              onClick={() => shareCatalogue(catalogue)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                shareCatalogue(catalogue)
+                              }}
                               className="cursor-pointer hover:bg-gray-50"
                             >
                               <Share2 className="mr-3 h-4 w-4 text-blue-600" />
                               Share Catalogue
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => exportToPDF(catalogue.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                exportToPDF(catalogue.id)
+                              }}
                               disabled={!canExport()}
                               className="cursor-pointer hover:bg-gray-50"
                             >
@@ -755,7 +765,10 @@ export default function DashboardPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="cursor-pointer text-red-600 focus:text-red-600 hover:bg-red-50"
-                              onClick={() => deleteCatalogue(catalogue.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                deleteCatalogue(catalogue.id)
+                              }}
                             >
                               <Trash2 className="mr-3 h-4 w-4" />
                               Delete
