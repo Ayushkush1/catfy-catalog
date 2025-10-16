@@ -90,7 +90,7 @@ export default function CataloguePreviewPage() {
   const [toolbarZoom, setToolbarZoom] = useState<number>(100)
   const [showResizeMenu, setShowResizeMenu] = useState(false)
   const [gridOn, setGridOn] = useState<boolean>(false)
-  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false)
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(true)
   const [shareOpen, setShareOpen] = useState<boolean>(false)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [pageCount, setPageCount] = useState<number>(1)
@@ -391,7 +391,7 @@ export default function CataloguePreviewPage() {
             onClick={() => setIsPreviewMode(v => !v)}
             aria-label="Toggle preview mode"
           >
-            {isPreviewMode ? (<><Eye className="w-4 h-4 mr-1" /> Preview</>) : (<><EyeOff className="w-4 h-4 mr-1" /> Editing</>)}
+            {isPreviewMode ? (<><EyeOff className="w-4 h-4 mr-1" /> Preview</>) : (<><Eye className="w-4 h-4 mr-1" /> Editing</>)}
           </button>
         </div>
 
@@ -469,47 +469,51 @@ export default function CataloguePreviewPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Save Status Indicator */}
-          {saveStatus === 'saving' && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              Saving...
-            </div>
-          )}
-          {saveStatus === 'saved' && (
-            <div className="flex items-center gap-2 text-xs text-green-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              All changes saved
-            </div>
-          )}
-          {saveStatus === 'unsaved' && (
-            <div className="flex items-center gap-2 text-xs text-orange-600">
-              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              Unsaved changes
-            </div>
-          )}
-          {saveStatus === 'error' && (
-            <div className="flex items-center gap-2 text-xs text-red-600">
-              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              Save failed
-            </div>
-          )}
+          {/* Save Status Indicator (hidden in preview mode) */}
+          {!isPreviewMode && (
+            <>
+              {saveStatus === 'saving' && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Saving...
+                </div>
+              )}
+              {saveStatus === 'saved' && (
+                <div className="flex items-center gap-2 text-xs text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  All changes saved
+                </div>
+              )}
+              {saveStatus === 'unsaved' && (
+                <div className="flex items-center gap-2 text-xs text-orange-600">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Unsaved changes
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="flex items-center gap-2 text-xs text-red-600">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  Save failed
+                </div>
+              )}
 
-          <Button
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
-            onClick={async () => {
-              try {
-                await editorControlsRef.current?.saveToDatabase?.()
-                toast.success('Changes saved successfully')
-              } catch (error) {
-                toast.error('Failed to save changes')
-              }
-            }}
-            disabled={saveStatus === 'saving'}
-          >
-            <Save className="w-3 h-3 mr-1" />
-            {saveStatus === 'saving' ? 'Saving...' : 'Save'}
-          </Button>
+              <Button
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                onClick={async () => {
+                  try {
+                    await editorControlsRef.current?.saveToDatabase?.()
+                    toast.success('Changes saved successfully')
+                  } catch (error) {
+                    toast.error('Failed to save changes')
+                  }
+                }}
+                disabled={saveStatus === 'saving'}
+              >
+                <Save className="w-3 h-3 mr-1" />
+                {saveStatus === 'saving' ? 'Saving...' : 'Save'}
+              </Button>
+            </>
+          )}
           {/* Share */}
           <Button
             className="px-3 py-2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-lg hover:from-[#1E1338] hover:to-[#4F46E5] transition-colors text-sm font-medium flex items-center"

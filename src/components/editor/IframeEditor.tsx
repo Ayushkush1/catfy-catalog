@@ -1906,17 +1906,57 @@ export default function IframeEditor({
   )
 }
 
-// Layers Panel: simple DOM tree
+// Layers Panel: Beautiful DOM tree with element type icons
 function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string) => void }) {
-  type LayerNode = { label: string; path: string; children: LayerNode[] }
+  type LayerNode = { label: string; path: string; children: LayerNode[]; id?: string; classes?: string }
   const [tree, setTree] = useState<LayerNode[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [dragSource, setDragSource] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<{ path: string; pos: 'before' | 'inside' | 'after' } | null>(null)
 
   const isContainer = (el: Element) => {
-    // Consider elements with children as containers
     return el.children && el.children.length >= 0
+  }
+
+  // Helper to get icon for element type
+  const getElementIcon = (tagName: string) => {
+    const tag = tagName.toLowerCase()
+    const iconClass = "w-4 h-4"
+
+    // Layout elements
+    if (tag === 'div' || tag === 'section' || tag === 'article' || tag === 'main' || tag === 'aside' || tag === 'nav' || tag === 'header' || tag === 'footer') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" /></svg>
+    }
+    // Text elements
+    if (tag.match(/^h[1-6]$/)) {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h3v10H2V3zm9 0h3v10h-3V3zM6 7h4v2H6V7z" /></svg>
+    }
+    if (tag === 'p' || tag === 'span') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="3" width="12" height="2" rx="1" /><rect x="2" y="7" width="10" height="2" rx="1" /><rect x="2" y="11" width="8" height="2" rx="1" /></svg>
+    }
+    // Interactive elements
+    if (tag === 'button' || tag === 'a') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="5" width="12" height="6" rx="3" /></svg>
+    }
+    if (tag === 'input' || tag === 'textarea') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="6" rx="2" stroke="currentColor" strokeWidth="1.5" /></svg>
+    }
+    // Media
+    if (tag === 'img') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" /><circle cx="5" cy="5" r="1.5" fill="currentColor" /><path d="M1 12l4-4 3 3 5-5" stroke="currentColor" strokeWidth="1.5" /></svg>
+    }
+    if (tag === 'svg') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><polygon points="8,2 11,8 8,14 5,8" /></svg>
+    }
+    // Lists
+    if (tag === 'ul' || tag === 'ol') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="4" r="1" /><rect x="6" y="3" width="8" height="2" rx="1" /><circle cx="3" cy="8" r="1" /><rect x="6" y="7" width="8" height="2" rx="1" /><circle cx="3" cy="12" r="1" /><rect x="6" y="11" width="8" height="2" rx="1" /></svg>
+    }
+    if (tag === 'li') {
+      return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><circle cx="3" cy="8" r="1.5" /><rect x="6" y="7" width="8" height="2" rx="1" /></svg>
+    }
+    // Default
+    return <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="3" width="10" height="10" rx="1" /></svg>
   }
 
   // Local utilities to resolve/compute element paths within iframe DOM
@@ -1951,9 +1991,13 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
         const pathArr = [...prefix, idx]
         const path = pathArr.join('.')
         const label = child.tagName.toLowerCase()
+        const id = child.getAttribute('id')
+        const classes = child.getAttribute('class')
         return {
           label,
           path,
+          id: id || undefined,
+          classes: classes || undefined,
           children: walk(child, pathArr)
         }
       })
@@ -1999,11 +2043,9 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
       } else if (dropTarget?.pos === 'after') {
         tgtEl.parentElement?.insertBefore(srcEl, tgtEl.nextSibling)
       } else {
-        // Fallback: insert before
         tgtEl.parentElement?.insertBefore(srcEl, tgtEl)
       }
     } finally {
-      // Rebuild tree and update selection path to new location
       const newPath = computeElementPathLocal(doc, srcEl)
       buildTreeFromDom()
       onSelectPath(newPath)
@@ -2017,6 +2059,8 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
     const isDropHere = dropTarget && dropTarget.path === node.path
     const isSelected = selectedPath === node.path
     const isHovered = hoveredPath === node.path
+    const hasChildren = node.children.length > 0
+
     return (
       <li key={node.path} className="select-none">
         <div
@@ -2024,28 +2068,65 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
           onDragStart={() => handleDragStart(node.path)}
           onDragOver={(e) => handleDragOver(e, node.path)}
           onDrop={() => handleDrop(node.path)}
-          className={`flex items-center gap-2 px-3 py-1 text-xs cursor-pointer rounded ${isSelected ? 'bg-indigo-50 text-indigo-700' : isHovered ? 'bg-gray-100' : ''} ${isDropHere ? 'ring-1 ring-blue-300' : ''}`}
+          className={`group flex items-center gap-2 px-2 py-2 text-xs cursor-pointer rounded-lg transition-all ${isSelected
+              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] shadow-sm'
+              : isHovered
+                ? 'bg-gray-50'
+                : 'hover:bg-gray-50'
+            } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
           onClick={() => onSelectPath(node.path)}
           title={node.path}
+          style={{ paddingLeft: `${depth * 12 + 8}px` }}
         >
-          {/* Chevron */}
-          {node.children.length > 0 ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleCollapse(node.path) }}
-              className="p-0.5 text-gray-600 hover:text-gray-900"
-            >
-              {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-            </button>
-          ) : (
-            <span className="w-[14px]" />
+          {/* Expand/Collapse chevron */}
+          <div className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+            {hasChildren ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleCollapse(node.path) }}
+                className={`p-0.5 rounded hover:bg-gray-200 transition-transform ${isCollapsed ? '' : 'rotate-0'}`}
+              >
+                <ChevronRight size={12} className={`transition-transform ${isCollapsed ? '' : 'rotate-90'}`} />
+              </button>
+            ) : null}
+          </div>
+
+          {/* Element type icon */}
+          <div className={`flex-shrink-0 ${isSelected ? 'text-[#6366F1]' : 'text-gray-500 group-hover:text-gray-700'}`}>
+            {getElementIcon(node.label)}
+          </div>
+
+          {/* Element label and metadata */}
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <span className={`font-medium truncate ${isSelected ? 'text-[#2D1B69]' : 'text-gray-700'}`}>
+              {node.label}
+            </span>
+            {node.id && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono">
+                #{node.id}
+              </span>
+            )}
+            {node.classes && !node.id && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono truncate max-w-[100px]">
+                .{node.classes.split(' ')[0]}
+              </span>
+            )}
+          </div>
+
+          {/* Children count badge */}
+          {hasChildren && (
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected
+                ? 'bg-[#6366F1]/20 text-[#6366F1]'
+                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+              }`}>
+              {node.children.length}
+            </span>
           )}
-          {/* Indicator */}
-          <span className={`inline-block w-2 h-2 rounded-full ${isSelected ? 'bg-indigo-600' : isHovered ? 'bg-gray-400' : 'bg-transparent border border-gray-300'}`} />
-          {/* Label */}
-          <span className="truncate" style={{ paddingLeft: depth * 8 }}>{node.label}</span>
         </div>
-        {!isCollapsed && node.children.length > 0 && (
-          <ul className="ml-4 border-l border-gray-200">
+
+        {/* Render children */}
+        {!isCollapsed && hasChildren && (
+          <ul className="mt-0.5 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-gray-200 to-transparent" style={{ marginLeft: `${depth * 12 + 16}px` }} />
             {node.children.map(child => renderNode(child, depth + 1))}
           </ul>
         )}
@@ -2054,12 +2135,24 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-3 font-semibold border-b">Layers</div>
+    <div className="flex flex-col h-full bg-white">
+      <div className="p-3 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <div className="font-semibold text-sm text-gray-800">Layers</div>
+          <div className="text-xs text-gray-500">{tree.length} root</div>
+        </div>
+      </div>
       <div className="flex-1 overflow-y-auto p-2">
-        <ul className="space-y-1">
-          {tree.map(n => renderNode(n))}
-        </ul>
+        {tree.length > 0 ? (
+          <ul className="space-y-0.5">
+            {tree.map(n => renderNode(n))}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <LayersIcon className="w-8 h-8 text-gray-300 mb-2" />
+            <p className="text-xs text-gray-500">No layers found</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -2067,33 +2160,53 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
 
 // Elements Panel
 function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType) => void, onlyText?: boolean }) {
+  // Helper to provide a short description / visual hint for an element
+  const hint = (type: PaletteElementType) => {
+    switch (type) {
+      case 'button': return 'CTA button - primary action'
+      case 'input': return 'Single-line input field'
+      case 'image': return 'Display an image or cover'
+      case 'icon': return 'Small decorative icon'
+      case 'container': return 'Container to group content'
+      case 'divider': return 'Thin separator line'
+      case 'columns-2': return 'Two-column layout'
+      case 'columns-3': return 'Three-column layout'
+      case 'hero': return 'Large hero section'
+      case 'gallery': return 'Grid of images'
+      case 'product-card': return 'Compact product card'
+      case 'heading': return 'Section heading'
+      case 'paragraph': return 'Paragraph / body text'
+      default: return ''
+    }
+  }
+
   return (
-    <div>
-      <div className="p-3 font-semibold">{onlyText ? 'Text' : 'Elements'}</div>
-      <div className="p-3 grid grid-cols-2 gap-2">
+    <div className="p-3">
+      <div className="font-semibold mb-3">{onlyText ? 'Text' : 'Elements'}</div>
+      <div className="grid grid-cols-1 gap-3">
         {!onlyText && (
           <>
-            <PaletteItem label="Button" type="button" onAdd={onAdd} />
-            <PaletteItem label="Input" type="input" onAdd={onAdd} />
-            <PaletteItem label="Image" type="image" onAdd={onAdd} />
-            <PaletteItem label="Icon ★" type="icon" onAdd={onAdd} />
-            <PaletteItem label="Container" type="container" onAdd={onAdd} />
-            <PaletteItem label="Divider" type="divider" onAdd={onAdd} />
-            <PaletteItem label="2 Columns" type="columns-2" onAdd={onAdd} />
-            <PaletteItem label="3 Columns" type="columns-3" onAdd={onAdd} />
-            <PaletteItem label="Hero" type="hero" onAdd={onAdd} />
-            <PaletteItem label="Gallery" type="gallery" onAdd={onAdd} />
-            <PaletteItem label="Product Card" type="product-card" onAdd={onAdd} />
+            <PaletteItem label="Button" type="button" onAdd={onAdd} hintText={hint('button')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="4" width="28" height="12" rx="6" fill="#6366F1" /></svg>} />
+            <PaletteItem label="Input" type="input" onAdd={onAdd} hintText={hint('input')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="4" width="28" height="12" rx="4" fill="#E5E7EB" /><rect x="4" y="8" width="20" height="2" rx="1" fill="#9CA3AF" /></svg>} />
+            <PaletteItem label="Image" type="image" onAdd={onAdd} hintText={hint('image')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="28" height="20" rx="4" fill="#F3F4F6" /><circle cx="8" cy="8" r="2" fill="#9CA3AF" /><rect x="3" y="12" width="22" height="4" fill="#E5E7EB" /></svg>} />
+            <PaletteItem label="Icon" type="icon" onAdd={onAdd} hintText={hint('icon')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="14,2 17,11 26,11 19,16 22,24 14,19 6,24 9,16 2,11 11,11" fill="#F59E0B" /></svg>} />
+            <PaletteItem label="Container" type="container" onAdd={onAdd} hintText={hint('container')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="26" height="18" rx="3" stroke="#D1D5DB" strokeWidth="1.5" /></svg>} />
+            <PaletteItem label="Divider" type="divider" onAdd={onAdd} hintText={hint('divider')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="9" width="24" height="2" rx="1" fill="#E5E7EB" /></svg>} />
+            <PaletteItem label="2 Columns" type="columns-2" onAdd={onAdd} hintText={hint('columns-2')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="12" height="18" rx="2" fill="#F8FAFC" stroke="#E6E9EE" /><rect x="15" y="1" width="12" height="18" rx="2" fill="#F8FAFC" stroke="#E6E9EE" /></svg>} />
+            <PaletteItem label="3 Columns" type="columns-3" onAdd={onAdd} hintText={hint('columns-3')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="8" height="18" rx="2" fill="#F8FAFC" stroke="#E6E9EE" /><rect x="10" y="1" width="8" height="18" rx="2" fill="#F8FAFC" stroke="#E6E9EE" /><rect x="19" y="1" width="8" height="18" rx="2" fill="#F8FAFC" stroke="#E6E9EE" /></svg>} />
+            <PaletteItem label="Hero" type="hero" onAdd={onAdd} hintText={hint('hero')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="28" height="20" rx="3" fill="#EEF2FF" /><rect x="3" y="3" width="22" height="6" rx="2" fill="#6366F1" /></svg>} />
+            <PaletteItem label="Gallery" type="gallery" onAdd={onAdd} hintText={hint('gallery')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="8" height="8" rx="1" fill="#F3F4F6" stroke="#E5E7EB" /><rect x="10" y="1" width="8" height="8" rx="1" fill="#F3F4F6" stroke="#E5E7EB" /><rect x="19" y="1" width="8" height="8" rx="1" fill="#F3F4F6" stroke="#E5E7EB" /></svg>} />
+            <PaletteItem label="Product Card" type="product-card" onAdd={onAdd} hintText={hint('product-card')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="26" height="18" rx="3" fill="#FFFFFF" stroke="#E6E9EE" /><rect x="3" y="3" width="8" height="8" rx="2" fill="#F3F4F6" /><rect x="13" y="4" width="12" height="3" rx="1" fill="#E5E7EB" /></svg>} />
           </>
         )}
-        <PaletteItem label="Heading" type="heading" onAdd={onAdd} />
-        <PaletteItem label="Paragraph" type="paragraph" onAdd={onAdd} />
+        <PaletteItem label="Heading" type="heading" onAdd={onAdd} hintText={hint('heading')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="24" height="3" rx="1" fill="#111827" /><rect x="2" y="10" width="18" height="3" rx="1" fill="#111827" /></svg>} />
+        <PaletteItem label="Paragraph" type="paragraph" onAdd={onAdd} hintText={hint('paragraph')} icon={<svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="24" height="2" rx="1" fill="#9CA3AF" /><rect x="2" y="7" width="20" height="2" rx="1" fill="#9CA3AF" /><rect x="2" y="11" width="16" height="2" rx="1" fill="#9CA3AF" /></svg>} />
       </div>
     </div>
   )
 }
 
-function PaletteItem({ label, type, onAdd }: { label: string, type: PaletteElementType, onAdd: (t: PaletteElementType) => void }) {
+function PaletteItem({ label, type, onAdd, hintText, icon }: { label: string, type: PaletteElementType, onAdd: (t: PaletteElementType) => void, hintText?: string, icon?: React.ReactNode }) {
   const onDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('application/x-editor-element', type)
     e.dataTransfer.setData('text/plain', type)
@@ -2101,11 +2214,20 @@ function PaletteItem({ label, type, onAdd }: { label: string, type: PaletteEleme
   }
   return (
     <button
-      className="px-2 py-1 border rounded text-sm"
+      className="group flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-left"
       onClick={() => onAdd(type)}
       draggable
       onDragStart={onDragStart}
-    >{label}</button>
+      title={hintText || label}
+    >
+      <div className="w-10 h-8 flex items-center justify-center rounded-md bg-gradient-to-br from-white to-[#F8FAFF] border border-gray-100">
+        {icon || <svg className="w-6 h-4 text-gray-400" viewBox="0 0 24 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="22" height="14" rx="2" stroke="#E5E7EB" /></svg>}
+      </div>
+      <div className="flex-1">
+        <div className="text-sm font-medium text-gray-800">{label}</div>
+        {hintText && <div className="text-xs text-gray-500 mt-0.5">{hintText}</div>}
+      </div>
+    </button>
   )
 }
 
