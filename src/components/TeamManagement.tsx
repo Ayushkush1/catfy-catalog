@@ -335,7 +335,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             {isOwner && (
               <Button
                 onClick={() => setShowInviteDialog(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#6366F1] to-[#2D1B69]"
               >
                 <UserPlus className="h-4 w-4" />
                 Invite Member

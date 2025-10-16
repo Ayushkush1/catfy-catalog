@@ -827,7 +827,7 @@ const pages: IframePage[] = [
 // ---------- Export Template ----------
 export const SmellAddaCatalogTemplate: PrebuiltHtmlTemplate = {
   id: 'furniture-catalog',
-  name: 'SmellAdda Catalog Layout',
+  name: 'Furniture Catalogue',
   engine: 'mustache',
   sharedCss,
   pages,

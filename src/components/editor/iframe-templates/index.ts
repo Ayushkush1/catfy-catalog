@@ -1,7 +1,6 @@
-import { DefaultHtmlTemplate } from './DefaultHtmlTemplate'
-import SimpleProductTemplate from './SimpleProductTemplate'
-import DarkHeroTemplate from './DarkHeroTemplate'
+
 import SmellAddaCatalogTemplate from './FurnitureCatalogueTemplate'
+import FashionCatalogueTemplate from './FashionCatalogueTemplate'
 // Local template types to avoid importing editor internals
 type IframePage = {
   id: string
@@ -19,10 +18,9 @@ export type PrebuiltTemplate = {
 }
 
 export const HtmlTemplates: PrebuiltTemplate[] = [
-  DefaultHtmlTemplate as unknown as PrebuiltTemplate,
-  SimpleProductTemplate as unknown as PrebuiltTemplate,
-  DarkHeroTemplate as unknown as PrebuiltTemplate,
+
   SmellAddaCatalogTemplate as unknown as PrebuiltTemplate,
+  FashionCatalogueTemplate as unknown as PrebuiltTemplate,
 ].filter(Boolean)
 
 export const getTemplateById = (id: string): PrebuiltTemplate | undefined => {

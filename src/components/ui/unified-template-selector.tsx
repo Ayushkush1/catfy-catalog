@@ -110,7 +110,7 @@ export function UnifiedTemplateSelector({
       } else {
         await templateManager.handleEditPageTemplateSelection(templateId, context)
       }
-      
+
       onTemplateSelect(templateId)
     } catch (error) {
       console.error('Template selection failed:', error)
@@ -134,61 +134,66 @@ export function UnifiedTemplateSelector({
     const canAccess = !isPremium || userPlan !== 'free'
 
     return (
-      <Card 
+      <Card
         key={template.id}
+        onClick={() => canAccess && handleTemplateSelect(template.id)}
+        role="button"
+        aria-pressed={isSelected}
+        aria-label={`${template.name}${isSelected ? ' (selected)' : ''}`}
         className={cn(
-          'cursor-pointer transition-all duration-200 hover:shadow-lg',
-          isSelected && 'ring-2 ring-blue-500 shadow-lg',
-          !canAccess && 'opacity-60',
+          'group relative overflow-hidden rounded-lg cursor-pointer transition-transform transform hover:-translate-y-1 hover:shadow-2xl',
+          isSelected && 'ring-2 ring-blue-500',
+          !canAccess && 'opacity-60 pointer-events-none',
           viewMode === 'list' && 'flex flex-row'
         )}
-        onClick={() => canAccess && handleTemplateSelect(template.id)}
       >
         <div className={cn(
-          'relative',
+          'relative bg-gray-100',
           viewMode === 'grid' ? 'aspect-video' : 'w-48 flex-shrink-0'
         )}>
           {template.previewImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={template.previewImage}
               alt={template.name}
-              className="w-full h-full object-cover rounded-t-lg"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                ; (e.target as HTMLImageElement).src = '/templates/default-preview.svg'
+              }}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-t-lg flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-blue-500" />
+            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-blue-500" />
             </div>
           )}
-          
-          {isPremium && (
-            <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">
-              <Crown className="w-3 h-3 mr-1" />
-              Premium
-            </Badge>
-          )}
-          
+
+          {/* Overlay header */}
+          <div className="absolute left-0 right-0 top-0 px-3 py-2 bg-gradient-to-b from-black/50 to-transparent text-white flex items-center justify-between z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold truncate max-w-xs">{template.name}</span>
+            </div>
+            {isPremium && (
+              <Badge className="bg-yellow-500 text-white text-xs">Premium</Badge>
+            )}
+          </div>
+
+          {/* Preview CTA visible on hover */}
           {showPreview && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation()
-                handlePreview(template.id)
-              }}
+            <button
+              aria-label={`Preview ${template.name}`}
+              onClick={(e) => { e.stopPropagation(); handlePreview(template.id) }}
+              className="absolute bottom-3 right-3 bg-white/90 text-gray-800 rounded-md p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-20"
             >
               <Eye className="w-4 h-4" />
-            </Button>
+            </button>
           )}
         </div>
 
-        <CardHeader className={cn(viewMode === 'list' && 'flex-1')}>
-          <CardTitle className="text-lg">{template.name}</CardTitle>
-          <CardDescription className="text-sm">
-            {template.description}
-          </CardDescription>
-          
-          <div className="flex flex-wrap gap-1 mt-2">
+        <CardHeader className={cn('p-4', viewMode === 'list' && 'flex-1')}>
+          <CardTitle className="text-base truncate">{template.name}</CardTitle>
+          <CardDescription className="text-sm text-gray-600 line-clamp-2">{template.description}</CardDescription>
+
+          <div className="flex flex-wrap gap-2 mt-3">
             {template.category && (
               <Badge variant="outline" className="text-xs">
                 {template.category}
@@ -202,8 +207,15 @@ export function UnifiedTemplateSelector({
           </div>
         </CardHeader>
 
+        {/* Selected indicator */}
+        {isSelected && (
+          <div className="absolute top-2 right-3 z-30">
+            <Badge className="bg-gradient-to-r from-[#6366F1]  text-white">Selected</Badge>
+          </div>
+        )}
+
         {!canAccess && (
-          <div className="absolute inset-0 bg-black/20 rounded-lg flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <Badge className="bg-yellow-500 text-white">
               <Crown className="w-3 h-3 mr-1" />
               Premium Required
@@ -285,7 +297,7 @@ export function UnifiedTemplateSelector({
           <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
           <p className="text-gray-600">
-            {searchQuery || selectedCategory !== 'all' 
+            {searchQuery || selectedCategory !== 'all'
               ? 'Try adjusting your search or filters'
               : 'No templates are available at the moment'
             }
@@ -294,7 +306,7 @@ export function UnifiedTemplateSelector({
       ) : (
         <div className={cn(
           'grid gap-6',
-          viewMode === 'grid' 
+          viewMode === 'grid'
             ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
             : 'grid-cols-1'
         )}>

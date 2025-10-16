@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FileText } from 'lucide-react'
 import { UnifiedTemplateSelector } from './unified-template-selector'
 import { TemplateSelectionContext } from '@/lib/template-manager'
@@ -35,6 +35,11 @@ export function TemplateThemeWorkflow({
 }: TemplateThemeWorkflowProps) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(initialTemplateId)
 
+  // Keep internal selection in sync with initialTemplateId prop when it changes
+  useEffect(() => {
+    setSelectedTemplateId(initialTemplateId)
+  }, [initialTemplateId])
+
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplateId(templateId)
     // Immediately call the completion callback
@@ -67,7 +72,7 @@ export function TemplateThemeWorkflow({
             Select a template that best fits your catalog needs
           </p>
         </div>
-        
+
         <UnifiedTemplateSelector
           context={selectionContext}
           userProfile={userProfile}

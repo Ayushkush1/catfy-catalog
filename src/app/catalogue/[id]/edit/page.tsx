@@ -1329,7 +1329,7 @@ export default function EditCataloguePage() {
                               <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
                               <Button
                                 onClick={() => openCategoryDialog()}
-                                className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                                className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                               >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Create Category
@@ -1539,7 +1539,7 @@ export default function EditCataloguePage() {
                       <h2 className="text-xl font-semibold text-[#1A1B41]">Categories</h2>
                       <Button
                         onClick={() => openCategoryDialog()}
-                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                        className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Category
@@ -1556,7 +1556,7 @@ export default function EditCataloguePage() {
                           </p>
                           <Button
                             onClick={() => openCategoryDialog()}
-                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                            className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             Create Category
@@ -1691,7 +1691,7 @@ export default function EditCataloguePage() {
                       <h2 className="text-xl font-semibold text-[#1A1B41]">Products</h2>
                       <Button
                         onClick={() => openProductDialog()}
-                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                        className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Product
@@ -1708,7 +1708,7 @@ export default function EditCataloguePage() {
                           </p>
                           <Button
                             onClick={() => openProductDialog()}
-                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                            className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Product
@@ -1860,6 +1860,7 @@ export default function EditCataloguePage() {
                           <Switch
                             checked={catalogue.isPublic}
                             onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                            className={`${catalogue.isPublic ? 'bg-[#2D1B69]' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors `}
                           />
                         </div>
                       </div>
@@ -1971,7 +1972,7 @@ export default function EditCataloguePage() {
                   type="button"
                   variant="outline"
                   size="xs"
-                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-gradient-to-r from-[#6366F1] to-[#2D1B69]"
                   disabled={isGeneratingDescription || !productForm.name.trim()}
                   onClick={async () => {
                     if (!productForm.name.trim()) {

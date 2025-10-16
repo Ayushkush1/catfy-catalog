@@ -23,7 +23,13 @@ function convertHtmlTemplateToConfig(htmlTemplate: PrebuiltTemplate): TemplateCo
     category: 'modern', // All HTML templates use modern category
     isPremium: false,
     version: '1.0.0',
-    previewImage: `/templates/${htmlTemplate.id}-preview.svg`,
+    // Use specific preview assets from public/templates. Some template ids differ from the
+    // public filename (eg. furniture-catalog -> furniture-catalogue-preview.png).
+    // Map known special cases here; default to svg preview naming.
+    previewImage:
+      htmlTemplate.id === 'furniture-catalog' ? '/templates/furniture-catalogue-preview.png'
+        : htmlTemplate.id === 'fashion-catalogue' ? '/templates/fashion-catalogue-preview.png'
+          : `/templates/${htmlTemplate.id}-preview.svg`,
     features: ['HTML', htmlTemplate.engine, `${htmlTemplate.pages.length} page(s)`],
     tags: ['html', htmlTemplate.engine, 'iframe'],
     pageCount: htmlTemplate.pages.length,
