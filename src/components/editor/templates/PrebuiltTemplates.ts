@@ -1,0 +1,1937 @@
+import { Template } from './types';
+
+export const PrebuiltTemplates: Template[] = [
+  // Simple test template to debug the issue
+  {
+    id: 'simple-test',
+    name: 'Simple Test',
+    description: 'A minimal template for testing',
+    category: 'test',
+    tags: ['test', 'simple'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 20,
+          "backgroundColor": "#ffffff"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["simple-text"],
+        "linkedNodes": {}
+      },
+      "simple-text": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Hello World - Simple Test",
+          "fontSize": 16,
+          "color": "#000000"
+        },
+        "displayName": "Text",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      }
+    }
+  },
+  {
+    id: 'landing-hero',
+    name: 'Hero Landing Page',
+    description: 'A modern hero section with heading, description, and call-to-action button',
+    category: 'landing',
+    tags: ['hero', 'landing', 'cta', 'modern'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "transparent",
+          "minHeight": "100vh",
+          "display": "flex",
+          "flexDirection": "column",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "textAlign": "center"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["hero-heading", "hero-description", "hero-button"],
+        "linkedNodes": {}
+      },
+      "hero-heading": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Build Amazing Websites",
+          "level": 1,
+          "fontSize": 48,
+          "fontWeight": "bold",
+          "color": "#1f2937",
+          "marginBottom": 16
+        },
+        "displayName": "Heading",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "hero-description": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Create stunning, responsive websites with our intuitive drag-and-drop editor. No coding required.",
+          "fontSize": 18,
+          "color": "#6b7280",
+          "marginBottom": 32,
+          "maxWidth": 600
+        },
+        "displayName": "Text",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "hero-button": {
+        "type": { "resolvedName": "ButtonBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Get Started",
+          "variant": "primary",
+          "size": "lg",
+          "backgroundColor": "#3b82f6",
+          "color": "#ffffff",
+          "padding": "12px 32px",
+          "borderRadius": 8
+        },
+        "displayName": "Button",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      }
+    }
+  },
+  {
+    id: 'feature-grid',
+    name: 'Feature Grid',
+    description: 'A 3-column grid showcasing features with icons and descriptions',
+    category: 'content',
+    tags: ['features', 'grid', 'icons', 'services'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 64,
+          "backgroundColor": "#f9fafb"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["features-heading", "features-grid"],
+        "linkedNodes": {}
+      },
+      "features-heading": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Our Features",
+          "level": 2,
+          "fontSize": 36,
+          "fontWeight": "bold",
+          "color": "#1f2937",
+          "textAlign": "center",
+          "marginBottom": 48
+        },
+        "displayName": "Heading",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "features-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 3,
+          "gap": 32,
+          "gridTemplateColumns": "repeat(3, 1fr)"
+        },
+        "displayName": "Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["feature-1", "feature-2", "feature-3"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "feature-1": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 24,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 8,
+          "textAlign": "center",
+          "boxShadow": "0 1px 3px rgba(0, 0, 0, 0.1)"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["feature-1-icon", "feature-1-title", "feature-1-desc"],
+        "linkedNodes": {},
+        "parent": "features-grid"
+      },
+      "feature-1-icon": {
+        "type": { "resolvedName": "IconBlock" },
+        "isCanvas": false,
+        "props": {
+          "icon": "Zap",
+          "size": 48,
+          "color": "#3b82f6",
+          "marginBottom": 16
+        },
+        "displayName": "Icon",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "feature-1"
+      },
+      "feature-1-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Fast Performance",
+          "level": 3,
+          "fontSize": 20,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Heading",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "feature-1"
+      },
+      "feature-1-desc": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Lightning-fast loading times and optimized performance for the best user experience.",
+          "fontSize": 14,
+          "color": "#6b7280"
+        },
+        "displayName": "Text",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "feature-1"
+      }
+    }
+  },
+  // Temporarily disabled - uses FormBlock which is not available
+  // {
+  //   id: 'contact-form',
+  //   name: 'Contact Form',
+  //   description: 'A complete contact form with validation and styling',
+  //   category: 'forms',
+  //   tags: ['contact', 'form', 'validation', 'business'],
+  //   isCustom: false,
+  //   createdAt: new Date(),
+  //   updatedAt: new Date(),
+  //   data: {
+  //     "ROOT": {
+  //       "type": { "resolvedName": "ContainerBlock" },
+  //       "isCanvas": true,
+  //       "props": {
+  //         "padding": 48,
+  //         "backgroundColor": "#ffffff",
+  //         "maxWidth": 600,
+  //         "margin": "0 auto"
+  //       },
+  //       "displayName": "Container",
+  //       "custom": {},
+  //       "hidden": false,
+  //       "nodes": ["contact-heading", "contact-form"],
+  //       "linkedNodes": {}
+  //     },
+  //     "contact-heading": {
+  //       "type": { "resolvedName": "HeadingBlock" },
+  //       "isCanvas": false,
+  //       "props": {
+  //         "text": "Get In Touch",
+  //         "level": 2,
+  //         "fontSize": 32,
+  //         "fontWeight": "bold",
+  //         "color": "#1f2937",
+  //         "textAlign": "center",
+  //         "marginBottom": 32
+  //       },
+  //       "displayName": "Heading",
+  //       "custom": {},
+  //       "hidden": false,
+  //       "nodes": [],
+  //       "linkedNodes": {},
+  //       "parent": "ROOT"
+  //     },
+  //     "contact-form": {
+  //       "type": { "resolvedName": "FormBlock" },
+  //       "isCanvas": false,
+  //       "props": {
+  //         "fields": [
+  //           {
+  //             "id": "name",
+  //             "type": "text",
+  //             "label": "Full Name",
+  //             "placeholder": "Enter your full name",
+  //             "required": true
+  //           },
+  //           {
+  //             "id": "email",
+  //             "type": "email",
+  //             "label": "Email Address",
+  //             "placeholder": "Enter your email",
+  //             "required": true
+  //           },
+  //           {
+  //             "id": "subject",
+  //             "type": "text",
+  //             "label": "Subject",
+  //             "placeholder": "What is this about?",
+  //             "required": true
+  //           },
+  //           {
+  //             "id": "message",
+  //             "type": "textarea",
+  //             "label": "Message",
+  //             "placeholder": "Tell us more...",
+  //             "required": true,
+  //             "rows": 5
+  //           }
+  //         ],
+  //         "submitText": "Send Message",
+  //         "submitButtonStyle": {
+  //           "backgroundColor": "#3b82f6",
+  //           "color": "#ffffff",
+  //           "padding": "12px 24px",
+  //           "borderRadius": 6,
+  //           "width": "100%"
+  //         }
+  //       },
+  //       "displayName": "Form",
+  //       "custom": {},
+  //       "hidden": false,
+  //       "nodes": [],
+  //       "linkedNodes": {},
+  //       "parent": "ROOT"
+  //     }
+  //   }
+  // },
+  {
+    id: 'pricing-table',
+    name: 'Pricing Table',
+    description: 'A responsive pricing table with three tiers',
+    category: 'business',
+    tags: ['pricing', 'table', 'business', 'subscription'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 64,
+          "backgroundColor": "#f9fafb"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["pricing-heading", "pricing-grid"],
+        "linkedNodes": {}
+      },
+      "pricing-heading": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Choose Your Plan",
+          "level": 2,
+          "fontSize": 36,
+          "fontWeight": "bold",
+          "color": "#1f2937",
+          "textAlign": "center",
+          "marginBottom": 48
+        },
+        "displayName": "Heading",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "pricing-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 3,
+          "gap": 24,
+          "gridTemplateColumns": "repeat(3, 1fr)"
+        },
+        "displayName": "Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["plan-basic", "plan-pro", "plan-enterprise"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      }
+    }
+  },
+  // Temporarily disabled - uses CarouselBlock which is not available
+  // {
+  //   id: 'testimonials',
+  //   name: 'Testimonials Section',
+  //   description: 'Customer testimonials with photos and quotes',
+  //   category: 'social',
+  //   tags: ['testimonials', 'reviews', 'social proof', 'customers'],
+  //   isCustom: false,
+  //   createdAt: new Date(),
+  //   updatedAt: new Date(),
+  //   data: {
+  //     "ROOT": {
+  //       "type": { "resolvedName": "ContainerBlock" },
+  //       "isCanvas": true,
+  //       "props": {
+  //         "padding": 64,
+  //         "backgroundColor": "#ffffff"
+  //       },
+  //       "displayName": "Container",
+  //       "custom": {},
+  //       "hidden": false,
+  //       "nodes": ["testimonials-heading", "testimonials-carousel"],
+  //       "linkedNodes": {}
+  //     },
+  //     "testimonials-heading": {
+  //       "type": { "resolvedName": "HeadingBlock" },
+  //       "isCanvas": false,
+  //       "props": {
+  //         "text": "What Our Customers Say",
+  // Product Catalog Template
+  {
+    id: 'product-catalog',
+    name: 'Product Catalog',
+    description: 'A beautiful product catalog with hero section, featured products grid, and footer',
+    category: 'catalog',
+    tags: ['catalog', 'products', 'ecommerce', 'grid', 'hero'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#ffffff",
+          "minHeight": "100vh"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["catalog-hero", "catalog-featured", "catalog-products", "catalog-footer"],
+        "linkedNodes": {}
+      },
+      "catalog-hero": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 80,
+          "backgroundColor": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          "textAlign": "center",
+          "color": "#ffffff"
+        },
+        "displayName": "Hero Section",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["hero-title", "hero-subtitle", "hero-cta"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "hero-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Premium Product Collection",
+          "level": 1,
+          "fontSize": 56,
+          "fontWeight": "bold",
+          "color": "#ffffff",
+          "marginBottom": 16,
+          "textAlign": "center"
+        },
+        "displayName": "Hero Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "catalog-hero"
+      },
+      "hero-subtitle": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Discover our curated selection of premium products designed for modern living",
+          "fontSize": 20,
+          "color": "#f3f4f6",
+          "marginBottom": 32,
+          "maxWidth": 600,
+          "textAlign": "center"
+        },
+        "displayName": "Hero Subtitle",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "catalog-hero"
+      },
+      "hero-cta": {
+        "type": { "resolvedName": "ButtonBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Explore Collection",
+          "variant": "primary",
+          "size": "lg",
+          "backgroundColor": "#ffffff",
+          "color": "#667eea",
+          "padding": "16px 40px",
+          "borderRadius": 50,
+          "fontWeight": "semibold",
+          "boxShadow": "0 4px 15px rgba(0, 0, 0, 0.2)"
+        },
+        "displayName": "Hero CTA",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "catalog-hero"
+      },
+      "catalog-featured": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 80,
+          "backgroundColor": "#f8fafc"
+        },
+        "displayName": "Featured Section",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["featured-title", "featured-grid"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "featured-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Featured Products",
+          "level": 2,
+          "fontSize": 42,
+          "fontWeight": "bold",
+          "color": "#1f2937",
+          "textAlign": "center",
+          "marginBottom": 48
+        },
+        "displayName": "Featured Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "catalog-featured"
+      },
+      "featured-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 3,
+          "gap": 32,
+          "gridTemplateColumns": "repeat(auto-fit, minmax(300px, 1fr))"
+        },
+        "displayName": "Featured Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["featured-1", "featured-2", "featured-3"],
+        "linkedNodes": {},
+        "parent": "catalog-featured"
+      },
+      "featured-1": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+          "boxShadow": "0 10px 25px rgba(0, 0, 0, 0.1)",
+          "overflow": "hidden",
+          "transition": "transform 0.3s ease"
+        },
+        "displayName": "Product Card 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-1-image", "product-1-content"],
+        "linkedNodes": {},
+        "parent": "featured-grid"
+      },
+      "product-1-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
+          "alt": "Premium Headphones",
+          "width": "100%",
+          "height": 250,
+          "objectFit": "cover"
+        },
+        "displayName": "Product Image 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "featured-1"
+      },
+      "product-1-content": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 24
+        },
+        "displayName": "Product Content 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-1-title", "product-1-desc", "product-1-price"],
+        "linkedNodes": {},
+        "parent": "featured-1"
+      },
+      "product-1-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Premium Wireless Headphones",
+          "level": 3,
+          "fontSize": 22,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product Title 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-1-content"
+      },
+      "product-1-desc": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Experience crystal-clear audio with our premium wireless headphones featuring noise cancellation.",
+          "fontSize": 14,
+          "color": "#6b7280",
+          "marginBottom": 16,
+          "lineHeight": 1.5
+        },
+        "displayName": "Product Description 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-1-content"
+      },
+      "product-1-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$299.99",
+          "fontSize": 24,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product Price 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-1-content"
+      },
+      "featured-2": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+          "boxShadow": "0 10px 25px rgba(0, 0, 0, 0.1)",
+          "overflow": "hidden"
+        },
+        "displayName": "Product Card 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-2-image", "product-2-content"],
+        "linkedNodes": {},
+        "parent": "featured-grid"
+      },
+      "product-2-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
+          "alt": "Smart Watch",
+          "width": "100%",
+          "height": 250,
+          "objectFit": "cover"
+        },
+        "displayName": "Product Image 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "featured-2"
+      },
+      "product-2-content": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 24
+        },
+        "displayName": "Product Content 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-2-title", "product-2-desc", "product-2-price"],
+        "linkedNodes": {},
+        "parent": "featured-2"
+      },
+      "product-2-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Smart Fitness Watch",
+          "level": 3,
+          "fontSize": 22,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product Title 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-2-content"
+      },
+      "product-2-desc": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Track your fitness goals with advanced health monitoring and GPS capabilities.",
+          "fontSize": 14,
+          "color": "#6b7280",
+          "marginBottom": 16,
+          "lineHeight": 1.5
+        },
+        "displayName": "Product Description 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-2-content"
+      },
+      "product-2-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$399.99",
+          "fontSize": 24,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product Price 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-2-content"
+      },
+      "featured-3": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+          "boxShadow": "0 10px 25px rgba(0, 0, 0, 0.1)",
+          "overflow": "hidden"
+        },
+        "displayName": "Product Card 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-3-image", "product-3-content"],
+        "linkedNodes": {},
+        "parent": "featured-grid"
+      },
+      "product-3-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=300&fit=crop",
+          "alt": "Wireless Speaker",
+          "width": "100%",
+          "height": 250,
+          "objectFit": "cover"
+        },
+        "displayName": "Product Image 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "featured-3"
+      },
+      "product-3-content": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 24
+        },
+        "displayName": "Product Content 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-3-title", "product-3-desc", "product-3-price"],
+        "linkedNodes": {},
+        "parent": "featured-3"
+      },
+      "product-3-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Portable Bluetooth Speaker",
+          "level": 3,
+          "fontSize": 22,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product Title 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-3-content"
+      },
+      "product-3-desc": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Powerful sound in a compact design. Perfect for outdoor adventures and home entertainment.",
+          "fontSize": 14,
+          "color": "#6b7280",
+          "marginBottom": 16,
+          "lineHeight": 1.5
+        },
+        "displayName": "Product Description 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-3-content"
+      },
+      "product-3-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$149.99",
+          "fontSize": 24,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product Price 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-3-content"
+      },
+      "catalog-products": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 80,
+          "backgroundColor": "#ffffff"
+        },
+        "displayName": "All Products Section",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["products-title", "products-grid"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "products-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "All Products",
+          "level": 2,
+          "fontSize": 42,
+          "fontWeight": "bold",
+          "color": "#1f2937",
+          "textAlign": "center",
+          "marginBottom": 48
+        },
+        "displayName": "Products Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "catalog-products"
+      },
+      "products-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 4,
+          "gap": 24,
+          "gridTemplateColumns": "repeat(auto-fit, minmax(250px, 1fr))"
+        },
+        "displayName": "Products Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-4", "product-5", "product-6", "product-7"],
+        "linkedNodes": {},
+        "parent": "catalog-products"
+      },
+      "product-4": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 16,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 12,
+          "border": "1px solid #e5e7eb",
+          "textAlign": "center"
+        },
+        "displayName": "Product 4",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-4-image", "product-4-title", "product-4-price"],
+        "linkedNodes": {},
+        "parent": "products-grid"
+      },
+      "product-4-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=250&h=200&fit=crop",
+          "alt": "Laptop",
+          "width": "100%",
+          "height": 180,
+          "objectFit": "cover",
+          "borderRadius": 8,
+          "marginBottom": 12
+        },
+        "displayName": "Product 4 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-4"
+      },
+      "product-4-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Gaming Laptop",
+          "fontSize": 16,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product 4 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-4"
+      },
+      "product-4-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$1,299.99",
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product 4 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-4"
+      },
+      "product-5": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 16,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 12,
+          "border": "1px solid #e5e7eb",
+          "textAlign": "center"
+        },
+        "displayName": "Product 5",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-5-image", "product-5-title", "product-5-price"],
+        "linkedNodes": {},
+        "parent": "products-grid"
+      },
+      "product-5-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=250&h=200&fit=crop",
+          "alt": "Smartphone",
+          "width": "100%",
+          "height": 180,
+          "objectFit": "cover",
+          "borderRadius": 8,
+          "marginBottom": 12
+        },
+        "displayName": "Product 5 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-5"
+      },
+      "product-5-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Smartphone Pro",
+          "fontSize": 16,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product 5 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-5"
+      },
+      "product-5-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$899.99",
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product 5 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-5"
+      },
+      "product-6": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 16,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 12,
+          "border": "1px solid #e5e7eb",
+          "textAlign": "center"
+        },
+        "displayName": "Product 6",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-6-image", "product-6-title", "product-6-price"],
+        "linkedNodes": {},
+        "parent": "products-grid"
+      },
+      "product-6-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=250&h=200&fit=crop",
+          "alt": "Running Shoes",
+          "width": "100%",
+          "height": 180,
+          "objectFit": "cover",
+          "borderRadius": 8,
+          "marginBottom": 12
+        },
+        "displayName": "Product 6 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-6"
+      },
+      "product-6-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Running Shoes",
+          "fontSize": 16,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product 6 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-6"
+      },
+      "product-6-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$129.99",
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product 6 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-6"
+      },
+      "product-7": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 16,
+          "backgroundColor": "#ffffff",
+          "borderRadius": 12,
+          "border": "1px solid #e5e7eb",
+          "textAlign": "center"
+        },
+        "displayName": "Product 7",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["product-7-image", "product-7-title", "product-7-price"],
+        "linkedNodes": {},
+        "parent": "products-grid"
+      },
+      "product-7-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=250&h=200&fit=crop",
+          "alt": "Backpack",
+          "width": "100%",
+          "height": 180,
+          "objectFit": "cover",
+          "borderRadius": 8,
+          "marginBottom": 12
+        },
+        "displayName": "Product 7 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-7"
+      },
+      "product-7-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Travel Backpack",
+          "fontSize": 16,
+          "fontWeight": "semibold",
+          "color": "#1f2937",
+          "marginBottom": 8
+        },
+        "displayName": "Product 7 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-7"
+      },
+      "product-7-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$79.99",
+          "fontSize": 18,
+          "fontWeight": "bold",
+          "color": "#667eea"
+        },
+        "displayName": "Product 7 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "product-7"
+      },
+      "catalog-footer": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 60,
+          "backgroundColor": "#1f2937",
+          "textAlign": "center"
+        },
+        "displayName": "Footer",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["footer-content"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "footer-content": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "maxWidth": 800
+        },
+        "displayName": "Footer Content",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["footer-title", "footer-text", "footer-contact"],
+        "linkedNodes": {},
+        "parent": "catalog-footer"
+      },
+      "footer-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Get in Touch",
+          "level": 3,
+          "fontSize": 28,
+          "fontWeight": "bold",
+          "color": "#ffffff",
+          "marginBottom": 16
+        },
+        "displayName": "Footer Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "footer-content"
+      },
+      "footer-text": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Have questions about our products? We'd love to hear from you. Contact us for more information.",
+          "fontSize": 16,
+          "color": "#d1d5db",
+          "marginBottom": 24,
+          "lineHeight": 1.6
+        },
+        "displayName": "Footer Text",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "footer-content"
+      },
+      "footer-contact": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Email: info@company.com | Phone: (555) 123-4567",
+          "fontSize": 14,
+          "color": "#9ca3af"
+        },
+        "displayName": "Footer Contact",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "footer-content"
+      }
+    }
+  },
+
+  // Fashion Catalog Template
+  {
+    id: 'fashion-catalogue',
+    name: 'Fashion Lookbook',
+    description: 'A stylish fashion catalog with lookbook layout and seasonal collections',
+    category: 'catalog',
+    tags: ['fashion', 'lookbook', 'style', 'clothing', 'seasonal'],
+    isCustom: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    data: {
+      "ROOT": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#ffffff",
+          "minHeight": "100vh"
+        },
+        "displayName": "Container",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-hero", "fashion-collections", "fashion-featured"],
+        "linkedNodes": {}
+      },
+      "fashion-hero": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 0,
+          "backgroundColor": "#000000",
+          "minHeight": "100vh",
+          "display": "flex",
+          "alignItems": "center",
+          "position": "relative"
+        },
+        "displayName": "Fashion Hero",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["hero-bg", "hero-overlay"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "hero-bg": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=800&fit=crop",
+          "alt": "Fashion Hero",
+          "width": "100%",
+          "height": "100vh",
+          "objectFit": "cover",
+          "position": "absolute",
+          "top": 0,
+          "left": 0,
+          "zIndex": 1
+        },
+        "displayName": "Hero Background",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-hero"
+      },
+      "hero-overlay": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "position": "relative",
+          "zIndex": 2,
+          "padding": 80,
+          "textAlign": "center",
+          "backgroundColor": "rgba(0, 0, 0, 0.4)"
+        },
+        "displayName": "Hero Overlay",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-title", "fashion-subtitle", "fashion-cta"],
+        "linkedNodes": {},
+        "parent": "fashion-hero"
+      },
+      "fashion-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "SPRING COLLECTION 2024",
+          "level": 1,
+          "fontSize": 64,
+          "fontWeight": "300",
+          "color": "#ffffff",
+          "marginBottom": 24,
+          "letterSpacing": "0.1em",
+          "textTransform": "uppercase"
+        },
+        "displayName": "Fashion Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "hero-overlay"
+      },
+      "fashion-subtitle": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "Discover the latest trends and timeless pieces for the modern wardrobe",
+          "fontSize": 18,
+          "color": "#f3f4f6",
+          "marginBottom": 40,
+          "fontStyle": "italic"
+        },
+        "displayName": "Fashion Subtitle",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "hero-overlay"
+      },
+      "fashion-cta": {
+        "type": { "resolvedName": "ButtonBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "SHOP NOW",
+          "variant": "outline",
+          "size": "lg",
+          "backgroundColor": "transparent",
+          "color": "#ffffff",
+          "border": "2px solid #ffffff",
+          "padding": "16px 48px",
+          "borderRadius": 0,
+          "fontWeight": "400",
+          "letterSpacing": "0.1em",
+          "textTransform": "uppercase"
+        },
+        "displayName": "Fashion CTA",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "hero-overlay"
+      },
+      "fashion-collections": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 100,
+          "backgroundColor": "#f8f9fa"
+        },
+        "displayName": "Collections Section",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["collections-title", "collections-grid"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "collections-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "COLLECTIONS",
+          "level": 2,
+          "fontSize": 48,
+          "fontWeight": "300",
+          "color": "#1a1a1a",
+          "textAlign": "center",
+          "marginBottom": 60,
+          "letterSpacing": "0.05em"
+        },
+        "displayName": "Collections Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-collections"
+      },
+      "collections-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 2,
+          "gap": 40,
+          "gridTemplateColumns": "1fr 1fr"
+        },
+        "displayName": "Collections Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["collection-women", "collection-men"],
+        "linkedNodes": {},
+        "parent": "fashion-collections"
+      },
+      "collection-women": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "position": "relative",
+          "overflow": "hidden"
+        },
+        "displayName": "Women Collection",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["women-image", "women-overlay"],
+        "linkedNodes": {},
+        "parent": "collections-grid"
+      },
+      "women-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600&h=800&fit=crop",
+          "alt": "Women's Collection",
+          "width": "100%",
+          "height": 500,
+          "objectFit": "cover"
+        },
+        "displayName": "Women Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "collection-women"
+      },
+      "women-overlay": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "position": "absolute",
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "padding": 40,
+          "backgroundColor": "rgba(0, 0, 0, 0.6)",
+          "textAlign": "center"
+        },
+        "displayName": "Women Overlay",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["women-title", "women-button"],
+        "linkedNodes": {},
+        "parent": "collection-women"
+      },
+      "women-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "WOMEN'S",
+          "level": 3,
+          "fontSize": 32,
+          "fontWeight": "300",
+          "color": "#ffffff",
+          "marginBottom": 16,
+          "letterSpacing": "0.1em"
+        },
+        "displayName": "Women Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "women-overlay"
+      },
+      "women-button": {
+        "type": { "resolvedName": "ButtonBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "EXPLORE",
+          "variant": "outline",
+          "backgroundColor": "transparent",
+          "color": "#ffffff",
+          "border": "1px solid #ffffff",
+          "padding": "12px 32px",
+          "borderRadius": 0,
+          "fontSize": 14,
+          "letterSpacing": "0.1em"
+        },
+        "displayName": "Women Button",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "women-overlay"
+      },
+      "collection-men": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "position": "relative",
+          "overflow": "hidden"
+        },
+        "displayName": "Men Collection",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["men-image", "men-overlay"],
+        "linkedNodes": {},
+        "parent": "collections-grid"
+      },
+      "men-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop",
+          "alt": "Men's Collection",
+          "width": "100%",
+          "height": 500,
+          "objectFit": "cover"
+        },
+        "displayName": "Men Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "collection-men"
+      },
+      "men-overlay": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "position": "absolute",
+          "bottom": 0,
+          "left": 0,
+          "right": 0,
+          "padding": 40,
+          "backgroundColor": "rgba(0, 0, 0, 0.6)",
+          "textAlign": "center"
+        },
+        "displayName": "Men Overlay",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["men-title", "men-button"],
+        "linkedNodes": {},
+        "parent": "collection-men"
+      },
+      "men-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "MEN'S",
+          "level": 3,
+          "fontSize": 32,
+          "fontWeight": "300",
+          "color": "#ffffff",
+          "marginBottom": 16,
+          "letterSpacing": "0.1em"
+        },
+        "displayName": "Men Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "men-overlay"
+      },
+      "men-button": {
+        "type": { "resolvedName": "ButtonBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "EXPLORE",
+          "variant": "outline",
+          "backgroundColor": "transparent",
+          "color": "#ffffff",
+          "border": "1px solid #ffffff",
+          "padding": "12px 32px",
+          "borderRadius": 0,
+          "fontSize": 14,
+          "letterSpacing": "0.1em"
+        },
+        "displayName": "Men Button",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "men-overlay"
+      },
+      "fashion-featured": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "padding": 100,
+          "backgroundColor": "#ffffff"
+        },
+        "displayName": "Featured Items",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["featured-fashion-title", "featured-fashion-grid"],
+        "linkedNodes": {},
+        "parent": "ROOT"
+      },
+      "featured-fashion-title": {
+        "type": { "resolvedName": "HeadingBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "FEATURED PIECES",
+          "level": 2,
+          "fontSize": 48,
+          "fontWeight": "300",
+          "color": "#1a1a1a",
+          "textAlign": "center",
+          "marginBottom": 60,
+          "letterSpacing": "0.05em"
+        },
+        "displayName": "Featured Fashion Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-featured"
+      },
+      "featured-fashion-grid": {
+        "type": { "resolvedName": "GridBlock" },
+        "isCanvas": true,
+        "props": {
+          "columns": 3,
+          "gap": 30,
+          "gridTemplateColumns": "repeat(3, 1fr)"
+        },
+        "displayName": "Featured Fashion Grid",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-item-1", "fashion-item-2", "fashion-item-3"],
+        "linkedNodes": {},
+        "parent": "fashion-featured"
+      },
+      "fashion-item-1": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "textAlign": "center"
+        },
+        "displayName": "Fashion Item 1",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-1-image", "fashion-1-info"],
+        "linkedNodes": {},
+        "parent": "featured-fashion-grid"
+      },
+      "fashion-1-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=600&fit=crop",
+          "alt": "Designer Dress",
+          "width": "100%",
+          "height": 400,
+          "objectFit": "cover",
+          "marginBottom": 20
+        },
+        "displayName": "Fashion 1 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-item-1"
+      },
+      "fashion-1-info": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Fashion 1 Info",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-1-title", "fashion-1-price"],
+        "linkedNodes": {},
+        "parent": "fashion-item-1"
+      },
+      "fashion-1-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "SILK EVENING DRESS",
+          "fontSize": 16,
+          "fontWeight": "400",
+          "color": "#1a1a1a",
+          "marginBottom": 8,
+          "letterSpacing": "0.05em"
+        },
+        "displayName": "Fashion 1 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-1-info"
+      },
+      "fashion-1-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$299",
+          "fontSize": 18,
+          "fontWeight": "300",
+          "color": "#666666"
+        },
+        "displayName": "Fashion 1 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-1-info"
+      },
+      "fashion-item-2": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "textAlign": "center"
+        },
+        "displayName": "Fashion Item 2",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-2-image", "fashion-2-info"],
+        "linkedNodes": {},
+        "parent": "featured-fashion-grid"
+      },
+      "fashion-2-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=600&fit=crop",
+          "alt": "Casual Blazer",
+          "width": "100%",
+          "height": 400,
+          "objectFit": "cover",
+          "marginBottom": 20
+        },
+        "displayName": "Fashion 2 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-item-2"
+      },
+      "fashion-2-info": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Fashion 2 Info",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-2-title", "fashion-2-price"],
+        "linkedNodes": {},
+        "parent": "fashion-item-2"
+      },
+      "fashion-2-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "TAILORED BLAZER",
+          "fontSize": 16,
+          "fontWeight": "400",
+          "color": "#1a1a1a",
+          "marginBottom": 8,
+          "letterSpacing": "0.05em"
+        },
+        "displayName": "Fashion 2 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-2-info"
+      },
+      "fashion-2-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$189",
+          "fontSize": 18,
+          "fontWeight": "300",
+          "color": "#666666"
+        },
+        "displayName": "Fashion 2 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-2-info"
+      },
+      "fashion-item-3": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {
+          "textAlign": "center"
+        },
+        "displayName": "Fashion Item 3",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-3-image", "fashion-3-info"],
+        "linkedNodes": {},
+        "parent": "featured-fashion-grid"
+      },
+      "fashion-3-image": {
+        "type": { "resolvedName": "ImageBlock" },
+        "isCanvas": false,
+        "props": {
+          "src": "https://images.unsplash.com/photo-1544966503-7cc5ac882d5f?w=400&h=600&fit=crop",
+          "alt": "Designer Handbag",
+          "width": "100%",
+          "height": 400,
+          "objectFit": "cover",
+          "marginBottom": 20
+        },
+        "displayName": "Fashion 3 Image",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-item-3"
+      },
+      "fashion-3-info": {
+        "type": { "resolvedName": "ContainerBlock" },
+        "isCanvas": true,
+        "props": {},
+        "displayName": "Fashion 3 Info",
+        "custom": {},
+        "hidden": false,
+        "nodes": ["fashion-3-title", "fashion-3-price"],
+        "linkedNodes": {},
+        "parent": "fashion-item-3"
+      },
+      "fashion-3-title": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "LEATHER HANDBAG",
+          "fontSize": 16,
+          "fontWeight": "400",
+          "color": "#1a1a1a",
+          "marginBottom": 8,
+          "letterSpacing": "0.05em"
+        },
+        "displayName": "Fashion 3 Title",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-3-info"
+      },
+      "fashion-3-price": {
+        "type": { "resolvedName": "TextBlock" },
+        "isCanvas": false,
+        "props": {
+          "text": "$249",
+          "fontSize": 18,
+          "fontWeight": "300",
+          "color": "#666666"
+        },
+        "displayName": "Fashion 3 Price",
+        "custom": {},
+        "hidden": false,
+        "nodes": [],
+        "linkedNodes": {},
+        "parent": "fashion-3-info"
+      }
+    }
+  }
+];

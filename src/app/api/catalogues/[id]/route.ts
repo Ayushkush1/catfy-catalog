@@ -7,60 +7,54 @@ import { z } from 'zod'
 export const runtime = 'nodejs'
 
 const updateCatalogueSchema = z.object({
+  // Basic catalogue info
   name: z.string().min(1, 'Catalogue name is required').max(100).optional(),
   description: z.string().optional(),
   quote: z.string().optional(),
   tagline: z.string().optional(),
+  year: z.string().optional(),
   introImage: z.string().optional(),
   theme: z.string().optional(),
   isPublic: z.boolean().optional(),
+
+  // Company/Profile information (flattened)
+  companyName: z.string().optional(),
+  companyDescription: z.string().optional(),
+  fullName: z.string().optional(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+
+  // Media assets (flattened)
+  logoUrl: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+
+  // Contact page fields (flattened)
+  contactImage: z.string().optional(),
+  contactDescription: z.string().optional(),
+  contactQuote: z.string().optional(),
+  contactQuoteBy: z.string().optional(),
+
+  // Social media (flattened)
+  facebook: z.string().optional(),
+  twitter: z.string().optional(),
+  instagram: z.string().optional(),
+  linkedin: z.string().optional(),
+
+  // Template settings (flattened)
+  showPrices: z.boolean().optional(),
+  showCategories: z.boolean().optional(),
+  allowSearch: z.boolean().optional(),
+  showProductCodes: z.boolean().optional(),
+  templateId: z.string().optional(),
+  template: z.string().optional(), // 🔥 ADD: catalogue.template field
+
+  // Legacy settings object for backward compatibility
   settings: z.object({
-    templateId: z.string().optional(),
-    showPrices: z.boolean().optional(),
-    showCategories: z.boolean().optional(),
-    showDescription: z.boolean().optional(),
-    primaryColor: z.string().optional(),
-    secondaryColor: z.string().optional(),
-    fontFamily: z.string().optional(),
-    // Company Information
-    companyInfo: z.object({
-      companyName: z.string().optional(),
-      companyDescription: z.string().optional(),
-      industry: z.string().optional(),
-      foundedYear: z.string().optional(),
-      employeeCount: z.string().optional(),
-      headquarters: z.string().optional(),
-    }).optional(),
-    // Media & Assets
-    mediaAssets: z.object({
-      logoUrl: z.string().optional(),
-      coverImageUrl: z.string().optional(),
-      brandColors: z.array(z.string()).optional(),
-      brandFonts: z.array(z.string()).optional(),
-    }).optional(),
-    // Contact Details
-    contactDetails: z.object({
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      website: z.string().optional(),
-      address: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      country: z.string().optional(),
-      postalCode: z.string().optional(),
-      contactImage: z.string().optional(),
-      contactQuote: z.string().optional(),
-      contactQuoteBy: z.string().optional(),
-    }).optional(),
-    // Social Media
-    socialMedia: z.object({
-      facebook: z.string().optional(),
-      twitter: z.string().optional(),
-      instagram: z.string().optional(),
-      linkedin: z.string().optional(),
-      youtube: z.string().optional(),
-      tiktok: z.string().optional(),
-    }).optional(),
     // Style Customizations
     customColors: z.object({
       textColors: z.object({
@@ -160,6 +154,19 @@ const updateCatalogueSchema = z.object({
           opacity: z.number().optional(),
         }).optional(),
       }).optional(),
+    }).optional(),
+    // Editor template data
+    editorData: z.string().optional(),
+    // IframeEditor persistence data
+    iframeEditor: z.object({
+      liveData: z.record(z.any()).optional(),
+      styleMutations: z.record(z.any()).optional(), // Changed from array to record (object)
+      templateId: z.string().optional(),
+      pages: z.array(z.any()).optional(),
+      currentPageIndex: z.number().optional(),
+      userZoom: z.number().optional(),
+      showGrid: z.boolean().optional(),
+      lastSaved: z.string().optional(),
     }).optional(),
   }).optional(),
 })
@@ -369,26 +376,112 @@ export async function PUT(
     }
 
     const body = await request.json()
-    
+
     console.log('PUT request received for catalogue:', params.id)
     console.log('Request body:', body)
-    console.log('Settings in request:', body.settings)
-    
+
     const validatedData = updateCatalogueSchema.parse(body)
     console.log('Validated data:', validatedData)
 
     console.log('Existing catalogue settings:', existingCatalogue.settings)
 
-    // Merge settings if provided
-    const updatedSettings = validatedData.settings 
-      ? { ...existingCatalogue.settings as any, ...validatedData.settings }
-      : existingCatalogue.settings
+    // Extract flattened fields and reconstruct settings object
+    const {
+      name, description, quote, tagline, year, introImage, theme, isPublic,
+      // Extract flattened fields
+      companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
+      logoUrl, coverImageUrl, contactImage, contactDescription, contactQuote, contactQuoteBy,
+      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId, template,
+      settings: legacySettings,
+      ...rest
+    } = validatedData
+
+    // Reconstruct settings object, merging with existing settings
+    const existingSettings = existingCatalogue.settings as any || {}
+
+    // Build new settings object from flat fields (if provided) or legacy settings object
+    const newSettingsFromFlat = {
+      ...(showPrices !== undefined && { showPrices }),
+      ...(showCategories !== undefined && { showCategories }),
+      ...(allowSearch !== undefined && { allowSearch }),
+      ...(showProductCodes !== undefined && { showProductCodes }),
+      ...(templateId !== undefined && { templateId }),
+
+      // Company Information
+      ...(companyName !== undefined || companyDescription !== undefined) && {
+        companyInfo: {
+          ...existingSettings.companyInfo,
+          ...(companyName !== undefined && { companyName }),
+          ...(companyDescription !== undefined && { companyDescription }),
+        }
+      },
+
+      // Media & Assets
+      ...(logoUrl !== undefined || coverImageUrl !== undefined) && {
+        mediaAssets: {
+          ...existingSettings.mediaAssets,
+          ...(logoUrl !== undefined && { logoUrl }),
+          ...(coverImageUrl !== undefined && { coverImageUrl }),
+        }
+      },
+
+      // Contact Details
+      ...(email !== undefined || phone !== undefined || website !== undefined || address !== undefined ||
+        contactImage !== undefined || contactQuote !== undefined || contactQuoteBy !== undefined ||
+        city !== undefined || state !== undefined || country !== undefined || fullName !== undefined) && {
+        contactDetails: {
+          ...existingSettings.contactDetails,
+          ...(email !== undefined && { email }),
+          ...(phone !== undefined && { phone }),
+          ...(website !== undefined && { website }),
+          ...(address !== undefined && { address }),
+          ...(contactImage !== undefined && { contactImage }),
+          ...(contactQuote !== undefined && { contactQuote }),
+          ...(contactQuoteBy !== undefined && { contactQuoteBy }),
+          ...(city !== undefined && { city }),
+          ...(state !== undefined && { state }),
+          ...(country !== undefined && { country }),
+          ...(fullName !== undefined && { fullName }),
+        }
+      },
+
+      // Contact Page Description
+      ...(contactDescription !== undefined && { contactDescription }),
+
+      // Social Media
+      ...(facebook !== undefined || twitter !== undefined || instagram !== undefined || linkedin !== undefined) && {
+        socialMedia: {
+          ...existingSettings.socialMedia,
+          ...(facebook !== undefined && { facebook }),
+          ...(twitter !== undefined && { twitter }),
+          ...(instagram !== undefined && { instagram }),
+          ...(linkedin !== undefined && { linkedin }),
+        }
+      },
+    }
+
+    // Merge with existing settings and legacy settings object
+    const updatedSettings = {
+      ...existingSettings,
+      ...newSettingsFromFlat,
+      ...(legacySettings && legacySettings),
+    }
 
     console.log('Updated settings to save:', updatedSettings)
 
-    // Extract only the fields that exist in the database schema
-    const { settings: _, ...dbFields } = validatedData
-    
+    // Extract only the basic catalogue fields for database update
+    const dbFields = {
+      ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
+      ...(quote !== undefined && { quote }),
+      ...(tagline !== undefined && { tagline }),
+      ...(year !== undefined && { year }),
+      ...(introImage !== undefined && { introImage }),
+      ...(theme !== undefined && { theme }),
+      ...(isPublic !== undefined && { isPublic }),
+      ...(template !== undefined && { template }), // 🔥 ADD: Update catalogue.template field
+    }
+
     const updatedCatalogue = await prisma.catalogue.update({
       where: { id: params.id },
       data: {
@@ -442,7 +535,7 @@ export async function PUT(
     })
   } catch (error) {
     console.error('Catalogue update error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -541,7 +634,7 @@ export async function DELETE(
     })
   } catch (error) {
     console.error('Catalogue deletion error:', error)
-    
+
     const message = error instanceof Error ? error.message : 'Failed to delete catalogue'
     return NextResponse.json(
       { error: message },

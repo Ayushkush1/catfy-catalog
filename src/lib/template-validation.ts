@@ -1,10 +1,11 @@
-import { TemplateConfig, CATALOG_TEMPLATES } from '@/components/catalog-templates'
+import { TemplateConfig, getTemplateById as getRegistryTemplateById } from '@/templates'
 
 /**
  * Get template configuration by ID
  */
 export function getTemplateById(templateId: string): TemplateConfig | null {
-  return CATALOG_TEMPLATES.find(template => template.id === templateId) || null
+  const template = getRegistryTemplateById(templateId);
+  return template || null;
 }
 
 /**

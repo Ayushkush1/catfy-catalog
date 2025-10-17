@@ -10,7 +10,7 @@ interface RequestBody {
 
 export async function POST(request: NextRequest) {
   const DEBUG = process.env.NODE_ENV === 'development';
-  
+
   try {
     const body: RequestBody = await request.json();
     const { productName, category, tags, price } = body;
@@ -26,13 +26,13 @@ export async function POST(request: NextRequest) {
       Product: ${productName}
       ${category ? `Category: ${category}` : ''}
       ${tags?.length ? `Tags: ${tags.join(', ')}` : ''}
-      ${price ? `Price: $${price}` : ''}
+      ${price ? `Price: ₹${Number(price).toLocaleString('en-IN')}` : ''}
       
       Make it professional, engaging, and focused on key features and benefits.
       Important: Return plain text only. Do not use markdown, asterisks (*), underscores (_), hashtags (#), or any other special formatting characters.`;
 
     let description = await generateWithGemini(prompt);
-    
+
     // Clean and validate the generated description
     description = description.trim().replace(/[*_#]/g, '');
     if (!description) {
@@ -57,8 +57,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Description generation error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to generate description",
         description: '' // Ensure consistent response format
       },
@@ -78,7 +78,7 @@ function getApiStatus() {
 export async function GET() {
   // Health check endpoint
   const apiStatus = getApiStatus();
-  
+
   return NextResponse.json({
     status: 'AI Description Generator API',
     version: '1.0.0',

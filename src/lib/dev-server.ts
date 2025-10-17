@@ -32,7 +32,7 @@ export interface DevServerConfig {
 // Default configuration
 const DEFAULT_CONFIG: DevServerConfig = {
   themesDir: 'src/themes',
-  templatesDir: 'src/components/catalog-templates',
+  templatesDir: 'src/templates',
   watchPatterns: [
     '**/*.theme.ts',
     '**/*.theme.js',
@@ -357,7 +357,7 @@ export class DevServer extends EventEmitter {
   // Extract template ID from file path
   private extractTemplateId(filePath: string): string | null {
     const parts = filePath.split(path.sep)
-    const templatesIndex = parts.findIndex(part => part === 'catalog-templates')
+    const templatesIndex = parts.findIndex(part => part === 'templates')
     
     if (templatesIndex !== -1 && parts[templatesIndex + 1]) {
       return parts[templatesIndex + 1]

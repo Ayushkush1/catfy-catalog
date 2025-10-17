@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Check, Crown, Eye, Star } from 'lucide-react'
 import { TemplateConfig } from '@/lib/template-registry'
 import { getAllTemplates } from '@/templates'
+import { TemplateEditorPreview } from '@/components/ui/template-editor-preview'
 import { cn } from '@/lib/utils'
 
 interface TemplateSelectorProps {
   selectedTemplateId?: string
+  selectedThemeId?: string
   onTemplateSelect: (templateId: string) => void
   showPreview?: boolean
   filterCategory?: TemplateConfig['category']
@@ -19,6 +21,7 @@ interface TemplateSelectorProps {
 
 export function TemplateSelector({
   selectedTemplateId,
+  selectedThemeId,
   onTemplateSelect,
   showPreview = true,
   filterCategory,
@@ -26,16 +29,16 @@ export function TemplateSelector({
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<TemplateConfig[]>([])
   const [loading, setLoading] = useState(true)
-  const [previewTemplate, setPreviewTemplate] = useState<string | null>(null)
+  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>([])
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         const allTemplates = getAllTemplates()
-        const filteredTemplates = filterCategory
-          ? allTemplates.filter(t => t.category === filterCategory)
-          : allTemplates
-        setTemplates(filteredTemplates)
+        setTemplates(allTemplates)
+        setFilteredTemplates(allTemplates)
       } catch (error) {
         console.error('Failed to load templates:', error)
       } finally {
@@ -44,19 +47,32 @@ export function TemplateSelector({
     }
 
     loadTemplates()
-  }, [filterCategory])
+  }, [])
+
+  useEffect(() => {
+    const filtered = filterCategory
+      ? templates.filter(t => t.category === filterCategory)
+      : templates
+    setFilteredTemplates(filtered)
+  }, [templates, filterCategory])
 
   const handleTemplateSelect = (templateId: string) => {
     onTemplateSelect(templateId)
   }
 
   const handlePreview = (templateId: string) => {
-    setPreviewTemplate(templateId)
+    setPreviewTemplateId(templateId)
+    setIsPreviewOpen(true)
+  }
+
+  const handleClosePreview = () => {
+    setIsPreviewOpen(false)
+    setPreviewTemplateId(null)
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
             <div className="h-48 bg-gray-200 rounded-t-lg" />
@@ -73,7 +89,7 @@ export function TemplateSelector({
   return (
     <div className={cn('space-y-6', className)}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => (
+        {filteredTemplates.map((template) => (
           <Card
             key={template.id}
             className={cn(
@@ -104,14 +120,14 @@ export function TemplateSelector({
                   </div>
                 </div>
               )}
-              
+
               {/* Selection Indicator */}
               {selectedTemplateId === template.id && (
                 <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
                   <Check className="w-4 h-4" />
                 </div>
               )}
-              
+
               {/* Premium Badge */}
               {template.isPremium && (
                 <div className="absolute top-2 left-2">
@@ -121,7 +137,7 @@ export function TemplateSelector({
                   </Badge>
                 </div>
               )}
-              
+
               {/* Preview Button */}
               {showPreview && (
                 <div className="absolute bottom-2 right-2">
@@ -139,7 +155,7 @@ export function TemplateSelector({
                 </div>
               )}
             </div>
-            
+
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -151,7 +167,7 @@ export function TemplateSelector({
                   </CardDescription>
                 </div>
               </div>
-              
+
               {/* Template Metadata */}
               <div className="flex items-center gap-2 mt-3">
                 <Badge variant="outline" className="text-xs">
@@ -167,7 +183,7 @@ export function TemplateSelector({
                 )}
               </div>
             </CardHeader>
-            
+
             <CardContent className="pt-0">
               {/* Features */}
               {template.features && template.features.length > 0 && (
@@ -187,7 +203,7 @@ export function TemplateSelector({
                   </div>
                 </div>
               )}
-              
+
               {/* Action Button */}
               <Button
                 className={cn(
@@ -214,7 +230,7 @@ export function TemplateSelector({
           </Card>
         ))}
       </div>
-      
+
       {templates.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-gray-400 text-lg mb-2">No templates found</div>
@@ -225,6 +241,13 @@ export function TemplateSelector({
           </div>
         </div>
       )}
+
+      <TemplateEditorPreview
+        templateId={previewTemplateId}
+        themeId={selectedThemeId}
+        isOpen={isPreviewOpen}
+        onClose={handleClosePreview}
+      />
     </div>
   )
 }

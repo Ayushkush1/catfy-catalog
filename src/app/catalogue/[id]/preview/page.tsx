@@ -1,158 +1,145 @@
 'use client'
 
-import { getTemplateById, getTemplateComponent } from '@/components/catalog-templates'
-import StyleCustomizer, { AdvancedStyleCustomization, DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION, FontCustomization, SpacingCustomization } from '@/components/shared/StyleCustomizer'
-import { ColorCustomization } from '@/components/catalog-templates/skincare-catalogue/types/ColorCustomization'
-import { Skeleton } from '@/components/ui/skeleton'
+import IframeEditor from '@/components/editor/IframeEditor'
+import { HtmlTemplates, getTemplateById as getHtmlTemplateById, PrebuiltTemplate } from '@/components/editor/iframe-templates'
+import { getTemplateById as getRegistryTemplateById } from '@/templates'
 import { Button } from '@/components/ui/button'
-import { ShareDialog } from '@/components/shared/ShareDialog'
-import { useSubscription } from '@/contexts/SubscriptionContext'
-import { ContentMapper } from '@/lib/content-schema'
-import { Catalogue as PrismaCatalogue, Category as PrismaCategory, Product as PrismaProduct } from '@prisma/client'
-import { AlertTriangle, ArrowLeft, Download, Edit, Share2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, EyeOff, Eye, ZoomIn, ZoomOut, Grid3X3, Undo, Redo, Save, Share, Share2, Link as LinkIcon, FileJson, FileType, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Skeleton } from '@/components/ui/skeleton'
 
-type Catalogue = PrismaCatalogue & {
-  categories: PrismaCategory[]
-  products: (PrismaProduct & { category: PrismaCategory | null })[]
-  profile?: {
-    fullName: string
-    companyName: string | null
-    phone: string | null
-    email: string | null
-    website: string | null
-    address: string | null
-    city: string | null
-    state: string | null
-    country: string | null
-    postalCode: string | null
-    logo: string | null
-    tagline: string | null
-    socialLinks: any | null
+// Helper function to get HTML template from registry or direct lookup
+function getTemplate(templateId: string): PrebuiltTemplate | null {
+  console.log('🔍 getTemplate called with:', templateId)
+
+  // First try direct HTML template lookup
+  const directTemplate = getHtmlTemplateById(templateId)
+  console.log('🔍 Direct HTML template lookup:', {
+    templateId,
+    found: !!directTemplate,
+    templateName: directTemplate?.name,
+    availableTemplates: HtmlTemplates.map(t => ({ id: t.id, name: t.name }))
+  })
+
+  if (directTemplate) {
+    return directTemplate
   }
+
+  // Then try registry lookup and extract HTML template data
+  const registryTemplate = getRegistryTemplateById(templateId)
+  console.log('🔍 Registry template lookup:', {
+    templateId,
+    found: !!registryTemplate,
+    isHtmlTemplate: !!registryTemplate?.customProperties?.isHtmlTemplate,
+    hasHtmlTemplateData: !!registryTemplate?.customProperties?.htmlTemplateData
+  })
+
+  if (registryTemplate?.customProperties?.isHtmlTemplate) {
+    // Extract the HTML template data from the registry template
+    return registryTemplate.customProperties.htmlTemplateData as PrebuiltTemplate
+  }
+
+  console.warn('❌ Template not found:', templateId)
+  return null
 }
 
-type Category = PrismaCategory
-type Product = PrismaProduct & { category: PrismaCategory | null }
-
 export default function CataloguePreviewPage() {
-  const [catalogue, setCatalogue] = useState<Catalogue | null>(null)
+  const [catalogue, setCatalogue] = useState<any | null>(null)
+  const [liveData, setLiveData] = useState<Record<string, any> | null>(null)
+  const [styleMutations, setStyleMutations] = useState<Record<string, Partial<CSSStyleDeclaration>>>({})
+  const [templateId, setTemplateId] = useState<string>('default-html')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [showStyleCustomizer, setShowStyleCustomizer] = useState(false)
-  const [customColors, setCustomColors] = useState<ColorCustomization>({
-    textColors: {
-      companyName: '#1f2937',
-      title: '#1f2937',
-      description: '#6b7280',
-      productName: '#1f2937',
-      productDescription: '#6b7280',
-      productPrice: '#059669',
-      categoryName: '#1f2937'
-    },
-    backgroundColors: {
-      main: '#ffffff',
-      cover: '#f9fafb',
-      productCard: '#ffffff',
-      categorySection: '#f3f4f6'
-    }
-  })
-  const [fontCustomization, setFontCustomization] = useState<FontCustomization | null>(null)
-  const [spacingCustomization, setSpacingCustomization] = useState<SpacingCustomization>(DEFAULT_SPACING_CUSTOMIZATION)
-  const [advancedStyles, setAdvancedStyles] = useState<AdvancedStyleCustomization>(DEFAULT_ADVANCED_STYLES)
-  const [smartSortEnabled, setSmartSortEnabled] = useState(true)
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved')
+  const [isEditorReady, setIsEditorReady] = useState(false) // NEW: Prevent flash on initial load
+  const [isExportingPDF, setIsExportingPDF] = useState(false) // Loading state for PDF export
+  const iframeGetterRef = useRef<() => HTMLIFrameElement | null>(() => null)
+  const editorControlsRef = useRef<{
+    undo: () => void,
+    redo: () => void,
+    setZoom: (z: number) => void,
+    getZoom: () => number,
+    zoomIn?: () => void,
+    zoomOut?: () => void,
+    toggleGrid?: () => void,
+    setGrid?: (v: boolean) => void,
+    getGrid?: () => boolean,
+    hasUndo?: () => boolean,
+    hasRedo?: () => boolean,
+    print?: () => void,
+    exportHTML?: () => void,
+    exportJSON?: () => void,
+    exportPDF?: () => Promise<void>,
+    exportPNG?: () => Promise<void>,
+    saveToDatabase?: () => Promise<void>,
+    getSaveStatus?: () => 'saved' | 'saving' | 'unsaved' | 'error',
+    getLastSaved?: () => Date | null,
+    isDirty?: () => boolean,
+    // Pages
+    getPages?: () => any[],
+    getCurrentPageIndex?: () => number,
+    setCurrentPageIndex?: (i: number) => void,
+    goPrev?: () => void,
+    goNext?: () => void,
+  } | null>(null)
+  const [toolbarZoom, setToolbarZoom] = useState<number>(100)
+  const [showResizeMenu, setShowResizeMenu] = useState(false)
+  const [gridOn, setGridOn] = useState<boolean>(false)
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(true)
+  const [shareOpen, setShareOpen] = useState<boolean>(false)
+  const [pageIndex, setPageIndex] = useState<number>(0)
+  const [pageCount, setPageCount] = useState<number>(1)
+
+  // Keep navbar page index/count in sync with iframe editor
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const controls = editorControlsRef.current as any
+      if (!controls) return
+      const idx = controls.getCurrentPageIndex?.()
+      if (typeof idx === 'number' && idx !== pageIndex) {
+        setPageIndex(idx)
+      }
+      const pages = controls.getPages?.()
+      if (Array.isArray(pages) && pages.length !== pageCount) {
+        setPageCount(pages.length)
+      }
+    }, 250)
+    return () => clearInterval(interval)
+  }, [pageIndex, pageCount])
+
+  // Poll save status from editor
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const status = editorControlsRef.current?.getSaveStatus?.()
+      if (status && status !== saveStatus) {
+        setSaveStatus(status)
+      }
+    }, 500) // Check every 500ms
+    return () => clearInterval(interval)
+  }, [saveStatus])
 
   const params = useParams()
   const catalogueId = params.id as string
-  const { canExport } = useSubscription()
 
-  const shareCatalogue = async () => {
-    if (!catalogue) return
-
-    if (!catalogue.isPublic) {
-      toast.error('Only public catalogues can be shared')
-      return
-    }
-
-    const shareUrl = `${window.location.origin}/preview/${catalogue.id}`
-
-    try {
-      await navigator.clipboard.writeText(shareUrl)
-      toast.success('Share link copied to clipboard!')
-    } catch (err) {
-      // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement('textarea')
-      textArea.value = shareUrl
-      document.body.appendChild(textArea)
-      textArea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textArea)
-      toast.success('Share link copied to clipboard!')
-    }
-  }
-
-  const exportToPDF = async () => {
-    if (!catalogue) return
-
-    if (!canExport()) {
-      toast.error('You have reached your export limit. Please upgrade your plan to export more catalogues.')
-      return
-    }
-
-    try {
-      toast.loading('Generating PDF...', { id: 'pdf-export' })
-
-      const response = await fetch('/api/export/pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          catalogueId: catalogue.id,
-          theme: 'modern',
-          format: 'A4',
-          orientation: 'portrait'
-        }),
-      })
-
-      if (response.ok) {
-        const contentType = response.headers.get('content-type')
-
-        if (contentType && contentType.includes('application/pdf')) {
-          // Direct PDF download for public catalogues
-          const blob = await response.blob()
-          const url = window.URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `catalogue-${catalogue.id}.pdf`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          window.URL.revokeObjectURL(url)
-          toast.success('PDF exported successfully!', { id: 'pdf-export' })
-        } else {
-          // JSON response with download URL for authenticated users
-          const data = await response.json()
-          if (data.export?.downloadUrl) {
-            // Open download URL in new tab
-            window.open(data.export.downloadUrl, '_blank')
-            toast.success('PDF exported successfully!', { id: 'pdf-export' })
-          } else {
-            throw new Error('No download URL received')
-          }
-        }
+  // Timeout fallback: if iframe doesn't load in 10 seconds, show it anyway
+  useEffect(() => {
+    console.log('⏰ Preview: Starting 10-second timeout for editor ready fallback')
+    const timeout = setTimeout(() => {
+      if (!isEditorReady) {
+        console.warn('⚠️ IframeEditor took too long to load (10s timeout), showing it anyway')
+        setIsEditorReady(true)
       } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to export PDF')
+        console.log('✅ Preview: Editor already ready before timeout')
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to export PDF', { id: 'pdf-export' })
-    }
-  }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [isEditorReady])
 
   const loadCatalogue = async () => {
     try {
@@ -164,6 +151,100 @@ export default function CataloguePreviewPage() {
       if (response.ok) {
         const data = await response.json()
         setCatalogue(data.catalogue)
+        // Prepare initial live data for iframe editor
+        const initial = {
+          catalogue: {
+            id: data.catalogue.id,
+            name: data.catalogue.name,
+            year: data.catalogue.year || ((data.catalogue.settings && data.catalogue.settings.displaySettings && data.catalogue.settings.displaySettings.defaultYear) || undefined),
+            nameUpper: data.catalogue.name ? String(data.catalogue.name).toUpperCase() : undefined,
+            // Tagline (template-level) — prefer catalogue.tagline if provided
+            tagline: data.catalogue.tagline || undefined,
+            // Split catalogue name into two parts for top/bottom title lines
+            titleTop: (() => {
+              const n = data.catalogue.name || ''
+              const parts = String(n).trim().split(/\s+/, 2)
+              return parts[0] ? String(parts[0]).toUpperCase() : undefined
+            })(),
+            titleBottom: (() => {
+              const n = data.catalogue.name || ''
+              const parts = String(n).trim().split(/\s+/, 2)
+              return parts[1] ? String(parts[1]).toUpperCase() : undefined
+            })(),
+            // Expose selected media assets to templates (cover image)
+            settings: {
+              mediaAssets: {
+                coverImageUrl: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.coverImageUrl) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.coverImageUrl) || undefined,
+                introImage: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.introImage) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.introImage) || undefined
+              }
+            }
+          },
+          profile: {
+            ...(data.catalogue.profile || {}),
+            companyName: (data.catalogue.settings && data.catalogue.settings.companyInfo && data.catalogue.settings.companyInfo.companyName) || (data.catalogue.profile && data.catalogue.profile.companyName) || ''
+          },
+          // Use first active product as default context
+          product: (() => {
+            const products = data.catalogue.products || []
+            const active = products.find((p: any) => p.isActive) || products[0] || {}
+            return {
+              title: active.name || '',
+              price: active.priceDisplay || (typeof active.price === 'number' ? `₹${active.price}` : ''),
+              image: active.imageUrl || (Array.isArray(active.images) && active.images[0]) || '',
+              description: active.description || ''
+            }
+          })(),
+          products: data.catalogue.products || [],
+          // Provide a small preview array limited to 3 items for templates that display a short selection
+          productsPreview: (data.catalogue.products || []).slice(0, 3).map((p: any) => ({
+            title: p.name || '',
+            price: p.priceDisplay || (typeof p.price === 'number' ? `₹${p.price}` : ''),
+            image: p.imageUrl || (Array.isArray(p.images) && p.images[0]) || '',
+            description: p.description || ''
+          })),
+          categories: data.catalogue.categories || [],
+          // Page info usable by templates
+          page: {
+            number: 1,
+            total: 1
+          }
+        }
+        setLiveData(initial)
+        // Load previous iframe editor state if present
+        const iframeEditorSettings = (data.catalogue.settings as any)?.iframeEditor
+
+        // Load template ID from either settings.iframeEditor.templateId or catalogue.template
+        const savedTemplateId = iframeEditorSettings?.templateId || data.catalogue.template
+
+        console.log('📋 Loading template from catalogue:', {
+          templateId: savedTemplateId,
+          source: iframeEditorSettings?.templateId ? 'settings.iframeEditor.templateId' : 'catalogue.template',
+          catalogueName: data.catalogue.name,
+          catalogueTemplate: data.catalogue.template,
+          iframeEditorTemplateId: iframeEditorSettings?.templateId,
+          hasSavedPages: !!iframeEditorSettings?.pages,
+          savedPageCount: iframeEditorSettings?.pages?.length || 0,
+          fullIframeEditorSettings: iframeEditorSettings
+        })
+
+        if (savedTemplateId) {
+          console.log('✅ Setting templateId to:', savedTemplateId)
+          setTemplateId(savedTemplateId)
+        } else {
+          console.log('⚠️ No template ID found, using default:', {
+            defaultTemplateId: templateId,
+            catalogueName: data.catalogue.name
+          })
+        } if (iframeEditorSettings) {
+          if (iframeEditorSettings.liveData) setLiveData(iframeEditorSettings.liveData)
+          if (iframeEditorSettings.styleMutations) setStyleMutations(iframeEditorSettings.styleMutations)
+          // Load additional editor state
+          if (typeof iframeEditorSettings.currentPageIndex === 'number') setPageIndex(iframeEditorSettings.currentPageIndex)
+          if (typeof iframeEditorSettings.userZoom === 'number') {
+            setToolbarZoom(Math.round(iframeEditorSettings.userZoom * 100))
+          }
+          if (typeof iframeEditorSettings.showGrid === 'boolean') setGridOn(iframeEditorSettings.showGrid)
+        }
       } else if (response.status === 404) {
         setError('Catalogue not found')
       } else {
@@ -177,43 +258,8 @@ export default function CataloguePreviewPage() {
     }
   }
 
-  const handleProductsReorder = async (updatedProducts: (PrismaProduct & { category: PrismaCategory | null })[]) => {
-    if (!catalogueId) return
-
+  const handleCatalogueUpdate = async (catalogueId: string, updates: any) => {
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/products/sort`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productUpdates: updatedProducts.map((product, index) => ({
-            id: product.id,
-            sortOrder: index
-          }))
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to reorder products')
-      }
-
-      // Update local state
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          products: updatedProducts
-        }
-      })
-    } catch (error) {
-      console.error('Error reordering products:', error)
-    }
-  }
-
-  const handleCatalogueUpdate = async (catalogueId: string, updates: Partial<PrismaCatalogue>) => {
-    try {
-      console.log('🔄 handleCatalogueUpdate called with:', { catalogueId, updates })
       const response = await fetch(`/api/catalogues/${catalogueId}`, {
         method: 'PATCH',
         headers: {
@@ -222,412 +268,26 @@ export default function CataloguePreviewPage() {
         body: JSON.stringify(updates),
       })
 
-      console.log('📡 API Response status:', response.status)
-
       if (!response.ok) {
-        const errorText = await response.text()
-        console.error('❌ API Error:', errorText)
-        throw new Error(`Failed to update catalogue: ${response.status} ${errorText}`)
+        throw new Error('Failed to update catalogue')
       }
 
       const responseData = await response.json()
-      console.log('✅ Catalogue updated successfully:', responseData)
-
-      // Extract the catalogue data from the response
       const updatedCatalogue = responseData.catalogue || responseData
 
-      // Update the catalogue state with the new data
-      setCatalogue(prev => {
+      setCatalogue((prev: { settings: object }) => {
         if (!prev) return null
-        const newCatalogue = {
+        return {
           ...prev,
           ...updatedCatalogue,
-          // Ensure settings are properly merged
           settings: {
             ...(prev.settings as object || {}),
             ...(updatedCatalogue.settings as object || {})
           }
         }
-
-        // Also update the fontCustomization state if it's in the response
-        const newSettings = newCatalogue.settings as any
-        if (newSettings?.fontCustomization) {
-          console.log('🔄 Updating fontCustomization state from API response:', newSettings.fontCustomization)
-          setFontCustomization(newSettings.fontCustomization)
-        }
-
-        return newCatalogue
       })
     } catch (error) {
-      console.error('💥 Error updating catalogue:', error)
-    }
-  }
-
-  const handleContentChange = async (field: string, value: string) => {
-    if (!catalogue?.id) return
-
-    try {
-      // Handle nested field paths
-      const updates: any = {}
-
-      if (field.startsWith('catalogue.settings.')) {
-        const settingsPath = field.replace('catalogue.settings.', '')
-        const currentSettings = catalogue.settings as any || {}
-
-        // Handle nested settings paths
-        const pathParts = settingsPath.split('.')
-        const updatedSettings = { ...currentSettings }
-        let current = updatedSettings
-
-        // Navigate to the parent object
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          if (!current[pathParts[i]]) {
-            current[pathParts[i]] = {}
-          }
-          current = current[pathParts[i]]
-        }
-
-        // Set the final value
-        current[pathParts[pathParts.length - 1]] = value
-
-        updates.settings = updatedSettings
-      } else if (field.startsWith('catalogue.')) {
-        const fieldName = field.replace('catalogue.', '')
-        // Handle direct catalogue fields (not settings)
-        updates[fieldName] = value
-      } else if (field.startsWith('profile.')) {
-        const fieldName = field.replace('profile.', '')
-        updates.profile = {
-          ...catalogue.profile,
-          [fieldName]: value
-        }
-      } else if (field.startsWith('categories.')) {
-        const match = field.match(/categories\.(\d+)\.(.+)/)
-        if (match && catalogue.categories) {
-          const categoryIndex = parseInt(match[1])
-          const fieldName = match[2]
-          const updatedCategories = [...catalogue.categories]
-          if (updatedCategories[categoryIndex]) {
-            updatedCategories[categoryIndex] = {
-              ...updatedCategories[categoryIndex],
-              [fieldName]: value
-            }
-            updates.categories = updatedCategories
-          }
-        }
-      } else if (field.startsWith('newCollection.')) {
-        const fieldName = field.replace('newCollection.', '')
-        const currentSettings = catalogue.settings as any || {}
-        updates.settings = {
-          ...currentSettings,
-          newCollection: {
-            ...currentSettings.newCollection,
-            [fieldName]: value
-          }
-        }
-      } else {
-        updates[field] = value
-      }
-
-      // Update local state immediately for real-time preview
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          ...updates,
-          // Ensure settings are properly merged
-          settings: updates.settings ? {
-            ...(prev.settings as object || {}),
-            ...updates.settings
-          } : prev.settings,
-          // Ensure profile is properly merged
-          profile: updates.profile ? {
-            ...(prev.profile || {}),
-            ...updates.profile
-          } : prev.profile
-        }
-      })
-
-      // Update database
-      await handleCatalogueUpdate(catalogue.id, updates)
-    } catch (error) {
-      console.error('Error updating catalogue content:', error)
-    }
-  }
-
-  const handleProductUpdate = async (productId: string, updates: Partial<PrismaProduct>) => {
-    try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/products/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update product')
-      }
-
-      const responseData = await response.json()
-      console.log('Successfully updated product:', responseData)
-
-      // Extract the product data from the response
-      const updatedProduct = responseData.product || responseData
-
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          products: prev.products.map(product =>
-            product.id === productId ? { ...product, ...updatedProduct } : product
-          )
-        }
-      })
-    } catch (error) {
-      console.error('Error updating product:', error)
-      throw error
-    }
-  }
-
-  // New category management handlers
-  const handleCategoryUpdate = async (categoryId: string, updates: any) => {
-    try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update category')
-      }
-
-      const responseData = await response.json()
-      console.log('Successfully updated category:', responseData)
-
-      const updatedCategory = responseData.category || responseData
-
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          categories: prev.categories.map(category =>
-            category.id === categoryId ? { ...category, ...updatedCategory } : category
-          )
-        }
-      })
-    } catch (error) {
-      console.error('Error updating category:', error)
-      throw error
-    }
-  }
-
-  const handleCategoryCreate = async (categoryData: any) => {
-    try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(categoryData),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create category')
-      }
-
-      const responseData = await response.json()
-      console.log('Successfully created category:', responseData)
-
-      const newCategory = responseData.category || responseData
-
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          categories: [...prev.categories, newCategory]
-        }
-      })
-    } catch (error) {
-      console.error('Error creating category:', error)
-      throw error
-    }
-  }
-
-  const handleCategoryDelete = async (categoryId: string) => {
-    try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/categories/${categoryId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete category')
-      }
-
-      console.log('Successfully deleted category:', categoryId)
-
-      setCatalogue(prev => {
-        if (!prev) return prev
-        return {
-          ...prev,
-          categories: prev.categories.filter(category => category.id !== categoryId),
-          // Also remove category association from products
-          products: prev.products.map(product =>
-            product.categoryId === categoryId
-              ? { ...product, categoryId: null, category: null }
-              : product
-          )
-        }
-      })
-    } catch (error) {
-      console.error('Error deleting category:', error)
-      throw error
-    }
-  }
-
-  const handleProductImageUpdate = async (productId: string, imageUrl: string) => {
-    try {
-      await handleProductUpdate(productId, { imageUrl })
-      toast.success('Product image updated successfully')
-    } catch (error) {
-      console.error('Error updating product image:', error)
-      toast.error('Failed to update product image')
-      throw error
-    }
-  }
-
-  const handleBulkContentUpdate = async (updates: any) => {
-    try {
-      if (!catalogue?.id) return
-
-      await handleCatalogueUpdate(catalogue.id, updates)
-      toast.success('Content updated successfully')
-    } catch (error) {
-      console.error('Error updating content:', error)
-      toast.error('Failed to update content')
-      throw error
-    }
-  }
-
-  const handleColorChange = async (type: string, colors: any) => {
-    console.log('🎨 handleColorChange called with type:', type, 'colors:', colors)
-
-    // Convert to the template's ColorCustomization format
-    const updatedColors = { ...customColors }
-    if (type === 'textColors') {
-      updatedColors.textColors = { ...updatedColors.textColors, ...colors }
-    } else if (type === 'backgroundColors') {
-      updatedColors.backgroundColors = { ...updatedColors.backgroundColors, ...colors }
-    }
-
-    setCustomColors(updatedColors)
-
-    // Save to database
-    if (catalogue?.id) {
-      console.log('💾 Saving color changes to database...')
-      await handleCatalogueUpdate(catalogue.id, {
-        settings: {
-          ...(catalogue.settings as object || {}),
-          customColors: updatedColors
-        } as any
-      })
-      console.log('✅ Color changes saved successfully')
-    } else {
-      console.log('❌ No catalogue ID available for saving')
-    }
-  }
-
-  const handleColorReset = () => {
-    setCustomColors({
-      textColors: {
-        companyName: '#1f2937',
-        title: '#1f2937',
-        description: '#6b7280',
-        productName: '#1f2937',
-        productDescription: '#6b7280',
-        productPrice: '#059669',
-        categoryName: '#1f2937'
-      },
-      backgroundColors: {
-        main: '#ffffff',
-        cover: '#f9fafb',
-        productCard: '#ffffff',
-        categorySection: '#f3f4f6'
-      }
-    })
-  }
-
-  const handleFontChange = async (path: string, value: any) => {
-    console.log('🔤 handleFontChange called with path:', path, 'value:', value)
-    const newFontCustomization = { ...(fontCustomization || DEFAULT_FONT_CUSTOMIZATION) }
-    const pathParts = path.split('.')
-    let current: any = newFontCustomization
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]]
-    }
-    current[pathParts[pathParts.length - 1]] = value
-    setFontCustomization(newFontCustomization)
-
-    // Save to database
-    if (catalogue?.id) {
-      console.log('💾 Saving font changes to database...')
-      await handleCatalogueUpdate(catalogue.id, {
-        settings: {
-          ...(catalogue.settings as object || {}),
-          fontCustomization: newFontCustomization
-        } as any
-      })
-      console.log('✅ Font changes saved successfully')
-    } else {
-      console.log('❌ No catalogue ID available for saving')
-    }
-  }
-
-  const handleSpacingChange = async (path: string, value: number) => {
-    const newSpacingCustomization = { ...(spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION) }
-    const pathParts = path.split('.')
-    let current: any = newSpacingCustomization
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]]
-    }
-    current[pathParts[pathParts.length - 1]] = value
-    setSpacingCustomization(newSpacingCustomization)
-
-    // Save to database
-    if (catalogue?.id) {
-      await handleCatalogueUpdate(catalogue.id, {
-        settings: {
-          ...(catalogue.settings as object || {}),
-          spacingCustomization: newSpacingCustomization
-        } as any
-      })
-    }
-  }
-
-  const handleAdvancedStylesChange = async (path: string, value: any) => {
-    const newAdvancedStyles = { ...(advancedStyles || DEFAULT_ADVANCED_STYLES) }
-    const pathParts = path.split('.')
-    let current: any = newAdvancedStyles
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      current = current[pathParts[i]]
-    }
-    current[pathParts[pathParts.length - 1]] = value
-    setAdvancedStyles(newAdvancedStyles)
-
-    // Save to database
-    if (catalogue?.id) {
-      await handleCatalogueUpdate(catalogue.id, {
-        settings: {
-          ...(catalogue.settings as object || {}),
-          advancedStyles: newAdvancedStyles
-        } as any
-      })
+      console.error('Error updating catalogue:', error)
     }
   }
 
@@ -637,104 +297,60 @@ export default function CataloguePreviewPage() {
     }
   }, [catalogueId])
 
-  // Initialize customizations from catalogue settings when catalogue is loaded
-  // This runs on initial page load to restore saved customizations
+  // Sync page index/count from editor controls so navbar shows "Page X of Y"
   useEffect(() => {
-    console.log('🔄 useEffect triggered for catalogue settings initialization')
-    if (catalogue?.settings) {
-      const settings = catalogue.settings as any
-      console.log('📋 Catalogue settings found:', settings)
-
-      // Initialize custom colors from saved settings
-      if (settings.customColors) {
-        console.log('🎨 Initializing custom colors:', settings.customColors)
-        setCustomColors(settings.customColors)
-      }
-
-      // Initialize font customization from saved settings or defaults
-      if (settings.fontCustomization) {
-        console.log('🔤 Initializing font customization from saved settings:', settings.fontCustomization)
-        setFontCustomization(settings.fontCustomization)
-      } else {
-        console.log('🔤 No saved fontCustomization found, using defaults:', DEFAULT_FONT_CUSTOMIZATION)
-        setFontCustomization(DEFAULT_FONT_CUSTOMIZATION)
-      }
-
-      // Initialize spacing customization from saved settings
-      if (settings.spacingCustomization) {
-        console.log('📏 Initializing spacing customization:', settings.spacingCustomization)
-        setSpacingCustomization(settings.spacingCustomization)
-      }
-
-      // Initialize advanced styles from saved settings
-      if (settings.advancedStyles) {
-        console.log('✨ Initializing advanced styles:', settings.advancedStyles)
-        setAdvancedStyles(settings.advancedStyles)
-      }
-    } else {
-      console.log('❌ No catalogue settings found, using defaults')
-      // Set defaults when no settings exist
-      setFontCustomization(DEFAULT_FONT_CUSTOMIZATION)
+    const update = () => {
+      const controls = editorControlsRef.current
+      if (!controls) return
+      const idx = controls.getCurrentPageIndex?.() ?? 0
+      const count = controls.getPages?.()?.length ?? 1
+      setPageIndex(idx)
+      setPageCount(count)
     }
-  }, [catalogue]) // Depend on the full catalogue object to ensure it runs when data is loaded
+    // Initial read shortly after mount/controls registration
+    const t = setTimeout(update, 100)
+    const interval = setInterval(update, 500)
+    return () => {
+      clearTimeout(t)
+      clearInterval(interval)
+    }
+  }, [])
 
-
-
-  // Reload catalogue data when the page becomes visible (e.g., when navigating back)
-  // but preserve edit mode state - DISABLED to prevent customization resets
-  // useEffect(() => {
-  //   const handleVisibilityChange = () => {
-  //     if (!document.hidden && catalogueId && !isEditMode) {
-  //       loadCatalogue()
-  //     }
-  //   }
-
-  //   document.addEventListener('visibilitychange', handleVisibilityChange)
-  //   return () => {
-  //     document.removeEventListener('visibilitychange', handleVisibilityChange)
-  //   }
-  // }, [catalogueId, isEditMode])
+  // Keep page number in liveData in sync with editor's pageIndex/pageCount
+  useEffect(() => {
+    if (!liveData) return
+    setLiveData(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        page: {
+          number: Math.min(pageIndex + 1, pageCount || 1),
+          total: pageCount || 1
+        }
+      }
+    })
+  }, [pageIndex, pageCount])
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-        {/* Enhanced Loading Header */}
-        <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-lg print:hidden">
-          <div className="container mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6">
-                <Skeleton className="h-10 w-32 rounded-xl" />
-                <div className="border-l border-gray-300 pl-6">
-                  <Skeleton className="h-6 w-48 mb-2 rounded-lg" />
-                  <Skeleton className="h-4 w-32 rounded-lg" />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-9 w-24 rounded-xl" />
-                <Skeleton className="h-9 w-20 rounded-xl" />
-                <Skeleton className="h-9 w-16 rounded-xl" />
-                <Skeleton className="h-9 w-28 rounded-xl" />
-              </div>
-            </div>
+      <div className="h-screen overflow-hidden bg-gray-50">
+        {/* Skeleton Toolbar */}
+        <div className="h-16 border-b bg-white flex items-center justify-between px-4">
+          <div className="flex items-center gap-10">
+            <Skeleton className="h-9 w-24" />
+            <Skeleton className="h-8 w-48" />
+          </div>
+
+          <div className="flex items-center gap-6">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-9 rounded-full" />
           </div>
         </div>
-        {/* Enhanced Loading Content */}
-        <div className="container mx-auto py-12 px-6">
-          <div className="space-y-8">
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <Skeleton className="h-40 w-full rounded-xl mb-6" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="space-y-4">
-                    <Skeleton className="h-48 rounded-xl" />
-                    <Skeleton className="h-6 w-3/4 rounded-lg" />
-                    <Skeleton className="h-4 w-full rounded-lg" />
-                    <Skeleton className="h-4 w-2/3 rounded-lg" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+
+        {/* Skeleton Canvas Area */}
+        <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+          <Skeleton className="h-[90%] w-[80%] max-w-4xl" />
         </div>
       </div>
     )
@@ -742,283 +358,408 @@ export default function CataloguePreviewPage() {
 
   if (error || !catalogue) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-red-400 to-red-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <AlertTriangle className="h-10 w-10 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-[#1A1B41] mb-4 tracking-tight">
-            {error || 'Catalogue not found'}
-          </h1>
-          <p className="text-gray-600 mb-8 text-lg leading-relaxed max-w-md mx-auto">
-            The catalogue you're looking for doesn't exist or you don't have permission to view it.
-          </p>
-          <Button
-            asChild
-            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white px-8 py-3 rounded-xl shadow-lg transition-all duration-300"
-          >
-            <Link href="/dashboard">Back to Dashboard</Link>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
+          <p className="text-gray-600 mb-4">{error || 'Catalogue not found'}</p>
+          <Button asChild>
+            <Link href="/dashboard">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Link>
           </Button>
         </div>
       </div>
     )
   }
 
-  const settings = catalogue.settings as any || {}
-  const templateId = settings.templateId || 'modern-4page' // Default to modern template
-
-  // Get the template component
-  const TemplateComponent = getTemplateComponent(templateId)
-  const templateConfig = getTemplateById(templateId)
-
-  // Get theme colors
-  const themeColors = {
-    primary: getThemeColors(catalogue.theme || 'modern').primary,
-    secondary: getThemeColors(catalogue.theme || 'modern').secondary,
-    accent: '#f1f5f9'
-  }
-
-  // Transform profile data to match expected structure
-  const profileData = {
-    id: catalogue.profileId || '',
-    email: catalogue.profile?.email || '',
-    fullName: catalogue.profile?.fullName || null,
-    firstName: null,
-    lastName: null,
-    avatarUrl: null,
-    accountType: 'INDIVIDUAL' as const,
-    companyName: catalogue.profile?.companyName || null,
-    phone: catalogue.profile?.phone || null,
-    website: catalogue.profile?.website || null,
-    address: catalogue.profile?.address || null,
-    city: catalogue.profile?.city || null,
-    state: catalogue.profile?.state || null,
-    country: catalogue.profile?.country || null,
-    postalCode: catalogue.profile?.postalCode || null,
-    logo: catalogue.profile?.logo || null,
-    tagline: catalogue.profile?.tagline || null,
-    socialLinks: catalogue.profile?.socialLinks || null,
-    stripeCustomerId: null,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      {/* Enhanced Admin Header */}
-      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/60 shadow-lg print:hidden sticky top-0 z-40">
-        <div className=" mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 transition-all duration-300"
-              >
-                <Link href={`/catalogue/${catalogue.id}/edit`}>
-                  <ArrowLeft className="h-4 w-4 mr-2 text-[#1A1B41]" />
-                  <span className="text-[#1A1B41] font-medium">Back to Edit</span>
-                </Link>
-              </Button>
-              <div className="border-l border-gray-300 pl-6">
-                <h1 className="font-bold text-xl text-[#1A1B41] tracking-tight">{catalogue.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-                  <p className="text-sm text-gray-600 font-medium">Live Preview Mode</p>
-                </div>
-              </div>
-            </div>
+    <div className="h-screen overflow-hidden bg-gray-50">
+      {/* Top Toolbar with center Zoom/Grid and right actions */}
+      <div className="h-16 border-b bg-white flex items-center justify-between px-4 relative">
+        <div className="flex items-center gap-10">
+          <Button asChild variant="ghost" className="px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10">
+            <Link href={`/catalogue/${catalogueId}/edit`}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Link>
+          </Button>
 
-            <div className="flex items-center gap-3">
-              <Button
-                variant={isEditMode ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsEditMode(!isEditMode)}
-                className={`relative transition-all duration-300 ${isEditMode
-                  ? 'bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white shadow-lg'
-                  : 'border-[#301F70]/30 text-[#301F70] hover:bg-gradient-to-r hover:from-[#301F70]/5 hover:to-[#1A1B41]/5'
-                  }`}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                {isEditMode ? 'Exit Edit Mode' : 'Edit Mode'}
-                {isEditMode && (
-                  <div className="absolute -top-1 -right-1">
-                    <div className="w-3 h-3 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-lg">
-                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full blur-sm opacity-70"></div>
-                    </div>
-                  </div>
-                )}
-              </Button>
+          {/* Edit/Preview toggle */}
+          <button
+            className={`text-sm px-3 py-2 rounded-lg flex items-center transition-colors ${isPreviewMode ? 'bg-gray-100 text-gray-700' : 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69]'}`}
+            onClick={() => setIsPreviewMode(v => !v)}
+            aria-label="Toggle preview mode"
+          >
+            {isPreviewMode ? (<><EyeOff className="w-4 h-4 mr-1" /> Preview</>) : (<><Eye className="w-4 h-4 mr-1" /> Editing</>)}
+          </button>
+        </div>
 
-              <ShareDialog 
-                shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/catalogue/${catalogue.id}/preview`}
-                catalogueName={catalogue.name}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300"
-                >
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </ShareDialog>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportToPDF}
-                disabled={!canExport()}
-                className="border-[#779CAB]/30 text-[#1A1B41] hover:bg-gradient-to-r hover:from-[#779CAB]/10 hover:to-[#A2E8DD]/10 hover:border-[#779CAB]/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export PDF
-              </Button>
-            </div>
+        {/* Center Zoom/Grid controls */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {/* Undo/Redo icons */}
+          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasUndo?.()} onClick={() => editorControlsRef.current?.undo?.()} aria-label="Undo">
+            <Undo className="w-4 h-4" />
+          </button>
+          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasRedo?.()} onClick={() => editorControlsRef.current?.redo?.()} aria-label="Redo">
+            <Redo className="w-4 h-4" />
+          </button>
+
+          <hr className="w-[1px] h-6 bg-gray-300"></hr>
+          <button
+            className="pl-2 text-gray-700"
+            onClick={() => {
+              editorControlsRef.current?.zoomOut?.()
+              setTimeout(() => {
+                const pct = Math.round((editorControlsRef.current?.getZoom?.() || 1) * 100)
+                setToolbarZoom(pct)
+              }, 0)
+            }}
+            aria-label="Zoom out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+          <div className="px-3 py-1 rounded-xl bg-gray-100 text-gray-700 text-xs font-medium">{toolbarZoom}%</div>
+          <button
+            className="pr-2  text-gray-700"
+            onClick={() => {
+              editorControlsRef.current?.zoomIn?.()
+              setTimeout(() => {
+                const pct = Math.round((editorControlsRef.current?.getZoom?.() || 1) * 100)
+                setToolbarZoom(pct)
+              }, 0)
+            }}
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          {/* Page navigator: Page X of Y with prev/next chevrons */}
+          <div className="ml-3 flex items-center gap-2 px-3 py-1 rounded-2xl bg-white border">
+            <span className="text-xs text-gray-700">Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}</span>
+            <button
+              className="p-1 rounded-md hover:bg-gray-100 text-gray-600 disabled:opacity-40"
+              onClick={() => {
+                editorControlsRef.current?.goPrev?.()
+                setTimeout(() => {
+                  setPageIndex(editorControlsRef.current?.getCurrentPageIndex?.() || 0)
+                  setPageCount(editorControlsRef.current?.getPages?.()?.length || pageCount)
+                }, 0)
+              }}
+              disabled={pageIndex <= 0}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              className="p-1 rounded-md hover:bg-gray-100 text-gray-600 disabled:opacity-40"
+              onClick={() => {
+                editorControlsRef.current?.goNext?.()
+                setTimeout(() => {
+                  setPageIndex(editorControlsRef.current?.getCurrentPageIndex?.() || 0)
+                  setPageCount(editorControlsRef.current?.getPages?.()?.length || pageCount)
+                }, 0)
+              }}
+              disabled={pageIndex >= pageCount - 1}
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
+
+        </div>
+
+        <div className="flex items-center gap-4">
+          {/* Save Status Indicator (hidden in preview mode) */}
+          {!isPreviewMode && (
+            <>
+              {saveStatus === 'saving' && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Saving...
+                </div>
+              )}
+              {saveStatus === 'saved' && (
+                <div className="flex items-center gap-2 text-xs text-green-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  All changes saved
+                </div>
+              )}
+              {saveStatus === 'unsaved' && (
+                <div className="flex items-center gap-2 text-xs text-orange-600">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Unsaved changes
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="flex items-center gap-2 text-xs text-red-600">
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  Save failed
+                </div>
+              )}
+
+              <Button
+                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                onClick={async () => {
+                  try {
+                    await editorControlsRef.current?.saveToDatabase?.()
+                    toast.success('Changes saved successfully')
+                  } catch (error) {
+                    toast.error('Failed to save changes')
+                  }
+                }}
+                disabled={saveStatus === 'saving'}
+              >
+                <Save className="w-3 h-3 mr-1" />
+                {saveStatus === 'saving' ? 'Saving...' : 'Save'}
+              </Button>
+            </>
+          )}
+          {/* Share */}
+          <Button
+            className="px-3 py-2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-lg hover:from-[#1E1338] hover:to-[#4F46E5] transition-colors text-sm font-medium flex items-center"
+            onClick={() => setShareOpen(true)}
+          >
+            <Share2 className="w-3 h-3 mr-2" />
+            Share
+          </Button>
+
+          <ProfileDropdown />
         </div>
       </div>
 
-      {/* Enhanced Main Content Area with Sidebar */}
-      <div className="flex bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-[calc(100vh-81px)] relative">
-        {/* Template Content - Enhanced PDF Export Size Preview */}
-        <div className={`flex justify-center pt-2 transition-all duration-500 ease-in-out overflow-x-hidden overflow-y-auto h-[calc(100vh-81px)] ${isEditMode ? 'w-[calc(100vw-320px)]' : 'w-full'
-          }`}>
-          <div className="overflow-x-hidden">
-            <div
-              className={`bg-white shadow-2xl transition-all duration-300 relative group overflow-hidden ${isEditMode ? 'ring-4 ring-[#301F70]/20 shadow-[#301F70]/20' : 'shadow-gray-300/50'
-                }`}
-              style={{
-                '--theme-primary': themeColors.primary,
-                '--theme-secondary': themeColors.secondary,
-                '--theme-accent': themeColors.accent,
-                // Fixed viewport dimensions
-                width: '1200px',
-                minHeight: '800px',
-                maxWidth: '1200px',
-                transform: 'scale(1)',
-                transformOrigin: 'top center',
-                margin: '0 auto',
-                boxShadow: isEditMode
-                  ? '0 25px 60px rgba(48, 31, 112, 0.15), 0 0 0 1px rgba(48, 31, 112, 0.1)'
-                  : '0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-              } as React.CSSProperties}
-            >
-              {TemplateComponent && templateConfig ? (
-                <TemplateComponent
-                  key={`${JSON.stringify(customColors)}-${JSON.stringify(fontCustomization)}-${JSON.stringify(spacingCustomization)}-${JSON.stringify(advancedStyles)}-${smartSortEnabled}`}
-                  catalogue={{
-                    ...catalogue,
-                    status: 'PUBLISHED',
-                    slug: null,
-                    viewCount: 0,
-                    exportCount: 0,
-                    shareCount: 0,
-                    lastViewedAt: null,
-                    lastExportedAt: null,
-                    lastSharedAt: null,
-                    settings: catalogue?.settings || {},
-                    categories: catalogue?.categories || [],
-                    products: catalogue?.products || [],
-                    profile: catalogue?.profile || null
-                  } as any}
-                  profile={profileData}
-                  themeColors={themeColors}
-                  isEditMode={isEditMode}
-                  catalogueId={catalogueId}
-                  onProductsReorder={handleProductsReorder}
-                  onCatalogueUpdate={handleCatalogueUpdate}
-                  onProductUpdate={handleProductUpdate}
-                  onContentChange={handleContentChange}
-                  customColors={customColors}
-                  fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
-                  spacingCustomization={spacingCustomization}
-                  advancedStyles={advancedStyles}
-                  smartSortEnabled={smartSortEnabled}
-                />
-              ) : (
-                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-white">
-                  <div className="text-center p-8">
-                    <div className="w-16 h-16 bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <AlertTriangle className="h-8 w-8 text-white" />
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#1A1B41] mb-2">Template Not Found</h2>
-                    <p className="text-gray-600">The selected template could not be loaded.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Right Sidebar - StyleCustomizer */}
-        {isEditMode && (
-          <div className="w-[320px] bg-white/95 backdrop-blur-xl shadow-2xl border-gray-200/60 overflow-y-auto h-[calc(100vh-80px)] fixed right-0 top-[85px] z-50">
-
-
-            <div className="">
-              <StyleCustomizer
-                fontCustomization={fontCustomization || DEFAULT_FONT_CUSTOMIZATION}
-                spacingCustomization={spacingCustomization || DEFAULT_SPACING_CUSTOMIZATION}
-                advancedStyleCustomization={advancedStyles || DEFAULT_ADVANCED_STYLES}
-                customColors={{
-                  primary: '#3b82f6',
-                  secondary: '#64748b',
-                  accent: '#f59e0b',
-                  background: customColors?.backgroundColors?.main || '#ffffff',
-                  surface: customColors?.backgroundColors?.productCard || '#f8fafc',
-                  textColors: {
-                    primary: customColors?.textColors?.title || '#1f2937',
-                    secondary: customColors?.textColors?.description || '#6b7280',
-                    accent: '#3b82f6',
-                    price: customColors?.textColors?.productPrice || '#059669',
-                    productDescription: customColors?.textColors?.productDescription || '#6b7280',
-                    companyName: customColors?.textColors?.companyName || '#1f2937',
-                    title: customColors?.textColors?.title || '#1f2937',
-                    description: customColors?.textColors?.description || '#6b7280',
-                  }
-                }}
-                content={ContentMapper.mapToStandardized({
-                  ...catalogue,
-                  products: catalogue?.products || [],
-                  categories: catalogue?.categories || []
-                }, profileData)}
-                onFontChange={handleFontChange}
-                onSpacingChange={handleSpacingChange}
-                onAdvancedStyleChange={handleAdvancedStylesChange}
-                onColorChange={handleColorChange}
-                onContentChange={handleContentChange}
-                onProductUpdate={handleProductUpdate}
-                onCategoryUpdate={handleCategoryUpdate}
-                onCategoryCreate={handleCategoryCreate}
-                onCategoryDelete={handleCategoryDelete}
-                onProductImageUpdate={handleProductImageUpdate}
-                onBulkContentUpdate={handleBulkContentUpdate}
-              />
+      {/* Iframe Editor */}
+      <div className="h-[calc(100vh-64px)] overflow-hidden relative bg-gray-50">
+        {/* Loading overlay - shows until editor is fully ready with user's edits */}
+        {!isEditorReady && (
+          <div className="absolute inset-0 bg-gray-50 flex items-center justify-center z-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
+              <p className="text-sm text-gray-600 font-medium">Loading your catalogue...</p>
             </div>
           </div>
         )}
 
+        {/* IframeEditor - hidden until fully loaded with user's edits */}
+        {liveData && (
+          <div
+            className="h-full transition-opacity duration-300 ease-in-out"
+            style={{ opacity: isEditorReady ? 1 : 0 }}
+          >
+            <IframeEditor
+              key={templateId} // 🔥 CRITICAL FIX: Force React to re-mount when template changes
+              template={(() => {
+                const template = getTemplate(templateId) || HtmlTemplates[0]
+                const foundTemplate = getTemplate(templateId)
+
+                console.log('🎨 Preview - Rendering template:', {
+                  templateId,
+                  templateFound: !!foundTemplate,
+                  templateName: template.name,
+                  templateEngine: template.engine,
+                  pageCount: template.pages?.length || 0,
+                  usingFallback: !foundTemplate
+                })
+
+                if (!foundTemplate) {
+                  console.error(`❌ Template "${templateId}" not found, using fallback: ${HtmlTemplates[0].name}`)
+                  toast.error(`Template "${templateId}" not found, using default template`)
+                }
+
+                return template
+              })()}
+              initialData={liveData}
+              onLiveDataChange={setLiveData}
+              initialStyleMutations={styleMutations}
+              onStyleMutationsChange={setStyleMutations}
+              registerIframeGetter={(getter) => { iframeGetterRef.current = getter }}
+              previewMode={isPreviewMode}
+              onTemplateIdChange={async (id) => {
+                console.log('� onTemplateIdChange CALLED with id:', id)
+                console.log('�🔄 Template changed:', {
+                  oldTemplateId: templateId,
+                  newTemplateId: id
+                })
+
+                // 🔥 FIX: Immediately update templateId to trigger React re-mount via key prop
+                setTemplateId(id)
+
+                // 🔥 FIX: Reset ALL editor state immediately
+                setStyleMutations({})
+                setLiveData({
+                  catalogue: catalogue ? {
+                    id: catalogue.id,
+                    name: catalogue.name,
+                  } : {},
+                  profile: catalogue?.profile || {},
+                  product: catalogue?.products?.[0] ? {
+                    title: catalogue.products[0].name || '',
+                    price: catalogue.products[0].priceDisplay || '',
+                    image: catalogue.products[0].imageUrl || '',
+                    description: catalogue.products[0].description || ''
+                  } : {},
+                  products: catalogue?.products || [],
+                  categories: catalogue?.categories || []
+                })
+
+                // 🔥 FIX: Save template change to database AND clear ALL saved editor state
+                if (catalogueId) {
+                  try {
+                    // First, get current catalogue data
+                    const getResponse = await fetch(`/api/catalogues/${catalogueId}`)
+                    const currentData = await getResponse.json()
+                    const currentSettings = currentData.catalogue?.settings || {}
+
+                    console.log('📦 Current settings before template change:', currentSettings)
+
+                    // Remove iframeEditor from settings completely
+                    const { iframeEditor, ...restSettings } = currentSettings as any
+
+                    console.log('📦 Settings after removing iframeEditor:', {
+                      restSettings,
+                      removedIframeEditor: iframeEditor
+                    })
+
+                    const updatePayload = {
+                      template: id, // Update catalogue.template field
+                      settings: {
+                        ...restSettings,
+                        iframeEditor: null // 🔥 CRITICAL: Explicitly set to null to remove it
+                      }
+                    }
+
+                    console.log('📤 Sending update payload:', updatePayload)
+
+                    const response = await fetch(`/api/catalogues/${catalogueId}`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(updatePayload)
+                    })
+
+                    console.log('📥 Update response status:', response.status)
+
+                    if (response.ok) {
+                      const responseData = await response.json()
+                      console.log('✅ Template changed and all saved editor state cleared')
+                      console.log('📦 Response data:', responseData)
+                      console.log('📦 Response settings:', responseData.catalogue?.settings)
+                      console.log('📦 Response template:', responseData.catalogue?.template)
+                      toast.success('Template changed - reloading with fresh template')
+
+                      // 🔥 CRITICAL: Force a hard reload to ensure clean state
+                      window.location.href = `/catalogue/${catalogueId}/preview`
+                    } else {
+                      const errorData = await response.json()
+                      console.error('❌ Failed to update template:', errorData)
+                      toast.error(`Failed to change template: ${errorData.error || 'Unknown error'}`)
+                    }
+                  } catch (error) {
+                    console.error('Error updating template:', error)
+                    toast.error('Failed to change template')
+                  }
+                }
+              }}
+              catalogueId={catalogueId as string}
+              autoSave={true}
+              autoSaveInterval={10000} // 10 seconds after last change
+              onSaveSuccess={() => {
+                // Don't show toast for auto-save, status indicator is enough
+              }}
+              onSaveError={(error) => {
+                toast.error(`Auto-save failed: ${error}`)
+              }}
+              registerEditorControls={(controls) => {
+                editorControlsRef.current = controls
+                const pct = Math.round((controls.getZoom?.() || 1) * 100)
+                setToolbarZoom(pct)
+                setGridOn(Boolean(controls.getGrid?.()))
+                // Sync page index/count from editor when controls become available
+                const idx = controls.getCurrentPageIndex?.()
+                if (typeof idx === 'number') setPageIndex(idx)
+                const pages = controls.getPages?.()
+                if (Array.isArray(pages)) setPageCount(pages.length)
+              }}
+              onIframeReady={() => {
+                // Mark editor as ready once iframe is fully loaded with user's saved edits
+                console.log('✅ Preview: onIframeReady callback received, hiding loading overlay')
+                setIsEditorReady(true)
+              }}
+            />
+          </div>
+        )}
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share & Export</DialogTitle>
+            <DialogDescription>Select an option to share or export your catalogue.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="outline" className="flex items-center gap-2" onClick={() => editorControlsRef.current?.exportHTML?.()}>
+                <FileType className="w-4 h-4" /> Export HTML
+              </Button>
+              <Button variant="outline" className="flex  items-center gap-2" onClick={() => editorControlsRef.current?.exportJSON?.()}>
+                <FileJson className="w-4 h-4" /> Export JSON
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                disabled={isExportingPDF}
+                onClick={async () => {
+                  try {
+                    setIsExportingPDF(true)
+                    toast.loading('Generating PDF with Playwright...', { id: 'pdf-export' })
+                    await editorControlsRef.current?.exportPDF?.()
+                    toast.success('PDF exported successfully', { id: 'pdf-export' })
+                  } catch (error) {
+                    toast.error('Failed to export PDF', { id: 'pdf-export' })
+                  } finally {
+                    setIsExportingPDF(false)
+                  }
+                }}
+              >
+                <Printer className="w-4 h-4" />
+                {isExportingPDF ? 'Exporting...' : 'Export PDF'}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={async () => {
+                  try {
+                    await editorControlsRef.current?.exportPNG?.()
+                    toast.success('PNG exported successfully')
+                  } catch (error) {
+                    toast.error('Failed to export PNG')
+                  }
+                }}
+              >
+                <Share className="w-4 h-4" /> Export PNG
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Share link</div>
+              <div className="flex gap-2">
+                <input className="flex-1 border rounded px-2 py-1 text-sm" value={typeof window !== 'undefined' ? window.location.href : ''} readOnly />
+                <Button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied') }} className="flex items-center gap-2">
+                  <LinkIcon className="w-4 h-4" /> Copy
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Share to</div>
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')}>Twitter</Button>
+                <Button variant="secondary" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`, '_blank')}>LinkedIn</Button>
+                <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')}>WhatsApp</Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
-}
-
-function getThemeColors(theme: string) {
-  switch (theme) {
-    case 'modern':
-      return { primary: '#3b82f6', secondary: '#1e40af' }
-    case 'classic':
-      return { primary: '#f59e0b', secondary: '#d97706' }
-    case 'minimal':
-      return { primary: '#6b7280', secondary: '#4b5563' }
-    case 'bold':
-      return { primary: '#8b5cf6', secondary: '#7c3aed' }
-    case 'elegant':
-      return { primary: '#64748b', secondary: '#475569' }
-    case 'tech':
-      return { primary: '#06b6d4', secondary: '#0891b2' }
-    default:
-      return { primary: '#3b82f6', secondary: '#1e40af' }
-  }
 }

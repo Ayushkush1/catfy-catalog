@@ -43,10 +43,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { smartSort } from '@/lib/sorting'
-import { templateRegistry } from '@/lib/template-registry'
 import { themeRegistry, getAllThemes } from '@/lib/theme-registry'
-import { initializeTemplateRegistry } from '@/templates'
 import { initializeThemeRegistry } from '@/themes'
+import { TemplateThemeWorkflow } from '@/components/ui/template-theme-workflow'
+import { getTemplateById } from '@/templates'
 import { SubscriptionPlan } from '@prisma/client'
 import {
   AlertTriangle,
@@ -114,6 +114,8 @@ interface Catalogue {
       allowSearch?: boolean
       showProductCodes?: boolean
     }
+    editorData?: string
+    [key: string]: any // Allow additional properties to match Prisma Json type
   }
 }
 
@@ -171,13 +173,10 @@ export default function EditCataloguePage() {
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [selectedThemeCategory, setSelectedThemeCategory] = useState('all')
   const [selectedTheme, setSelectedTheme] = useState('modern')
   const [products, setProducts] = useState<Product[]>([])
   const [smartSortEnabled, setSmartSortEnabled] = useState(false)
-  const [availableThemes, setAvailableThemes] = useState<any[]>([])
-  const [templateStep, setTemplateStep] = useState<'template' | 'theme'>('template')
 
   // Theme data matching the themes page
   const THEMES = [
@@ -291,62 +290,196 @@ export default function EditCataloguePage() {
   })
 
   // Get available templates and themes
-  const templates = templateRegistry.getAllTemplates()
   const allThemes = getAllThemes()
 
-  // Handle template selection
+  // Handle template selection (now handled by TemplateThemeWorkflow)
   const handleTemplateSelect = async (templateId: string) => {
-    setSelectedTemplate(templateId)
-    const compatibleThemes = themeRegistry.getCompatibleThemes(templateId)
-    setAvailableThemes(compatibleThemes)
-    setTemplateStep('theme')
+    try {
+      console.log('🔍 Template Selection Debug:', {
+        templateId,
+        timestamp: new Date().toISOString()
+      });
 
-    // Update catalogue template
-    if (catalogue) {
-      setCatalogue(prev => prev ? {
-        ...prev,
-        settings: {
-          ...(prev.settings as Record<string, any> || {}),
-          templateId: templateId
-        } as any
-      } : null)
+      // Get the template data
+      const template = getTemplateById(templateId)
 
-      // Save to database immediately
-      try {
-        const response = await fetch(`/api/catalogues/${catalogueId}`, {
+      console.log('📋 Template Retrieved:', {
+        templateExists: !!template,
+        templateId: template?.id,
+        templateName: template?.name,
+        hasCustomProperties: !!template?.customProperties,
+        isHtmlTemplate: !!template?.customProperties?.isHtmlTemplate,
+        hasEditorData: !!template?.customProperties?.editorData,
+        customPropertiesKeys: template?.customProperties ? Object.keys(template.customProperties) : [],
+        templateKeys: template ? Object.keys(template) : []
+      });
+
+      if (!template) {
+        toast.error('Template not found')
+        return
+      }
+
+      // Check if this is an HTML template (from iframe-templates)
+      const isHtmlTemplate = template.customProperties?.isHtmlTemplate
+
+      if (isHtmlTemplate) {
+        // Handle HTML templates - save template ID to settings for IframeEditor
+        console.log('✅ HTML template detected, saving template ID:', templateId);
+
+        if (catalogue) {
+          const existingSettings = typeof catalogue.settings === 'string'
+            ? JSON.parse(catalogue.settings || '{}')
+            : (catalogue.settings || {})
+
+          // 🔥 FIX: Remove old iframeEditor settings to avoid loading wrong template pages
+          const { iframeEditor, ...restSettings } = existingSettings
+
+          const updatedCatalogue = {
+            ...catalogue,
+            template: templateId,
+            settings: {
+              ...restSettings,
+              // 🔥 CRITICAL: Create fresh iframeEditor settings for new template
+              // Don't include old pages/styleMutations from previous template
+              iframeEditor: {
+                templateId: templateId,
+                engine: template.customProperties?.engine || 'mustache',
+                pageCount: template.customProperties?.pages?.length || 1
+                // Don't include: pages, styleMutations, liveData, etc.
+              }
+            }
+          }
+
+          // Save to database
+          const response = await fetch(`/api/catalogues/${catalogue.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              template: templateId,
+              settings: updatedCatalogue.settings
+            })
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            console.error('Error updating catalogue:', errorData)
+            toast.error('Failed to save template selection')
+            return
+          }
+
+          // Update local state
+          setCatalogue(updatedCatalogue)
+
+          toast.success('Template changed successfully!')
+        }
+        return
+      }
+
+      // Handle CraftJS editor templates (legacy support)
+      const isMultiPageTemplate = template.customProperties?.multiPageData && Array.isArray(template.customProperties.multiPageData)
+
+      console.log('📄 Multi-page Template Check:', {
+        isMultiPageTemplate,
+        hasMultiPageData: !!template.customProperties?.multiPageData,
+        multiPageDataLength: template.customProperties?.multiPageData?.length || 0
+      });
+
+      // Get template data - handle both single-page and multi-page templates
+      let templateData: any
+      let isMultiPage = false
+
+      if (isMultiPageTemplate) {
+        // This is a multi-page template - store the multi-page structure
+        templateData = template.customProperties?.multiPageData
+        isMultiPage = true
+        console.log('✅ Using multi-page template data with', templateData.length, 'pages');
+      } else if (template.customProperties?.editorData) {
+        // This is a single-page editor template
+        templateData = template.customProperties.editorData
+        console.log('✅ Using single-page editor template data from customProperties.editorData');
+      } else {
+        // For regular catalog templates, we'll use a default empty editor state
+        templateData = {
+          ROOT: {
+            type: { resolvedName: 'Container' },
+            isCanvas: true,
+            props: {},
+            displayName: 'Container',
+            custom: {},
+            hidden: false,
+            nodes: [],
+            linkedNodes: {}
+          }
+        }
+        console.log('⚠️ Using default empty editor state - no editorData found');
+      }
+
+      console.log('📊 Template Data Structure:', {
+        templateDataExists: !!templateData,
+        templateDataType: typeof templateData,
+        isMultiPage,
+        isArray: Array.isArray(templateData),
+        hasROOT: !isMultiPage && !!templateData?.ROOT,
+        rootNodes: !isMultiPage ? (templateData?.ROOT?.nodes || []) : 'N/A (multi-page)',
+        templateDataKeys: templateData ? Object.keys(templateData) : [],
+        pageCount: isMultiPage ? templateData.length : 1
+      });
+
+      console.log('Template data found, updating catalogue...')
+
+      // Update the catalogue with the template data
+      if (catalogue && templateData) {
+        // Parse existing settings if they're stored as JSON string
+        const existingSettings = typeof catalogue.settings === 'string'
+          ? JSON.parse(catalogue.settings || '{}')
+          : (catalogue.settings || {})
+
+        const updatedCatalogue = {
+          ...catalogue,
+          template: templateId,
+          settings: {
+            ...existingSettings,
+            editorData: isMultiPage ? JSON.stringify(templateData) : JSON.stringify(templateData),
+            isMultiPage: isMultiPage,
+            pageCount: isMultiPage ? templateData.length : 1
+          }
+        }
+
+        // Save to database using API route
+        const response = await fetch(`/api/catalogues/${catalogue.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            settings: {
-              ...(catalogue.settings as object || {}),
-              templateId: templateId
-            }
-          }),
+            template: templateId,
+            settings: updatedCatalogue.settings
+          })
         })
 
         if (!response.ok) {
-          throw new Error('Failed to update template')
+          const errorData = await response.json()
+          console.error('Error updating catalogue:', errorData)
+          toast.error('Failed to load template')
+          return
         }
 
-        console.log('Template saved successfully:', templateId)
-      } catch (error: any) {
-        console.error('Error saving template:', error)
-        toast.error(error.message || 'Failed to save template')
+        // Update local state
+        setCatalogue(updatedCatalogue)
+
+        toast.success('Template loaded successfully!')
       }
+    } catch (error) {
+      console.error('Error loading template:', error)
+      toast.error('Failed to load template')
     }
-
-    // Save to localStorage
-    localStorage.setItem('selectedTemplate', templateId)
-
-    // Reset theme selection when template changes
-    setSelectedTheme('')
   }
 
   // Handle theme selection
   const handleThemeSelect = async (themeId: string) => {
-    const theme = availableThemes.find(t => t.id === themeId) || THEMES.find(t => t.id === themeId)
+    const theme = allThemes.find(t => t.id === themeId) || THEMES.find(t => t.id === themeId)
     if (!theme) return
 
     // For now, assume user can only use free themes
@@ -404,9 +537,115 @@ export default function EditCataloguePage() {
     }
   }
 
+  // Combined handler for template and theme selection from workflow
+  const handleTemplateThemeSelection = async (templateId: string, themeId: string) => {
+    try {
+      // Get the template data
+      const template = getTemplateById(templateId)
+
+      if (!template) {
+        toast.error('Template not found')
+        return
+      }
+
+      // Get the theme data
+      const theme = allThemes.find(t => t.id === themeId) || THEMES.find(t => t.id === themeId)
+      if (!theme) {
+        toast.error('Theme not found')
+        return
+      }
+
+      // Check if theme is premium
+      if (theme.isPremium) {
+        toast.error('This is a premium theme. Upgrade your plan to use it.')
+        return
+      }
+
+      console.log('Template and theme found:', template.name, theme.name)
+
+      // Get template data - check if it's in customProperties.editorData (for editor templates) or data field
+      let templateData = null
+      if (template.customProperties?.editorData) {
+        // This is an editor template converted by convertEditorTemplateToConfig
+        templateData = template.customProperties.editorData
+      } else {
+        // Use default empty editor state if no template data is available
+        templateData = {}
+      }
+
+      if (!templateData) {
+        toast.error('Template data not found')
+        return
+      }
+
+      console.log('Template data found, updating catalogue...')
+
+      // Update the catalogue with both template and theme data
+      if (catalogue) {
+        const updatedCatalogue = {
+          ...catalogue,
+          template: templateId,
+          theme: themeId,
+          settings: {
+            ...(catalogue.settings || {}),
+            editorData: JSON.stringify(templateData)
+          }
+        }
+
+        // Save to database
+        const { error } = await (supabase as any)
+          .from('catalogues')
+          .update({
+            template: templateId,
+            theme: themeId,
+            settings: updatedCatalogue.settings
+          })
+          .eq('id', catalogue.id)
+
+        if (error) {
+          console.error('Error updating catalogue:', error)
+          toast.error('Failed to load template and theme')
+          return
+        }
+
+        // Update local state
+        setCatalogue(updatedCatalogue)
+        setSelectedTheme(themeId)
+
+        // Save theme to localStorage for global theme application
+        localStorage.setItem('selectedTheme', themeId)
+
+        // Track theme selection for analytics
+        try {
+          await fetch('/api/admin/theme-analytics', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              themeId,
+              themeName: theme.name,
+              catalogueId,
+            }),
+          })
+        } catch (analyticsError) {
+          console.error('Failed to track theme selection:', analyticsError)
+          // Don't show error to user as this is background tracking
+        }
+
+        toast.success('Template and theme loaded successfully!')
+
+        // Redirect to preview page to see the loaded template with theme
+        router.push(`/catalogue/${catalogue.id}/preview`)
+      }
+    } catch (error) {
+      console.error('Error loading template and theme:', error)
+      toast.error('Failed to load template and theme')
+    }
+  }
+
   // Initialize registries
   useEffect(() => {
-    initializeTemplateRegistry()
     initializeThemeRegistry()
   }, [])
 
@@ -441,31 +680,7 @@ export default function EditCataloguePage() {
     }
   }, [catalogue])
 
-  // Initialize template selection based on catalogue data
-  useEffect(() => {
-    if (catalogue) {
-      // Set selected template from catalogue data or default to first available template
-      const catalogueTemplate = catalogue.template || localStorage.getItem('selectedTemplate')
-      if (catalogueTemplate) {
-        setSelectedTemplate(catalogueTemplate)
-        // Update available themes based on selected template
-        const template = templateRegistry.getTemplate(catalogueTemplate)
-        if (template) {
-          const compatibleThemes = themeRegistry.getCompatibleThemes(catalogueTemplate)
-          setAvailableThemes(compatibleThemes)
-        }
-      } else {
-        // Default to first available template if none is set
-        const templates = templateRegistry.getAllTemplates()
-        if (templates.length > 0) {
-          const defaultTemplate = templates[0]
-          setSelectedTemplate(defaultTemplate.id)
-          const compatibleThemes = themeRegistry.getCompatibleThemes(defaultTemplate.id)
-          setAvailableThemes(compatibleThemes)
-        }
-      }
-    }
-  }, [catalogue])
+  // Template selection is now handled by TemplateThemeWorkflow component
 
   // Auto-dismiss errors after 5 seconds
   useEffect(() => {
@@ -975,7 +1190,7 @@ export default function EditCataloguePage() {
                     }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
-                  Theme
+                  Template
                 </button>
 
                 <button
@@ -1114,7 +1329,7 @@ export default function EditCataloguePage() {
                               <p className="text-gray-600 mb-4">Create your first category to organize your products</p>
                               <Button
                                 onClick={() => openCategoryDialog()}
-                                className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                                className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                               >
                                 <Plus className="mr-2 h-4 w-4" />
                                 Create Category
@@ -1324,7 +1539,7 @@ export default function EditCataloguePage() {
                       <h2 className="text-xl font-semibold text-[#1A1B41]">Categories</h2>
                       <Button
                         onClick={() => openCategoryDialog()}
-                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                        className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Category
@@ -1341,7 +1556,7 @@ export default function EditCataloguePage() {
                           </p>
                           <Button
                             onClick={() => openCategoryDialog()}
-                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                            className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             Create Category
@@ -1476,7 +1691,7 @@ export default function EditCataloguePage() {
                       <h2 className="text-xl font-semibold text-[#1A1B41]">Products</h2>
                       <Button
                         onClick={() => openProductDialog()}
-                        className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                        className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Add Product
@@ -1493,7 +1708,7 @@ export default function EditCataloguePage() {
                           </p>
                           <Button
                             onClick={() => openProductDialog()}
-                            className="bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white"
+                            className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                           >
                             <Plus className="mr-2 h-4 w-4" />
                             Add Product
@@ -1645,6 +1860,7 @@ export default function EditCataloguePage() {
                           <Switch
                             checked={catalogue.isPublic}
                             onCheckedChange={(checked) => setCatalogue(prev => prev ? { ...prev, isPublic: checked } : null)}
+                            className={`${catalogue.isPublic ? 'bg-[#2D1B69]' : 'bg-gray-200'} relative inline-flex h-6 w-11 items-center rounded-full transition-colors `}
                           />
                         </div>
                       </div>
@@ -1654,408 +1870,16 @@ export default function EditCataloguePage() {
                   </div>
                 )}
 
-                {/* Theme Tab */}
+                {/* Template Tab */}
                 {activeTab === 'theme' && (
                   <div className="space-y-6">
-                    <div className="flex items-center space-x-4 mb-6">
-                      <div className={`flex items-center space-x-2 ${templateStep === 'template' ? 'text-[#301F70]' : selectedTemplate ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'template' ? 'bg-[#301F70]/10 text-[#301F70]' :
-                          selectedTemplate ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
-                          }`}>
-                          {selectedTemplate ? '✓' : '1'}
-                        </div>
-                        <span className="font-medium">Choose Template</span>
-                      </div>
-                      <div className="flex-1 h-px bg-gray-200"></div>
-                      <div className={`flex items-center space-x-2 ${templateStep === 'theme' && selectedTemplate ? 'text-[#301F70]' : selectedTheme ? 'text-[#A2E8DD]' : 'text-gray-400'}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${templateStep === 'theme' && selectedTemplate ? 'bg-[#301F70]/10 text-[#301F70]' :
-                          selectedTheme ? 'bg-[#A2E8DD]/20 text-[#1A1B41]' : 'bg-gray-100 text-gray-400'
-                          }`}>
-                          {selectedTheme ? '✓' : '2'}
-                        </div>
-                        <span className="font-medium">Choose Theme</span>
-                      </div>
-                    </div>
-
-                    {templateStep === 'template' ? (
-                      <div>
-                        <div className="mb-6">
-                          <h3 className="font-medium text-lg text-[#1A1B41]">Select a Template</h3>
-                          <p className="text-sm text-gray-600">Choose a template structure for your catalogue</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {templates.map((template) => (
-                            <div
-                              key={template.id}
-                              onClick={() => handleTemplateSelect(template.id)}
-                              className={`group relative border-2 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-2 ${selectedTemplate === template.id
-                                ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/10 to-[#1A1B41]/5 shadow-xl ring-2 ring-[#301F70]/30 scale-[1.02]'
-                                : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-[#779CAB]/5 hover:to-[#A2E8DD]/5 shadow-md hover:shadow-[#779CAB]/30'
-                                } overflow-hidden`}
-                            >
-                              {/* Premium Badge */}
-                              {template.isPremium && (
-                                <div className="absolute -top-2 -right-2 z-10">
-                                  <div className="flex items-center gap-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                                    <Crown className="h-3 w-3" />
-                                    PRO
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Selection Check */}
-                              {selectedTemplate === template.id && (
-                                <div className="absolute top-3 right-3 z-10">
-                                  <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full shadow-lg">
-                                    <Check className="h-4 w-4 text-white" />
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="space-y-4">
-                                {/* Template Preview */}
-                                <div className="relative rounded-xl overflow-hidden bg-white border border-gray-200 shadow-sm">
-                                  <div className="aspect-[4/3] relative bg-white">
-                                    {template.previewImage ? (
-                                      <>
-                                        <object
-                                          data={template.previewImage}
-                                          type="image/svg+xml"
-                                          className="w-full h-full"
-                                          style={{ display: 'block' }}
-                                          onLoad={(e) => {
-                                            console.log(`Successfully loaded preview for ${template.name}:`, template.previewImage);
-                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
-                                            if (fallbackDiv) {
-                                              fallbackDiv.style.display = 'none';
-                                            }
-                                          }}
-                                          onError={(e) => {
-                                            console.error(`Failed to load preview for ${template.name}:`, template.previewImage);
-                                            e.currentTarget.style.display = 'none';
-                                            const fallbackDiv = e.currentTarget.nextElementSibling as HTMLElement;
-                                            if (fallbackDiv) {
-                                              fallbackDiv.style.display = 'block';
-                                            }
-                                          }}
-                                        >
-                                          <img
-                                            src={template.previewImage}
-                                            alt={`${template.name} preview`}
-                                            className="w-full h-full object-contain"
-                                          />
-                                        </object>
-
-                                        {/* Fallback for SVG loading issues */}
-                                        <div className="absolute inset-0 flex items-center justify-center bg-white" style={{ display: 'none' }}>
-                                          <svg
-                                            viewBox="0 0 400 300"
-                                            className="w-full h-full"
-                                          >
-                                            <rect width="400" height="300" fill="#ffffff" />
-                                            <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
-                                            <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
-                                            <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
-
-                                            {template.category === 'modern' && (
-                                              <>
-                                                <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
-                                                <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
-                                                <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
-                                              </>
-                                            )}
-
-                                            {template.category === 'classic' && (
-                                              <>
-                                                <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
-                                                <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
-                                              </>
-                                            )}
-
-                                            {template.category === 'minimal' && (
-                                              <>
-                                                <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
-                                                <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
-                                              </>
-                                            )}
-
-                                            {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
-                                              <>
-                                                <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
-                                                <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
-                                                <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
-                                              </>
-                                            )}
-
-                                            <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
-                                              {template.name} (Fallback Preview)
-                                            </text>
-                                          </svg>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      /* No preview image available */
-                                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
-                                        <svg
-                                          viewBox="0 0 400 300"
-                                          className="w-full h-full"
-                                        >
-                                          <rect width="400" height="300" fill="#f9fafb" />
-                                          <rect x="0" y="0" width="400" height="40" fill={selectedTemplate === template.id ? '#301F70' : '#4f46e5'} opacity="0.9" />
-                                          <rect x="15" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
-                                          <rect x="325" y="12" width="60" height="16" rx="8" fill="white" opacity="0.9" />
-
-                                          {template.category === 'modern' && (
-                                            <>
-                                              <rect x="20" y="60" width="360" height="30" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#6366f1'} opacity="0.2" />
-                                              <rect x="20" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#8b5cf6'} opacity="0.3" />
-                                              <rect x="205" y="110" width="175" height="100" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#06b6d4'} opacity="0.3" />
-                                            </>
-                                          )}
-
-                                          {template.category === 'classic' && (
-                                            <>
-                                              <rect x="50" y="60" width="300" height="25" rx="4" fill={selectedTemplate === template.id ? '#301F70' : '#374151'} opacity="0.8" />
-                                              <rect x="50" y="100" width="300" height="110" rx="8" fill={selectedTemplate === template.id ? '#A2E8DD' : '#f59e0b'} opacity="0.2" />
-                                            </>
-                                          )}
-
-                                          {template.category === 'minimal' && (
-                                            <>
-                                              <rect x="150" y="80" width="100" height="20" rx="10" fill={selectedTemplate === template.id ? '#301F70' : '#1f2937'} />
-                                              <rect x="175" y="120" width="50" height="50" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#10b981'} opacity="0.4" />
-                                            </>
-                                          )}
-
-                                          {(template.category === 'creative' || template.category === 'industry' || template.category === 'specialized' || template.category === 'product') && (
-                                            <>
-                                              <rect x="30" y="60" width="80" height="140" rx="12" fill={selectedTemplate === template.id ? '#A2E8DD' : '#ec4899'} opacity="0.3" />
-                                              <rect x="130" y="60" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#779CAB' : '#8b5cf6'} opacity="0.2" />
-                                              <rect x="130" y="135" width="240" height="65" rx="8" fill={selectedTemplate === template.id ? '#301F70' : '#06b6d4'} opacity="0.2" />
-                                            </>
-                                          )}
-
-                                          <text x="200" y="280" textAnchor="middle" fill="#666" fontSize="12">
-                                            {template.name} Preview
-                                          </text>
-                                        </svg>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Category Badge and Icon */}
-                                <div className="flex items-center justify-between">
-                                  <div className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 ${selectedTemplate === template.id
-                                    ? 'bg-gradient-to-br from-[#301F70]/20 to-[#1A1B41]/10 text-[#301F70]'
-                                    : 'bg-gradient-to-br from-[#779CAB]/10 to-[#A2E8DD]/10 text-[#1A1B41] group-hover:from-[#779CAB]/20 group-hover:to-[#A2E8DD]/20'
-                                    }`}>
-                                    <Package className="h-6 w-6" />
-                                  </div>
-                                  <Badge
-                                    className={`text-xs font-medium capitalize px-2 py-1 rounded-lg ${selectedTemplate === template.id
-                                      ? 'bg-[#301F70]/10 text-[#301F70] border-[#301F70]/20'
-                                      : 'bg-[#779CAB]/10 text-[#1A1B41] border-[#779CAB]/20'
-                                      }`}
-                                  >
-                                    {template.category}
-                                  </Badge>
-                                </div>
-
-                                {/* Title */}
-                                <div>
-                                  <h4 className={`font-bold text-lg leading-tight transition-colors duration-300 ${selectedTemplate === template.id
-                                    ? 'text-[#1A1B41]'
-                                    : 'text-gray-900 group-hover:text-[#1A1B41]'
-                                    }`}>
-                                    {template.name}
-                                  </h4>
-                                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                    {template.description}
-                                  </p>
-                                </div>
-
-                                {/* Features */}
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                                    <span className="font-medium">Features:</span>
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${selectedTemplate === template.id
-                                      ? 'bg-[#301F70]/10 text-[#301F70]'
-                                      : 'bg-gray-100 text-gray-600'
-                                      }`}>
-                                      {(template.features || []).length}
-                                    </span>
-                                  </div>
-
-                                  {/* Top 2 Features Only */}
-                                  <div className="space-y-1">
-                                    {(template.features || []).slice(0, 2).map((feature, index) => (
-                                      <div key={index} className="flex items-center gap-2 text-xs text-gray-600">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${selectedTemplate === template.id
-                                          ? 'bg-[#301F70]'
-                                          : 'bg-[#779CAB]'
-                                          }`} />
-                                        <span className="truncate">{feature}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Footer */}
-                                <div className="pt-3 border-t border-gray-100">
-                                  <div className={`text-center text-xs font-medium transition-colors duration-300 ${selectedTemplate === template.id
-                                    ? 'text-[#301F70]'
-                                    : 'text-gray-500 group-hover:text-[#1A1B41]'
-                                    }`}>
-                                    {selectedTemplate === template.id ? '✓ Selected' : 'Click to Select'}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex items-center justify-between mb-6">
-                          <div>
-                            <h3 className="font-medium text-lg text-[#1A1B41]">Choose Theme for {templates.find(t => t.id === selectedTemplate)?.name}</h3>
-                            <p className="text-sm text-gray-600">Select a color scheme and styling for your template</p>
-                          </div>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setTemplateStep('template')
-                              setSelectedTemplate(null)
-                              setAvailableThemes([])
-                            }}
-                            className="border-[#301F70]/20 text-[#301F70] hover:bg-[#301F70]/10"
-                          >
-                            Change Template
-                          </Button>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                          {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).map((theme) => {
-                            const IconComponent = THEME_ICONS[theme.category as keyof typeof THEME_ICONS] || Monitor
-                            const isSelected = selectedTheme === theme.id
-
-                            return (
-                              <div
-                                key={theme.id}
-                                onClick={() => handleThemeSelect(theme.id)}
-                                className={`group relative border rounded-2xl p-4 sm:p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${isSelected
-                                  ? 'border-[#301F70] bg-gradient-to-br from-[#301F70]/5 to-[#1A1B41]/5 shadow-lg ring-2 ring-[#301F70]/20'
-                                  : 'border-gray-200 hover:border-[#779CAB] bg-white hover:bg-gradient-to-br hover:from-gray-50 hover:to-[#779CAB]/5'
-                                  }`}
-                              >
-                                {theme.isPremium && (
-                                  <div className="absolute -top-2 -right-2 z-10">
-                                    <div className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold shadow-lg">
-                                      <Crown className="h-3 w-3" />
-                                      Premium
-                                    </div>
-                                  </div>
-                                )}
-
-                                {isSelected && (
-                                  <div className="absolute top-4 right-4">
-                                    <div className="flex items-center justify-center w-6 h-6 bg-[#301F70] rounded-full">
-                                      <Check className="h-4 w-4 text-white" />
-                                    </div>
-                                  </div>
-                                )}
-
-                                <div className="space-y-5">
-                                  <div className="flex items-center justify-between">
-                                    <div className={`flex items-center justify-center w-14 h-14 rounded-xl transition-colors ${isSelected
-                                      ? 'bg-[#301F70]/10 text-[#301F70]'
-                                      : 'bg-gray-100 text-gray-600 group-hover:bg-[#779CAB]/10 group-hover:text-[#1A1B41]'
-                                      }`}>
-                                      <IconComponent className="h-7 w-7" />
-                                    </div>
-                                    <div className="text-right">
-                                      <Badge variant="secondary" className="text-xs font-medium capitalize">
-                                        {theme.category}
-                                      </Badge>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-[#1A1B41] transition-colors">
-                                      {theme.name}
-                                    </h4>
-                                    <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
-                                      {theme.description}
-                                    </p>
-                                  </div>
-
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Color Palette</p>
-                                      <span className="text-xs text-gray-500">{Object.keys(theme.colors || {}).length} colors</span>
-                                    </div>
-                                    <div className="flex gap-2 flex-wrap">
-                                      {Object.values(theme.colors || {}).map((color, index) => (
-                                        <div
-                                          key={index}
-                                          className="w-10 h-10 rounded-xl border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer"
-                                          style={{ backgroundColor: color as string }}
-                                          title={color as string}
-                                        />
-                                      ))}
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Key Features</p>
-                                      <span className="text-xs text-gray-500">{theme.features?.length || 0} features</span>
-                                    </div>
-                                    <ul className="space-y-2">
-                                      {theme.features?.slice(0, 3).map((feature: string, index: number) => (
-                                        <li key={index} className="text-xs text-gray-700 flex items-center gap-3">
-                                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isSelected ? 'bg-[#301F70]' : 'bg-gray-400 group-hover:bg-[#779CAB]'
-                                            } transition-colors`} />
-                                          <span className="font-medium">{feature}</span>
-                                        </li>
-                                      ))}
-                                      {(theme.features?.length || 0) > 3 && (
-                                        <li className="text-xs text-gray-500 flex items-center gap-3 italic">
-                                          <div className="w-2 h-2 rounded-full bg-gray-300 flex-shrink-0" />
-                                          +{(theme.features?.length || 0) - 3} more features
-                                        </li>
-                                      )}
-                                    </ul>
-                                  </div>
-
-                                  <div className="pt-2 border-t border-gray-100">
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="text-gray-500">Theme ID: {theme.id}</span>
-                                      <span className={`font-semibold ${isSelected ? 'text-[#301F70]' : 'text-gray-600 group-hover:text-[#1A1B41]'
-                                        } transition-colors`}>
-                                        Select Theme <ArrowRight className='inline-block ml-1 h-3 w-3' />
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        {(availableThemes && availableThemes.length > 0 ? availableThemes : THEMES).length === 0 && (
-                          <div className="text-center py-12">
-                            <div className="text-gray-400 mb-2">
-                              <Palette className="h-12 w-12 mx-auto" />
-                            </div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-1">No themes found</h3>
-                            <p className="text-gray-600">Try selecting a different template</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <TemplateThemeWorkflow
+                      initialTemplateId={catalogue?.template}
+                      onSelectionComplete={(templateId) => {
+                        // Use template-only handler
+                        handleTemplateSelect(templateId);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -2148,7 +1972,7 @@ export default function EditCataloguePage() {
                   type="button"
                   variant="outline"
                   size="xs"
-                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-blue-500/10"
+                  className="w-fit text-xs text-blue-600 border-blue-400/20 bg-gradient-to-r from-[#6366F1] to-[#2D1B69]"
                   disabled={isGeneratingDescription || !productForm.name.trim()}
                   onClick={async () => {
                     if (!productForm.name.trim()) {
@@ -2891,10 +2715,111 @@ export default function EditCataloguePage() {
               <div className="space-y-4">
                 <h4 className="text-md font-medium">Contact Page Customization</h4>
                 <div className="grid grid-cols-1 gap-4">
-                  {/* Note: Contact image, quote, and quote by features can be added later */}
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm text-gray-600">
-                      Additional contact customization features will be available in future updates.
+                  {/* Contact Image */}
+                  <div>
+                    <Label className="text-sm font-medium mb-2 block">Contact Image</Label>
+                    {!(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+                      <FileUpload
+                        uploadType="catalogue"
+                        catalogueId={catalogueId}
+                        maxFiles={1}
+                        accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                        onUpload={(files) => {
+                          if (files.length > 0) {
+                            setCatalogue(prev => prev ? {
+                              ...prev,
+                              settings: {
+                                ...(prev.settings || {}),
+                                contactDetails: {
+                                  ...(prev.settings as any)?.contactDetails,
+                                  contactImage: files[0].url
+                                }
+                              }
+                            } : null)
+                          }
+                        }}
+                        onError={(error) => {
+                          setErrorWithAutoDismiss(`Contact image upload failed: ${error}`)
+                        }}
+                        className="mt-2"
+                      />
+                    ) : (
+                      <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2">
+                        <p className="text-sm text-gray-600 mb-2">Current contact image:</p>
+                        <img
+                          src={(catalogue.settings as any).contactDetails.contactImage}
+                          alt="Contact Image"
+                          className="w-32 h-24 object-cover border rounded"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCatalogue(prev => prev ? {
+                            ...prev,
+                            settings: {
+                              ...(prev.settings || {}),
+                              contactDetails: {
+                                ...(prev.settings as any)?.contactDetails,
+                                contactImage: ''
+                              }
+                            }
+                          } : null)}
+                          className="text-xs"
+                        >
+                          Change Contact Image
+                        </Button>
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500 mt-1">
+                      Upload an image to display on the contact page (e.g., office, team photo, or workspace)
+                    </p>
+                  </div>
+
+                  {/* Contact Quote */}
+                  <div>
+                    <Label htmlFor="contactQuote">Contact Quote</Label>
+                    <Textarea
+                      id="contactQuote"
+                      value={(catalogue?.settings as any)?.contactDetails?.contactQuote || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings as any)?.contactDetails,
+                            contactQuote: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter an inspiring quote for the contact page (e.g., 'Where creativity meets craftsmanship')"
+                      rows={2}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      A quote or message that will be displayed over the contact image
+                    </p>
+                  </div>
+
+                  {/* Contact Quote By */}
+                  <div>
+                    <Label htmlFor="contactQuoteBy">Quote Attribution</Label>
+                    <Input
+                      id="contactQuoteBy"
+                      value={(catalogue?.settings as any)?.contactDetails?.contactQuoteBy || ''}
+                      onChange={(e) => setCatalogue(prev => prev ? {
+                        ...prev,
+                        settings: {
+                          ...(prev.settings || {}),
+                          contactDetails: {
+                            ...(prev.settings as any)?.contactDetails,
+                            contactQuoteBy: e.target.value
+                          }
+                        }
+                      } : null)}
+                      placeholder="Enter who the quote is from (e.g., 'John Smith, CEO' or 'COMPANY NAME')"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Attribution for the contact quote (company name, founder, or team member)
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,0 @@
-export { CoverPage } from './CoverPage'
-export { BrandPromisePage } from './BrandPromisePage'
-export { DailyRoutinePage } from './DailyRoutinePage'
-export { ContactPage } from './ContactPage'
-export { IndividualColorPicker } from './IndividualColorPicker'

@@ -47,8 +47,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       setIsLoading(true)
       
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) {
+        // User not authenticated, set defaults and stop loading
+        setCurrentPlan(SubscriptionPlan.FREE)
+        setUsage({ catalogues: 0, monthlyExports: 0 })
+        return
+      }
 
       // Fetch user's subscription from your API
       const response = await fetch('/api/subscription/current')
@@ -56,9 +61,17 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         const data = await response.json()
         setCurrentPlan(data.plan || SubscriptionPlan.FREE)
         setUsage(data.usage || { catalogues: 0, monthlyExports: 0 })
+      } else {
+        // API call failed, set defaults
+        console.warn('Failed to fetch subscription data, using defaults')
+        setCurrentPlan(SubscriptionPlan.FREE)
+        setUsage({ catalogues: 0, monthlyExports: 0 })
       }
     } catch (error) {
-      console.error('Error fetching subscription data:', error)
+      console.warn('Error fetching subscription data, using defaults:', error)
+      // Set defaults on error
+      setCurrentPlan(SubscriptionPlan.FREE)
+      setUsage({ catalogues: 0, monthlyExports: 0 })
     } finally {
       setIsLoading(false)
     }
@@ -147,7 +160,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     fetchSubscriptionData()
-  }, [])
+  }, []) // Empty dependency array to run only once on mount
 
   const value: SubscriptionContextType = {
     currentPlan,

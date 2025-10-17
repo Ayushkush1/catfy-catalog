@@ -14,6 +14,7 @@ export const TemplateConfigSchema = z.object({
   author: z.string().optional(),
   previewImage: z.string().optional(),
   features: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
   pageCount: z.number().default(1),
   supportedFields: z.object({
     products: z.array(z.string()).default([]),
@@ -95,8 +96,8 @@ export class TemplateRegistry {
   }
 
   getCompatibleTemplates(themeId: string): TemplateConfig[] {
-    return this.getAllTemplates().filter(template => 
-      template.compatibleThemes.includes('*') || 
+    return this.getAllTemplates().filter(template =>
+      template.compatibleThemes.includes('*') ||
       template.compatibleThemes.includes(themeId)
     )
   }
@@ -106,8 +107,8 @@ export class TemplateRegistry {
     if (!template) return false
 
     // Check basic compatibility
-    if (!template.compatibleThemes.includes('*') && 
-        !template.compatibleThemes.includes(themeId)) {
+    if (!template.compatibleThemes.includes('*') &&
+      !template.compatibleThemes.includes(themeId)) {
       return false
     }
 
@@ -122,8 +123,19 @@ export class TemplateRegistry {
   }
 
   registerTemplate(config: TemplateConfig, component: TemplateComponent): void {
-    const validatedConfig = TemplateConfigSchema.parse(config)
-    this.templates.set(config.id, validatedConfig)
+    // Use safeParse to handle validation errors gracefully
+    const result = TemplateConfigSchema.safeParse(config)
+
+    if (!result.success) {
+      console.warn(`⚠️ Template validation failed for "${config.id}":`, result.error.errors)
+      console.warn('Registering template anyway with original config')
+      // Register anyway - useful for HTML templates with flexible properties
+      this.templates.set(config.id, config)
+      this.components.set(config.id, component)
+      return
+    }
+
+    this.templates.set(config.id, result.data)
     this.components.set(config.id, component)
   }
 
@@ -159,11 +171,11 @@ export class TemplateRegistry {
   // Get template compatibility matrix
   getCompatibilityMatrix(): Record<string, string[]> {
     const matrix: Record<string, string[]> = {}
-    
+
     this.getAllTemplates().forEach(template => {
       matrix[template.id] = template.compatibleThemes
     })
-    
+
     return matrix
   }
 }

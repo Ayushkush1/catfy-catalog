@@ -26,27 +26,7 @@
     --radius: 0.5rem;
   }
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
-  }
+
 }
 
 @layer base {
@@ -88,6 +68,18 @@
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+  
+  * {
+    box-sizing: border-box !important;
   }
   
   .no-print {
@@ -104,6 +96,27 @@
   
   .print-break-inside-avoid {
     page-break-inside: avoid;
+  }
+  
+  /* Remove any wrapper padding/margins for PDF */
+  [style*="padding"] {
+    padding: 0 !important;
+  }
+  
+  /* Ensure full width for preview containers */
+  .preview-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  
+  /* Remove viewport styling wrapper padding */
+  div[style*="padding"] {
+    padding: 0 !important;
   }
 }
 

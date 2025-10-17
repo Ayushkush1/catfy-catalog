@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { isClientAdmin } from '@/lib/client-auth'
 
@@ -35,13 +35,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { 
-  Users, 
-  FileText, 
-  DollarSign, 
-  TrendingUp, 
-  Search, 
-  Filter, 
+import {
+  Users,
+  FileText,
+  DollarSign,
+  TrendingUp,
+  Search,
+  Filter,
   Download,
   Eye,
   Edit,
@@ -52,11 +52,14 @@ import {
   Calendar,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  Palette,
+  Menu,
+  X
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { ThemeAnalytics } from '@/components/admin/ThemeAnalytics'
+import TemplateManagement from '@/components/admin/TemplateManagement'
 
 interface AdminStats {
   totalUsers: number
@@ -121,13 +124,23 @@ export default function AdminDashboard() {
   const [selectedTab, setSelectedTab] = useState('overview')
   const [userFilter, setUserFilter] = useState('all')
   const [catalogueFilter, setCatalogueFilter] = useState('all')
-  
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
   useEffect(() => {
     checkAdminAccess()
   }, [])
+
+  // Handle URL parameter for tab selection
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['overview', 'users', 'catalogues', 'subscriptions', 'templates'].includes(tab)) {
+      setSelectedTab(tab)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (selectedTab === 'overview') {
@@ -141,10 +154,24 @@ export default function AdminDashboard() {
     }
   }, [selectedTab])
 
+  // Custom function to handle tab changes and update URL
+  const handleTabChange = (newTab: string) => {
+    setSelectedTab(newTab)
+    // Update URL without causing a page refresh
+    const url = new URL(window.location.href)
+    if (newTab === 'overview') {
+      // Remove tab parameter for overview (default)
+      url.searchParams.delete('tab')
+    } else {
+      url.searchParams.set('tab', newTab)
+    }
+    window.history.pushState({}, '', url.toString())
+  }
+
   const checkAdminAccess = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         router.push('/admin/login')
         return
@@ -152,7 +179,7 @@ export default function AdminDashboard() {
 
       // Check if user is admin using client-side function
       const adminCheck = await isClientAdmin()
-      
+
       if (!adminCheck) {
         router.push('/dashboard')
         return
@@ -276,30 +303,30 @@ export default function AdminDashboard() {
   }
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.companyName?.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesFilter = userFilter === 'all' || 
+
+    const matchesFilter = userFilter === 'all' ||
       (userFilter === 'free' && user.subscriptionPlan === 'free') ||
       (userFilter === 'paid' && user.subscriptionPlan !== 'free') ||
       (userFilter === 'active' && user.isActive) ||
       (userFilter === 'inactive' && !user.isActive)
-    
+
     return matchesSearch && matchesFilter
   })
 
   const filteredCatalogues = catalogues.filter(catalogue => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch = !searchQuery ||
       catalogue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       catalogue.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       catalogue.user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesFilter = catalogueFilter === 'all' || 
+
+    const matchesFilter = catalogueFilter === 'all' ||
       (catalogueFilter === 'public' && catalogue.isPublic) ||
       (catalogueFilter === 'private' && !catalogue.isPublic)
-    
+
     return matchesSearch && matchesFilter
   })
 
@@ -308,17 +335,17 @@ export default function AdminDashboard() {
       <>
         <Header title="Admin" />
         <div className="min-h-screen bg-white">
-        <div className="container mx-auto py-8 px-4">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-32" />
-              ))}
+          <div className="container mx-auto py-8 px-4">
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-64" />
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-32" />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </>
     )
   }
@@ -326,423 +353,575 @@ export default function AdminDashboard() {
   return (
     <>
       <Header title="Admin" />
-      <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Manage users, catalogues, and platform analytics</p>
+      <div className="min-h-screen bg-white border-t">
+
+
+        <div className="flex min-h-screen bg-gray-50">
+          {/* Mobile overlay */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+
+          {/* Sidebar Navigation */}
+          <div className={`
+          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen
+          transform transition-transform duration-300 ease-in-out lg:transform-none
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  aria-label="Close navigation menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <nav className="space-y-2" role="navigation" aria-label="Admin navigation">
+                <button
+                  onClick={() => handleTabChange('overview')}
+                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${selectedTab === 'overview'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  aria-current={selectedTab === 'overview' ? 'page' : undefined}
+                  aria-label="Overview dashboard"
+                >
+                  <BarChart3 className="mr-3 h-5 w-5" />
+                  Overview
+                  {selectedTab === 'overview' && (
+                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleTabChange('users')}
+                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${selectedTab === 'users'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  aria-current={selectedTab === 'users' ? 'page' : undefined}
+                  aria-label="Users management"
+                >
+                  <Users className="mr-3 h-5 w-5" />
+                  Users
+                  {stats && (
+                    <span className={`ml-auto text-xs px-2 py-1 rounded-full ${selectedTab === 'users'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                      }`}>
+                      {stats.totalUsers}
+                    </span>
+                  )}
+                  {selectedTab === 'users' && (
+                    <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleTabChange('catalogues')}
+                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${selectedTab === 'catalogues'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  aria-current={selectedTab === 'catalogues' ? 'page' : undefined}
+                  aria-label="Catalogues management"
+                >
+                  <FileText className="mr-3 h-5 w-5" />
+                  Catalogues
+                  {stats && (
+                    <span className={`ml-auto text-xs px-2 py-1 rounded-full ${selectedTab === 'catalogues'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                      }`}>
+                      {stats.totalCatalogues}
+                    </span>
+                  )}
+                  {selectedTab === 'catalogues' && (
+                    <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleTabChange('subscriptions')}
+                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${selectedTab === 'subscriptions'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  aria-current={selectedTab === 'subscriptions' ? 'page' : undefined}
+                  aria-label="Subscriptions management"
+                >
+                  <DollarSign className="mr-3 h-5 w-5" />
+                  Subscriptions
+                  {stats && (
+                    <span className={`ml-auto text-xs px-2 py-1 rounded-full ${selectedTab === 'subscriptions'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-100 text-gray-600'
+                      }`}>
+                      {stats.activeSubscriptions}
+                    </span>
+                  )}
+                  {selectedTab === 'subscriptions' && (
+                    <div className="ml-2 w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => handleTabChange('templates')}
+                  className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${selectedTab === 'templates'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  aria-current={selectedTab === 'templates' ? 'page' : undefined}
+                  aria-label="Templates management"
+                >
+                  <Palette className="mr-3 h-5 w-5" />
+                  Templates
+                  {selectedTab === 'templates' && (
+                    <div className="ml-auto w-2 h-2 bg-blue-600 rounded-full"></div>
+                  )}
+                </button>
+              </nav>
+
+              {/* Quick Stats Summary */}
+              {stats && selectedTab === 'overview' && (
+                <div className="mt-8 p-2 bg-gray-50 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Stats</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Users</span>
+                      <span className="font-medium">{stats.totalUsers}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Revenue</span>
+                      <span className="font-medium">${stats.totalRevenue.toFixed(0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Growth</span>
+                      <span className="font-medium text-green-600">+{stats.monthlyGrowth}%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            
-            <Button asChild variant="outline">
-              <Link href="/dashboard">
-                Back to Dashboard
-              </Link>
-            </Button>
+          </div>
+
+          {/* Main Content Area */}
+          <div className="flex-1 overflow-hidden lg:ml-0">
+            {/* Mobile header with hamburger menu */}
+            <div className="lg:hidden bg-white border-b border-gray-200 p-4">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <h1 className="text-lg font-semibold text-gray-900">Admin Dashboard</h1>
+                <div className="w-9"></div> {/* Spacer for centering */}
+              </div>
+            </div>
+
+            <Tabs value={selectedTab} onValueChange={handleTabChange} className="h-full">
+              <div className="p-4  h-full overflow-y-auto">
+
+                {/* Overview Tab */}
+                <TabsContent value="overview" className="space-y-6">
+                  {stats && (
+                    <>
+                      {/* Stats Cards */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                                <p className="text-2xl font-bold">{stats.totalUsers}</p>
+                                <p className="text-xs text-gray-500">
+                                  {stats.freeUsers} free, {stats.paidUsers} paid
+                                </p>
+                              </div>
+                              <Users className="h-8 w-8 text-blue-600" />
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Total Catalogues</p>
+                                <p className="text-2xl font-bold">{stats.totalCatalogues}</p>
+                                <p className="text-xs text-gray-500">
+                                  {stats.totalExports} total exports
+                                </p>
+                              </div>
+                              <FileText className="h-8 w-8 text-green-600" />
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                                <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+                                <p className="text-xs text-gray-500">
+                                  {stats.activeSubscriptions} active subscriptions
+                                </p>
+                              </div>
+                              <DollarSign className="h-8 w-8 text-purple-600" />
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Monthly Growth</p>
+                                <p className="text-2xl font-bold">+{stats.monthlyGrowth}%</p>
+                                <p className="text-xs text-gray-500">
+                                  Compared to last month
+                                </p>
+                              </div>
+                              <TrendingUp className="h-8 w-8 text-orange-600" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Quick Actions */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Quick Actions</CardTitle>
+                          <CardDescription>
+                            Common administrative tasks
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Button onClick={() => exportData('users')} variant="outline">
+                              <Download className="mr-2 h-4 w-4" />
+                              Export Users
+                            </Button>
+                            <Button onClick={() => exportData('catalogues')} variant="outline">
+                              <Download className="mr-2 h-4 w-4" />
+                              Export Catalogues
+                            </Button>
+                            <Button onClick={() => exportData('subscriptions')} variant="outline">
+                              <Download className="mr-2 h-4 w-4" />
+                              Export Subscriptions
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
+                  )}
+                </TabsContent>
+
+                {/* Users Tab */}
+                <TabsContent value="users" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Users Management</CardTitle>
+                          <CardDescription>
+                            Manage user accounts and subscriptions
+                          </CardDescription>
+                        </div>
+                        <Button onClick={() => exportData('users')} variant="outline">
+                          <Download className="mr-2 h-4 w-4" />
+                          Export
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Filters */}
+                      <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search users..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+
+                        <Select value={userFilter} onValueChange={setUserFilter}>
+                          <SelectTrigger className="w-full md:w-48">
+                            <Filter className="mr-2 h-4 w-4" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Users</SelectItem>
+                            <SelectItem value="free">Free Plan</SelectItem>
+                            <SelectItem value="paid">Paid Plan</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="inactive">Inactive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Users Table */}
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Plan</TableHead>
+                            <TableHead>Catalogues</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Joined</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{user.fullName}</div>
+                                  <div className="text-sm text-gray-500">{user.email}</div>
+                                  {user.companyName && (
+                                    <div className="text-sm text-gray-500">{user.companyName}</div>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={user.subscriptionPlan === 'free' ? 'secondary' : 'default'}>
+                                  {user.subscriptionPlan === 'free' ? 'Free' :
+                                    user.subscriptionPlan === 'monthly' ? 'Pro Monthly' : 'Pro Yearly'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{user.catalogueCount}</TableCell>
+                              <TableCell>
+                                <Badge variant={user.isActive ? 'default' : 'destructive'}>
+                                  {user.isActive ? 'Active' : 'Inactive'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(user.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => toggleUserStatus(user.id, user.isActive)}
+                                  >
+                                    {user.isActive ? (
+                                      <Ban className="h-4 w-4" />
+                                    ) : (
+                                      <CheckCircle className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Catalogues Tab */}
+                <TabsContent value="catalogues" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Catalogues Management</CardTitle>
+                          <CardDescription>
+                            Monitor and manage user catalogues
+                          </CardDescription>
+                        </div>
+                        <Button onClick={() => exportData('catalogues')} variant="outline">
+                          <Download className="mr-2 h-4 w-4" />
+                          Export
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Filters */}
+                      <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search catalogues..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+
+                        <Select value={catalogueFilter} onValueChange={setCatalogueFilter}>
+                          <SelectTrigger className="w-full md:w-48">
+                            <Filter className="mr-2 h-4 w-4" />
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Catalogues</SelectItem>
+                            <SelectItem value="public">Public</SelectItem>
+                            <SelectItem value="private">Private</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Catalogues Table */}
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Catalogue</TableHead>
+                            <TableHead>Owner</TableHead>
+                            <TableHead>Products</TableHead>
+                            <TableHead>Views</TableHead>
+                            <TableHead>Exports</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredCatalogues.map((catalogue) => (
+                            <TableRow key={catalogue.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{catalogue.name}</div>
+                                  {catalogue.description && (
+                                    <div className="text-sm text-gray-500 line-clamp-1">
+                                      {catalogue.description}
+                                    </div>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{catalogue.user.fullName}</div>
+                                  <div className="text-sm text-gray-500">{catalogue.user.email}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{catalogue.productCount}</TableCell>
+                              <TableCell>{catalogue.viewCount}</TableCell>
+                              <TableCell>{catalogue.exportCount}</TableCell>
+                              <TableCell>
+                                <Badge variant={catalogue.isPublic ? 'default' : 'secondary'}>
+                                  {catalogue.isPublic ? 'Public' : 'Private'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="outline" asChild>
+                                    <Link href={`/catalogue/${catalogue.id}/preview`}>
+                                      <Eye className="h-4 w-4" />
+                                    </Link>
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => deleteCatalogue(catalogue.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Subscriptions Tab */}
+                <TabsContent value="subscriptions" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Subscriptions Management</CardTitle>
+                          <CardDescription>
+                            Monitor subscription status and revenue
+                          </CardDescription>
+                        </div>
+                        <Button onClick={() => exportData('subscriptions')} variant="outline">
+                          <Download className="mr-2 h-4 w-4" />
+                          Export
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Plan</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Started</TableHead>
+                            <TableHead>Cancelled</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {subscriptions.map((subscription) => (
+                            <TableRow key={subscription.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{subscription.user.fullName}</div>
+                                  <div className="text-sm text-gray-500">{subscription.user.email}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge>
+                                  {subscription.plan === 'monthly' ? 'Pro Monthly' : 'Pro Yearly'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>${subscription.amount.toFixed(2)}</TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    subscription.status === 'active' ? 'default' :
+                                      subscription.status === 'cancelled' ? 'destructive' : 'secondary'
+                                  }
+                                >
+                                  {subscription.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(subscription.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                {subscription.cancelledAt
+                                  ? new Date(subscription.cancelledAt).toLocaleDateString()
+                                  : '-'
+                                }
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Templates Tab */}
+                <TabsContent value="templates" className="space-y-6">
+                  <TemplateManagement />
+                </TabsContent>
+              </div>
+            </Tabs>
           </div>
         </div>
       </div>
-
-      <div className="container mx-auto py-8 px-4">
-        <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="catalogues">Catalogues</TabsTrigger>
-            <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
-            <TabsTrigger value="themes">Theme Analytics</TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {stats && (
-              <>
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Total Users</p>
-                          <p className="text-2xl font-bold">{stats.totalUsers}</p>
-                          <p className="text-xs text-gray-500">
-                            {stats.freeUsers} free, {stats.paidUsers} paid
-                          </p>
-                        </div>
-                        <Users className="h-8 w-8 text-blue-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Total Catalogues</p>
-                          <p className="text-2xl font-bold">{stats.totalCatalogues}</p>
-                          <p className="text-xs text-gray-500">
-                            {stats.totalExports} total exports
-                          </p>
-                        </div>
-                        <FileText className="h-8 w-8 text-green-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                          <p className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">
-                            {stats.activeSubscriptions} active subscriptions
-                          </p>
-                        </div>
-                        <DollarSign className="h-8 w-8 text-purple-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Monthly Growth</p>
-                          <p className="text-2xl font-bold">+{stats.monthlyGrowth}%</p>
-                          <p className="text-xs text-gray-500">
-                            Compared to last month
-                          </p>
-                        </div>
-                        <TrendingUp className="h-8 w-8 text-orange-600" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Quick Actions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>
-                      Common administrative tasks
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Button onClick={() => exportData('users')} variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Users
-                      </Button>
-                      <Button onClick={() => exportData('catalogues')} variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Catalogues
-                      </Button>
-                      <Button onClick={() => exportData('subscriptions')} variant="outline">
-                        <Download className="mr-2 h-4 w-4" />
-                        Export Subscriptions
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </TabsContent>
-
-          {/* Users Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Users Management</CardTitle>
-                    <CardDescription>
-                      Manage user accounts and subscriptions
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => exportData('users')} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search users..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  
-                  <Select value={userFilter} onValueChange={setUserFilter}>
-                    <SelectTrigger className="w-full md:w-48">
-                      <Filter className="mr-2 h-4 w-4" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Users</SelectItem>
-                      <SelectItem value="free">Free Plan</SelectItem>
-                      <SelectItem value="paid">Paid Plan</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Users Table */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Catalogues</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Joined</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{user.fullName}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                            {user.companyName && (
-                              <div className="text-sm text-gray-500">{user.companyName}</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.subscriptionPlan === 'free' ? 'secondary' : 'default'}>
-                            {user.subscriptionPlan === 'free' ? 'Free' : 
-                             user.subscriptionPlan === 'monthly' ? 'Pro Monthly' : 'Pro Yearly'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{user.catalogueCount}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.isActive ? 'default' : 'destructive'}>
-                            {user.isActive ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(user.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => toggleUserStatus(user.id, user.isActive)}
-                            >
-                              {user.isActive ? (
-                                <Ban className="h-4 w-4" />
-                              ) : (
-                                <CheckCircle className="h-4 w-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Catalogues Tab */}
-          <TabsContent value="catalogues" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Catalogues Management</CardTitle>
-                    <CardDescription>
-                      Monitor and manage user catalogues
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => exportData('catalogues')} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {/* Filters */}
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search catalogues..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  
-                  <Select value={catalogueFilter} onValueChange={setCatalogueFilter}>
-                    <SelectTrigger className="w-full md:w-48">
-                      <Filter className="mr-2 h-4 w-4" />
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Catalogues</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Catalogues Table */}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Catalogue</TableHead>
-                      <TableHead>Owner</TableHead>
-                      <TableHead>Products</TableHead>
-                      <TableHead>Views</TableHead>
-                      <TableHead>Exports</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCatalogues.map((catalogue) => (
-                      <TableRow key={catalogue.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{catalogue.name}</div>
-                            {catalogue.description && (
-                              <div className="text-sm text-gray-500 line-clamp-1">
-                                {catalogue.description}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{catalogue.user.fullName}</div>
-                            <div className="text-sm text-gray-500">{catalogue.user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{catalogue.productCount}</TableCell>
-                        <TableCell>{catalogue.viewCount}</TableCell>
-                        <TableCell>{catalogue.exportCount}</TableCell>
-                        <TableCell>
-                          <Badge variant={catalogue.isPublic ? 'default' : 'secondary'}>
-                            {catalogue.isPublic ? 'Public' : 'Private'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline" asChild>
-                              <Link href={`/catalogue/${catalogue.id}/preview`}>
-                                <Eye className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => deleteCatalogue(catalogue.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Subscriptions Tab */}
-          <TabsContent value="subscriptions" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Subscriptions Management</CardTitle>
-                    <CardDescription>
-                      Monitor subscription status and revenue
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => exportData('subscriptions')} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Started</TableHead>
-                      <TableHead>Cancelled</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {subscriptions.map((subscription) => (
-                      <TableRow key={subscription.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{subscription.user.fullName}</div>
-                            <div className="text-sm text-gray-500">{subscription.user.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge>
-                            {subscription.plan === 'monthly' ? 'Pro Monthly' : 'Pro Yearly'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>${subscription.amount.toFixed(2)}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={
-                              subscription.status === 'active' ? 'default' : 
-                              subscription.status === 'cancelled' ? 'destructive' : 'secondary'
-                            }
-                          >
-                            {subscription.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(subscription.createdAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {subscription.cancelledAt 
-                            ? new Date(subscription.cancelledAt).toLocaleDateString()
-                            : '-'
-                          }
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Theme Analytics Tab */}
-          <TabsContent value="themes" className="space-y-6">
-            <ThemeAnalytics />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
     </>
   )
 }

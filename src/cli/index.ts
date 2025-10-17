@@ -59,7 +59,7 @@ program
   .option('-p, --pages <number>', 'Number of pages', '4')
   .option('--premium', 'Mark as premium template', false)
   .option('-f, --features <features>', 'Comma-separated list of features')
-  .option('-o, --output-dir <dir>', 'Output directory', 'src/components/catalog-templates')
+  .option('-o, --output-dir <dir>', 'Output directory', 'src/templates')
   .action(async (options) => {
     try {
       const features = options.features ? options.features.split(',').map((f: string) => f.trim()) : []

@@ -8,56 +8,50 @@ import { z } from 'zod'
 export const runtime = 'nodejs'
 
 const createCatalogueSchema = z.object({
+  // Basic catalogue info
   name: z.string().min(1, 'Catalogue name is required').max(100),
   description: z.string().optional(),
   quote: z.string().optional(),
   tagline: z.string().optional(),
+  year: z.string().optional(),
+  introImage: z.string().optional(),
   theme: z.string().default('modern'),
   isPublic: z.boolean().default(false),
-  settings: z.object({
-    showPrices: z.boolean().default(true),
-    showCategories: z.boolean().default(true),
-    showDescription: z.boolean().default(true),
-    primaryColor: z.string().default('#3b82f6'),
-    secondaryColor: z.string().default('#64748b'),
-    fontFamily: z.string().default('Inter'),
-    // Company Information
-    companyInfo: z.object({
-      companyName: z.string().optional(),
-      companyDescription: z.string().optional(),
-      industry: z.string().optional(),
-      foundedYear: z.string().optional(),
-      employeeCount: z.string().optional(),
-      headquarters: z.string().optional(),
-    }).optional(),
-    // Media & Assets
-    mediaAssets: z.object({
-      logoUrl: z.string().optional(),
-      coverImageUrl: z.string().optional(),
-      brandColors: z.array(z.string()).optional(),
-      brandFonts: z.array(z.string()).optional(),
-    }).optional(),
-    // Contact Details
-    contactDetails: z.object({
-      email: z.string().optional(),
-      phone: z.string().optional(),
-      website: z.string().optional(),
-      address: z.string().optional(),
-      city: z.string().optional(),
-      state: z.string().optional(),
-      country: z.string().optional(),
-      postalCode: z.string().optional(),
-    }).optional(),
-    // Social Media
-    socialMedia: z.object({
-      facebook: z.string().optional(),
-      twitter: z.string().optional(),
-      instagram: z.string().optional(),
-      linkedin: z.string().optional(),
-      youtube: z.string().optional(),
-      tiktok: z.string().optional(),
-    }).optional(),
-  }).optional(),
+
+  // Company/Profile information (flattened)
+  companyName: z.string().optional(),
+  companyDescription: z.string().optional(),
+  fullName: z.string().optional(),
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  website: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  country: z.string().optional(),
+
+  // Media assets (flattened)
+  logoUrl: z.string().optional(),
+  coverImageUrl: z.string().optional(),
+
+  // Contact page fields (flattened)
+  contactImage: z.string().optional(),
+  contactDescription: z.string().optional(),
+  contactQuote: z.string().optional(),
+  contactQuoteBy: z.string().optional(),
+
+  // Social media (flattened)
+  facebook: z.string().optional(),
+  twitter: z.string().optional(),
+  instagram: z.string().optional(),
+  linkedin: z.string().optional(),
+
+  // Template settings (flattened)
+  showPrices: z.boolean().default(true),
+  showCategories: z.boolean().default(true),
+  allowSearch: z.boolean().default(true),
+  showProductCodes: z.boolean().default(false),
+  templateId: z.string().optional(),
 })
 
 const updateCatalogueSchema = createCatalogueSchema.partial()
@@ -217,7 +211,7 @@ export async function GET(request: NextRequest) {
       catalogues: catalogues.map(catalogue => {
         const isOwner = catalogue.profileId === profile.id
         const teamMemberRole = catalogue.teamMembers.length > 0 ? catalogue.teamMembers[0].role : null
-        
+
         return {
           id: catalogue.id,
           name: catalogue.name,
@@ -331,7 +325,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // Continue with normal catalogue creation for all users
 
     // Check subscription limits
@@ -358,18 +352,79 @@ export async function POST(request: NextRequest) {
 
     const validatedData = createCatalogueSchema.parse(body)
 
+    // Extract basic catalogue fields
+    const {
+      name, description, quote, tagline, year, introImage, theme, isPublic,
+      // Extract flattened fields to reconstruct settings object for database
+      companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
+      logoUrl, coverImageUrl, contactImage, contactDescription, contactQuote, contactQuoteBy,
+      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId,
+      ...rest
+    } = validatedData
+
+    // Reconstruct settings object for database storage (maintaining backward compatibility)
+    const settings = {
+      showPrices: showPrices ?? true,
+      showCategories: showCategories ?? true,
+      allowSearch: allowSearch ?? true,
+      showProductCodes: showProductCodes ?? false,
+      templateId,
+      // Company Information
+      companyInfo: {
+        companyName,
+        companyDescription,
+      },
+      // Media & Assets
+      mediaAssets: {
+        logoUrl,
+        coverImageUrl,
+      },
+      // Contact Details
+      contactDetails: {
+        email,
+        phone,
+        website,
+        address,
+        contactImage,
+        contactQuote,
+        contactQuoteBy,
+        city,
+        state,
+        country,
+        fullName,
+      },
+      // Contact Page Description
+      contactDescription,
+      // Social Media
+      socialMedia: {
+        facebook,
+        twitter,
+        instagram,
+        linkedin,
+      },
+      // IframeEditor settings for HTML templates
+      ...(templateId ? {
+        iframeEditor: {
+          templateId,
+          engine: 'mustache', // Default engine for HTML templates
+          pageCount: 1, // Will be updated when template is loaded
+        }
+      } : {})
+    }
+
     const catalogue = await prisma.catalogue.create({
       data: {
-        ...validatedData,
+        name,
+        description,
+        quote,
+        tagline,
+        year,
+        introImage,
+        theme,
+        isPublic,
         profileId: profile.id,
-        settings: validatedData.settings || {
-          showPrices: true,
-          showCategories: true,
-          showDescription: true,
-          primaryColor: '#3b82f6',
-          secondaryColor: '#64748b',
-          fontFamily: 'Inter',
-        },
+        template: templateId, // Save template ID to catalogue.template field
+        settings,
       },
       include: {
         _count: {
@@ -429,7 +484,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Catalogue creation error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     if (user) {
       profile = await getUserProfile(user.id)
-      
+
       // Check for owned or team member catalogue first
       catalogue = await prisma.catalogue.findFirst({
         where: {
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     if (user && profile && catalogue.profileId === profile.id) {
       // Skip subscription check in development environment
       const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_APP_URL?.includes('localhost')
-      
+
       if (!isDevelopment) {
         const activeSubscription = await prisma.subscription.findFirst({
           where: {
@@ -153,10 +153,10 @@ export async function POST(request: NextRequest) {
 
     try {
       const page = await browser.newPage()
-      
-      // Set viewport for consistent rendering
-      await page.setViewportSize({ width: 1200, height: 800 })
-      
+
+      // Set viewport for consistent rendering with A4 dimensions
+      await page.setViewportSize({ width: 794, height: 1123 }) // A4 in pixels at 96 DPI
+
       // Navigate to preview page
       await page.goto(previewUrl, {
         waitUntil: 'networkidle',
@@ -171,10 +171,9 @@ export async function POST(request: NextRequest) {
         return page.waitForTimeout(3000)
       })
 
-      // Generate PDF with custom dimensions matching desktop preview
+      // Generate PDF with A4 dimensions matching preview
       const pdfBuffer = await page.pdf({
-        width: '1200px',
-        height: '800px',
+        format: 'A4',
         printBackground: true,
         margin: {
           top: '0px',
@@ -183,6 +182,7 @@ export async function POST(request: NextRequest) {
           left: '0px',
         },
         preferCSSPageSize: true,
+        scale: 1,
       })
 
       await browser.close()
@@ -275,7 +275,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('PDF export error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -291,7 +291,7 @@ export async function POST(request: NextRequest) {
           { status: 408 }
         )
       }
-      
+
       if (error.message.includes('navigation')) {
         return NextResponse.json(
           { error: 'Failed to load preview page for PDF generation.' },
