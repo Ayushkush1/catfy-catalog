@@ -132,6 +132,7 @@ export default function IframeEditor({
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const stageContainerRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
+  const leftSidebarRef = useRef<HTMLDivElement>(null)
   const rightSidebarRef = useRef<HTMLDivElement>(null)
 
   // Enable trackpad pinch-to-zoom when hovering over the canvas area
@@ -169,6 +170,58 @@ export default function IframeEditor({
   const [showGrid, setShowGrid] = useState<boolean>(false)
   const [hoverStyles, setHoverStyles] = useState<Record<string, { backgroundColor?: string; color?: string }>>({})
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
+  // Keep a ref to the previously hovered element so we can remove the attribute cleanly
+  const prevHoveredElRef = useRef<Element | null>(null)
+  useEffect(() => {
+    const doc = iframeRef.current?.contentDocument
+    // If iframe not ready, just clear any previous hover attr and wait
+    if (!doc) {
+      if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
+        prevHoveredElRef.current.removeAttribute('data-editor-hover')
+        prevHoveredElRef.current = null
+      }
+      return
+    }
+
+    // Helper to resolve a path like '0.2.1' into an element under body
+    const resolve = (d: Document, path: string) => {
+      if (!path) return null
+      const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
+      let cursor: Element = d.body
+      for (const i of parts) {
+        if (!cursor.children[i]) return null
+        cursor = cursor.children[i]
+      }
+      return cursor as Element
+    }
+
+    // Remove attribute from previous hovered element (if any)
+    if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
+      prevHoveredElRef.current.removeAttribute('data-editor-hover')
+      prevHoveredElRef.current = null
+    }
+
+    // If there's no hovered path or it's the same as the selected path, don't set hover
+    if (!hoveredPath || (selectedPath && hoveredPath === selectedPath)) return
+
+    const el = resolve(doc, hoveredPath)
+    if (el) {
+      try {
+        el.setAttribute('data-editor-hover', 'true')
+        prevHoveredElRef.current = el
+      } catch (e) {
+        // ignore cross-origin or other DOM errors
+      }
+    }
+
+    // Cleanup when hoveredPath changes or on unmount
+    return () => {
+      if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
+        prevHoveredElRef.current.removeAttribute('data-editor-hover')
+        prevHoveredElRef.current = null
+      }
+    }
+  }, [hoveredPath, selectedPath, iframeRef])
   const [pages, setPages] = useState<IframePage[]>(template.pages)
   const currentPage = pages[currentPageIndex]
 
@@ -568,15 +621,21 @@ export default function IframeEditor({
       if (container) container.appendChild(tag)
     }
     tag.textContent = `
-      [data-editor-hover="true"],
-      [data-editor-selected="true"] { outline: none !important; box-shadow: none !important; }
+      /* Remove focus ring from contenteditable elements completely */
+      *[contenteditable]:focus,
+      *[contenteditable]:focus-visible,
+      [data-editor-selected="true"],
+      [data-editor-hover="true"] {
+        outline: none !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
       
-      /* Hide element borders while hovered/selected in editor to avoid double lines */
+      /* Prevent user selection to avoid accidental text selection */
       [data-editor-hover="true"],
-      [data-editor-selected="true"] { border-color: transparent !important; }
-      /* Tailwind ring utilities sometimes add pseudo-element ring; neutralize them */
-      [data-editor-hover="true"],
-      [data-editor-selected="true"] { --tw-ring-color: transparent !important; --tw-ring-offset-shadow: 0 0 #0000 !important; --tw-ring-shadow: 0 0 #0000 !important; }
+      [data-editor-selected="true"] {
+        user-select: none;
+      }
     `
   }
   useEffect(() => { ensureInteractionStyleTag() }, [compiledHtml])
@@ -730,9 +789,11 @@ export default function IframeEditor({
         prevSel.removeAttribute('contenteditable')
       }
       target.setAttribute('data-editor-selected', 'true')
-      // Always enable inline content editing on selection
-      target.setAttribute('contenteditable', 'true')
-      try { target.focus({ preventScroll: true }) } catch { }
+      // Set tabindex to -1 to prevent native focus and gray border
+      target.setAttribute('tabindex', '-1')
+      // Don't focus the element to avoid browser's default focus ring
+      // target.setAttribute('contenteditable', 'true')
+      // try { target.focus({ preventScroll: true }) } catch { }
       setSelectedPath(path)
       setSelectedTag(target.tagName.toLowerCase())
       setSelectedContent(target.textContent || '')
@@ -800,10 +861,14 @@ export default function IframeEditor({
     if (!selectedPath) { setIsContentEditable(false); return }
     const el = resolvePathToElement(doc, selectedPath) as HTMLElement | null
     if (!el) { setIsContentEditable(false); return }
-    const editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true'
-    if (!editable) el.setAttribute('contenteditable', 'true')
+    // Set tabindex to -1 to prevent native focus and gray border
+    el.setAttribute('tabindex', '-1')
+    // Don't set contenteditable or focus to avoid browser's default focus ring
+    // const editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true'
+    // if (!editable) el.setAttribute('contenteditable', 'true')
     el.setAttribute('data-editor-selected', 'true')
-    try { (el as HTMLElement).focus({ preventScroll: true }) } catch { }
+    // Don't focus the element to avoid gray border
+    // try { (el as HTMLElement).focus({ preventScroll: true }) } catch { }
     setSelectedTag(el.tagName.toLowerCase())
     setSelectedContent((el as HTMLElement).textContent || '')
     setIsContentEditable(true)
@@ -897,6 +962,7 @@ export default function IframeEditor({
     if (prevSel) {
       prevSel.removeAttribute('data-editor-selected')
       prevSel.removeAttribute('contenteditable')
+      prevSel.removeAttribute('tabindex')
     }
     setIsContentEditable(false)
   }
@@ -944,9 +1010,12 @@ export default function IframeEditor({
       if (!target) return
       const canvas = canvasWrapperRef.current
       const rightBar = rightSidebarRef.current
+      const leftBar = leftSidebarRef.current
       const insideCanvas = canvas ? canvas.contains(target) : false
       const insideRight = rightBar ? rightBar.contains(target) : false
-      if (!insideCanvas && !insideRight) {
+      const insideLeft = leftBar ? leftBar.contains(target) : false
+      // Keep selection when clicking inside canvas, right sidebar, or left sidebar
+      if (!insideCanvas && !insideRight && !insideLeft) {
         setSelectedPath(null)
       }
     }
@@ -1442,8 +1511,8 @@ export default function IframeEditor({
             ))}
           </div>
           {/* Panel */}
-          {activeLeftTab && !selectedPath && (
-            <div className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
+          {activeLeftTab && (activeLeftTab === 'layers' || !selectedPath) && (
+            <div ref={leftSidebarRef} className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
               {activeLeftTab === 'pages' && (
                 <div className="flex flex-col h-full bg-white">
                   {/* Header */}
@@ -1529,7 +1598,7 @@ export default function IframeEditor({
                 </div>
               )}
               {activeLeftTab === 'layers' && (
-                <LayersPanel iframeRef={iframeRef} selectedPath={selectedPath} hoveredPath={hoveredPath} onSelectPath={(p) => { setSelectedPath(p); }} />
+                <LayersPanel iframeRef={iframeRef} selectedPath={selectedPath} hoveredPath={hoveredPath} onSelectPath={(p) => { setSelectedPath(p); }} onHoverPath={(p) => setHoveredPath(p)} />
               )}
               {activeLeftTab === 'elements' && (
                 <ElementsPanel onAdd={(type) => addElement(type)} />
@@ -1594,8 +1663,8 @@ export default function IframeEditor({
                   }}
                 />
               )}
-              {/* Show hover rectangle only when nothing is selected to avoid double rectangles */}
-              {hoveredPath && !selectedPath && (
+              {/* Show hover border when hovering any element, even if something is selected */}
+              {hoveredPath && (
                 <HoverRectOverlay iframeRef={iframeRef} hoveredPath={hoveredPath} selectedPath={selectedPath} scale={scale} />
               )}
               {selectedPath && (
@@ -1907,7 +1976,7 @@ export default function IframeEditor({
 }
 
 // Layers Panel: Beautiful DOM tree with element type icons
-function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string) => void }) {
+function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath, onHoverPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string) => void, onHoverPath?: (path: string | null) => void }) {
   type LayerNode = { label: string; path: string; children: LayerNode[]; id?: string; classes?: string }
   const [tree, setTree] = useState<LayerNode[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
@@ -2068,11 +2137,13 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
           onDragStart={() => handleDragStart(node.path)}
           onDragOver={(e) => handleDragOver(e, node.path)}
           onDrop={() => handleDrop(node.path)}
+          onMouseEnter={() => onHoverPath?.(node.path)}
+          onMouseLeave={() => onHoverPath?.(null)}
           className={`group flex items-center gap-2 px-2 py-2 text-xs cursor-pointer rounded-lg transition-all ${isSelected
-              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] shadow-sm'
-              : isHovered
-                ? 'bg-gray-50'
-                : 'hover:bg-gray-50'
+            ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69] shadow-sm'
+            : isHovered
+              ? 'bg-gray-50'
+              : 'hover:bg-gray-50'
             } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
           onClick={() => onSelectPath(node.path)}
           title={node.path}
@@ -2105,18 +2176,13 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
                 #{node.id}
               </span>
             )}
-            {node.classes && !node.id && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-mono truncate max-w-[100px]">
-                .{node.classes.split(' ')[0]}
-              </span>
-            )}
           </div>
 
           {/* Children count badge */}
           {hasChildren && (
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${isSelected
-                ? 'bg-[#6366F1]/20 text-[#6366F1]'
-                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+              ? 'bg-[#6366F1]/20 text-[#6366F1]'
+              : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
               }`}>
               {node.children.length}
             </span>
@@ -2157,6 +2223,8 @@ function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { i
     </div>
   )
 }
+
+// (hover sync effect moved into component body earlier)
 
 // Elements Panel
 function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType) => void, onlyText?: boolean }) {
@@ -2330,8 +2398,8 @@ function SelectionActionsOverlay({ iframeRef, selectedPath, scale, onChangeSelec
   const barLeft = rect.left
   return (
     <>
-      {/* Selection rectangle – always rectangular */}
-      <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box' }} className="border-2 border-gray-900 rounded-sm" />
+      {/* Selection rectangle – single blue border */}
+      <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box', border: '2px solid #3B82F6', borderRadius: '2px' }} />
       {/* Quick actions on the top edge */}
       <div style={{ position: 'absolute', top: barTop, left: barLeft, pointerEvents: 'auto' }}>
         <div className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md bg-white/95 border shadow-sm">
@@ -2349,6 +2417,7 @@ function HoverRectOverlay({ iframeRef, hoveredPath, scale, selectedPath }: { ifr
   const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   useEffect(() => {
     const doc = iframeRef.current?.contentDocument
+    // Show hover border even when something is selected, but not on the same element
     if (!doc || !hoveredPath || (selectedPath && hoveredPath === selectedPath)) { setRect(null); return }
     const resolve = (d: Document, path: string) => {
       const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
@@ -2370,6 +2439,6 @@ function HoverRectOverlay({ iframeRef, hoveredPath, scale, selectedPath }: { ifr
   }, [hoveredPath, selectedPath, scale])
   if (!rect) return null
   return (
-    <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box' }} className="border border-dashed border-gray-500/80 rounded-sm" />
+    <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box', border: '2px dashed #3B82F6', borderRadius: '2px' }} />
   )
 }

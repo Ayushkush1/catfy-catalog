@@ -4,7 +4,7 @@ import IframeEditor from '@/components/editor/IframeEditor'
 import { HtmlTemplates, getTemplateById as getHtmlTemplateById, PrebuiltTemplate } from '@/components/editor/iframe-templates'
 import { getTemplateById as getRegistryTemplateById } from '@/templates'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, EyeOff, Eye, ZoomIn, ZoomOut, Grid3X3, Undo, Redo, Save, Share, Share2, Link as LinkIcon, FileJson, FileType, Printer } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, EyeOff, Eye, Edit3, ZoomIn, ZoomOut, Grid3X3, Undo, Redo, Save, Share, Share2, Link as LinkIcon, FileJson, FileType, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -385,14 +385,35 @@ export default function CataloguePreviewPage() {
             </Link>
           </Button>
 
-          {/* Edit/Preview toggle */}
-          <button
-            className={`text-sm px-3 py-2 rounded-lg flex items-center transition-colors ${isPreviewMode ? 'bg-gray-100 text-gray-700' : 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 text-[#2D1B69]'}`}
-            onClick={() => setIsPreviewMode(v => !v)}
-            aria-label="Toggle preview mode"
-          >
-            {isPreviewMode ? (<><EyeOff className="w-4 h-4 mr-1" /> Preview</>) : (<><Eye className="w-4 h-4 mr-1" /> Editing</>)}
-          </button>
+          {/* Mode Toggle - Segmented Control */}
+          <div className="flex items-center gap-3">
+            <div className="inline-flex items-center bg-gray-100 rounded-xl p-1 ">
+              <button
+                className={`relative px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-2 ${!isPreviewMode
+                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                onClick={() => setIsPreviewMode(false)}
+                aria-label="Switch to edit mode"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span className="leading-none">Edit</span>
+              </button>
+              <button
+                className={`relative px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-2 ${isPreviewMode
+                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                onClick={() => setIsPreviewMode(true)}
+                aria-label="Switch to preview mode"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="leading-none">Preview</span>
+              </button>
+            </div>
+
+
+          </div>
         </div>
 
         {/* Center Zoom/Grid controls */}
