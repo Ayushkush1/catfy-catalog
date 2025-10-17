@@ -239,9 +239,9 @@ export default function IframeEditor({
           allowTaint: true,
           backgroundColor: '#ffffff'
         })
-        
+
         const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7)
-        
+
         setPagePreviews(prev => ({
           ...prev,
           [pageId]: thumbnailDataUrl
@@ -251,7 +251,7 @@ export default function IframeEditor({
 
       // For non-current pages, create a temporary iframe with the compiled HTML
       const compiledHtml = Mustache.render(pageHtml, liveData)
-      
+
       const tempIframe = document.createElement('iframe')
       tempIframe.style.width = '800px'
       tempIframe.style.height = '600px'
@@ -259,12 +259,12 @@ export default function IframeEditor({
       tempIframe.style.left = '-9999px'
       tempIframe.style.top = '-9999px'
       tempIframe.sandbox.add('allow-same-origin')
-      
+
       document.body.appendChild(tempIframe)
-      
+
       const doc = tempIframe.contentDocument
       if (!doc) return
-      
+
       // Write the compiled HTML with styles
       const fullHtml = `
         <!DOCTYPE html>
@@ -281,14 +281,14 @@ export default function IframeEditor({
           </body>
         </html>
       `
-      
+
       doc.open()
       doc.write(fullHtml)
       doc.close()
-      
+
       // Wait for content to load and fonts to render
       await new Promise(resolve => setTimeout(resolve, 800))
-      
+
       // Create canvas and capture the content
       const canvas = await html2canvas(doc.body, {
         width: 800,
@@ -298,12 +298,12 @@ export default function IframeEditor({
         allowTaint: true,
         backgroundColor: '#ffffff'
       })
-      
+
       const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7)
-      
+
       // Clean up
       document.body.removeChild(tempIframe)
-      
+
       // Update state
       setPagePreviews(prev => ({
         ...prev,
@@ -1819,8 +1819,8 @@ export default function IframeEditor({
                         {/* Live Preview Thumbnail */}
                         <div className="w-full h-24 bg-gray-100 rounded mb-2 overflow-hidden relative">
                           {pagePreviews[p.id] ? (
-                            <img 
-                              src={pagePreviews[p.id]} 
+                            <img
+                              src={pagePreviews[p.id]}
                               alt={`Preview of ${p.name}`}
                               className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
                             />
@@ -1977,475 +1977,475 @@ export default function IframeEditor({
       <div className={`transition-all duration-500 ease-in-out ${!previewMode && selectedPath ? 'w-72' : 'w-0'} overflow-hidden`}>
         {!previewMode && selectedPath && (
           <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto transform transition-all duration-500 ease-in-out">
-          {/* Tabs */}
-          <div className="flex items-center justify-between">
-            <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
-              <button
-                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-                onClick={() => setRightTab('content')}
-              >
-                <FileText size={12} />
-                Content
-              </button>
-              <button
-                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
-                onClick={() => setRightTab('style')}
-              >
-                <Palette size={12} />
-                Style
-              </button>
+            {/* Tabs */}
+            <div className="flex items-center justify-between">
+              <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
+                <button
+                  className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                  onClick={() => setRightTab('content')}
+                >
+                  <FileText size={12} />
+                  Content
+                </button>
+                <button
+                  className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                  onClick={() => setRightTab('style')}
+                >
+                  <Palette size={12} />
+                  Style
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Panel */}
-          <div className="space-y-3 transition-all duration-300 ease-in-out">
-            {selectedPath ? (
-              <>
+            {/* Panel */}
+            <div className="space-y-3 transition-all duration-300 ease-in-out">
+              {selectedPath ? (
+                <>
 
-                {rightTab === 'content' && (
-                  <div className="space-y-3 animate-in fade-in slide-in-from-right-3 duration-300">
-                    {/* Content Editing */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
-                      <textarea
-                        className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
-                        value={selectedContent}
-                        onChange={(e) => {
-                          const val = e.target.value
-                          setSelectedContent(val)
-                          const doc = iframeRef.current?.contentDocument
-                          if (!doc || !selectedPath) return
-                          const el = resolvePathToElement(doc, selectedPath)
-                          if (el) (el as HTMLElement).textContent = val
-                        }}
-                      />
-                      <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
-                    </div>
+                  {rightTab === 'content' && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-right-3 duration-300">
+                      {/* Content Editing */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
+                        <textarea
+                          className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
+                          value={selectedContent}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setSelectedContent(val)
+                            const doc = iframeRef.current?.contentDocument
+                            if (!doc || !selectedPath) return
+                            const el = resolvePathToElement(doc, selectedPath)
+                            if (el) (el as HTMLElement).textContent = val
+                          }}
+                        />
+                        <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
+                      </div>
 
-                    {/* Typography (in Content tab) */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                      <label className="block text-[11px] text-gray-600">Text Color</label>
-                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
-                      <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div className="col-span-2">
-                          <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
-                          <div className="relative font-dropdown-container">
-                            {/* Custom Font Dropdown Button */}
-                            <button
-                              type="button"
-                              onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
-                              className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                              <div className="flex items-center space-x-3">
-                                <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
-                                  {getSelectedFont().label}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {getSelectedFont().description}
-                                </span>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
+                      {/* Typography (in Content tab) */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                        <label className="block text-[11px] text-gray-600">Text Color</label>
+                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          <div className="col-span-2">
+                            <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
+                            <div className="relative font-dropdown-container">
+                              {/* Custom Font Dropdown Button */}
+                              <button
+                                type="button"
+                                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
+                                    {getSelectedFont().label}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {getSelectedFont().description}
+                                  </span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
+                              </button>
 
-                            {/* Custom Font Dropdown Menu */}
-                            {fontDropdownOpen && (
-                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                {fontOptions.map((font) => (
-                                  <button
-                                    key={font.value}
-                                    type="button"
-                                    onClick={() => {
-                                      updateSelectedStyles({ fontFamily: font.value })
-                                      setFontDropdownOpen(false)
-                                    }}
-                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                                      }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex-1">
-                                        <div
-                                          style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
-                                          className="truncate"
-                                        >
-                                          {font.label}
+                              {/* Custom Font Dropdown Menu */}
+                              {fontDropdownOpen && (
+                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                  {fontOptions.map((font) => (
+                                    <button
+                                      key={font.value}
+                                      type="button"
+                                      onClick={() => {
+                                        updateSelectedStyles({ fontFamily: font.value })
+                                        setFontDropdownOpen(false)
+                                      }}
+                                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                        }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <div
+                                            style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
+                                            className="truncate"
+                                          >
+                                            {font.label}
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-0.5">
+                                            {font.description}
+                                          </div>
                                         </div>
-                                        <div className="text-xs text-gray-500 mt-0.5">
-                                          {font.description}
-                                        </div>
+                                        {getSelectedFont().value === font.value && (
+                                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
+                                        )}
                                       </div>
-                                      {getSelectedFont().value === font.value && (
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
-                                      )}
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Font Size</label>
-                          <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Font Size</label>
+                            <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
 
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Font Weight</label>
-                          <select
-                            value={currentStyles.fontWeight || '400'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
-                          >
-                            <option value="400">400</option>
-                            <option value="500">500</option>
-                            <option value="600">600</option>
-                            <option value="700">700</option>
-                            <option value="800">800</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Line Height</label>
-                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {rightTab === 'style' && (
-                  <div className="animate-in fade-in slide-in-from-right-3 duration-300">
-                    {/* Dimensions & Position */}
-                    <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Width</label>
-                          <input
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            placeholder="auto"
-                            value={currentStyles.width || ''}
-                            onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Height</label>
-                          <input
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            placeholder="auto"
-                            value={currentStyles.height || ''}
-                            onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Min Width</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minWidth: e.target.value || '' })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Min Height</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minHeight: e.target.value || '' })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Max Width</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxWidth: e.target.value || '' })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Max Height</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxHeight: e.target.value || '' })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Display</label>
-                          <select
-                            value={currentStyles.display || 'block'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}
-                          >
-                            <option value="block">block</option>
-                            <option value="inline">inline</option>
-                            <option value="inline-block">inline-block</option>
-                            <option value="flex">flex</option>
-                            <option value="grid">grid</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Position</label>
-                          <select
-                            value={currentStyles.position || 'static'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}
-                          >
-                            <option value="static">static</option>
-                            <option value="relative">relative</option>
-                            <option value="absolute">absolute</option>
-                            <option value="fixed">fixed</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Z-Index</label>
-                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ zIndex: e.target.value as any })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Overflow</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ overflow: e.target.value as any })}>
-                            <option>visible</option>
-                            <option>hidden</option>
-                            <option>scroll</option>
-                            <option>auto</option>
-                          </select>
-                        </div>
-                      </div>
-                      {/* Margin & Padding */}
-                      <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
-                          <div className="grid grid-cols-4 gap-1">
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
-                          <div className="grid grid-cols-4 gap-1">
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                            <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Background & Border */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
-                      <label className="block text-[11px] text-gray-600">Background Color</label>
-                      <input
-                        type="color"
-                        value={currentStyles.backgroundColor || '#ffffff'}
-                        className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                        onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
-                      />
-                      <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Border Width</label>
-                          <input
-                            type="number"
-                            value={currentStyles.borderWidth ? parseInt(currentStyles.borderWidth) : ''}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Border Radius</label>
-                          <input
-                            type="number"
-                            value={currentStyles.borderRadius ? parseInt(currentStyles.borderRadius) : ''}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })}
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Border Color</label>
-                          <input
-                            type="color"
-                            value={currentStyles.borderColor || '#000000'}
-                            className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                            onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Border Style</label>
-                          <select
-                            value={currentStyles.borderStyle || 'solid'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}
-                          >
-                            <option value="solid">solid</option>
-                            <option value="dashed">dashed</option>
-                            <option value="dotted">dotted</option>
-                            <option value="none">none</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Typography */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                      <label className="block text-[11px] text-gray-600">Text Color</label>
-                      <input
-                        type="color"
-                        value={currentStyles.color || '#000000'}
-                        className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                        onChange={(e) => updateSelectedStyles({ color: e.target.value })}
-                      />
-                      <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                      <input
-                        type="number"
-                        min={8}
-                        max={96}
-                        value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : ''}
-                        className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                        onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
-                      />
-                      <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div className="col-span-2">
-                          <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
-                          <div className="relative font-dropdown-container">
-                            {/* Custom Font Dropdown Button */}
-                            <button
-                              type="button"
-                              onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
-                              className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Font Weight</label>
+                            <select
+                              value={currentStyles.fontWeight || '400'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
                             >
-                              <div className="flex items-center space-x-3">
-                                <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
-                                  {getSelectedFont().label}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  {getSelectedFont().description}
-                                </span>
-                              </div>
-                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {/* Custom Font Dropdown Menu */}
-                            {fontDropdownOpen && (
-                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                {fontOptions.map((font) => (
-                                  <button
-                                    key={font.value}
-                                    type="button"
-                                    onClick={() => {
-                                      updateSelectedStyles({ fontFamily: font.value })
-                                      setFontDropdownOpen(false)
-                                    }}
-                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                                      }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex-1">
-                                        <div
-                                          style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
-                                          className="truncate"
-                                        >
-                                          {font.label}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-0.5">
-                                          {font.description}
-                                        </div>
-                                      </div>
-                                      {getSelectedFont().value === font.value && (
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
-                                      )}
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
+                              <option value="400">400</option>
+                              <option value="500">500</option>
+                              <option value="600">600</option>
+                              <option value="700">700</option>
+                              <option value="800">800</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Line Height</label>
+                            <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                            <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
                           </div>
                         </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Font Weight</label>
-                          <select
-                            value={currentStyles.fontWeight || '400'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
-                          >
-                            <option value="400">400</option>
-                            <option value="500">500</option>
-                            <option value="600">600</option>
-                            <option value="700">700</option>
-                            <option value="800">800</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Line Height</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={currentStyles.lineHeight ? parseFloat(currentStyles.lineHeight) : ''}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                          <input
-                            type="number"
-                            step="0.1"
-                            value={currentStyles.letterSpacing ? parseInt(currentStyles.letterSpacing) : ''}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })}
-                          />
-                        </div>
                       </div>
                     </div>
+                  )}
 
-                    {/* Effects */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
-                      <label className="block text-[11px] text-gray-600">Box Shadow</label>
-                      <input
-                        className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                        placeholder="0 4px 10px rgba(0,0,0,0.1)"
-                        value={currentStyles.boxShadow && currentStyles.boxShadow !== 'none' ? currentStyles.boxShadow : ''}
-                        onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })}
-                      />
-                      {selectedTag === 'img' && (
-                        <div className="mt-2">
-                          <label className="block text-[11px] text-gray-600">Image Fit</label>
-                          <select
-                            value={currentStyles.objectFit || 'cover'}
-                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                            onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}
-                          >
-                            <option value="cover">cover</option>
-                            <option value="contain">contain</option>
-                            <option value="fill">fill</option>
-                            <option value="none">none</option>
-                            <option value="scale-down">scale-down</option>
-                          </select>
+                  {rightTab === 'style' && (
+                    <div className="animate-in fade-in slide-in-from-right-3 duration-300">
+                      {/* Dimensions & Position */}
+                      <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Width</label>
+                            <input
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              placeholder="auto"
+                              value={currentStyles.width || ''}
+                              onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Height</label>
+                            <input
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              placeholder="auto"
+                              value={currentStyles.height || ''}
+                              onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Min Width</label>
+                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minWidth: e.target.value || '' })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Min Height</label>
+                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minHeight: e.target.value || '' })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Max Width</label>
+                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxWidth: e.target.value || '' })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Max Height</label>
+                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxHeight: e.target.value || '' })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Display</label>
+                            <select
+                              value={currentStyles.display || 'block'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}
+                            >
+                              <option value="block">block</option>
+                              <option value="inline">inline</option>
+                              <option value="inline-block">inline-block</option>
+                              <option value="flex">flex</option>
+                              <option value="grid">grid</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Position</label>
+                            <select
+                              value={currentStyles.position || 'static'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}
+                            >
+                              <option value="static">static</option>
+                              <option value="relative">relative</option>
+                              <option value="absolute">absolute</option>
+                              <option value="fixed">fixed</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Z-Index</label>
+                            <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ zIndex: e.target.value as any })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Overflow</label>
+                            <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ overflow: e.target.value as any })}>
+                              <option>visible</option>
+                              <option>hidden</option>
+                              <option>scroll</option>
+                              <option>auto</option>
+                            </select>
+                          </div>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Hover Styles */}
-                    <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                      <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Hover Background</label>
-                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ backgroundColor: e.target.value })} />
-                        </div>
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Hover Text</label>
-                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ color: e.target.value })} />
+                        {/* Margin & Padding */}
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
+                            <div className="grid grid-cols-4 gap-1">
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
+                            <div className="grid grid-cols-4 gap-1">
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex gap-2">
-                      <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
+                      {/* Background & Border */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
+                        <label className="block text-[11px] text-gray-600">Background Color</label>
+                        <input
+                          type="color"
+                          value={currentStyles.backgroundColor || '#ffffff'}
+                          className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                          onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
+                        />
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Border Width</label>
+                            <input
+                              type="number"
+                              value={currentStyles.borderWidth ? parseInt(currentStyles.borderWidth) : ''}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Border Radius</label>
+                            <input
+                              type="number"
+                              value={currentStyles.borderRadius ? parseInt(currentStyles.borderRadius) : ''}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Border Color</label>
+                            <input
+                              type="color"
+                              value={currentStyles.borderColor || '#000000'}
+                              className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                              onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Border Style</label>
+                            <select
+                              value={currentStyles.borderStyle || 'solid'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}
+                            >
+                              <option value="solid">solid</option>
+                              <option value="dashed">dashed</option>
+                              <option value="dotted">dotted</option>
+                              <option value="none">none</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Typography */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                        <label className="block text-[11px] text-gray-600">Text Color</label>
+                        <input
+                          type="color"
+                          value={currentStyles.color || '#000000'}
+                          className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                          onChange={(e) => updateSelectedStyles({ color: e.target.value })}
+                        />
+                        <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
+                        <input
+                          type="number"
+                          min={8}
+                          max={96}
+                          value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : ''}
+                          className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                          onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
+                        />
+                        <div className="grid grid-cols-2 gap-1.5 mt-2">
+                          <div className="col-span-2">
+                            <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
+                            <div className="relative font-dropdown-container">
+                              {/* Custom Font Dropdown Button */}
+                              <button
+                                type="button"
+                                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
+                                    {getSelectedFont().label}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    {getSelectedFont().description}
+                                  </span>
+                                </div>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
+                              </button>
+
+                              {/* Custom Font Dropdown Menu */}
+                              {fontDropdownOpen && (
+                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                  {fontOptions.map((font) => (
+                                    <button
+                                      key={font.value}
+                                      type="button"
+                                      onClick={() => {
+                                        updateSelectedStyles({ fontFamily: font.value })
+                                        setFontDropdownOpen(false)
+                                      }}
+                                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                        }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                          <div
+                                            style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
+                                            className="truncate"
+                                          >
+                                            {font.label}
+                                          </div>
+                                          <div className="text-xs text-gray-500 mt-0.5">
+                                            {font.description}
+                                          </div>
+                                        </div>
+                                        {getSelectedFont().value === font.value && (
+                                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Font Weight</label>
+                            <select
+                              value={currentStyles.fontWeight || '400'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
+                            >
+                              <option value="400">400</option>
+                              <option value="500">500</option>
+                              <option value="600">600</option>
+                              <option value="700">700</option>
+                              <option value="800">800</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Line Height</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={currentStyles.lineHeight ? parseFloat(currentStyles.lineHeight) : ''}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={currentStyles.letterSpacing ? parseInt(currentStyles.letterSpacing) : ''}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Effects */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
+                        <label className="block text-[11px] text-gray-600">Box Shadow</label>
+                        <input
+                          className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                          placeholder="0 4px 10px rgba(0,0,0,0.1)"
+                          value={currentStyles.boxShadow && currentStyles.boxShadow !== 'none' ? currentStyles.boxShadow : ''}
+                          onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })}
+                        />
+                        {selectedTag === 'img' && (
+                          <div className="mt-2">
+                            <label className="block text-[11px] text-gray-600">Image Fit</label>
+                            <select
+                              value={currentStyles.objectFit || 'cover'}
+                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                              onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}
+                            >
+                              <option value="cover">cover</option>
+                              <option value="contain">contain</option>
+                              <option value="fill">fill</option>
+                              <option value="none">none</option>
+                              <option value="scale-down">scale-down</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Hover Styles */}
+                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                        <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Hover Background</label>
+                            <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ backgroundColor: e.target.value })} />
+                          </div>
+                          <div>
+                            <label className="block text-[11px] text-gray-600">Hover Text</label>
+                            <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ color: e.target.value })} />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab === 'content' ? 'content' : 'style'}.</div>
-            )}
+                  )}
+                </>
+              ) : (
+                <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab === 'content' ? 'content' : 'style'}.</div>
+              )}
+            </div>
+
+
+
           </div>
-
-
-
-        </div>
         )}
       </div>
     </div>
