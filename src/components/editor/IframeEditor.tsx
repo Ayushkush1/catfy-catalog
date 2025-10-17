@@ -170,6 +170,222 @@ export default function IframeEditor({
   const [showGrid, setShowGrid] = useState<boolean>(false)
   const [hoverStyles, setHoverStyles] = useState<Record<string, { backgroundColor?: string; color?: string }>>({})
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
+  const [currentStyles, setCurrentStyles] = useState<Record<string, string>>({})
+  const [fontDropdownOpen, setFontDropdownOpen] = useState(false)
+  const [pagePreviews, setPagePreviews] = useState<Record<string, string>>({})
+
+  // Font options for custom dropdown
+  const fontOptions = [
+    { value: 'Inter, system-ui, Arial', label: 'Inter', description: 'Modern Sans-Serif', family: 'Inter, system-ui, Arial' },
+    { value: 'Arial, Helvetica, sans-serif', label: 'Arial', description: 'Classic Sans-Serif', family: 'Arial, Helvetica, sans-serif' },
+    { value: 'Helvetica Neue, Helvetica, sans-serif', label: 'Helvetica Neue', description: 'Clean Sans-Serif', family: 'Helvetica Neue, Helvetica, sans-serif' },
+    { value: 'Roboto, sans-serif', label: 'Roboto', description: 'Google Font', family: 'Roboto, sans-serif' },
+    { value: 'Open Sans, sans-serif', label: 'Open Sans', description: 'Friendly Sans-Serif', family: 'Open Sans, sans-serif' },
+    { value: 'Lato, sans-serif', label: 'Lato', description: 'Professional Sans-Serif', family: 'Lato, sans-serif' },
+    { value: 'Montserrat, sans-serif', label: 'Montserrat', description: 'Geometric Sans-Serif', family: 'Montserrat, sans-serif' },
+    { value: 'Poppins, sans-serif', label: 'Poppins', description: 'Rounded Sans-Serif', family: 'Poppins, sans-serif' },
+    { value: 'Source Sans Pro, sans-serif', label: 'Source Sans Pro', description: 'Adobe Font', family: 'Source Sans Pro, sans-serif' },
+    { value: 'Georgia, serif', label: 'Georgia', description: 'Classic Serif', family: 'Georgia, serif' },
+    { value: 'Times New Roman, Times, serif', label: 'Times New Roman', description: 'Traditional Serif', family: 'Times New Roman, Times, serif' },
+    { value: 'Playfair Display, serif', label: 'Playfair Display', description: 'Elegant Serif', family: 'Playfair Display, serif' },
+    { value: 'Merriweather, serif', label: 'Merriweather', description: 'Readable Serif', family: 'Merriweather, serif' },
+    { value: 'Crimson Text, serif', label: 'Crimson Text', description: 'Book Serif', family: 'Crimson Text, serif' },
+    { value: 'Courier New, monospace', label: 'Courier New', description: 'Typewriter', family: 'Courier New, monospace' },
+    { value: 'Monaco, Consolas, monospace', label: 'Monaco', description: 'Code Font', family: 'Monaco, Consolas, monospace' },
+    { value: 'Source Code Pro, monospace', label: 'Source Code Pro', description: 'Modern Mono', family: 'Source Code Pro, monospace' },
+    { value: 'Fira Code, monospace', label: 'Fira Code', description: 'Programming Font', family: 'Fira Code, monospace' },
+    { value: 'Dancing Script, cursive', label: 'Dancing Script', description: 'Handwritten', family: 'Dancing Script, cursive' },
+    { value: 'Lobster, cursive', label: 'Lobster', description: 'Display Script', family: 'Lobster, cursive' },
+    { value: 'Pacifico, cursive', label: 'Pacifico', description: 'Brush Script', family: 'Pacifico, cursive' },
+    { value: 'Oswald, sans-serif', label: 'Oswald', description: 'Condensed Sans-Serif', family: 'Oswald, sans-serif' },
+    { value: 'Raleway, sans-serif', label: 'Raleway', description: 'Elegant Sans-Serif', family: 'Raleway, sans-serif' },
+    { value: 'Nunito, sans-serif', label: 'Nunito', description: 'Rounded Sans-Serif', family: 'Nunito, sans-serif' },
+  ]
+
+  // Get selected font option
+  const getSelectedFont = () => {
+    const currentFont = currentStyles.fontFamily || 'Inter, system-ui, Arial'
+    return fontOptions.find(font => font.value === currentFont) || fontOptions[0]
+  }
+
+  // Close font dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (fontDropdownOpen) {
+        const target = event.target as Element
+        if (!target.closest('.font-dropdown-container')) {
+          setFontDropdownOpen(false)
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [fontDropdownOpen])
+
+  // Generate preview thumbnails for pages
+  const generatePagePreview = async (pageHtml: string, pageId: string) => {
+    try {
+      // If this is the current page, capture from the main iframe
+      if (pageId === currentPage?.id && iframeRef.current?.contentDocument) {
+        const mainDoc = iframeRef.current.contentDocument
+        const canvas = await html2canvas(mainDoc.body, {
+          width: 800,
+          height: 600,
+          scale: 0.25, // Small scale for thumbnail
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff'
+        })
+        
+        const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7)
+        
+        setPagePreviews(prev => ({
+          ...prev,
+          [pageId]: thumbnailDataUrl
+        }))
+        return
+      }
+
+      // For non-current pages, create a temporary iframe with the compiled HTML
+      const compiledHtml = Mustache.render(pageHtml, liveData)
+      
+      const tempIframe = document.createElement('iframe')
+      tempIframe.style.width = '800px'
+      tempIframe.style.height = '600px'
+      tempIframe.style.position = 'absolute'
+      tempIframe.style.left = '-9999px'
+      tempIframe.style.top = '-9999px'
+      tempIframe.sandbox.add('allow-same-origin')
+      
+      document.body.appendChild(tempIframe)
+      
+      const doc = tempIframe.contentDocument
+      if (!doc) return
+      
+      // Write the compiled HTML with styles
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              ${template.sharedCss || ''}
+              body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+            </style>
+          </head>
+          <body>
+            ${compiledHtml}
+          </body>
+        </html>
+      `
+      
+      doc.open()
+      doc.write(fullHtml)
+      doc.close()
+      
+      // Wait for content to load and fonts to render
+      await new Promise(resolve => setTimeout(resolve, 800))
+      
+      // Create canvas and capture the content
+      const canvas = await html2canvas(doc.body, {
+        width: 800,
+        height: 600,
+        scale: 0.25, // Small scale for thumbnail
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      })
+      
+      const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7)
+      
+      // Clean up
+      document.body.removeChild(tempIframe)
+      
+      // Update state
+      setPagePreviews(prev => ({
+        ...prev,
+        [pageId]: thumbnailDataUrl
+      }))
+    } catch (error) {
+      console.error('Failed to generate page preview:', error)
+    }
+  }
+
+  // Refresh preview for current page when changes are made
+  const refreshCurrentPagePreview = () => {
+    if (currentPage?.id) {
+      generatePagePreview(currentPage.html, currentPage.id)
+    }
+  }
+
+  // Refresh all page previews
+  const refreshAllPreviews = () => {
+    pages.forEach(page => {
+      generatePagePreview(page.html, page.id)
+    })
+  }
+
+  // Function to get current computed styles of selected element
+  const getCurrentElementStyles = (element: HTMLElement): Record<string, string> => {
+    const doc = iframeRef.current?.contentDocument
+    if (!doc) return {}
+    const iframeWindow = iframeRef.current?.contentWindow
+    if (!iframeWindow) return {}
+
+    const computedStyles = iframeWindow.getComputedStyle(element)
+    return {
+      // Typography
+      color: element.style.color || rgbToHex(computedStyles.color) || '#000000',
+      fontSize: element.style.fontSize || computedStyles.fontSize,
+      fontFamily: element.style.fontFamily || computedStyles.fontFamily,
+      fontWeight: element.style.fontWeight || computedStyles.fontWeight,
+      lineHeight: element.style.lineHeight || computedStyles.lineHeight,
+      letterSpacing: element.style.letterSpacing || computedStyles.letterSpacing,
+      // Dimensions
+      width: element.style.width || (computedStyles.width !== 'auto' ? computedStyles.width : ''),
+      height: element.style.height || (computedStyles.height !== 'auto' ? computedStyles.height : ''),
+      minWidth: element.style.minWidth || computedStyles.minWidth,
+      minHeight: element.style.minHeight || computedStyles.minHeight,
+      maxWidth: element.style.maxWidth || computedStyles.maxWidth,
+      maxHeight: element.style.maxHeight || computedStyles.maxHeight,
+      // Position & Display
+      display: element.style.display || computedStyles.display,
+      position: element.style.position || computedStyles.position,
+      zIndex: element.style.zIndex || computedStyles.zIndex,
+      overflow: element.style.overflow || computedStyles.overflow,
+      // Spacing
+      marginTop: element.style.marginTop || computedStyles.marginTop,
+      marginRight: element.style.marginRight || computedStyles.marginRight,
+      marginBottom: element.style.marginBottom || computedStyles.marginBottom,
+      marginLeft: element.style.marginLeft || computedStyles.marginLeft,
+      paddingTop: element.style.paddingTop || computedStyles.paddingTop,
+      paddingRight: element.style.paddingRight || computedStyles.paddingRight,
+      paddingBottom: element.style.paddingBottom || computedStyles.paddingBottom,
+      paddingLeft: element.style.paddingLeft || computedStyles.paddingLeft,
+      // Background & Border
+      backgroundColor: element.style.backgroundColor || rgbToHex(computedStyles.backgroundColor) || '#ffffff',
+      borderWidth: element.style.borderWidth || computedStyles.borderWidth,
+      borderRadius: element.style.borderRadius || computedStyles.borderRadius,
+      borderColor: element.style.borderColor || rgbToHex(computedStyles.borderColor) || '#000000',
+      borderStyle: element.style.borderStyle || computedStyles.borderStyle,
+      // Effects
+      boxShadow: element.style.boxShadow || computedStyles.boxShadow,
+      objectFit: element.style.objectFit || computedStyles.objectFit,
+    }
+  }
+
+  // Helper function to convert RGB to Hex for color inputs
+  const rgbToHex = (rgb: string): string => {
+    if (!rgb || rgb === 'transparent' || rgb === 'rgba(0, 0, 0, 0)') return '#ffffff'
+    if (rgb.startsWith('#')) return rgb
+    const match = rgb.match(/\d+/g)
+    if (!match || match.length < 3) return '#ffffff'
+    const [r, g, b] = match.map(Number)
+    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')
+  }
   // Keep a ref to the previously hovered element so we can remove the attribute cleanly
   const prevHoveredElRef = useRef<Element | null>(null)
   useEffect(() => {
@@ -230,6 +446,49 @@ export default function IframeEditor({
   useEffect(() => {
     pagesRef.current = pages
   }, [pages])
+
+  // Auto-collapse left tab when element is selected (except for layers tab)
+  useEffect(() => {
+    if (selectedPath && activeLeftTab && activeLeftTab !== 'layers') {
+      setActiveLeftTab(null)
+    }
+  }, [selectedPath, activeLeftTab])
+
+  // Generate previews when pages change
+  useEffect(() => {
+    pages.forEach(page => {
+      if (!pagePreviews[page.id]) {
+        generatePagePreview(page.html, page.id)
+      }
+    })
+  }, [pages.length, pagePreviews]) // Depend on page count and previews state
+
+  // Refresh current page preview when style mutations change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      refreshCurrentPagePreview()
+    }, 1000) // Debounce to avoid too frequent updates
+
+    return () => clearTimeout(timeoutId)
+  }, [styleMutations])
+
+  // Refresh current page preview when live data changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      refreshCurrentPagePreview()
+    }, 1000) // Debounce to avoid too frequent updates
+
+    return () => clearTimeout(timeoutId)
+  }, [liveData])
+
+  // Refresh preview when current page changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      refreshCurrentPagePreview()
+    }, 1500) // Wait a bit longer for page transition to complete
+
+    return () => clearTimeout(timeoutId)
+  }, [currentPageIndex])
 
   // Database persistence
   const [isSaving, setIsSaving] = useState(false)
@@ -597,6 +856,11 @@ export default function IframeEditor({
       console.log('✅ IframeEditor: Calling onIframeReady callback')
       onIframeReady?.()
 
+      // Refresh preview for current page after iframe is ready
+      setTimeout(() => {
+        refreshCurrentPagePreview()
+      }, 500)
+
       // Store observer cleanup
       return () => observer.disconnect()
     }
@@ -665,7 +929,7 @@ export default function IframeEditor({
       const timer = setTimeout(() => {
         setPages([...pagesRef.current])
         setIsPageTransitioning(false)
-      }, 150) // 150ms fade out, then fade in
+      }, 200) // 200ms fade out, then fade in
 
       return () => clearTimeout(timer)
     }
@@ -852,15 +1116,32 @@ export default function IframeEditor({
   // Reflect contenteditable state when selection changes
   useEffect(() => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc) { setIsContentEditable(false); return }
+    if (!doc) {
+      setIsContentEditable(false)
+      setCurrentStyles({})
+      return
+    }
     const prevSel = doc.querySelector('[data-editor-selected="true"]') as HTMLElement | null
     if (prevSel && (!selectedPath || computeElementPath(doc, prevSel) !== selectedPath)) {
       prevSel.removeAttribute('data-editor-selected')
       prevSel.removeAttribute('contenteditable')
     }
-    if (!selectedPath) { setIsContentEditable(false); return }
+    if (!selectedPath) {
+      setIsContentEditable(false)
+      setCurrentStyles({})
+      return
+    }
     const el = resolvePathToElement(doc, selectedPath) as HTMLElement | null
-    if (!el) { setIsContentEditable(false); return }
+    if (!el) {
+      setIsContentEditable(false)
+      setCurrentStyles({})
+      return
+    }
+
+    // Extract current styles from the element
+    const styles = getCurrentElementStyles(el)
+    setCurrentStyles(styles)
+
     // Set tabindex to -1 to prevent native focus and gray border
     el.setAttribute('tabindex', '-1')
     // Don't set contenteditable or focus to avoid browser's default focus ring
@@ -1483,7 +1764,7 @@ export default function IframeEditor({
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
       {/* Left Sidebar: Icon nav + panel */}
       {!previewMode && (
-        <div className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} transition-all flex-shrink-0`}>
+        <div className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} transition-all duration-500 ease-in-out flex-shrink-0`}>
           {/* Icon column */}
           <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3 flex-shrink-0">
             {([
@@ -1497,12 +1778,12 @@ export default function IframeEditor({
               <button
                 key={tab.id}
                 onClick={() => setActiveLeftTab(prev => (prev === (tab.id as any) ? null : (tab.id as any)))}
-                className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg transition-all duration-200 group relative`}
+                className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out group relative transform hover:scale-105`}
                 title={tab.name}
               >
-                <div className={`p-2 rounded-xl ${activeLeftTab === (tab.id as any)
-                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+                <div className={`p-2 rounded-xl transition-all duration-300 ease-in-out ${activeLeftTab === (tab.id as any)
+                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md scale-110'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md hover:scale-105'
                   }`}>
                   {tab.icon}
                 </div>
@@ -1512,7 +1793,7 @@ export default function IframeEditor({
           </div>
           {/* Panel */}
           {activeLeftTab && (activeLeftTab === 'layers' || !selectedPath) && (
-            <div ref={leftSidebarRef} className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
+            <div ref={leftSidebarRef} className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2 transform transition-all duration-500 ease-in-out animate-in slide-in-from-left-5">
               {activeLeftTab === 'pages' && (
                 <div className="flex flex-col h-full bg-white">
                   {/* Header */}
@@ -1520,7 +1801,7 @@ export default function IframeEditor({
                     <div className="font-medium text-sm">Pages ({pages.length})</div>
                     <button
                       onClick={addBlankPage}
-                      className="px-2 py-1 text-xs rounded bg-white border border-gray-300 hover:bg-gray-50"
+                      className="px-2 py-1 text-xs rounded bg-white border border-gray-300 hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
                       title="Add Page"
                     >
                       +
@@ -1532,25 +1813,40 @@ export default function IframeEditor({
                     {pages.map((p, idx) => (
                       <div
                         key={p.id}
-                        className={`group border-2 rounded-lg p-2 transition-all ${idx === currentPageIndex ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                        className={`group border-2 rounded-lg p-2 cursor-pointer transition-all duration-300 ease-in-out transform ${idx === currentPageIndex ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'}`}
                         onClick={() => setCurrentPageIndex(idx)}
                       >
-                        {/* Thumbnail placeholder */}
-                        <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
+                        {/* Live Preview Thumbnail */}
+                        <div className="w-full h-24 bg-gray-100 rounded mb-2 overflow-hidden relative">
+                          {pagePreviews[p.id] ? (
+                            <img 
+                              src={pagePreviews[p.id]} 
+                              alt={`Preview of ${p.name}`}
+                              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-110"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 animate-pulse">
+                              <div className="text-xs text-gray-500">Generating...</div>
+                            </div>
+                          )}
+                          {idx === currentPageIndex && (
+                            <div className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full shadow-sm"></div>
+                          )}
+                        </div>
 
                         {/* Name and actions */}
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-medium text-gray-700 truncate">{p.name}</div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300">
                             <button
-                              className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-100"
+                              className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-100 transition-all duration-200 transform hover:scale-105"
                               onClick={(e) => { e.stopPropagation(); duplicateCurrentPage() }}
                             >
                               Duplicate
                             </button>
                             {pages.length > 1 && (
                               <button
-                                className="px-2 py-1 text-xs rounded border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                                className="px-2 py-1 text-xs rounded border border-red-300 bg-white text-red-600 hover:bg-red-50 transition-all duration-200 transform hover:scale-105"
                                 onClick={(e) => { e.stopPropagation(); deleteCurrentPage() }}
                               >
                                 Delete
@@ -1578,7 +1874,7 @@ export default function IframeEditor({
                     <span>Page {currentPageIndex + 1} of {pages.length}</span>
                     <div className="flex items-center gap-2">
                       <button
-                        className={`px-2 py-1  ${currentPageIndex === 0 ? 'text-gray-400' : ''}`}
+                        className={`px-2 py-1 rounded transition-all duration-200 transform hover:scale-110 ${currentPageIndex === 0 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
                         onClick={goPrev}
                         disabled={currentPageIndex === 0}
                         title="Previous"
@@ -1586,7 +1882,7 @@ export default function IframeEditor({
                         <ChevronLeft className="w-4 h-4" />
                       </button>
                       <button
-                        className={`px-2 py-1 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : ''}`}
+                        className={`px-2 py-1 rounded transition-all duration-200 transform hover:scale-110 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
                         onClick={goNext}
                         disabled={currentPageIndex === pages.length - 1}
                         title="Next"
@@ -1629,13 +1925,13 @@ export default function IframeEditor({
         // Add margin-right to balance the left sidebar when both are collapsed
         // Also add proper padding to prevent overlap and ensure equal spacing
         const containerStyle = sidebarsCollapsed && !previewMode
-          ? { marginRight: '80px', padding: '2rem 1rem' }
-          : { padding: '1rem' }
+          ? { marginRight: '80px', padding: '2rem 1rem', transition: 'all 0.5s ease-in-out' }
+          : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
         return (
-          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center h-full`} style={containerStyle}>
-            <div ref={canvasWrapperRef} style={{ width: BASE_W * scale, height: BASE_H * scale, position: 'relative', overflow: 'visible' }}>
+          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center h-full transition-all duration-500 ease-in-out`} style={containerStyle}>
+            <div ref={canvasWrapperRef} style={{ width: BASE_W * scale, height: BASE_H * scale, position: 'relative', overflow: 'visible', transition: 'all 0.3s ease-in-out' }}>
               <div
-                className="bg-white shadow border"
+                className="bg-white shadow border transition-all duration-300 ease-in-out"
                 style={{ width: BASE_W, height: BASE_H, transform: `scale(${scale})`, transformOrigin: 'top left' }}
               >
                 <iframe
@@ -1646,7 +1942,8 @@ export default function IframeEditor({
                     height: BASE_H,
                     border: 'none',
                     opacity: isPageTransitioning ? 0 : 1,
-                    transition: 'opacity 0.15s ease-in-out'
+                    transform: isPageTransitioning ? 'translateX(20px) scale(0.98)' : 'translateX(0) scale(1)',
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                   sandbox="allow-same-origin allow-scripts"
                 />
@@ -1677,20 +1974,21 @@ export default function IframeEditor({
       })()}
 
       {/* Right Sidebar: Style editing */}
-      {!previewMode && selectedPath && (
-        <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto">
+      <div className={`transition-all duration-500 ease-in-out ${!previewMode && selectedPath ? 'w-72' : 'w-0'} overflow-hidden`}>
+        {!previewMode && selectedPath && (
+          <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto transform transition-all duration-500 ease-in-out">
           {/* Tabs */}
           <div className="flex items-center justify-between">
             <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
               <button
-                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
                 onClick={() => setRightTab('content')}
               >
                 <FileText size={12} />
                 Content
               </button>
               <button
-                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
                 onClick={() => setRightTab('style')}
               >
                 <Palette size={12} />
@@ -1700,12 +1998,12 @@ export default function IframeEditor({
           </div>
 
           {/* Panel */}
-          <div className="space-y-3">
+          <div className="space-y-3 transition-all duration-300 ease-in-out">
             {selectedPath ? (
               <>
 
                 {rightTab === 'content' && (
-                  <div className="space-y-3">
+                  <div className="space-y-3 animate-in fade-in slide-in-from-right-3 duration-300">
                     {/* Content Editing */}
                     <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
                       <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
@@ -1729,27 +2027,80 @@ export default function IframeEditor({
                       <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
                       <label className="block text-[11px] text-gray-600">Text Color</label>
                       <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
-                      <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                      <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
                       <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        <div className="col-span-2">
+                          <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
+                          <div className="relative font-dropdown-container">
+                            {/* Custom Font Dropdown Button */}
+                            <button
+                              type="button"
+                              onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
+                              className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
+                                  {getSelectedFont().label}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {getSelectedFont().description}
+                                </span>
+                              </div>
+                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Custom Font Dropdown Menu */}
+                            {fontDropdownOpen && (
+                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                {fontOptions.map((font) => (
+                                  <button
+                                    key={font.value}
+                                    type="button"
+                                    onClick={() => {
+                                      updateSelectedStyles({ fontFamily: font.value })
+                                      setFontDropdownOpen(false)
+                                    }}
+                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                      }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div
+                                          style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
+                                          className="truncate"
+                                        >
+                                          {font.label}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-0.5">
+                                          {font.description}
+                                        </div>
+                                      </div>
+                                      {getSelectedFont().value === font.value && (
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
                         <div>
-                          <label className="block text-[11px] text-gray-600">Font Family</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontFamily: e.target.value })}>
-                            <option value="Inter, system-ui, Arial">Inter</option>
-                            <option value="Arial, Helvetica, sans-serif">Arial</option>
-                            <option value="Georgia, serif">Georgia</option>
-                            <option value="Times New Roman, Times, serif">Times</option>
-                            <option value="Courier New, monospace">Courier</option>
-                          </select>
+                          <label className="block text-[11px] text-gray-600">Font Size</label>
+                          <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Font Weight</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}>
-                            <option>400</option>
-                            <option>500</option>
-                            <option>600</option>
-                            <option>700</option>
-                            <option>800</option>
+                          <select
+                            value={currentStyles.fontWeight || '400'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
+                          >
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="800">800</option>
                           </select>
                         </div>
                         <div>
@@ -1766,18 +2117,28 @@ export default function IframeEditor({
                 )}
 
                 {rightTab === 'style' && (
-                  <>
+                  <div className="animate-in fade-in slide-in-from-right-3 duration-300">
                     {/* Dimensions & Position */}
                     <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
                       <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[11px] text-gray-600">Width</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })} />
+                          <input
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            placeholder="auto"
+                            value={currentStyles.width || ''}
+                            onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })}
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Height</label>
-                          <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })} />
+                          <input
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            placeholder="auto"
+                            value={currentStyles.height || ''}
+                            onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })}
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Min Width</label>
@@ -1797,21 +2158,29 @@ export default function IframeEditor({
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Display</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}>
-                            <option>block</option>
-                            <option>inline</option>
-                            <option>inline-block</option>
-                            <option>flex</option>
-                            <option>grid</option>
+                          <select
+                            value={currentStyles.display || 'block'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}
+                          >
+                            <option value="block">block</option>
+                            <option value="inline">inline</option>
+                            <option value="inline-block">inline-block</option>
+                            <option value="flex">flex</option>
+                            <option value="grid">grid</option>
                           </select>
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Position</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}>
-                            <option>static</option>
-                            <option>relative</option>
-                            <option>absolute</option>
-                            <option>fixed</option>
+                          <select
+                            value={currentStyles.position || 'static'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}
+                          >
+                            <option value="static">static</option>
+                            <option value="relative">relative</option>
+                            <option value="absolute">absolute</option>
+                            <option value="fixed">fixed</option>
                           </select>
                         </div>
                         <div>
@@ -1855,29 +2224,53 @@ export default function IframeEditor({
                     <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
                       <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
                       <label className="block text-[11px] text-gray-600">Background Color</label>
-                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })} />
+                      <input
+                        type="color"
+                        value={currentStyles.backgroundColor || '#ffffff'}
+                        className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                        onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
+                      />
                       <div className="grid grid-cols-2 gap-1.5 mt-2">
                         <div>
                           <label className="block text-[11px] text-gray-600">Border Width</label>
-                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })} />
+                          <input
+                            type="number"
+                            value={currentStyles.borderWidth ? parseInt(currentStyles.borderWidth) : ''}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })}
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Border Radius</label>
-                          <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })} />
+                          <input
+                            type="number"
+                            value={currentStyles.borderRadius ? parseInt(currentStyles.borderRadius) : ''}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })}
+                          />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-1.5 mt-2">
                         <div>
                           <label className="block text-[11px] text-gray-600">Border Color</label>
-                          <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })} />
+                          <input
+                            type="color"
+                            value={currentStyles.borderColor || '#000000'}
+                            className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                            onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })}
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Border Style</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}>
-                            <option>solid</option>
-                            <option>dashed</option>
-                            <option>dotted</option>
-                            <option>none</option>
+                          <select
+                            value={currentStyles.borderStyle || 'solid'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}
+                          >
+                            <option value="solid">solid</option>
+                            <option value="dashed">dashed</option>
+                            <option value="dotted">dotted</option>
+                            <option value="none">none</option>
                           </select>
                         </div>
                       </div>
@@ -1887,37 +2280,111 @@ export default function IframeEditor({
                     <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
                       <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
                       <label className="block text-[11px] text-gray-600">Text Color</label>
-                      <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
+                      <input
+                        type="color"
+                        value={currentStyles.color || '#000000'}
+                        className="w-full h-8 border border-gray-300 rounded-lg bg-white"
+                        onChange={(e) => updateSelectedStyles({ color: e.target.value })}
+                      />
                       <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                      <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                      <input
+                        type="number"
+                        min={8}
+                        max={96}
+                        value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : ''}
+                        className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                        onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
+                      />
                       <div className="grid grid-cols-2 gap-1.5 mt-2">
-                        <div>
-                          <label className="block text-[11px] text-gray-600">Font Family</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontFamily: e.target.value })}>
-                            <option value="Inter, system-ui, Arial">Inter</option>
-                            <option value="Arial, Helvetica, sans-serif">Arial</option>
-                            <option value="Georgia, serif">Georgia</option>
-                            <option value="Times New Roman, Times, serif">Times</option>
-                            <option value="Courier New, monospace">Courier</option>
-                          </select>
+                        <div className="col-span-2">
+                          <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
+                          <div className="relative font-dropdown-container">
+                            {/* Custom Font Dropdown Button */}
+                            <button
+                              type="button"
+                              onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
+                              className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <div className="flex items-center space-x-3">
+                                <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
+                                  {getSelectedFont().label}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {getSelectedFont().description}
+                                </span>
+                              </div>
+                              <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Custom Font Dropdown Menu */}
+                            {fontDropdownOpen && (
+                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                {fontOptions.map((font) => (
+                                  <button
+                                    key={font.value}
+                                    type="button"
+                                    onClick={() => {
+                                      updateSelectedStyles({ fontFamily: font.value })
+                                      setFontDropdownOpen(false)
+                                    }}
+                                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                                      }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1">
+                                        <div
+                                          style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
+                                          className="truncate"
+                                        >
+                                          {font.label}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-0.5">
+                                          {font.description}
+                                        </div>
+                                      </div>
+                                      {getSelectedFont().value === font.value && (
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Font Weight</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}>
-                            <option>400</option>
-                            <option>500</option>
-                            <option>600</option>
-                            <option>700</option>
-                            <option>800</option>
+                          <select
+                            value={currentStyles.fontWeight || '400'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
+                          >
+                            <option value="400">400</option>
+                            <option value="500">500</option>
+                            <option value="600">600</option>
+                            <option value="700">700</option>
+                            <option value="800">800</option>
                           </select>
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Line Height</label>
-                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={currentStyles.lineHeight ? parseFloat(currentStyles.lineHeight) : ''}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })}
+                          />
                         </div>
                         <div>
                           <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                          <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={currentStyles.letterSpacing ? parseInt(currentStyles.letterSpacing) : ''}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })}
+                          />
                         </div>
                       </div>
                     </div>
@@ -1926,16 +2393,25 @@ export default function IframeEditor({
                     <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
                       <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
                       <label className="block text-[11px] text-gray-600">Box Shadow</label>
-                      <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0 4px 10px rgba(0,0,0,0.1)" onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })} />
+                      <input
+                        className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                        placeholder="0 4px 10px rgba(0,0,0,0.1)"
+                        value={currentStyles.boxShadow && currentStyles.boxShadow !== 'none' ? currentStyles.boxShadow : ''}
+                        onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })}
+                      />
                       {selectedTag === 'img' && (
                         <div className="mt-2">
                           <label className="block text-[11px] text-gray-600">Image Fit</label>
-                          <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}>
-                            <option>cover</option>
-                            <option>contain</option>
-                            <option>fill</option>
-                            <option>none</option>
-                            <option>scale-down</option>
+                          <select
+                            value={currentStyles.objectFit || 'cover'}
+                            className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
+                            onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}
+                          >
+                            <option value="cover">cover</option>
+                            <option value="contain">contain</option>
+                            <option value="fill">fill</option>
+                            <option value="none">none</option>
+                            <option value="scale-down">scale-down</option>
                           </select>
                         </div>
                       )}
@@ -1959,7 +2435,7 @@ export default function IframeEditor({
                     <div className="flex gap-2">
                       <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
                     </div>
-                  </>
+                  </div>
                 )}
               </>
             ) : (
@@ -1970,7 +2446,8 @@ export default function IframeEditor({
 
 
         </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
