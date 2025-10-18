@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { FileText, Layers as LayersIcon, Shapes, Type, Upload, Palette, Star, ChevronRight, ChevronDown, ChevronLeft, Trash2, Copy, ChevronUp } from 'lucide-react'
+import { FileText, Layers as LayersIcon, Shapes, Type, Upload, Palette, Star, ChevronRight, ChevronDown, ChevronLeft, Trash2, Copy, ChevronUp, Edit3, Settings, Sparkles, Image, Move3D, Circle, Tag, LayoutGrid } from 'lucide-react'
 import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
 import html2canvas from 'html2canvas'
@@ -115,7 +115,7 @@ export default function IframeEditor({
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
   const [isPageTransitioning, setIsPageTransitioning] = useState(false)
   const [activeLeftTab, setActiveLeftTab] = useState<'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'icons' | null>(null)
-  const [rightTab, setRightTab] = useState<'content' | 'style'>('style')
+  const [rightTab, setRightTab] = useState<'content' | 'style' | 'effects'>('style')
   const [liveData, setLiveData] = useState<LiveData>(initialData || {
     product: {
       title: 'Sample Product',
@@ -173,6 +173,81 @@ export default function IframeEditor({
   const [currentStyles, setCurrentStyles] = useState<Record<string, string>>({})
   const [fontDropdownOpen, setFontDropdownOpen] = useState(false)
   const [pagePreviews, setPagePreviews] = useState<Record<string, string>>({})
+  const [selectedElementType, setSelectedElementType] = useState<string>('unknown')
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({})
+
+  // Element UI Configuration for smart sidebar
+  const ELEMENT_UI_CONFIG = {
+    text: {
+      content: [
+        { group: "Content", icon: "Type", fields: ["text", "link"] },
+
+      ],
+      style: [
+        { group: "Typography", icon: "Type", fields: ["fontFamily", "fontSize", "fontWeight", "color", "textAlign", "lineHeight", "letterSpacing"] },
+        { group: "Background", icon: "Palette", fields: ["backgroundColor"] },
+        { group: "Spacing", icon: "Move3D", fields: ["padding", "margin"] }
+      ],
+      effects: [
+        { group: "Visual Effects", icon: "Sparkles", fields: ["boxShadow", "opacity", "transform"] }
+      ]
+    },
+    image: {
+      content: [
+        { group: "Image Source", icon: "Image", fields: ["upload", "src", "alt"] },
+
+      ],
+      style: [
+        { group: "Appearance", icon: "Settings", fields: ["objectFit", "borderRadius", "border"] },
+        { group: "Size & Position", icon: "Move3D", fields: ["width", "height", "padding", "margin"] }
+      ],
+      effects: [
+        { group: "Visual Effects", icon: "Sparkles", fields: ["boxShadow", "opacity", "filter"] }
+      ]
+    },
+    button: {
+      content: [
+        { group: "Content", icon: "Type", fields: ["text", "link"] },
+
+      ],
+      style: [
+        { group: "Colors", icon: "Palette", fields: ["backgroundColor", "color"] },
+        { group: "Typography", icon: "Type", fields: ["fontFamily", "fontWeight", "fontSize"] },
+        { group: "Shape", icon: "Circle", fields: ["borderRadius", "border"] },
+        { group: "Spacing", icon: "Move3D", fields: ["padding", "margin"] }
+      ],
+      effects: [
+        { group: "Visual Effects", icon: "Sparkles", fields: ["boxShadow", "hover", "transition"] }
+      ]
+    },
+    container: {
+      content: [
+      ],
+      style: [
+        { group: "Background", icon: "Palette", fields: ["backgroundColor", "backgroundImage"] },
+        { group: "Layout", icon: "LayoutGrid", fields: ["layout", "justifyContent", "alignItems", "gap"] },
+        { group: "Shape", icon: "Circle", fields: ["border", "borderRadius"] },
+        { group: "Spacing", icon: "Move3D", fields: ["padding", "margin"] }
+      ],
+      effects: [
+        { group: "Visual Effects", icon: "Sparkles", fields: ["boxShadow", "backdrop", "overflow"] }
+      ]
+    },
+    default: {
+      content: [
+        { group: "Content", icon: "Type", fields: ["text"] },
+
+      ],
+      style: [
+        { group: "Appearance", icon: "Settings", fields: ["backgroundColor", "color", "border", "borderRadius"] },
+        { group: "Typography", icon: "Type", fields: ["fontFamily", "fontSize", "fontWeight", "textAlign"] },
+        { group: "Spacing", icon: "Move3D", fields: ["padding", "margin"] }
+      ],
+      effects: [
+        { group: "Visual Effects", icon: "Sparkles", fields: ["boxShadow", "opacity"] }
+      ]
+    }
+  }
 
   // Font options for custom dropdown
   const fontOptions = [
@@ -206,6 +281,838 @@ export default function IframeEditor({
   const getSelectedFont = () => {
     const currentFont = currentStyles.fontFamily || 'Inter, system-ui, Arial'
     return fontOptions.find(font => font.value === currentFont) || fontOptions[0]
+  }
+
+  // Detect element type for smart sidebar
+  const detectElementType = (tagName: string, element?: HTMLElement): string => {
+    const tag = tagName.toLowerCase()
+
+    // Text elements
+    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'a'].includes(tag)) {
+      return 'text'
+    }
+
+    // Image elements
+    if (tag === 'img') {
+      return 'image'
+    }
+
+    // Button elements
+    if (tag === 'button' || (tag === 'a' && element?.classList.contains('btn'))) {
+      return 'button'
+    }
+
+    // Container elements
+    if (['div', 'section', 'article', 'main', 'aside', 'nav', 'header', 'footer'].includes(tag)) {
+      return 'container'
+    }
+
+    return 'default'
+  }
+
+  // Get current element configuration
+  const getCurrentElementConfig = () => {
+    const config = ELEMENT_UI_CONFIG[selectedElementType as keyof typeof ELEMENT_UI_CONFIG]
+    return config || ELEMENT_UI_CONFIG.default
+  }
+
+  // Toggle section expansion
+  const toggleSection = (sectionName: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionName]: !prev[sectionName]
+    }))
+  }
+
+  // Render smart section
+  const renderSmartSection = (section: { group: string; icon: string; fields: string[] }, tabType: 'content' | 'style' | 'effects') => {
+    const isExpanded = expandedSections[section.group] ?? true // Default to expanded
+
+    // Map icon names to Lucide React components with colorful styling
+    const getIconComponent = (iconName: string) => {
+      switch (iconName) {
+        case 'Type': return <Type className="w-4 h-4 text-blue-500" />
+        case 'Image': return <Image className="w-4 h-4 text-green-500" />
+        case 'Settings': return <Settings className="w-4 h-4 text-purple-500" />
+        case 'Palette': return <Palette className="w-4 h-4 text-pink-500" />
+        case 'Move3D': return <Move3D className="w-4 h-4 text-orange-500" />
+        case 'Circle': return <Circle className="w-4 h-4 text-cyan-500" />
+        case 'Tag': return <Tag className="w-4 h-4 text-indigo-500" />
+        case 'LayoutGrid': return <LayoutGrid className="w-4 h-4 text-emerald-500" />
+        case 'Sparkles': return <Sparkles className="w-4 h-4 text-yellow-500" />
+        case 'Link': return <Type className="w-4 h-4 text-blue-600" />
+        case 'Content': return <FileText className="w-4 h-4 text-slate-600" />
+        default: return <Settings className="w-4 h-4 text-gray-500" />
+      }
+    }
+
+    return (
+      <div key={section.group} className="rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/50 overflow-hidden mb-3 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <button
+          onClick={() => toggleSection(section.group)}
+          className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 transition-all duration-200"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="p-1 rounded-lg bg-white shadow-sm">{getIconComponent(section.icon)}</span>
+            <span className="text-xs font-semibold text-gray-800">{section.group}</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isExpanded && (
+          <div className="p-3 pt-1 space-y-3 animate-in slide-in-from-top-2 duration-200 bg-gradient-to-br from-gray-50/30 to-white">
+            {section.fields.map(field => renderSmartField(field, tabType))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Render smart field based on field type
+  const renderSmartField = (field: string, tabType: 'content' | 'style' | 'effects') => {
+    switch (field) {
+      case 'text':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Text Content</label>
+            <textarea
+              className="w-full h-20 border border-gray-300 rounded-lg px-2 py-2 text-xs bg-white resize-none"
+              value={selectedContent}
+              onChange={(e) => {
+                const val = e.target.value
+                setSelectedContent(val)
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el) (el as HTMLElement).textContent = val
+              }}
+              placeholder="Enter your text..."
+            />
+          </div>
+        )
+
+      case 'link':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Link (Optional)</label>
+            <input
+              type="url"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="https://example.com"
+              onChange={(e) => {
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el && selectedTag === 'a') {
+                  (el as HTMLAnchorElement).href = e.target.value
+                }
+              }}
+            />
+          </div>
+        )
+
+      case 'fontFamily':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
+            <div className="relative font-dropdown-container">
+              <button
+                type="button"
+                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
+                className="w-full h-10 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <div className="flex items-center space-x-2">
+                  <span style={{ fontFamily: getSelectedFont().family, fontSize: '12px' }}>
+                    {getSelectedFont().label}
+                  </span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {fontDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {fontOptions.map((font) => (
+                    <button
+                      key={font.value}
+                      type="button"
+                      onClick={() => {
+                        updateSelectedStyles({ fontFamily: font.value })
+                        setFontDropdownOpen(false)
+                      }}
+                      className={`w-full px-3 py-2 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                        }`}
+                    >
+                      <div style={{ fontFamily: font.family, fontSize: '13px' }}>
+                        {font.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+
+      case 'fontSize':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Font Size</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="8"
+                max="72"
+                value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : 16}
+                className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
+              />
+              <input
+                type="number"
+                min="8"
+                max="72"
+                value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : 16}
+                className="w-12 h-8 border border-gray-300 rounded px-1 text-xs text-center bg-white"
+                onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
+              />
+            </div>
+          </div>
+        )
+
+      case 'color':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Text Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={currentStyles.color || '#000000'}
+                className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                onChange={(e) => updateSelectedStyles({ color: e.target.value })}
+              />
+              <input
+                type="text"
+                value={currentStyles.color || '#000000'}
+                className="flex-1 h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+                onChange={(e) => updateSelectedStyles({ color: e.target.value })}
+              />
+            </div>
+          </div>
+        )
+
+      case 'backgroundColor':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Background Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={currentStyles.backgroundColor || '#ffffff'}
+                className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
+              />
+              <input
+                type="text"
+                value={currentStyles.backgroundColor || '#ffffff'}
+                className="flex-1 h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+                onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
+              />
+            </div>
+          </div>
+        )
+
+      case 'fontWeight':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Font Weight</label>
+            <select
+              value={currentStyles.fontWeight || '400'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
+            >
+              <option value="400">Regular</option>
+              <option value="500">Medium</option>
+              <option value="600">Semibold</option>
+              <option value="700">Bold</option>
+            </select>
+          </div>
+        )
+
+      case 'textAlign':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Text Alignment</label>
+            <div className="flex gap-1">
+              {['left', 'center', 'right', 'justify'].map(align => (
+                <button
+                  key={align}
+                  onClick={() => updateSelectedStyles({ textAlign: align })}
+                  className={`flex-1 h-8 border border-gray-300 rounded text-xs capitalize ${currentStyles.textAlign === align ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-50'
+                    }`}
+                >
+                  {align}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 'padding':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Padding (Inside Spacing)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={currentStyles.padding ? parseInt(currentStyles.padding) : 0}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ padding: `${e.target.value}px` })}
+            />
+          </div>
+        )
+
+      case 'margin':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Margin (Outside Spacing)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              value={currentStyles.margin ? parseInt(currentStyles.margin) : 0}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ margin: `${e.target.value}px` })}
+            />
+          </div>
+        )
+
+      case 'lineHeight':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Line Height</label>
+            <input
+              type="number"
+              min="1"
+              max="3"
+              step="0.1"
+              value={currentStyles.lineHeight ? parseFloat(currentStyles.lineHeight) : 1.5}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })}
+            />
+          </div>
+        )
+
+      case 'letterSpacing':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Letter Spacing</label>
+            <input
+              type="number"
+              min="-2"
+              max="10"
+              step="0.1"
+              value={currentStyles.letterSpacing ? parseFloat(currentStyles.letterSpacing) : 0}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })}
+            />
+          </div>
+        )
+
+      case 'upload':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Image Upload / Replace</label>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="image-upload"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    const reader = new FileReader()
+                    reader.onload = (event) => {
+                      const doc = iframeRef.current?.contentDocument
+                      if (!doc || !selectedPath) return
+                      const el = resolvePathToElement(doc, selectedPath)
+                      if (el && selectedTag === 'img') {
+                        (el as HTMLImageElement).src = event.target?.result as string
+                      }
+                    }
+                    reader.readAsDataURL(file)
+                  }
+                }}
+              />
+              <label
+                htmlFor="image-upload"
+                className="flex-1 h-8 border border-gray-300 rounded-lg px-3 text-xs bg-white cursor-pointer flex items-center justify-center hover:bg-gray-50"
+              >
+                📤 Upload Image
+              </label>
+            </div>
+          </div>
+        )
+
+      case 'src':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Image URL (Optional)</label>
+            <input
+              type="url"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="https://example.com/image.jpg"
+              onChange={(e) => {
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el && selectedTag === 'img') {
+                  (el as HTMLImageElement).src = e.target.value
+                }
+              }}
+            />
+          </div>
+        )
+
+      case 'alt':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Alt Text</label>
+            <input
+              type="text"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="Describe the image..."
+              onChange={(e) => {
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el && selectedTag === 'img') {
+                  (el as HTMLImageElement).alt = e.target.value
+                }
+              }}
+            />
+          </div>
+        )
+
+      case 'objectFit':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Image Fit</label>
+            <select
+              value={currentStyles.objectFit || 'cover'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}
+            >
+              <option value="contain">Contain</option>
+              <option value="cover">Cover</option>
+              <option value="fill">Fill</option>
+              <option value="none">None</option>
+              <option value="scale-down">Scale Down</option>
+            </select>
+          </div>
+        )
+
+      case 'borderRadius':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Corner Radius</label>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={currentStyles.borderRadius ? parseInt(currentStyles.borderRadius) : 0}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })}
+            />
+            <div className="text-xs text-gray-500 mt-1">{currentStyles.borderRadius || '0px'}</div>
+          </div>
+        )
+
+      case 'boxShadow':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Shadow</label>
+            <select
+              value={currentStyles.boxShadow && currentStyles.boxShadow !== 'none' ? 'custom' : 'none'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => {
+                if (e.target.value === 'none') {
+                  updateSelectedStyles({ boxShadow: 'none' })
+                } else if (e.target.value === 'small') {
+                  updateSelectedStyles({ boxShadow: '0 2px 4px rgba(0,0,0,0.1)' })
+                } else if (e.target.value === 'medium') {
+                  updateSelectedStyles({ boxShadow: '0 4px 8px rgba(0,0,0,0.15)' })
+                } else if (e.target.value === 'large') {
+                  updateSelectedStyles({ boxShadow: '0 8px 16px rgba(0,0,0,0.2)' })
+                }
+              }}
+            >
+              <option value="none">No Shadow</option>
+              <option value="small">Small Shadow</option>
+              <option value="medium">Medium Shadow</option>
+              <option value="large">Large Shadow</option>
+            </select>
+          </div>
+        )
+
+      case 'border':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Border</label>
+            <div className="grid grid-cols-3 gap-2">
+              <input
+                type="number"
+                min="0"
+                max="10"
+                placeholder="Width"
+                value={currentStyles.borderWidth ? parseInt(currentStyles.borderWidth) : 0}
+                className="h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+                onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })}
+              />
+              <select
+                value={currentStyles.borderStyle || 'solid'}
+                className="h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+                onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}
+              >
+                <option value="solid">Solid</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </select>
+              <input
+                type="color"
+                value={currentStyles.borderColor || '#000000'}
+                className="h-8 border border-gray-300 rounded cursor-pointer"
+                onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })}
+              />
+            </div>
+          </div>
+        )
+
+      case 'width':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Width</label>
+            <input
+              type="range"
+              min="50"
+              max="800"
+              value={currentStyles.width ? parseInt(currentStyles.width) : 200}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => updateSelectedStyles({ width: `${e.target.value}px` })}
+            />
+            <div className="text-xs text-gray-500 mt-1">{currentStyles.width || 'auto'}</div>
+          </div>
+        )
+
+      case 'height':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Height</label>
+            <input
+              type="range"
+              min="50"
+              max="600"
+              value={currentStyles.height ? parseInt(currentStyles.height) : 200}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => updateSelectedStyles({ height: `${e.target.value}px` })}
+            />
+            <div className="text-xs text-gray-500 mt-1">{currentStyles.height || 'auto'}</div>
+          </div>
+        )
+
+      case 'label':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Section Label / ID</label>
+            <input
+              type="text"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="Section name..."
+              onChange={(e) => {
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el) {
+                  el.setAttribute('data-label', e.target.value)
+                }
+              }}
+            />
+          </div>
+        )
+
+      case 'id':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Element ID</label>
+            <input
+              type="text"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="unique-id"
+              onChange={(e) => {
+                const doc = iframeRef.current?.contentDocument
+                if (!doc || !selectedPath) return
+                const el = resolvePathToElement(doc, selectedPath)
+                if (el) {
+                  (el as HTMLElement).id = e.target.value
+                }
+              }}
+            />
+          </div>
+        )
+
+      case 'backgroundImage':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Background Image</label>
+            <input
+              type="url"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              placeholder="https://example.com/bg.jpg"
+              onChange={(e) => {
+                const value = e.target.value
+                updateSelectedStyles({
+                  backgroundImage: value ? `url(${value})` : 'none'
+                })
+              }}
+            />
+          </div>
+        )
+
+      case 'layout':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Layout</label>
+            <div className="flex gap-1">
+              {[
+                { value: 'flex', label: 'Flex' },
+                { value: 'grid', label: 'Grid' },
+                { value: 'block', label: 'Block' }
+              ].map(layout => (
+                <button
+                  key={layout.value}
+                  onClick={() => updateSelectedStyles({ display: layout.value })}
+                  className={`flex-1 h-8 border border-gray-300 rounded text-xs ${currentStyles.display === layout.value ? 'bg-blue-500 text-white' : 'bg-white hover:bg-gray-50'
+                    }`}
+                >
+                  {layout.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+
+      case 'justifyContent':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Horizontal Alignment</label>
+            <select
+              value={currentStyles.justifyContent || 'flex-start'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ justifyContent: e.target.value as any })}
+            >
+              <option value="flex-start">Left</option>
+              <option value="center">Center</option>
+              <option value="flex-end">Right</option>
+              <option value="space-between">Space Between</option>
+              <option value="space-around">Space Around</option>
+            </select>
+          </div>
+        )
+
+      case 'alignItems':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Vertical Alignment</label>
+            <select
+              value={currentStyles.alignItems || 'flex-start'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ alignItems: e.target.value as any })}
+            >
+              <option value="flex-start">Top</option>
+              <option value="center">Center</option>
+              <option value="flex-end">Bottom</option>
+              <option value="stretch">Stretch</option>
+            </select>
+          </div>
+        )
+
+      case 'gap':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Spacing (Gap between children)</label>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              value={currentStyles.gap ? parseInt(currentStyles.gap) : 0}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => updateSelectedStyles({ gap: `${e.target.value}px` })}
+            />
+            <div className="text-xs text-gray-500 mt-1">{currentStyles.gap || '0px'}</div>
+          </div>
+        )
+
+      case 'opacity':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Opacity</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={currentStyles.opacity ? parseFloat(currentStyles.opacity) : 1}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              onChange={(e) => updateSelectedStyles({ opacity: e.target.value })}
+            />
+            <div className="text-xs text-gray-500 mt-1">{Math.round((parseFloat(currentStyles.opacity || '1') * 100))}%</div>
+          </div>
+        )
+
+      case 'transform':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Transform</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] text-gray-500 mb-1">Rotate (deg)</label>
+                <input
+                  type="range"
+                  min="-180"
+                  max="180"
+                  value={0}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  onChange={(e) => updateSelectedStyles({ transform: `rotate(${e.target.value}deg)` })}
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] text-gray-500 mb-1">Scale</label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="2"
+                  step="0.1"
+                  value={1}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  onChange={(e) => updateSelectedStyles({ transform: `scale(${e.target.value})` })}
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'filter':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Image Filter</label>
+            <select
+              value="none"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => {
+                const filterValue = e.target.value === 'none' ? 'none' : e.target.value
+                updateSelectedStyles({ filter: filterValue })
+              }}
+            >
+              <option value="none">No Filter</option>
+              <option value="blur(2px)">Blur</option>
+              <option value="brightness(1.2)">Bright</option>
+              <option value="contrast(1.2)">High Contrast</option>
+              <option value="grayscale(1)">Grayscale</option>
+              <option value="sepia(1)">Sepia</option>
+              <option value="saturate(1.5)">Saturated</option>
+            </select>
+          </div>
+        )
+
+      case 'hover':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Hover Effects</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[9px] text-gray-500 mb-1">Hover Background</label>
+                <input
+                  type="color"
+                  className="w-full h-6 border border-gray-300 rounded cursor-pointer"
+                  onChange={(e) => updateHoverStyles({ backgroundColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[9px] text-gray-500 mb-1">Hover Text</label>
+                <input
+                  type="color"
+                  className="w-full h-6 border border-gray-300 rounded cursor-pointer"
+                  onChange={(e) => updateHoverStyles({ color: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+        )
+
+      case 'transition':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Transition Duration</label>
+            <select
+              value={currentStyles.transitionDuration || '300ms'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({
+                transitionDuration: e.target.value,
+                transitionProperty: 'all',
+                transitionTimingFunction: 'ease-in-out'
+              })}
+            >
+              <option value="150ms">Fast (150ms)</option>
+              <option value="300ms">Normal (300ms)</option>
+              <option value="500ms">Slow (500ms)</option>
+              <option value="1000ms">Very Slow (1s)</option>
+            </select>
+          </div>
+        )
+
+      case 'backdrop':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Backdrop Filter</label>
+            <select
+              value="none"
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => {
+                const backdropValue = e.target.value === 'none' ? 'none' : e.target.value
+                updateSelectedStyles({ backdropFilter: backdropValue })
+              }}
+            >
+              <option value="none">No Backdrop</option>
+              <option value="blur(10px)">Blur Background</option>
+              <option value="brightness(0.8)">Darken Background</option>
+              <option value="brightness(1.2)">Brighten Background</option>
+              <option value="saturate(1.5)">Saturate Background</option>
+            </select>
+          </div>
+        )
+
+      case 'overflow':
+        return (
+          <div key={field}>
+            <label className="block text-[11px] text-gray-600 mb-1">Content Overflow</label>
+            <select
+              value={currentStyles.overflow || 'visible'}
+              className="w-full h-8 border border-gray-300 rounded-lg px-2 text-xs bg-white"
+              onChange={(e) => updateSelectedStyles({ overflow: e.target.value as any })}
+            >
+              <option value="visible">Visible</option>
+              <option value="hidden">Hidden</option>
+              <option value="scroll">Scroll</option>
+              <option value="auto">Auto</option>
+            </select>
+          </div>
+        )
+
+
+
+      default:
+        return null
+    }
   }
 
   // Close font dropdown when clicking outside
@@ -453,6 +1360,31 @@ export default function IframeEditor({
       setActiveLeftTab(null)
     }
   }, [selectedPath, activeLeftTab])
+
+  // Detect element type when selection changes
+  useEffect(() => {
+    if (selectedPath && selectedTag) {
+      const elementType = detectElementType(selectedTag)
+      setSelectedElementType(elementType)
+
+      // Auto-expand first section of each tab
+      const config = ELEMENT_UI_CONFIG[elementType as keyof typeof ELEMENT_UI_CONFIG] || ELEMENT_UI_CONFIG.default
+
+      // Expand all sections by default for better user experience
+      const allSections: Record<string, boolean> = {}
+      config.content.forEach(section => {
+        allSections[section.group] = true
+      })
+      config.style.forEach(section => {
+        allSections[section.group] = true
+      })
+      config.effects?.forEach(section => {
+        allSections[section.group] = true
+      })
+
+      setExpandedSections(allSections)
+    }
+  }, [selectedPath, selectedTag])
 
   // Generate previews when pages change
   useEffect(() => {
@@ -1979,20 +2911,27 @@ export default function IframeEditor({
           <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto transform transition-all duration-500 ease-in-out">
             {/* Tabs */}
             <div className="flex items-center justify-between">
-              <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
+              <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] via-[#F3EFFF] to-[#E9E5FF] border border-[#E5E1FF] shadow-sm">
                 <button
-                  className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                  className={`flex items-center justify-center gap-1.5 flex-1 text-center px-2 py-2 text-xs rounded-lg transition-all duration-300 ease-in-out transform  ${rightTab === 'content' ? 'bg-gradient-to-r from-white to-blue-50 shadow-sm text-gray-900 ' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}`}
                   onClick={() => setRightTab('content')}
                 >
-                  <FileText size={12} />
-                  Content
+                  <Edit3 size={12} className={rightTab === 'content' ? 'text-blue-600' : ''} />
+                  Edit
                 </button>
                 <button
-                  className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 ${rightTab === 'style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+                  className={`flex items-center justify-center gap-1.5 flex-1 text-center px-2 py-2 text-xs rounded-lg transition-all duration-300 ease-in-out transform  ${rightTab === 'style' ? 'bg-gradient-to-r from-white to-pink-50 shadow-sm text-gray-900 ' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}`}
                   onClick={() => setRightTab('style')}
                 >
-                  <Palette size={12} />
-                  Style
+                  <Palette size={12} className={rightTab === 'style' ? 'text-pink-600' : ''} />
+                  Design
+                </button>
+                <button
+                  className={`flex items-center justify-center gap-1.5 flex-1 text-center px-2 py-2 text-xs rounded-lg transition-all duration-300 ease-in-out transform  ${rightTab === 'effects' ? 'bg-gradient-to-r from-white to-yellow-50 shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'}`}
+                  onClick={() => setRightTab('effects')}
+                >
+                  <Sparkles size={12} className={rightTab === 'effects' ? 'text-yellow-600' : ''} />
+                  Effects
                 </button>
               </div>
             </div>
@@ -2004,442 +2943,66 @@ export default function IframeEditor({
 
                   {rightTab === 'content' && (
                     <div className="space-y-3 animate-in fade-in slide-in-from-right-3 duration-300">
-                      {/* Content Editing */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
-                        <textarea
-                          className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
-                          value={selectedContent}
-                          onChange={(e) => {
-                            const val = e.target.value
-                            setSelectedContent(val)
-                            const doc = iframeRef.current?.contentDocument
-                            if (!doc || !selectedPath) return
-                            const el = resolvePathToElement(doc, selectedPath)
-                            if (el) (el as HTMLElement).textContent = val
-                          }}
-                        />
-                        <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
+                      {/* Smart Content Sections */}
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+                          <span className="capitalize font-medium">{selectedElementType}</span>
+                          <span>Editing</span>
+                        </div>
                       </div>
 
-                      {/* Typography (in Content tab) */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                        <label className="block text-[11px] text-gray-600">Text Color</label>
-                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateSelectedStyles({ color: e.target.value })} />
-                        <div className="grid grid-cols-2 gap-1.5 mt-2">
-                          <div className="col-span-2">
-                            <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
-                            <div className="relative font-dropdown-container">
-                              {/* Custom Font Dropdown Button */}
-                              <button
-                                type="button"
-                                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
-                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
-                                    {getSelectedFont().label}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {getSelectedFont().description}
-                                  </span>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
-                              </button>
+                      {getCurrentElementConfig().content.map(section =>
+                        renderSmartSection(section, 'content')
+                      )}
 
-                              {/* Custom Font Dropdown Menu */}
-                              {fontDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                  {fontOptions.map((font) => (
-                                    <button
-                                      key={font.value}
-                                      type="button"
-                                      onClick={() => {
-                                        updateSelectedStyles({ fontFamily: font.value })
-                                        setFontDropdownOpen(false)
-                                      }}
-                                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                                        }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                          <div
-                                            style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
-                                            className="truncate"
-                                          >
-                                            {font.label}
-                                          </div>
-                                          <div className="text-xs text-gray-500 mt-0.5">
-                                            {font.description}
-                                          </div>
-                                        </div>
-                                        {getSelectedFont().value === font.value && (
-                                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
-                                        )}
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Font Size</label>
-                            <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
-
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Font Weight</label>
-                            <select
-                              value={currentStyles.fontWeight || '400'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
-                            >
-                              <option value="400">400</option>
-                              <option value="500">500</option>
-                              <option value="600">600</option>
-                              <option value="700">700</option>
-                              <option value="800">800</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Line Height</label>
-                            <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                            <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
-                          </div>
-                        </div>
+                      <div className="flex gap-2 mt-4">
+                        <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
                       </div>
                     </div>
                   )}
 
                   {rightTab === 'style' && (
                     <div className="animate-in fade-in slide-in-from-right-3 duration-300">
-                      {/* Dimensions & Position */}
-                      <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Width</label>
-                            <input
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              placeholder="auto"
-                              value={currentStyles.width || ''}
-                              onChange={(e) => updateSelectedStyles({ width: e.target.value || '' })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Height</label>
-                            <input
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              placeholder="auto"
-                              value={currentStyles.height || ''}
-                              onChange={(e) => updateSelectedStyles({ height: e.target.value || '' })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Min Width</label>
-                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minWidth: e.target.value || '' })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Min Height</label>
-                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e) => updateSelectedStyles({ minHeight: e.target.value || '' })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Max Width</label>
-                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxWidth: e.target.value || '' })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Max Height</label>
-                            <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e) => updateSelectedStyles({ maxHeight: e.target.value || '' })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Display</label>
-                            <select
-                              value={currentStyles.display || 'block'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ display: e.target.value as any })}
-                            >
-                              <option value="block">block</option>
-                              <option value="inline">inline</option>
-                              <option value="inline-block">inline-block</option>
-                              <option value="flex">flex</option>
-                              <option value="grid">grid</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Position</label>
-                            <select
-                              value={currentStyles.position || 'static'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ position: e.target.value as any })}
-                            >
-                              <option value="static">static</option>
-                              <option value="relative">relative</option>
-                              <option value="absolute">absolute</option>
-                              <option value="fixed">fixed</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Z-Index</label>
-                            <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ zIndex: e.target.value as any })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Overflow</label>
-                            <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e) => updateSelectedStyles({ overflow: e.target.value as any })}>
-                              <option>visible</option>
-                              <option>hidden</option>
-                              <option>scroll</option>
-                              <option>auto</option>
-                            </select>
-                          </div>
-                        </div>
-                        {/* Margin & Padding */}
-                        <div className="grid grid-cols-2 gap-1.5 mt-2">
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
-                            <div className="grid grid-cols-4 gap-1">
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
-                            <div className="grid grid-cols-4 gap-1">
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e) => updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e) => updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e) => updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
-                              <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e) => updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
-                            </div>
-                          </div>
+                      {/* Smart Style Sections */}
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+                          <span className="capitalize font-medium">{selectedElementType}</span>
+                          <span>Design</span>
                         </div>
                       </div>
 
-                      {/* Background & Border */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
-                        <label className="block text-[11px] text-gray-600">Background Color</label>
-                        <input
-                          type="color"
-                          value={currentStyles.backgroundColor || '#ffffff'}
-                          className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                          onChange={(e) => updateSelectedStyles({ backgroundColor: e.target.value })}
-                        />
-                        <div className="grid grid-cols-2 gap-1.5 mt-2">
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Border Width</label>
-                            <input
-                              type="number"
-                              value={currentStyles.borderWidth ? parseInt(currentStyles.borderWidth) : ''}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ borderWidth: `${e.target.value}px` })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Border Radius</label>
-                            <input
-                              type="number"
-                              value={currentStyles.borderRadius ? parseInt(currentStyles.borderRadius) : ''}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ borderRadius: `${e.target.value}px` })}
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-1.5 mt-2">
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Border Color</label>
-                            <input
-                              type="color"
-                              value={currentStyles.borderColor || '#000000'}
-                              className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                              onChange={(e) => updateSelectedStyles({ borderColor: e.target.value })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Border Style</label>
-                            <select
-                              value={currentStyles.borderStyle || 'solid'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ borderStyle: e.target.value as any })}
-                            >
-                              <option value="solid">solid</option>
-                              <option value="dashed">dashed</option>
-                              <option value="dotted">dotted</option>
-                              <option value="none">none</option>
-                            </select>
-                          </div>
+                      {getCurrentElementConfig().style.map((section, index) =>
+                        renderSmartSection(section, 'style')
+                      )}
+
+                      <div className="flex gap-2 mt-4">
+                        <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {rightTab === 'effects' && (
+                    <div className="animate-in fade-in slide-in-from-right-3 duration-300">
+                      {/* Smart Effects Sections */}
+                      <div className="mb-2">
+                        <div className="text-xs text-gray-500 mb-3 flex items-center gap-2">
+                          <span className="capitalize font-medium">{selectedElementType}</span>
+                          <span>Effects</span>
                         </div>
                       </div>
 
-                      {/* Typography */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
-                        <label className="block text-[11px] text-gray-600">Text Color</label>
-                        <input
-                          type="color"
-                          value={currentStyles.color || '#000000'}
-                          className="w-full h-8 border border-gray-300 rounded-lg bg-white"
-                          onChange={(e) => updateSelectedStyles({ color: e.target.value })}
-                        />
-                        <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
-                        <input
-                          type="number"
-                          min={8}
-                          max={96}
-                          value={currentStyles.fontSize ? parseInt(currentStyles.fontSize) : ''}
-                          className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                          onChange={(e) => updateSelectedStyles({ fontSize: `${e.target.value}px` })}
-                        />
-                        <div className="grid grid-cols-2 gap-1.5 mt-2">
-                          <div className="col-span-2">
-                            <label className="block text-[11px] text-gray-600 mb-1">Font Family</label>
-                            <div className="relative font-dropdown-container">
-                              {/* Custom Font Dropdown Button */}
-                              <button
-                                type="button"
-                                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
-                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white font-medium flex items-center justify-between hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                              >
-                                <div className="flex items-center space-x-3">
-                                  <span style={{ fontFamily: getSelectedFont().family, fontSize: '14px' }}>
-                                    {getSelectedFont().label}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    {getSelectedFont().description}
-                                  </span>
-                                </div>
-                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`} />
-                              </button>
+                      {getCurrentElementConfig().effects?.map((section, index) =>
+                        renderSmartSection(section, 'effects')
+                      )}
 
-                              {/* Custom Font Dropdown Menu */}
-                              {fontDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                  {fontOptions.map((font) => (
-                                    <button
-                                      key={font.value}
-                                      type="button"
-                                      onClick={() => {
-                                        updateSelectedStyles({ fontFamily: font.value })
-                                        setFontDropdownOpen(false)
-                                      }}
-                                      className={`w-full px-4 py-3 text-left hover:bg-gray-50 focus:outline-none focus:bg-gray-50 border-b border-gray-100 last:border-b-0 ${getSelectedFont().value === font.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                                        }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex-1">
-                                          <div
-                                            style={{ fontFamily: font.family, fontSize: '15px', fontWeight: '500' }}
-                                            className="truncate"
-                                          >
-                                            {font.label}
-                                          </div>
-                                          <div className="text-xs text-gray-500 mt-0.5">
-                                            {font.description}
-                                          </div>
-                                        </div>
-                                        {getSelectedFont().value === font.value && (
-                                          <div className="w-2 h-2 bg-blue-500 rounded-full ml-2 flex-shrink-0"></div>
-                                        )}
-                                      </div>
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Font Weight</label>
-                            <select
-                              value={currentStyles.fontWeight || '400'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ fontWeight: e.target.value as any })}
-                            >
-                              <option value="400">400</option>
-                              <option value="500">500</option>
-                              <option value="600">600</option>
-                              <option value="700">700</option>
-                              <option value="800">800</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Line Height</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={currentStyles.lineHeight ? parseFloat(currentStyles.lineHeight) : ''}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ lineHeight: e.target.value })}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Letter Spacing</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={currentStyles.letterSpacing ? parseInt(currentStyles.letterSpacing) : ''}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ letterSpacing: `${e.target.value}px` })}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Effects */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
-                        <label className="block text-[11px] text-gray-600">Box Shadow</label>
-                        <input
-                          className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                          placeholder="0 4px 10px rgba(0,0,0,0.1)"
-                          value={currentStyles.boxShadow && currentStyles.boxShadow !== 'none' ? currentStyles.boxShadow : ''}
-                          onChange={(e) => updateSelectedStyles({ boxShadow: e.target.value })}
-                        />
-                        {selectedTag === 'img' && (
-                          <div className="mt-2">
-                            <label className="block text-[11px] text-gray-600">Image Fit</label>
-                            <select
-                              value={currentStyles.objectFit || 'cover'}
-                              className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white"
-                              onChange={(e) => updateSelectedStyles({ objectFit: e.target.value as any })}
-                            >
-                              <option value="cover">cover</option>
-                              <option value="contain">contain</option>
-                              <option value="fill">fill</option>
-                              <option value="none">none</option>
-                              <option value="scale-down">scale-down</option>
-                            </select>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Hover Styles */}
-                      <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
-                        <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Hover Background</label>
-                            <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ backgroundColor: e.target.value })} />
-                          </div>
-                          <div>
-                            <label className="block text-[11px] text-gray-600">Hover Text</label>
-                            <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e) => updateHoverStyles({ color: e.target.value })} />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-4">
                         <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
                       </div>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab === 'content' ? 'content' : 'style'}.</div>
+                <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab === 'content' ? 'content' : rightTab === 'style' ? 'design' : 'effects'}.</div>
               )}
             </div>
 
