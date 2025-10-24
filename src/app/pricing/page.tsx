@@ -67,21 +67,19 @@ export default function PricingPage() {
           {/* Billing Toggle */}
           <div className="inline-flex items-center rounded-lg bg-white p-1 shadow-sm">
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
-                billingCycle === 'monthly'
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${billingCycle === 'monthly'
                   ? 'bg-blue-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
               onClick={() => setBillingCycle('monthly')}
             >
               Monthly
             </button>
             <button
-              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
-                billingCycle === 'yearly'
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${billingCycle === 'yearly'
                   ? 'bg-blue-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+                }`}
               onClick={() => setBillingCycle('yearly')}
             >
               Yearly
@@ -107,9 +105,9 @@ export default function PricingPage() {
             const savings =
               billingCycle === 'yearly'
                 ? getYearlySavingsPercentage(
-                    features.monthlyPrice,
-                    features.yearlyPrice
-                  )
+                  features.monthlyPrice,
+                  features.yearlyPrice
+                )
                 : 0
 
             return (

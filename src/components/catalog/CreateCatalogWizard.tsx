@@ -343,13 +343,12 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             {[1, 2, 3, 4].map(step => (
               <div key={step} className="flex items-center">
                 <div
-                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all duration-300 ${
-                    step < currentStep
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all duration-300 ${step < currentStep
                       ? 'bg-white text-[#301F70] shadow-sm'
                       : step === currentStep
                         ? 'bg-white text-[#1A1B41] shadow-md ring-2 ring-white/30'
                         : 'bg-white/20 text-white/60'
-                  }`}
+                    }`}
                 >
                   {step < currentStep ? (
                     <CheckCircle className="h-4 w-4" />
@@ -359,9 +358,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 </div>
                 {step < 4 && (
                   <div
-                    className={`mx-2 h-1 w-12 rounded-full transition-all duration-300 ${
-                      step < currentStep ? 'bg-white/60' : 'bg-white/20'
-                    }`}
+                    className={`mx-2 h-1 w-12 rounded-full transition-all duration-300 ${step < currentStep ? 'bg-white/60' : 'bg-white/20'
+                      }`}
                   />
                 )}
               </div>
@@ -378,11 +376,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             ].map(({ step, label }) => (
               <div key={step} className="text-center">
                 <span
-                  className={`text-xs transition-all duration-300 ${
-                    currentStep >= step
+                  className={`text-xs transition-all duration-300 ${currentStep >= step
                       ? 'font-medium text-white'
                       : 'text-white/60'
-                  }`}
+                    }`}
                 >
                   {label}
                 </span>
@@ -1197,11 +1194,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 <CardContent>
                   <div className="space-y-4">
                     <div
-                      className={`cursor-pointer rounded-lg border p-4 transition-all ${
-                        !data.isPublic
+                      className={`cursor-pointer rounded-lg border p-4 transition-all ${!data.isPublic
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                       onClick={() => updateData('isPublic', false)}
                     >
                       <div className="flex items-center gap-3">
@@ -1216,11 +1212,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     </div>
 
                     <div
-                      className={`cursor-pointer rounded-lg border p-4 transition-all ${
-                        data.isPublic
+                      className={`cursor-pointer rounded-lg border p-4 transition-all ${data.isPublic
                           ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                       onClick={() => updateData('isPublic', true)}
                     >
                       <div className="flex items-center gap-3">

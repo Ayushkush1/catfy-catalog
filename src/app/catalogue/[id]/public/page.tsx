@@ -167,7 +167,7 @@ export default function PublicCataloguePage() {
               referrer: document.referrer,
             },
           }),
-        }).catch(() => {}) // Silent fail for analytics
+        }).catch(() => { }) // Silent fail for analytics
       } else if (response.status === 404) {
         setError('Catalogue not found or is private')
       } else {
@@ -360,58 +360,58 @@ export default function PublicCataloguePage() {
         {/* Company Info */}
         {(catalogue.settings.companyInfo?.companyName ||
           catalogue.settings.companyInfo?.companyDescription) && (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="mb-4 font-semibold">Company Information</h3>
-              {catalogue.settings.companyInfo?.companyName && (
-                <h4 className="mb-2 text-lg font-medium">
-                  {catalogue.settings.companyInfo.companyName}
-                </h4>
-              )}
-              {catalogue.settings.companyInfo?.companyDescription && (
-                <p className="text-gray-600">
-                  {catalogue.settings.companyInfo.companyDescription}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        )}
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <h3 className="mb-4 font-semibold">Company Information</h3>
+                {catalogue.settings.companyInfo?.companyName && (
+                  <h4 className="mb-2 text-lg font-medium">
+                    {catalogue.settings.companyInfo.companyName}
+                  </h4>
+                )}
+                {catalogue.settings.companyInfo?.companyDescription && (
+                  <p className="text-gray-600">
+                    {catalogue.settings.companyInfo.companyDescription}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
         {/* Media & Assets */}
         {(catalogue.settings.mediaAssets?.logoUrl ||
           catalogue.settings.mediaAssets?.coverImageUrl) && (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="mb-4 font-semibold">Media & Assets</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {catalogue.settings.mediaAssets?.logoUrl && (
-                  <div>
-                    <h4 className="mb-2 text-sm font-medium">Logo</h4>
-                    <Image
-                      src={catalogue.settings.mediaAssets.logoUrl}
-                      alt="Company Logo"
-                      width={100}
-                      height={100}
-                      className="rounded border"
-                    />
-                  </div>
-                )}
-                {catalogue.settings.mediaAssets?.coverImageUrl && (
-                  <div>
-                    <h4 className="mb-2 text-sm font-medium">Cover Image</h4>
-                    <Image
-                      src={catalogue.settings.mediaAssets.coverImageUrl}
-                      alt="Cover Image"
-                      width={200}
-                      height={100}
-                      className="rounded border"
-                    />
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <h3 className="mb-4 font-semibold">Media & Assets</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {catalogue.settings.mediaAssets?.logoUrl && (
+                    <div>
+                      <h4 className="mb-2 text-sm font-medium">Logo</h4>
+                      <Image
+                        src={catalogue.settings.mediaAssets.logoUrl}
+                        alt="Company Logo"
+                        width={100}
+                        height={100}
+                        className="rounded border"
+                      />
+                    </div>
+                  )}
+                  {catalogue.settings.mediaAssets?.coverImageUrl && (
+                    <div>
+                      <h4 className="mb-2 text-sm font-medium">Cover Image</h4>
+                      <Image
+                        src={catalogue.settings.mediaAssets.coverImageUrl}
+                        alt="Cover Image"
+                        width={200}
+                        height={100}
+                        className="rounded border"
+                      />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* Contact Details */}
         {(catalogue.settings.contactDetails?.email ||
@@ -420,107 +420,107 @@ export default function PublicCataloguePage() {
           catalogue.settings.contactInfo.email ||
           catalogue.settings.contactInfo.phone ||
           catalogue.settings.contactInfo.website) && (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="mb-4 font-semibold">Contact Information</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {(catalogue.settings.contactDetails?.email ||
-                  catalogue.settings.contactInfo.email) && (
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() => contactSeller('email')}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Send Email
-                  </Button>
-                )}
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <h3 className="mb-4 font-semibold">Contact Information</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {(catalogue.settings.contactDetails?.email ||
+                    catalogue.settings.contactInfo.email) && (
+                      <Button
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => contactSeller('email')}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Send Email
+                      </Button>
+                    )}
 
-                {(catalogue.settings.contactDetails?.phone ||
-                  catalogue.settings.contactInfo.phone) && (
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() => contactSeller('phone')}
-                  >
-                    <Phone className="mr-2 h-4 w-4" />
-                    Call Now
-                  </Button>
-                )}
+                  {(catalogue.settings.contactDetails?.phone ||
+                    catalogue.settings.contactInfo.phone) && (
+                      <Button
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => contactSeller('phone')}
+                      >
+                        <Phone className="mr-2 h-4 w-4" />
+                        Call Now
+                      </Button>
+                    )}
 
-                {(catalogue.settings.contactDetails?.website ||
-                  catalogue.settings.contactInfo.website) && (
-                  <Button
-                    variant="outline"
-                    className="justify-start"
-                    onClick={() => contactSeller('website')}
-                  >
-                    <Globe className="mr-2 h-4 w-4" />
-                    Visit Website
-                    <ExternalLink className="ml-2 h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  {(catalogue.settings.contactDetails?.website ||
+                    catalogue.settings.contactInfo.website) && (
+                      <Button
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => contactSeller('website')}
+                      >
+                        <Globe className="mr-2 h-4 w-4" />
+                        Visit Website
+                        <ExternalLink className="ml-2 h-3 w-3" />
+                      </Button>
+                    )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* Social Media */}
         {(catalogue.settings.socialMedia?.facebook ||
           catalogue.settings.socialMedia?.twitter ||
           catalogue.settings.socialMedia?.instagram ||
           catalogue.settings.socialMedia?.linkedin) && (
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="mb-4 font-semibold">Social Media</h3>
-              <div className="flex gap-4">
-                {catalogue.settings.socialMedia?.facebook && (
-                  <a
-                    href={catalogue.settings.socialMedia.facebook}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 transition-colors hover:text-blue-800"
-                  >
-                    <Facebook className="h-6 w-6" />
-                  </a>
-                )}
+            <Card className="mb-8">
+              <CardContent className="p-6">
+                <h3 className="mb-4 font-semibold">Social Media</h3>
+                <div className="flex gap-4">
+                  {catalogue.settings.socialMedia?.facebook && (
+                    <a
+                      href={catalogue.settings.socialMedia.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 transition-colors hover:text-blue-800"
+                    >
+                      <Facebook className="h-6 w-6" />
+                    </a>
+                  )}
 
-                {catalogue.settings.socialMedia?.twitter && (
-                  <a
-                    href={catalogue.settings.socialMedia.twitter}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 transition-colors hover:text-blue-600"
-                  >
-                    <Twitter className="h-6 w-6" />
-                  </a>
-                )}
+                  {catalogue.settings.socialMedia?.twitter && (
+                    <a
+                      href={catalogue.settings.socialMedia.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 transition-colors hover:text-blue-600"
+                    >
+                      <Twitter className="h-6 w-6" />
+                    </a>
+                  )}
 
-                {catalogue.settings.socialMedia?.instagram && (
-                  <a
-                    href={catalogue.settings.socialMedia.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-pink-600 transition-colors hover:text-pink-800"
-                  >
-                    <Instagram className="h-6 w-6" />
-                  </a>
-                )}
+                  {catalogue.settings.socialMedia?.instagram && (
+                    <a
+                      href={catalogue.settings.socialMedia.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-pink-600 transition-colors hover:text-pink-800"
+                    >
+                      <Instagram className="h-6 w-6" />
+                    </a>
+                  )}
 
-                {catalogue.settings.socialMedia?.linkedin && (
-                  <a
-                    href={catalogue.settings.socialMedia.linkedin}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-700 transition-colors hover:text-blue-900"
-                  >
-                    <Linkedin className="h-6 w-6" />
-                  </a>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  {catalogue.settings.socialMedia?.linkedin && (
+                    <a
+                      href={catalogue.settings.socialMedia.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 transition-colors hover:text-blue-900"
+                    >
+                      <Linkedin className="h-6 w-6" />
+                    </a>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
         {/* Filters and Search */}
         <div className="mb-8 flex flex-col gap-4 md:flex-row">

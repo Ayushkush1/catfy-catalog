@@ -32,11 +32,11 @@ const optionalEnvVars = [
 
 function validateEnvironment() {
   console.log('🔍 Validating environment variables...');
-  
+
   const missing = [];
   const warnings = [];
   const usingDefaults = [];
-  
+
   // Check required variables and apply defaults if missing
   requiredEnvVars.forEach(varName => {
     if (!process.env[varName]) {
@@ -48,14 +48,14 @@ function validateEnvironment() {
       }
     }
   });
-  
+
   // Check optional variables
   optionalEnvVars.forEach(varName => {
     if (!process.env[varName]) {
       warnings.push(varName);
     }
   });
-  
+
   if (usingDefaults.length > 0) {
     console.log('ℹ️  Using default values for:');
     usingDefaults.forEach(varName => {
@@ -63,7 +63,7 @@ function validateEnvironment() {
     });
     console.log('');
   }
-  
+
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');
     missing.forEach(varName => {
@@ -72,7 +72,7 @@ function validateEnvironment() {
     console.error('\nPlease check your .env.local file or environment configuration.');
     process.exit(1);
   }
-  
+
   if (warnings.length > 0) {
     console.warn('⚠️  Optional environment variables not set:');
     warnings.forEach(varName => {
@@ -80,7 +80,7 @@ function validateEnvironment() {
     });
     console.warn('Some features may not work properly without these variables.\n');
   }
-  
+
   console.log('✅ Environment validation passed!');
 }
 
