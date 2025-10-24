@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { SubscriptionStatus, AccountType } from '@prisma/client'
 
+export const dynamic = 'force-dynamic'
+
 // File validation schema
 const uploadSchema = z.object({
   type: z.enum(['product', 'catalogue', 'profile']),
