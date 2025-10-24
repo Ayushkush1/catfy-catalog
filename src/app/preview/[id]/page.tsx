@@ -1,14 +1,38 @@
 'use client'
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/prisma'               
+import { prisma } from '@/lib/prisma'
 import { CraftJSEditor } from '@/components/editor/CraftJSEditor'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
-import { Twitter, Instagram, Linkedin, Mail, Phone, Globe, ExternalLink, MapPin, Facebook } from 'lucide-react'
-import { ViewportToggle, ViewportMode, getViewportStyles } from '@/components/preview/ViewportToggle'
-import { DEFAULT_ADVANCED_STYLES, DEFAULT_FONT_CUSTOMIZATION, DEFAULT_SPACING_CUSTOMIZATION } from '@/components/shared/StyleCustomizer'
+import {
+  Twitter,
+  Instagram,
+  Linkedin,
+  Mail,
+  Phone,
+  Globe,
+  ExternalLink,
+  MapPin,
+  Facebook,
+} from 'lucide-react'
+import {
+  ViewportToggle,
+  ViewportMode,
+  getViewportStyles,
+} from '@/components/preview/ViewportToggle'
+import {
+  DEFAULT_ADVANCED_STYLES,
+  DEFAULT_FONT_CUSTOMIZATION,
+  DEFAULT_SPACING_CUSTOMIZATION,
+} from '@/components/shared/StyleCustomizer'
 import { getTemplateComponent, getTemplateById } from '@/templates'
 import { getThemeColors as getRegistryThemeColors } from '@/lib/theme-registry'
 
@@ -71,7 +95,7 @@ export default async function PreviewPage({ params }: PreviewPageProps) {
 function PreviewPageClient({ catalogue }: { catalogue: any }) {
   const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop')
 
-  const settings = catalogue.settings as any || {}
+  const settings = (catalogue.settings as any) || {}
   const templateId = settings.templateId || 'modern-4page' // Default to modern template
 
   // Get the template component
@@ -96,64 +120,74 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
       />
 
       {/* Responsive Container */}
-      <div style={viewportStyles.wrapper} className="print:p-0 print:m-0">
+      <div style={viewportStyles.wrapper} className="print:m-0 print:p-0">
         <div
-          className={`preview-container ${getThemeClasses(catalogue.theme)} print:bg-white print:w-full print:h-auto`}
+          className={`preview-container ${getThemeClasses(catalogue.theme)} print:h-auto print:w-full print:bg-white`}
           data-pdf-ready="true"
           style={{
             ...viewportStyles.container,
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow:
+              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             borderRadius: '8px',
-            overflow: 'hidden'
+            overflow: 'hidden',
           }}
         >
           {/* Catalogue Content */}
-          <div className="py-8 px-8">
+          <div className="px-8 py-8">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <div className="mb-8 text-center">
+              <h1 className="mb-4 text-4xl font-bold text-gray-900">
                 {catalogue.name}
               </h1>
 
               {catalogue.description && (
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+                <p className="mx-auto mb-6 max-w-2xl text-lg text-gray-600">
                   {catalogue.description}
                 </p>
               )}
 
               <div className="text-sm text-gray-500">
-                by {catalogue.profile?.companyName || catalogue.profile?.fullName || 'Unknown'}
+                by{' '}
+                {catalogue.profile?.companyName ||
+                  catalogue.profile?.fullName ||
+                  'Unknown'}
               </div>
             </div>
 
             {/* Company Info */}
-            {(settings.companyInfo?.companyName || settings.companyInfo?.companyDescription) && (
+            {(settings.companyInfo?.companyName ||
+              settings.companyInfo?.companyDescription) && (
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle>Company Information</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {settings.companyInfo?.companyName && (
-                    <h4 className="text-lg font-medium mb-2">{settings.companyInfo.companyName}</h4>
+                    <h4 className="mb-2 text-lg font-medium">
+                      {settings.companyInfo.companyName}
+                    </h4>
                   )}
                   {settings.companyInfo?.companyDescription && (
-                    <p className="text-gray-600">{settings.companyInfo.companyDescription}</p>
+                    <p className="text-gray-600">
+                      {settings.companyInfo.companyDescription}
+                    </p>
                   )}
                 </CardContent>
               </Card>
             )}
 
             {/* Media & Assets */}
-            {(settings.mediaAssets?.logoUrl || settings.mediaAssets?.coverImageUrl) && (
+            {(settings.mediaAssets?.logoUrl ||
+              settings.mediaAssets?.coverImageUrl) && (
               <Card className="mb-8">
                 <CardHeader>
                   <CardTitle>Media & Assets</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {settings.mediaAssets?.logoUrl && (
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Logo</h4>
+                        <h4 className="mb-2 text-sm font-medium">Logo</h4>
                         <Image
                           src={settings.mediaAssets.logoUrl}
                           alt="Company Logo"
@@ -165,7 +199,9 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
                     )}
                     {settings.mediaAssets?.coverImageUrl && (
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Cover Image</h4>
+                        <h4 className="mb-2 text-sm font-medium">
+                          Cover Image
+                        </h4>
                         <Image
                           src={settings.mediaAssets.coverImageUrl}
                           alt="Cover Image"
@@ -186,139 +222,147 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
               settings.contactDetails?.website ||
               settings.contactDetails?.address ||
               catalogue.profile?.address) && (
-                <Card className="mb-8">
-                  <CardHeader>
-                    <CardTitle>Contact Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {settings.contactDetails?.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-500" />
-                        <a
-                          href={`mailto:${settings.contactDetails.email}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {settings.contactDetails.email}
-                        </a>
-                      </div>
-                    )}
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Contact Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {settings.contactDetails?.email && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      <a
+                        href={`mailto:${settings.contactDetails.email}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {settings.contactDetails.email}
+                      </a>
+                    </div>
+                  )}
 
-                    {settings.contactDetails?.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-gray-500" />
-                        <a
-                          href={`tel:${settings.contactDetails.phone}`}
-                          className="text-blue-600 hover:underline"
-                        >
-                          {settings.contactDetails.phone}
-                        </a>
-                      </div>
-                    )}
+                  {settings.contactDetails?.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <a
+                        href={`tel:${settings.contactDetails.phone}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {settings.contactDetails.phone}
+                      </a>
+                    </div>
+                  )}
 
-                    {settings.contactDetails?.website && (
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-gray-500" />
-                        <a
-                          href={settings.contactDetails.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline flex items-center gap-1"
-                        >
-                          Visit Website
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </div>
-                    )}
+                  {settings.contactDetails?.website && (
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-gray-500" />
+                      <a
+                        href={settings.contactDetails.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        Visit Website
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  )}
 
-                    {/* Address */}
-                    {(settings.contactDetails?.address || catalogue.profile?.address) && (
-                      <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                        <div>
-                          {(settings.contactDetails?.address || catalogue.profile?.address) && (
-                            <div>{settings.contactDetails?.address || catalogue.profile?.address}</div>
-                          )}
+                  {/* Address */}
+                  {(settings.contactDetails?.address ||
+                    catalogue.profile?.address) && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 text-gray-500" />
+                      <div>
+                        {(settings.contactDetails?.address ||
+                          catalogue.profile?.address) && (
                           <div>
-                            {[
-                              settings.contactDetails?.city || catalogue.profile?.city,
-                              settings.contactDetails?.state || catalogue.profile?.state,
-                              settings.contactDetails?.country || catalogue.profile?.country
-                            ]
-                              .filter(Boolean)
-                              .join(', ')}
+                            {settings.contactDetails?.address ||
+                              catalogue.profile?.address}
                           </div>
-                          {settings.contactDetails?.postalCode && (
-                            <div>{settings.contactDetails.postalCode}</div>
-                          )}
+                        )}
+                        <div>
+                          {[
+                            settings.contactDetails?.city ||
+                              catalogue.profile?.city,
+                            settings.contactDetails?.state ||
+                              catalogue.profile?.state,
+                            settings.contactDetails?.country ||
+                              catalogue.profile?.country,
+                          ]
+                            .filter(Boolean)
+                            .join(', ')}
                         </div>
+                        {settings.contactDetails?.postalCode && (
+                          <div>{settings.contactDetails.postalCode}</div>
+                        )}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Social Media */}
             {(settings.socialMedia?.facebook ||
               settings.socialMedia?.twitter ||
               settings.socialMedia?.instagram ||
               settings.socialMedia?.linkedin) && (
-                <Card className="mb-8">
-                  <CardHeader>
-                    <CardTitle>Social Media</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-4">
-                      {settings.socialMedia?.facebook && (
-                        <a
-                          href={settings.socialMedia.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          <Facebook className="h-6 w-6" />
-                        </a>
-                      )}
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle>Social Media</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4">
+                    {settings.socialMedia?.facebook && (
+                      <a
+                        href={settings.socialMedia.facebook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 transition-colors hover:text-blue-800"
+                      >
+                        <Facebook className="h-6 w-6" />
+                      </a>
+                    )}
 
-                      {settings.socialMedia?.twitter && (
-                        <a
-                          href={settings.socialMedia.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-400 hover:text-blue-600 transition-colors"
-                        >
-                          <Twitter className="h-6 w-6" />
-                        </a>
-                      )}
+                    {settings.socialMedia?.twitter && (
+                      <a
+                        href={settings.socialMedia.twitter}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 transition-colors hover:text-blue-600"
+                      >
+                        <Twitter className="h-6 w-6" />
+                      </a>
+                    )}
 
-                      {settings.socialMedia?.instagram && (
-                        <a
-                          href={settings.socialMedia.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-pink-600 hover:text-pink-800 transition-colors"
-                        >
-                          <Instagram className="h-6 w-6" />
-                        </a>
-                      )}
+                    {settings.socialMedia?.instagram && (
+                      <a
+                        href={settings.socialMedia.instagram}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-pink-600 transition-colors hover:text-pink-800"
+                      >
+                        <Instagram className="h-6 w-6" />
+                      </a>
+                    )}
 
-                      {settings.socialMedia?.linkedin && (
-                        <a
-                          href={settings.socialMedia.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-700 hover:text-blue-900 transition-colors"
-                        >
-                          <Linkedin className="h-6 w-6" />
-                        </a>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                    {settings.socialMedia?.linkedin && (
+                      <a
+                        href={settings.socialMedia.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-700 transition-colors hover:text-blue-900"
+                      >
+                        <Linkedin className="h-6 w-6" />
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Products */}
             {catalogue.products && catalogue.products.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {catalogue.products.map((product: any) => (
                   <Card key={product.id}>
                     {product.imageUrl && (
@@ -328,7 +372,7 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
                           alt={product.name}
                           width={300}
                           height={300}
-                          className="w-full h-full object-cover rounded-t-lg"
+                          className="h-full w-full rounded-t-lg object-cover"
                         />
                       </div>
                     )}
@@ -343,7 +387,8 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
                     </CardHeader>
 
                     <CardContent>
-                      {(product.priceDisplay === 'show' && product.price) || (!product.priceDisplay && product.price) ? (
+                      {(product.priceDisplay === 'show' && product.price) ||
+                      (!product.priceDisplay && product.price) ? (
                         <div className="text-lg font-semibold text-primary">
                           ₹{Number(product.price).toLocaleString('en-IN')}
                         </div>
@@ -365,10 +410,10 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">
-                  <div className="text-gray-400 mb-4">
-                    <div className="h-12 w-12 mx-auto bg-gray-200 rounded" />
+                  <div className="mb-4 text-gray-400">
+                    <div className="mx-auto h-12 w-12 rounded bg-gray-200" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="mb-2 text-lg font-semibold text-gray-900">
                     No products yet
                   </h3>
                   <p className="text-gray-600">
@@ -382,30 +427,31 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
 
         {/* Global styles for responsive preview */}
         <style jsx global>{`
-        @media print {
-          .preview-container {
-            transform: none !important;
-            width: auto !important;
-            max-width: none !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            margin: 0 !important;
+          @media print {
+            .preview-container {
+              transform: none !important;
+              width: auto !important;
+              max-width: none !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              margin: 0 !important;
+            }
+            body {
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+            * {
+              box-sizing: border-box;
+            }
           }
+
           body {
-            margin: 0 !important;
-            padding: 0 !important;
+            overflow-x: ${viewportMode !== 'desktop' ? 'hidden' : 'auto'};
           }
-          * {
-            box-sizing: border-box;
-          }
-        }
-        
-        body {
-          overflow-x: ${viewportMode !== 'desktop' ? 'hidden' : 'auto'};
-        }
-        
-        /* Mobile-specific styles */
-        ${viewportMode === 'mobile' ? `
+
+          /* Mobile-specific styles */
+          ${viewportMode === 'mobile'
+            ? `
           .preview-container .grid {
             grid-template-columns: 1fr !important;
           }
@@ -443,10 +489,12 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
           .preview-container .gap-6 {
             gap: 0.75rem !important;
           }
-        ` : ''}
-        
-        /* Tablet-specific styles */
-        ${viewportMode === 'tablet' ? `
+        `
+            : ''}
+
+          /* Tablet-specific styles */
+        ${viewportMode === 'tablet'
+            ? `
           .preview-container .xl\\:grid-cols-4 {
             grid-template-columns: repeat(2, 1fr) !important;
           }
@@ -459,8 +507,9 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
           .preview-container .p-8 {
             padding: 1.5rem !important;
           }
-        ` : ''}
-      `}</style>
+        `
+            : ''}
+        `}</style>
       </div>
     </>
   )
@@ -468,15 +517,50 @@ function PreviewPageClient({ catalogue }: { catalogue: any }) {
 
 // Theme color configurations
 function getThemeColors(theme: string) {
-  const themes: Record<string, { primary: string; secondary: string; fontFamily: string }> = {
-    modern: { primary: '#3b82f6', secondary: '#64748b', fontFamily: 'Inter, sans-serif' },
-    classic: { primary: '#1f2937', secondary: '#6b7280', fontFamily: 'Georgia, serif' },
-    minimal: { primary: '#000000', secondary: '#666666', fontFamily: 'Helvetica, sans-serif' },
-    bold: { primary: '#dc2626', secondary: '#991b1b', fontFamily: 'Arial, sans-serif' },
-    elegant: { primary: '#7c3aed', secondary: '#a855f7', fontFamily: 'Times, serif' },
-    tech: { primary: '#06b6d4', secondary: '#0891b2', fontFamily: 'Roboto, sans-serif' },
-    nature: { primary: '#059669', secondary: '#047857', fontFamily: 'Inter, sans-serif' },
-    warm: { primary: '#ea580c', secondary: '#c2410c', fontFamily: 'Inter, sans-serif' },
+  const themes: Record<
+    string,
+    { primary: string; secondary: string; fontFamily: string }
+  > = {
+    modern: {
+      primary: '#3b82f6',
+      secondary: '#64748b',
+      fontFamily: 'Inter, sans-serif',
+    },
+    classic: {
+      primary: '#1f2937',
+      secondary: '#6b7280',
+      fontFamily: 'Georgia, serif',
+    },
+    minimal: {
+      primary: '#000000',
+      secondary: '#666666',
+      fontFamily: 'Helvetica, sans-serif',
+    },
+    bold: {
+      primary: '#dc2626',
+      secondary: '#991b1b',
+      fontFamily: 'Arial, sans-serif',
+    },
+    elegant: {
+      primary: '#7c3aed',
+      secondary: '#a855f7',
+      fontFamily: 'Times, serif',
+    },
+    tech: {
+      primary: '#06b6d4',
+      secondary: '#0891b2',
+      fontFamily: 'Roboto, sans-serif',
+    },
+    nature: {
+      primary: '#059669',
+      secondary: '#047857',
+      fontFamily: 'Inter, sans-serif',
+    },
+    warm: {
+      primary: '#ea580c',
+      secondary: '#c2410c',
+      fontFamily: 'Inter, sans-serif',
+    },
   }
 
   return themes[theme] || themes.modern

@@ -9,11 +9,24 @@ import { Catalogue, Category, Product, Profile } from '@prisma/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { AlertCircle, Eye, Palette, FileText, Zap, Download } from 'lucide-react'
+import {
+  AlertCircle,
+  Eye,
+  Palette,
+  FileText,
+  Zap,
+  Download,
+} from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface ThemeTemplatePreviewProps {
@@ -34,19 +47,24 @@ interface PreviewState {
   autoRefresh: boolean
 }
 
-export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTemplatePreviewProps) {
+export function ThemeTemplatePreview({
+  catalogue,
+  profile,
+  className,
+}: ThemeTemplatePreviewProps) {
   const [state, setState] = useState<PreviewState>({
     selectedTheme: null,
     selectedTemplate: null,
     isCompatible: true,
     showIncompatible: false,
     previewMode: 'single',
-    autoRefresh: true
+    autoRefresh: true,
   })
 
   const [themes, setThemes] = useState<ThemeConfig[]>([])
   const [templates, setTemplates] = useState<TemplateConfig[]>([])
-  const [compatibilityMatrix, setCompatibilityMatrix] = useState<CompatibilityMatrix>(new CompatibilityMatrix())
+  const [compatibilityMatrix, setCompatibilityMatrix] =
+    useState<CompatibilityMatrix>(new CompatibilityMatrix())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -69,7 +87,8 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
         // Build compatibility matrix
         loadedThemes.forEach(theme => {
           loadedTemplates.forEach(template => {
-            const isCompatible = template.compatibleThemes.includes('*') ||
+            const isCompatible =
+              template.compatibleThemes.includes('*') ||
               template.compatibleThemes.includes(theme.id) ||
               theme.compatibleTemplates.includes('*') ||
               theme.compatibleTemplates.includes(template.id)
@@ -77,7 +96,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             matrix.addRule({
               themeId: theme.id,
               templateId: template.id,
-              compatible: isCompatible
+              compatible: isCompatible,
             })
           })
         })
@@ -91,11 +110,13 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
           setState(prev => ({
             ...prev,
             selectedTheme: prev.selectedTheme || loadedThemes[0].id,
-            selectedTemplate: prev.selectedTemplate || loadedTemplates[0].id
+            selectedTemplate: prev.selectedTemplate || loadedTemplates[0].id,
           }))
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load preview data')
+        setError(
+          err instanceof Error ? err.message : 'Failed to load preview data'
+        )
       } finally {
         setLoading(false)
       }
@@ -107,7 +128,10 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
   // Check compatibility when selections change
   useEffect(() => {
     if (state.selectedTheme && state.selectedTemplate) {
-      const isCompatible = compatibilityMatrix.isCompatible(state.selectedTheme, state.selectedTemplate)
+      const isCompatible = compatibilityMatrix.isCompatible(
+        state.selectedTheme,
+        state.selectedTemplate
+      )
       setState(prev => ({ ...prev, isCompatible }))
     }
   }, [state.selectedTheme, state.selectedTemplate, compatibilityMatrix])
@@ -115,20 +139,29 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
   // Standardized content for preview
   const standardizedContent = useMemo(() => {
     const mapper = new ContentMapper()
-    return ContentMapper.mapToStandardized({
-      ...catalogue,
-      products: catalogue.products,
-      categories: catalogue.categories
-    }, profile)
+    return ContentMapper.mapToStandardized(
+      {
+        ...catalogue,
+        products: catalogue.products,
+        categories: catalogue.categories,
+      },
+      profile
+    )
   }, [catalogue, profile])
 
   // Get compatible combinations
   const compatibleCombinations = useMemo(() => {
-    const combinations: Array<{ theme: ThemeConfig, template: TemplateConfig }> = []
+    const combinations: Array<{
+      theme: ThemeConfig
+      template: TemplateConfig
+    }> = []
 
     themes.forEach(theme => {
       templates.forEach(template => {
-        const isCompatible = compatibilityMatrix.isCompatible(theme.id, template.id)
+        const isCompatible = compatibilityMatrix.isCompatible(
+          theme.id,
+          template.id
+        )
         if (isCompatible || state.showIncompatible) {
           combinations.push({ theme, template })
         }
@@ -143,71 +176,82 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
   const currentTemplate = templates.find(t => t.id === state.selectedTemplate)
 
   // Render template component
-  const renderTemplate = (theme: ThemeConfig, template: TemplateConfig, size: 'small' | 'medium' | 'large' = 'large') => {
+  const renderTemplate = (
+    theme: ThemeConfig,
+    template: TemplateConfig,
+    size: 'small' | 'medium' | 'large' = 'large'
+  ) => {
     try {
       // This would dynamically import and render the template component
       // For now, we'll show a placeholder
       return (
         <div
           className={`
-            border rounded-lg overflow-hidden bg-white shadow-sm
+            overflow-hidden rounded-lg border bg-white shadow-sm
             ${size === 'small' ? 'h-32' : size === 'medium' ? 'h-48' : 'h-96'}
           `}
-          style={{
-            '--primary-color': theme.colors.primary,
-            '--secondary-color': theme.colors.secondary,
-            '--accent-color': theme.colors.accent
-          } as React.CSSProperties}
+          style={
+            {
+              '--primary-color': theme.colors.primary,
+              '--secondary-color': theme.colors.secondary,
+              '--accent-color': theme.colors.accent,
+            } as React.CSSProperties
+          }
         >
-          <div className="h-full flex flex-col">
+          <div className="flex h-full flex-col">
             {/* Header */}
             <div
-              className="h-8 flex items-center px-3 text-white text-sm font-medium"
+              className="flex h-8 items-center px-3 text-sm font-medium text-white"
               style={{ backgroundColor: theme.colors.primary }}
             >
               {standardizedContent.catalogue.name}
             </div>
 
             {/* Content */}
-            <div className="flex-1 p-3 space-y-2">
+            <div className="flex-1 space-y-2 p-3">
               <div className="text-xs text-gray-600">
                 {template.name} • {theme.name}
               </div>
 
               {/* Sample product grid */}
               <div className="grid grid-cols-2 gap-1">
-                {standardizedContent.products.slice(0, 4).map((product: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="border rounded p-1 text-xs"
-                    style={{ borderColor: theme.colors.secondary }}
-                  >
-                    <div className="font-medium truncate">{product.name}</div>
-                    {(product.priceDisplay === 'show' && product.price) ||
-                      (product.priceDisplay === 'contact') ||
+                {standardizedContent.products
+                  .slice(0, 4)
+                  .map((product: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="rounded border p-1 text-xs"
+                      style={{ borderColor: theme.colors.secondary }}
+                    >
+                      <div className="truncate font-medium">{product.name}</div>
+                      {(product.priceDisplay === 'show' && product.price) ||
+                      product.priceDisplay === 'contact' ||
                       (!product.priceDisplay && product.price) ? (
-                      <div
-                        className="text-xs"
-                        style={{ color: theme.colors.accent }}
-                      >
-                        {product.priceDisplay === 'show' && product.price ?
-                          `₹${Number(product.price).toLocaleString('en-IN')}`
-                          : product.priceDisplay === 'contact' ?
-                            'Contact for Price'
-                            : product.price ?
-                              `₹${Number(product.price).toLocaleString('en-IN')}`
-                              : 'No Price'}
-                      </div>
-                    ) : null}
-                  </div>
-                ))}
+                        <div
+                          className="text-xs"
+                          style={{ color: theme.colors.accent }}
+                        >
+                          {product.priceDisplay === 'show' && product.price
+                            ? `₹${Number(product.price).toLocaleString('en-IN')}`
+                            : product.priceDisplay === 'contact'
+                              ? 'Contact for Price'
+                              : product.price
+                                ? `₹${Number(product.price).toLocaleString('en-IN')}`
+                                : 'No Price'}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))}
               </div>
             </div>
 
             {/* Footer */}
             <div
-              className="h-6 flex items-center px-3 text-xs"
-              style={{ backgroundColor: theme.colors.secondary, color: 'white' }}
+              className="flex h-6 items-center px-3 text-xs"
+              style={{
+                backgroundColor: theme.colors.secondary,
+                color: 'white',
+              }}
             >
               {standardizedContent.profile.companyName}
             </div>
@@ -216,9 +260,9 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
       )
     } catch (err) {
       return (
-        <div className="border rounded-lg p-4 bg-red-50 border-red-200">
-          <div className="text-red-600 text-sm">Preview Error</div>
-          <div className="text-red-500 text-xs mt-1">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="text-sm text-red-600">Preview Error</div>
+          <div className="mt-1 text-xs text-red-500">
             {err instanceof Error ? err.message : 'Failed to render preview'}
           </div>
         </div>
@@ -228,9 +272,9 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-64 ${className}`}>
+      <div className={`flex h-64 items-center justify-center ${className}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <div className="mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <div className="text-sm text-gray-600">Loading preview...</div>
         </div>
       </div>
@@ -252,14 +296,14 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Theme & Template Preview</h2>
-          <p className="text-gray-600 mt-1">
+          <p className="mt-1 text-gray-600">
             Preview and test all theme-template combinations
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
 
@@ -267,9 +311,13 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             <Switch
               id="auto-refresh"
               checked={state.autoRefresh}
-              onCheckedChange={(checked) => setState(prev => ({ ...prev, autoRefresh: checked }))}
+              onCheckedChange={checked =>
+                setState(prev => ({ ...prev, autoRefresh: checked }))
+              }
             />
-            <Label htmlFor="auto-refresh" className="text-sm">Auto-refresh</Label>
+            <Label htmlFor="auto-refresh" className="text-sm">
+              Auto-refresh
+            </Label>
           </div>
         </div>
       </div>
@@ -283,13 +331,15 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {/* Theme Selection */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Theme</Label>
+              <Label className="mb-2 block text-sm font-medium">Theme</Label>
               <Select
                 value={state.selectedTheme || ''}
-                onValueChange={(value) => setState(prev => ({ ...prev, selectedTheme: value }))}
+                onValueChange={value =>
+                  setState(prev => ({ ...prev, selectedTheme: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select theme" />
@@ -299,7 +349,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
                     <SelectItem key={theme.id} value={theme.id}>
                       <div className="flex items-center gap-2">
                         <div
-                          className="w-3 h-3 rounded-full"
+                          className="h-3 w-3 rounded-full"
                           style={{ backgroundColor: theme.colors.primary }}
                         />
                         {theme.name}
@@ -312,10 +362,12 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
 
             {/* Template Selection */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Template</Label>
+              <Label className="mb-2 block text-sm font-medium">Template</Label>
               <Select
                 value={state.selectedTemplate || ''}
-                onValueChange={(value) => setState(prev => ({ ...prev, selectedTemplate: value }))}
+                onValueChange={value =>
+                  setState(prev => ({ ...prev, selectedTemplate: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select template" />
@@ -326,7 +378,11 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
                       <div className="flex items-center gap-2">
                         <FileText className="h-3 w-3" />
                         {template.name}
-                        {template.isPremium && <Badge variant="secondary" className="text-xs">Pro</Badge>}
+                        {template.isPremium && (
+                          <Badge variant="secondary" className="text-xs">
+                            Pro
+                          </Badge>
+                        )}
                       </div>
                     </SelectItem>
                   ))}
@@ -336,10 +392,14 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
 
             {/* Preview Mode */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Preview Mode</Label>
+              <Label className="mb-2 block text-sm font-medium">
+                Preview Mode
+              </Label>
               <Select
                 value={state.previewMode}
-                onValueChange={(value: any) => setState(prev => ({ ...prev, previewMode: value }))}
+                onValueChange={(value: any) =>
+                  setState(prev => ({ ...prev, previewMode: value }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -358,19 +418,26 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
                 <Switch
                   id="show-incompatible"
                   checked={state.showIncompatible}
-                  onCheckedChange={(checked) => setState(prev => ({ ...prev, showIncompatible: checked }))}
+                  onCheckedChange={checked =>
+                    setState(prev => ({ ...prev, showIncompatible: checked }))
+                  }
                 />
-                <Label htmlFor="show-incompatible" className="text-sm">Show incompatible</Label>
+                <Label htmlFor="show-incompatible" className="text-sm">
+                  Show incompatible
+                </Label>
               </div>
             </div>
           </div>
 
           {/* Compatibility Status */}
           {state.selectedTheme && state.selectedTemplate && (
-            <div className="mt-4 pt-4 border-t">
+            <div className="mt-4 border-t pt-4">
               <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${state.isCompatible ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    state.isCompatible ? 'bg-green-500' : 'bg-red-500'
+                  }`}
+                />
                 <span className="text-sm font-medium">
                   {state.isCompatible ? 'Compatible' : 'Incompatible'}
                 </span>
@@ -386,7 +453,12 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
       </Card>
 
       {/* Preview Content */}
-      <Tabs value={state.previewMode} onValueChange={(value: any) => setState(prev => ({ ...prev, previewMode: value }))}>
+      <Tabs
+        value={state.previewMode}
+        onValueChange={(value: any) =>
+          setState(prev => ({ ...prev, previewMode: value }))
+        }
+      >
         <TabsList>
           <TabsTrigger value="single" className="flex items-center gap-2">
             <Eye className="h-4 w-4" />
@@ -408,7 +480,9 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  <span>{currentTheme.name} + {currentTemplate.name}</span>
+                  <span>
+                    {currentTheme.name} + {currentTemplate.name}
+                  </span>
                   <div className="flex items-center gap-2">
                     {!state.isCompatible && (
                       <Badge variant="destructive">Incompatible</Badge>
@@ -424,7 +498,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
               </CardContent>
             </Card>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="py-8 text-center text-gray-500">
               Select a theme and template to preview
             </div>
           )}
@@ -432,27 +506,41 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
 
         {/* Grid View */}
         <TabsContent value="grid" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {compatibleCombinations.map(({ theme, template }, idx) => {
-              const isCompatible = compatibilityMatrix.isCompatible(theme.id, template.id)
+              const isCompatible = compatibilityMatrix.isCompatible(
+                theme.id,
+                template.id
+              )
               return (
                 <Card
                   key={`${theme.id}-${template.id}`}
-                  className={`cursor-pointer transition-all hover:shadow-md ${!isCompatible ? 'opacity-60 border-red-200' : ''
-                    }`}
-                  onClick={() => setState(prev => ({
-                    ...prev,
-                    selectedTheme: theme.id,
-                    selectedTemplate: template.id,
-                    previewMode: 'single'
-                  }))}
+                  className={`cursor-pointer transition-all hover:shadow-md ${
+                    !isCompatible ? 'border-red-200 opacity-60' : ''
+                  }`}
+                  onClick={() =>
+                    setState(prev => ({
+                      ...prev,
+                      selectedTheme: theme.id,
+                      selectedTemplate: template.id,
+                      previewMode: 'single',
+                    }))
+                  }
                 >
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center justify-between">
-                      <span className="truncate">{theme.name} + {template.name}</span>
+                    <CardTitle className="flex items-center justify-between text-sm">
+                      <span className="truncate">
+                        {theme.name} + {template.name}
+                      </span>
                       <div className="flex items-center gap-1">
-                        {!isCompatible && <div className="w-2 h-2 bg-red-500 rounded-full" />}
-                        {template.isPremium && <Badge variant="secondary" className="text-xs">Pro</Badge>}
+                        {!isCompatible && (
+                          <div className="h-2 w-2 rounded-full bg-red-500" />
+                        )}
+                        {template.isPremium && (
+                          <Badge variant="secondary" className="text-xs">
+                            Pro
+                          </Badge>
+                        )}
                       </div>
                     </CardTitle>
                   </CardHeader>
@@ -472,15 +560,25 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
               <h3 className="text-lg font-semibold">
                 {currentTemplate.name} with Different Themes
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {themes.map(theme => {
-                  const isCompatible = compatibilityMatrix.isCompatible(theme.id, currentTemplate.id)
+                  const isCompatible = compatibilityMatrix.isCompatible(
+                    theme.id,
+                    currentTemplate.id
+                  )
                   return (
-                    <Card key={theme.id} className={!isCompatible ? 'opacity-60 border-red-200' : ''}>
+                    <Card
+                      key={theme.id}
+                      className={
+                        !isCompatible ? 'border-red-200 opacity-60' : ''
+                      }
+                    >
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm flex items-center justify-between">
+                        <CardTitle className="flex items-center justify-between text-sm">
                           <span>{theme.name}</span>
-                          {!isCompatible && <div className="w-2 h-2 bg-red-500 rounded-full" />}
+                          {!isCompatible && (
+                            <div className="h-2 w-2 rounded-full bg-red-500" />
+                          )}
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -492,7 +590,7 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
               </div>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="py-8 text-center text-gray-500">
               Select a template to compare themes
             </div>
           )}
@@ -505,24 +603,32 @@ export function ThemeTemplatePreview({ catalogue, profile, className }: ThemeTem
           <CardTitle>Preview Statistics</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4">
             <div>
-              <div className="text-2xl font-bold text-blue-600">{themes.length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {themes.length}
+              </div>
               <div className="text-sm text-gray-600">Themes</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">{templates.length}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {templates.length}
+              </div>
               <div className="text-sm text-gray-600">Templates</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-600">{compatibleCombinations.length}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {compatibleCombinations.length}
+              </div>
               <div className="text-sm text-gray-600">Combinations</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">
-                {compatibleCombinations.filter(({ theme, template }) =>
-                  compatibilityMatrix.isCompatible(theme.id, template.id)
-                ).length}
+                {
+                  compatibleCombinations.filter(({ theme, template }) =>
+                    compatibilityMatrix.isCompatible(theme.id, template.id)
+                  ).length
+                }
               </div>
               <div className="text-sm text-gray-600">Compatible</div>
             </div>

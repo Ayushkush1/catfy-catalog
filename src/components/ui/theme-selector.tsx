@@ -1,7 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Check, Palette, Eye } from 'lucide-react'
@@ -22,7 +28,7 @@ export function ThemeSelector({
   selectedTemplateId,
   onThemeSelect,
   showPreview = true,
-  className
+  className,
 }: ThemeSelectorProps) {
   const [themes, setThemes] = useState<ThemeConfig[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,12 +38,14 @@ export function ThemeSelector({
     const loadThemes = async () => {
       try {
         const allThemes = getAllThemes()
-        
+
         if (selectedTemplateId) {
           // Filter themes compatible with selected template
           const compatibleThemeIds = getCompatibleThemes(selectedTemplateId)
-          const compatibleThemes = allThemes.filter((theme: ThemeConfig) => 
-            compatibleThemeIds.includes(theme.id) || compatibleThemeIds.includes('*')
+          const compatibleThemes = allThemes.filter(
+            (theme: ThemeConfig) =>
+              compatibleThemeIds.includes(theme.id) ||
+              compatibleThemeIds.includes('*')
           )
           setThemes(compatibleThemes)
         } else {
@@ -68,19 +76,19 @@ export function ThemeSelector({
       colors.primary,
       colors.secondary,
       colors.accent || colors.primary,
-      colors.background
+      colors.background,
     ]
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <div className="h-32 bg-gray-200 rounded-t-lg" />
+            <div className="h-32 rounded-t-lg bg-gray-200" />
             <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-200 rounded w-full" />
+              <div className="h-4 w-3/4 rounded bg-gray-200" />
+              <div className="h-3 w-full rounded bg-gray-200" />
             </CardHeader>
           </Card>
         ))}
@@ -90,10 +98,12 @@ export function ThemeSelector({
 
   if (!selectedTemplateId) {
     return (
-      <div className="text-center py-12">
-        <Palette className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <div className="text-gray-500 text-lg mb-2">Select a Template First</div>
-        <div className="text-gray-400 text-sm">
+      <div className="py-12 text-center">
+        <Palette className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+        <div className="mb-2 text-lg text-gray-500">
+          Select a Template First
+        </div>
+        <div className="text-sm text-gray-400">
           Choose a template to see compatible themes
         </div>
       </div>
@@ -102,17 +112,17 @@ export function ThemeSelector({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {themes.map((theme) => {
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {themes.map(theme => {
           const colorPreview = getColorPreview(theme)
-          
+
           return (
             <Card
               key={theme.id}
               className={cn(
                 'cursor-pointer transition-all duration-200 hover:shadow-lg',
                 selectedThemeId === theme.id
-                  ? 'ring-2 ring-blue-500 shadow-lg'
+                  ? 'shadow-lg ring-2 ring-blue-500'
                   : 'hover:shadow-md'
               )}
               onClick={() => handleThemeSelect(theme.id)}
@@ -128,14 +138,14 @@ export function ThemeSelector({
                     />
                   ))}
                 </div>
-                
+
                 {/* Selection Indicator */}
                 {selectedThemeId === theme.id && (
-                  <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                    <Check className="w-4 h-4" />
+                  <div className="absolute right-2 top-2 rounded-full bg-blue-500 p-1 text-white">
+                    <Check className="h-4 w-4" />
                   </div>
                 )}
-                
+
                 {/* Preview Button */}
                 {showPreview && (
                   <div className="absolute bottom-2 right-2">
@@ -143,31 +153,31 @@ export function ThemeSelector({
                       size="sm"
                       variant="secondary"
                       className="bg-white/90 hover:bg-white"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation()
                         handlePreview(theme.id)
                       }}
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
               </div>
-              
+
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg font-semibold">
                       {theme.name}
                     </CardTitle>
-                    <CardDescription className="text-sm text-gray-600 mt-1">
+                    <CardDescription className="mt-1 text-sm text-gray-600">
                       {theme.description}
                     </CardDescription>
                   </div>
                 </div>
-                
+
                 {/* Theme Metadata */}
-                <div className="flex items-center gap-2 mt-3">
+                <div className="mt-3 flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {theme.category}
                   </Badge>
@@ -178,76 +188,84 @@ export function ThemeSelector({
                   )}
                 </div>
               </CardHeader>
-              
+
               <CardContent className="pt-0">
                 {/* Color Palette Details */}
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700">Colors:</div>
+                  <div className="text-sm font-medium text-gray-700">
+                    Colors:
+                  </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full border"
+                      <div
+                        className="h-3 w-3 rounded-full border"
                         style={{ backgroundColor: theme.colors.primary }}
                       />
                       <span>Primary</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full border"
+                      <div
+                        className="h-3 w-3 rounded-full border"
                         style={{ backgroundColor: theme.colors.secondary }}
                       />
                       <span>Secondary</span>
                     </div>
                     {theme.colors.accent && (
                       <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full border"
+                        <div
+                          className="h-3 w-3 rounded-full border"
                           style={{ backgroundColor: theme.colors.accent }}
                         />
                         <span>Accent</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full border"
+                      <div
+                        className="h-3 w-3 rounded-full border"
                         style={{ backgroundColor: theme.colors.background }}
                       />
                       <span>Background</span>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Typography Info */}
                 {theme.typography?.fontFamily && (
-                  <div className="space-y-2 mt-4">
-                    <div className="text-sm font-medium text-gray-700">Typography:</div>
+                  <div className="mt-4 space-y-2">
+                    <div className="text-sm font-medium text-gray-700">
+                      Typography:
+                    </div>
                     <div className="text-xs text-gray-600">
                       {theme.typography.fontFamily.primary && (
-                        <div>Primary: {theme.typography.fontFamily.primary}</div>
+                        <div>
+                          Primary: {theme.typography.fontFamily.primary}
+                        </div>
                       )}
                       {theme.typography.fontFamily.secondary && (
-                        <div>Secondary: {theme.typography.fontFamily.secondary}</div>
+                        <div>
+                          Secondary: {theme.typography.fontFamily.secondary}
+                        </div>
                       )}
                     </div>
                   </div>
                 )}
-                
+
                 {/* Action Button */}
                 <Button
                   className={cn(
-                    'w-full mt-4',
+                    'mt-4 w-full',
                     selectedThemeId === theme.id
                       ? 'bg-blue-500 hover:bg-blue-600'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   )}
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     handleThemeSelect(theme.id)
                   }}
                 >
                   {selectedThemeId === theme.id ? (
                     <>
-                      <Check className="w-4 h-4 mr-2" />
+                      <Check className="mr-2 h-4 w-4" />
                       Selected
                     </>
                   ) : (
@@ -259,11 +277,13 @@ export function ThemeSelector({
           )
         })}
       </div>
-      
+
       {themes.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-lg mb-2">No compatible themes found</div>
-          <div className="text-gray-500 text-sm">
+        <div className="py-12 text-center">
+          <div className="mb-2 text-lg text-gray-400">
+            No compatible themes found
+          </div>
+          <div className="text-sm text-gray-500">
             No themes are compatible with the selected template.
           </div>
         </div>

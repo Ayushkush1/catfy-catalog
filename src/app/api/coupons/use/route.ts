@@ -20,14 +20,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { couponId, subscriptionId, discountAmount } = useCouponSchema.parse(body)
+    const { couponId, subscriptionId, discountAmount } =
+      useCouponSchema.parse(body)
 
     // Use atomic transaction to record coupon usage
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       // Get user profile
       const profile = await tx.profile.findUnique({
         where: { id: user.id },
-        select: { id: true }
+        select: { id: true },
       })
 
       if (!profile) {
@@ -39,9 +40,9 @@ export async function POST(request: NextRequest) {
         where: { id: couponId },
         include: {
           usages: {
-            where: { profileId: profile.id }
-          }
-        }
+            where: { profileId: profile.id },
+          },
+        },
       })
 
       if (!coupon) {
@@ -59,10 +60,10 @@ export async function POST(request: NextRequest) {
 
       // Verify the subscription exists and belongs to the user
       const subscription = await tx.subscription.findUnique({
-        where: { 
+        where: {
           id: subscriptionId,
-          profileId: profile.id
-        }
+          profileId: profile.id,
+        },
       })
 
       if (!subscription) {
@@ -75,8 +76,8 @@ export async function POST(request: NextRequest) {
           couponId,
           profileId: profile.id,
           subscriptionId,
-          usedAt: new Date()
-        }
+          usedAt: new Date(),
+        },
       })
 
       // Update coupon used count
@@ -84,9 +85,9 @@ export async function POST(request: NextRequest) {
         where: { id: couponId },
         data: {
           usedCount: {
-            increment: 1
-          }
-        }
+            increment: 1,
+          },
+        },
       })
 
       return {
@@ -94,16 +95,15 @@ export async function POST(request: NextRequest) {
         couponUsage: {
           id: couponUsage.id,
           couponCode: coupon.code,
-          usedAt: couponUsage.usedAt
-        }
+          usedAt: couponUsage.usedAt,
+        },
       }
     })
 
     return NextResponse.json(result)
-
   } catch (error) {
     console.error('Coupon usage error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -111,7 +111,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to record coupon usage'
+    const message =
+      error instanceof Error ? error.message : 'Failed to record coupon usage'
     return NextResponse.json(
       { error: message, success: false },
       { status: 400 }
@@ -132,14 +133,11 @@ export async function GET(request: NextRequest) {
 
     const profile = await prisma.profile.findUnique({
       where: { id: user.id },
-      select: { id: true }
+      select: { id: true },
     })
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     const couponUsages = await prisma.couponUsage.findMany({
@@ -151,20 +149,20 @@ export async function GET(request: NextRequest) {
             name: true,
             description: true,
             type: true,
-            value: true
-          }
+            value: true,
+          },
         },
         subscription: {
           select: {
             id: true,
             billingCycle: true,
-            status: true
-          }
-        }
+            status: true,
+          },
+        },
       },
       orderBy: {
-        usedAt: 'desc'
-      }
+        usedAt: 'desc',
+      },
     })
 
     return NextResponse.json({
@@ -172,10 +170,9 @@ export async function GET(request: NextRequest) {
         id: usage.id,
         coupon: usage.coupon,
         subscription: usage.subscription,
-        usedAt: usage.usedAt
-      }))
+        usedAt: usage.usedAt,
+      })),
     })
-
   } catch (error) {
     console.error('Coupon usage history error:', error)
     return NextResponse.json(

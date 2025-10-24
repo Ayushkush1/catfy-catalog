@@ -7,9 +7,10 @@ import { chromium } from 'playwright'
 
 const exportPdfSchema = z.object({
   catalogueId: z.string().refine(
-    (id) => {
+    id => {
       // Allow valid UUIDs or test catalogue IDs
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
       const testIdRegex = /^test-catalogue(-\d+)?(-id)?$/
       return uuidRegex.test(id) || testIdRegex.test(id)
     },
@@ -25,7 +26,8 @@ const exportPdfSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { catalogueId, theme, format, orientation } = exportPdfSchema.parse(body)
+    const { catalogueId, theme, format, orientation } =
+      exportPdfSchema.parse(body)
 
     // First, try to get authenticated user for owned catalogues
     const user = await getUser()
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
       profile = await getUserProfile(user.id)
 
       // Check for owned or team member catalogue first
-      catalogue = await prisma.catalogue.findFirst({
+      catalogue = (await prisma.catalogue.findFirst({
         where: {
           id: catalogueId,
           OR: [
@@ -44,11 +46,11 @@ export async function POST(request: NextRequest) {
             {
               teamMembers: {
                 some: {
-                  profileId: profile?.id
-                }
-              }
-            } // User is a team member
-          ]
+                  profileId: profile?.id,
+                },
+              },
+            }, // User is a team member
+          ],
         },
         include: {
           products: {
@@ -74,12 +76,12 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-      }) as any
+      })) as any
     }
 
     // If not found as owned catalogue, check for public catalogue
     if (!catalogue) {
-      catalogue = await prisma.catalogue.findFirst({
+      catalogue = (await prisma.catalogue.findFirst({
         where: {
           id: catalogueId,
           isPublic: true, // Only allow public catalogues for non-authenticated users
@@ -108,7 +110,7 @@ export async function POST(request: NextRequest) {
             },
           },
         },
-      }) as any
+      })) as any
     }
 
     if (!catalogue) {
@@ -121,7 +123,9 @@ export async function POST(request: NextRequest) {
     // For authenticated users with owned catalogues, check subscription
     if (user && profile && catalogue.profileId === profile.id) {
       // Skip subscription check in development environment
-      const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_APP_URL?.includes('localhost')
+      const isDevelopment =
+        process.env.NODE_ENV === 'development' ||
+        process.env.NEXT_PUBLIC_APP_URL?.includes('localhost')
 
       if (!isDevelopment) {
         const activeSubscription = await prisma.subscription.findFirst({
@@ -164,12 +168,14 @@ export async function POST(request: NextRequest) {
       })
 
       // Wait for content to load
-      await page.waitForSelector('[data-pdf-ready="true"]', {
-        timeout: 10000,
-      }).catch(() => {
-        // Fallback: wait for a reasonable time
-        return page.waitForTimeout(3000)
-      })
+      await page
+        .waitForSelector('[data-pdf-ready="true"]', {
+          timeout: 10000,
+        })
+        .catch(() => {
+          // Fallback: wait for a reasonable time
+          return page.waitForTimeout(3000)
+        })
 
       // Generate PDF with A4 dimensions matching preview
       const pdfBuffer = await page.pdf({
@@ -197,11 +203,13 @@ export async function POST(request: NextRequest) {
 
         // Upload to Supabase storage
         const uploadResult = await uploadFile(
-          new File([new Uint8Array(pdfBuffer)], filename, { type: 'application/pdf' }),
+          new File([new Uint8Array(pdfBuffer)], filename, {
+            type: 'application/pdf',
+          }),
           'exports',
           profile.id,
           true, // Allow PDF uploads
-          true  // Use service role to bypass RLS
+          true // Use service role to bypass RLS
         )
 
         if (uploadResult.error) {
@@ -300,11 +308,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to export PDF'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to export PDF'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -321,10 +327,7 @@ export async function GET(request: NextRequest) {
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     const { searchParams } = new URL(request.url)

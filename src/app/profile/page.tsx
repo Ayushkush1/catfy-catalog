@@ -4,14 +4,41 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Header } from '@/components/Header'
-import { Loader2, Save, User, Building, Mail, Phone, Globe, MapPin, HelpCircle, FileText, ChevronRight, Crown, Zap, CreditCard } from 'lucide-react'
+import {
+  Loader2,
+  Save,
+  User,
+  Building,
+  Mail,
+  Phone,
+  Globe,
+  MapPin,
+  HelpCircle,
+  FileText,
+  ChevronRight,
+  Crown,
+  Zap,
+  CreditCard,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -50,7 +77,7 @@ export default function SettingsPage() {
     address: '',
     city: '',
     country: '',
-    timezone: 'UTC'
+    timezone: 'UTC',
   })
   const router = useRouter()
   const supabase = createClient()
@@ -61,7 +88,9 @@ export default function SettingsPage() {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) {
         router.push('/auth/login')
         return
@@ -83,7 +112,7 @@ export default function SettingsPage() {
         address: data.profile.address || '',
         city: data.profile.city || '',
         country: data.profile.country || '',
-        timezone: data.profile.timezone || 'UTC'
+        timezone: data.profile.timezone || 'UTC',
       })
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -149,14 +178,16 @@ export default function SettingsPage() {
   // Plan Indicator Component
   function PlanIndicator() {
     const { currentPlan, planFeatures, isLoading } = useSubscription()
-    
+
     if (isLoading) {
       return (
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-3">
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm text-gray-600">Loading plan information...</span>
+              <span className="text-sm text-gray-600">
+                Loading plan information...
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -200,23 +231,24 @@ export default function SettingsPage() {
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="rounded-lg bg-blue-100 p-2">
                 {getPlanIcon(currentPlan)}
               </div>
               <div>
-                <div className="flex items-center space-x-2 mb-1">
-                  <h3 className="font-semibold text-gray-900">Current Subscription</h3>
+                <div className="mb-1 flex items-center space-x-2">
+                  <h3 className="font-semibold text-gray-900">
+                    Current Subscription
+                  </h3>
                   <Badge variant={getPlanBadgeVariant(currentPlan)}>
                     {getPlanDisplayName(currentPlan)}
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-600">
-                  {currentPlan === SubscriptionPlan.FREE 
+                  {currentPlan === SubscriptionPlan.FREE
                     ? `${planFeatures.maxCatalogues} catalogue • ${planFeatures.maxProductsPerCatalogue} products per catalogue`
-                    : planFeatures.maxCatalogues === -1 
+                    : planFeatures.maxCatalogues === -1
                       ? 'Unlimited catalogues and products'
-                      : `${planFeatures.maxCatalogues} catalogues • ${planFeatures.maxProductsPerCatalogue} products per catalogue`
-                  }
+                      : `${planFeatures.maxCatalogues} catalogues • ${planFeatures.maxProductsPerCatalogue} products per catalogue`}
                 </p>
               </div>
             </div>
@@ -224,45 +256,53 @@ export default function SettingsPage() {
               {currentPlan === SubscriptionPlan.FREE && (
                 <Link href="/billing">
                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                    <Crown className="h-4 w-4 mr-1" />
+                    <Crown className="mr-1 h-4 w-4" />
                     Upgrade
                   </Button>
                 </Link>
               )}
               <Link href="/billing">
                 <Button variant="outline" size="sm">
-                  <CreditCard className="h-4 w-4 mr-1" />
+                  <CreditCard className="mr-1 h-4 w-4" />
                   Manage
                 </Button>
               </Link>
             </div>
           </div>
-          
+
           {/* Plan Features Summary */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="mt-4 border-t border-gray-200 pt-4">
+            <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
               <div>
                 <span className="text-gray-500">Catalogues:</span>
                 <span className="ml-1 font-medium">
-                  {planFeatures.maxCatalogues === -1 ? 'Unlimited' : planFeatures.maxCatalogues}
+                  {planFeatures.maxCatalogues === -1
+                    ? 'Unlimited'
+                    : planFeatures.maxCatalogues}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500">Products:</span>
                 <span className="ml-1 font-medium">
-                  {planFeatures.maxProductsPerCatalogue === -1 ? 'Unlimited' : planFeatures.maxProductsPerCatalogue}
+                  {planFeatures.maxProductsPerCatalogue === -1
+                    ? 'Unlimited'
+                    : planFeatures.maxProductsPerCatalogue}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500">Storage:</span>
                 <span className="ml-1 font-medium">
-                  {planFeatures.maxStorageGB === -1 ? 'Unlimited' : `${planFeatures.maxStorageGB}GB`}
+                  {planFeatures.maxStorageGB === -1
+                    ? 'Unlimited'
+                    : `${planFeatures.maxStorageGB}GB`}
                 </span>
               </div>
               <div>
                 <span className="text-gray-500">Exports:</span>
                 <span className="ml-1 font-medium">
-                  {planFeatures.maxExportsPerMonth === -1 ? 'Unlimited' : `${planFeatures.maxExportsPerMonth}/month`}
+                  {planFeatures.maxExportsPerMonth === -1
+                    ? 'Unlimited'
+                    : `${planFeatures.maxExportsPerMonth}/month`}
                 </span>
               </div>
             </div>
@@ -275,22 +315,26 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Profile" showBackButton backHref="/dashboard" />
-      
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+
+      <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="space-y-6">
           {/* Current Plan Indicator */}
           <PlanIndicator />
-          
-          
+
           {/* Account Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {isBusinessAccount ? <Building className="h-5 w-5" /> : <User className="h-5 w-5" />}
+                {isBusinessAccount ? (
+                  <Building className="h-5 w-5" />
+                ) : (
+                  <User className="h-5 w-5" />
+                )}
                 Account Information
               </CardTitle>
               <CardDescription>
-                Manage your {isBusinessAccount ? 'business' : 'personal'} account details
+                Manage your {isBusinessAccount ? 'business' : 'personal'}{' '}
+                account details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -299,11 +343,11 @@ export default function SettingsPage() {
                 <Input
                   id="fullName"
                   value={formData.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
+                  onChange={e => handleInputChange('fullName', e.target.value)}
                   placeholder="Enter your full name"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -321,7 +365,9 @@ export default function SettingsPage() {
                   <Input
                     id="companyName"
                     value={formData.companyName}
-                    onChange={(e) => handleInputChange('companyName', e.target.value)}
+                    onChange={e =>
+                      handleInputChange('companyName', e.target.value)
+                    }
                     placeholder="Enter your company name"
                   />
                 </div>
@@ -336,18 +382,16 @@ export default function SettingsPage() {
                 <Mail className="h-5 w-5" />
                 Contact Information
               </CardTitle>
-              <CardDescription>
-                Update your contact details
-              </CardDescription>
+              <CardDescription>Update your contact details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={e => handleInputChange('phone', e.target.value)}
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -356,7 +400,7 @@ export default function SettingsPage() {
                   <Input
                     id="website"
                     value={formData.website}
-                    onChange={(e) => handleInputChange('website', e.target.value)}
+                    onChange={e => handleInputChange('website', e.target.value)}
                     placeholder="https://yourwebsite.com"
                   />
                 </div>
@@ -371,9 +415,7 @@ export default function SettingsPage() {
                 <MapPin className="h-5 w-5" />
                 Location
               </CardTitle>
-              <CardDescription>
-                Set your location and timezone
-              </CardDescription>
+              <CardDescription>Set your location and timezone</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -381,19 +423,19 @@ export default function SettingsPage() {
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  onChange={e => handleInputChange('address', e.target.value)}
                   placeholder="Enter your address"
                   rows={2}
                 />
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
+                    onChange={e => handleInputChange('city', e.target.value)}
                     placeholder="Enter your city"
                   />
                 </div>
@@ -402,7 +444,7 @@ export default function SettingsPage() {
                   <Input
                     id="country"
                     value={formData.country}
-                    onChange={(e) => handleInputChange('country', e.target.value)}
+                    onChange={e => handleInputChange('country', e.target.value)}
                     placeholder="Enter your country"
                   />
                 </div>
@@ -410,21 +452,38 @@ export default function SettingsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="timezone">Timezone</Label>
-                <Select value={formData.timezone} onValueChange={(value) => handleInputChange('timezone', value)}>
+                <Select
+                  value={formData.timezone}
+                  onValueChange={value => handleInputChange('timezone', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select timezone" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="UTC">UTC (Coordinated Universal Time)</SelectItem>
-                    <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                    <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                    <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                    <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                    <SelectItem value="UTC">
+                      UTC (Coordinated Universal Time)
+                    </SelectItem>
+                    <SelectItem value="America/New_York">
+                      Eastern Time (ET)
+                    </SelectItem>
+                    <SelectItem value="America/Chicago">
+                      Central Time (CT)
+                    </SelectItem>
+                    <SelectItem value="America/Denver">
+                      Mountain Time (MT)
+                    </SelectItem>
+                    <SelectItem value="America/Los_Angeles">
+                      Pacific Time (PT)
+                    </SelectItem>
                     <SelectItem value="Europe/London">London (GMT)</SelectItem>
                     <SelectItem value="Europe/Paris">Paris (CET)</SelectItem>
                     <SelectItem value="Asia/Tokyo">Tokyo (JST)</SelectItem>
-                    <SelectItem value="Asia/Shanghai">Shanghai (CST)</SelectItem>
-                    <SelectItem value="Australia/Sydney">Sydney (AEST)</SelectItem>
+                    <SelectItem value="Asia/Shanghai">
+                      Shanghai (CST)
+                    </SelectItem>
+                    <SelectItem value="Australia/Sydney">
+                      Sydney (AEST)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -433,7 +492,11 @@ export default function SettingsPage() {
 
           {/* Save Button */}
           <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={saving} className="min-w-[120px]">
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="min-w-[120px]"
+            >
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

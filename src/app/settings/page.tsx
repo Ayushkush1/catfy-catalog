@@ -1,10 +1,22 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/Header'
@@ -31,15 +43,15 @@ export default function SettingsPage() {
     notifications: {
       email: true,
       push: true,
-      marketing: false
+      marketing: false,
     },
     privacy: {
       profileVisibility: 'public',
       showEmail: false,
-      showPhone: false
+      showPhone: false,
     },
     language: 'en',
-    timezone: 'UTC'
+    timezone: 'UTC',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -59,7 +71,7 @@ export default function SettingsPage() {
     try {
       // Save to localStorage (in a real app, this would be an API call)
       localStorage.setItem('appSettings', JSON.stringify(settings))
-      
+
       toast({
         title: 'Settings saved',
         description: 'Your preferences have been updated successfully.',
@@ -80,11 +92,11 @@ export default function SettingsPage() {
       const newSettings = { ...prev }
       const keys = path.split('.')
       let current: any = newSettings
-      
+
       for (let i = 0; i < keys.length - 1; i++) {
         current = current[keys[i]]
       }
-      
+
       current[keys[keys.length - 1]] = value
       return newSettings
     })
@@ -94,9 +106,9 @@ export default function SettingsPage() {
     return (
       <div className="container mx-auto py-8">
         <Header title="Settings" />
-        <div className="flex items-center justify-center h-64">
+        <div className="flex h-64 items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
             <p className="mt-2 text-gray-600">Loading settings...</p>
           </div>
         </div>
@@ -105,10 +117,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto space-y-6 py-8">
       <Header title="Settings" />
-      
-
 
       {/* Notification Settings */}
       <Card>
@@ -125,33 +135,45 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Email Notifications</Label>
-              <p className="text-sm text-gray-500">Receive notifications via email</p>
+              <p className="text-sm text-gray-500">
+                Receive notifications via email
+              </p>
             </div>
             <Switch
               checked={settings.notifications.email}
-              onCheckedChange={(checked) => updateSettings('notifications.email', checked)}
+              onCheckedChange={checked =>
+                updateSettings('notifications.email', checked)
+              }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Push Notifications</Label>
-              <p className="text-sm text-gray-500">Receive push notifications in browser</p>
+              <p className="text-sm text-gray-500">
+                Receive push notifications in browser
+              </p>
             </div>
             <Switch
               checked={settings.notifications.push}
-              onCheckedChange={(checked) => updateSettings('notifications.push', checked)}
+              onCheckedChange={checked =>
+                updateSettings('notifications.push', checked)
+              }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Marketing Communications</Label>
-              <p className="text-sm text-gray-500">Receive updates about new features and offers</p>
+              <p className="text-sm text-gray-500">
+                Receive updates about new features and offers
+              </p>
             </div>
             <Switch
               checked={settings.notifications.marketing}
-              onCheckedChange={(checked) => updateSettings('notifications.marketing', checked)}
+              onCheckedChange={checked =>
+                updateSettings('notifications.marketing', checked)
+              }
             />
           </div>
         </CardContent>
@@ -173,7 +195,9 @@ export default function SettingsPage() {
             <Label htmlFor="profileVisibility">Profile Visibility</Label>
             <Select
               value={settings.privacy.profileVisibility}
-              onValueChange={(value) => updateSettings('privacy.profileVisibility', value)}
+              onValueChange={value =>
+                updateSettings('privacy.profileVisibility', value)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -184,26 +208,34 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Show Email in Profile</Label>
-              <p className="text-sm text-gray-500">Make your email visible to other users</p>
+              <p className="text-sm text-gray-500">
+                Make your email visible to other users
+              </p>
             </div>
             <Switch
               checked={settings.privacy.showEmail}
-              onCheckedChange={(checked) => updateSettings('privacy.showEmail', checked)}
+              onCheckedChange={checked =>
+                updateSettings('privacy.showEmail', checked)
+              }
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label>Show Phone in Profile</Label>
-              <p className="text-sm text-gray-500">Make your phone number visible to other users</p>
+              <p className="text-sm text-gray-500">
+                Make your phone number visible to other users
+              </p>
             </div>
             <Switch
               checked={settings.privacy.showPhone}
-              onCheckedChange={(checked) => updateSettings('privacy.showPhone', checked)}
+              onCheckedChange={checked =>
+                updateSettings('privacy.showPhone', checked)
+              }
             />
           </div>
         </CardContent>
@@ -225,7 +257,7 @@ export default function SettingsPage() {
             <Label htmlFor="language">Language</Label>
             <Select
               value={settings.language}
-              onValueChange={(value) => updateSettings('language', value)}
+              onValueChange={value => updateSettings('language', value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -239,12 +271,12 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="timezone">Timezone</Label>
             <Select
               value={settings.timezone}
-              onValueChange={(value) => updateSettings('timezone', value)}
+              onValueChange={value => updateSettings('timezone', value)}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -254,7 +286,9 @@ export default function SettingsPage() {
                 <SelectItem value="America/New_York">Eastern Time</SelectItem>
                 <SelectItem value="America/Chicago">Central Time</SelectItem>
                 <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                <SelectItem value="America/Los_Angeles">
+                  Pacific Time
+                </SelectItem>
                 <SelectItem value="Europe/London">London</SelectItem>
                 <SelectItem value="Europe/Paris">Paris</SelectItem>
                 <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
@@ -278,9 +312,9 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="p-4 border border-red-200 rounded-lg">
+            <div className="rounded-lg border border-red-200 p-4">
               <h4 className="font-medium text-red-800">Clear All Data</h4>
-              <p className="text-sm text-red-600 mt-1">
+              <p className="mt-1 text-sm text-red-600">
                 This will permanently delete all your data and cannot be undone.
               </p>
               <Button variant="destructive" size="sm" className="mt-3">

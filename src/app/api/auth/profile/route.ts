@@ -31,14 +31,15 @@ export async function GET() {
     }
 
     let profile = await getUserProfile(user.id)
-    
+
     // If profile doesn't exist, try to create it
     if (!profile && user.email) {
       try {
         await createOrUpdateProfile({
           email: user.email,
           firstName: user.user_metadata?.full_name?.split(' ')[0] || '',
-          lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          lastName:
+            user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
           accountType: 'INDIVIDUAL',
         })
         // Fetch the profile with includes after creation
@@ -49,7 +50,7 @@ export async function GET() {
         profile = await getUserProfile(user.id)
       }
     }
-    
+
     if (!profile) {
       return NextResponse.json(
         { error: 'Profile not found and could not be created' },
@@ -134,7 +135,7 @@ export async function PUT(request: NextRequest) {
     })
   } catch (error) {
     console.error('Profile update error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -142,11 +143,9 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to update profile'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to update profile'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -166,8 +165,14 @@ export async function POST(request: NextRequest) {
 
     const profile = await createOrUpdateProfile({
       email: user.email!,
-      firstName: fullName?.split(' ')[0] || user.user_metadata?.full_name?.split(' ')[0] || '',
-      lastName: fullName?.split(' ').slice(1).join(' ') || user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+      firstName:
+        fullName?.split(' ')[0] ||
+        user.user_metadata?.full_name?.split(' ')[0] ||
+        '',
+      lastName:
+        fullName?.split(' ').slice(1).join(' ') ||
+        user.user_metadata?.full_name?.split(' ').slice(1).join(' ') ||
+        '',
       accountType,
     })
 
@@ -192,11 +197,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Profile creation error:', error)
-    
-    const message = error instanceof Error ? error.message : 'Failed to create profile'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+
+    const message =
+      error instanceof Error ? error.message : 'Failed to create profile'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

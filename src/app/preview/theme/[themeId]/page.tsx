@@ -26,11 +26,12 @@ const DUMMY_CATALOG = {
     {
       id: '1',
       name: 'Wireless Bluetooth Headphones',
-      description: 'Premium quality wireless headphones with noise cancellation',
+      description:
+        'Premium quality wireless headphones with noise cancellation',
       price: 199.99,
       image: '/api/placeholder/300/300',
       category: 'Audio',
-      featured: true
+      featured: true,
     },
     {
       id: '2',
@@ -39,7 +40,7 @@ const DUMMY_CATALOG = {
       price: 299.99,
       image: '/api/placeholder/300/300',
       category: 'Wearables',
-      featured: true
+      featured: true,
     },
     {
       id: '3',
@@ -48,7 +49,7 @@ const DUMMY_CATALOG = {
       price: 89.99,
       image: '/api/placeholder/300/300',
       category: 'Audio',
-      featured: false
+      featured: false,
     },
     {
       id: '4',
@@ -57,7 +58,7 @@ const DUMMY_CATALOG = {
       price: 39.99,
       image: '/api/placeholder/300/300',
       category: 'Accessories',
-      featured: false
+      featured: false,
     },
     {
       id: '5',
@@ -66,7 +67,7 @@ const DUMMY_CATALOG = {
       price: 79.99,
       image: '/api/placeholder/300/300',
       category: 'Gaming',
-      featured: true
+      featured: true,
     },
     {
       id: '6',
@@ -75,10 +76,10 @@ const DUMMY_CATALOG = {
       price: 59.99,
       image: '/api/placeholder/300/300',
       category: 'Accessories',
-      featured: false
-    }
+      featured: false,
+    },
   ],
-  categories: ['Audio', 'Wearables', 'Gaming', 'Accessories']
+  categories: ['Audio', 'Wearables', 'Gaming', 'Accessories'],
 }
 
 // Theme configurations
@@ -90,12 +91,12 @@ const THEMES = {
       secondary: '#64748b',
       accent: '#f59e0b',
       background: '#ffffff',
-      text: '#1f2937'
+      text: '#1f2937',
     },
     fonts: {
       heading: 'Inter',
-      body: 'Inter'
-    }
+      body: 'Inter',
+    },
   },
   elegant: {
     name: 'Elegant',
@@ -104,12 +105,12 @@ const THEMES = {
       secondary: '#a78bfa',
       accent: '#f59e0b',
       background: '#fafafa',
-      text: '#374151'
+      text: '#374151',
     },
     fonts: {
       heading: 'Playfair Display',
-      body: 'Inter'
-    }
+      body: 'Inter',
+    },
   },
   minimal: {
     name: 'Minimal',
@@ -118,12 +119,12 @@ const THEMES = {
       secondary: '#6b7280',
       accent: '#ef4444',
       background: '#ffffff',
-      text: '#111827'
+      text: '#111827',
     },
     fonts: {
       heading: 'Inter',
-      body: 'Inter'
-    }
+      body: 'Inter',
+    },
   },
   vibrant: {
     name: 'Vibrant',
@@ -132,12 +133,12 @@ const THEMES = {
       secondary: '#8b5cf6',
       accent: '#06b6d4',
       background: '#fef7ff',
-      text: '#1f2937'
+      text: '#1f2937',
     },
     fonts: {
       heading: 'Poppins',
-      body: 'Inter'
-    }
+      body: 'Inter',
+    },
   },
   professional: {
     name: 'Professional',
@@ -146,12 +147,12 @@ const THEMES = {
       secondary: '#475569',
       accent: '#059669',
       background: '#f8fafc',
-      text: '#0f172a'
+      text: '#0f172a',
     },
     fonts: {
       heading: 'Inter',
-      body: 'Inter'
-    }
+      body: 'Inter',
+    },
   },
   creative: {
     name: 'Creative',
@@ -160,13 +161,13 @@ const THEMES = {
       secondary: '#ef4444',
       accent: '#8b5cf6',
       background: '#fffbeb',
-      text: '#92400e'
+      text: '#92400e',
     },
     fonts: {
       heading: 'Comfortaa',
-      body: 'Inter'
-    }
-  }
+      body: 'Inter',
+    },
+  },
 }
 
 export default function ThemePreviewPage() {
@@ -176,11 +177,16 @@ export default function ThemePreviewPage() {
 
   const theme = THEMES[themeId as keyof typeof THEMES] || THEMES.modern
 
-  const filteredProducts = selectedCategory === 'All'
-    ? DUMMY_CATALOG.products
-    : DUMMY_CATALOG.products.filter(product => product.category === selectedCategory)
+  const filteredProducts =
+    selectedCategory === 'All'
+      ? DUMMY_CATALOG.products
+      : DUMMY_CATALOG.products.filter(
+          product => product.category === selectedCategory
+        )
 
-  const featuredProducts = DUMMY_CATALOG.products.filter(product => product.featured)
+  const featuredProducts = DUMMY_CATALOG.products.filter(
+    product => product.featured
+  )
 
   return (
     <div
@@ -188,24 +194,29 @@ export default function ThemePreviewPage() {
       style={{
         backgroundColor: theme.colors.background,
         color: theme.colors.text,
-        fontFamily: theme.fonts.body
+        fontFamily: theme.fonts.body,
       }}
     >
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b">
+      <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/themes">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Themes
               </Button>
             </Link>
             <div className="text-center">
-              <h1 className="text-lg font-semibold" style={{ color: theme.colors.primary }}>
+              <h1
+                className="text-lg font-semibold"
+                style={{ color: theme.colors.primary }}
+              >
                 {theme.name} Theme Preview
               </h1>
-              <p className="text-sm text-gray-500">Preview with sample catalog data</p>
+              <p className="text-sm text-gray-500">
+                Preview with sample catalog data
+              </p>
             </div>
             <div className="w-24"></div>
           </div>
@@ -215,14 +226,14 @@ export default function ThemePreviewPage() {
       {/* Hero Section */}
       <section className="relative">
         <div
-          className="h-64 bg-gradient-to-r flex items-center justify-center"
+          className="flex h-64 items-center justify-center bg-gradient-to-r"
           style={{
-            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`
+            background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
           }}
         >
           <div className="text-center text-white">
             <h1
-              className="text-4xl font-bold mb-4"
+              className="mb-4 text-4xl font-bold"
               style={{ fontFamily: theme.fonts.heading }}
             >
               {DUMMY_CATALOG.name}
@@ -233,33 +244,40 @@ export default function ThemePreviewPage() {
       </section>
 
       {/* Navigation */}
-      <nav className="bg-white border-b sticky top-16 z-40">
+      <nav className="sticky top-16 z-40 border-b bg-white">
         <div className="container mx-auto px-4">
           <div className="flex items-center space-x-8 py-4">
             <button
               onClick={() => setSelectedCategory('All')}
-              className={`px-4 py-2 rounded-lg transition-colors ${selectedCategory === 'All'
-                  ? 'text-white'
-                  : 'hover:bg-gray-100'
-                }`}
+              className={`rounded-lg px-4 py-2 transition-colors ${
+                selectedCategory === 'All' ? 'text-white' : 'hover:bg-gray-100'
+              }`}
               style={{
-                backgroundColor: selectedCategory === 'All' ? theme.colors.primary : 'transparent',
-                color: selectedCategory === 'All' ? 'white' : theme.colors.text
+                backgroundColor:
+                  selectedCategory === 'All'
+                    ? theme.colors.primary
+                    : 'transparent',
+                color: selectedCategory === 'All' ? 'white' : theme.colors.text,
               }}
             >
               All Products
             </button>
-            {DUMMY_CATALOG.categories.map((category) => (
+            {DUMMY_CATALOG.categories.map(category => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg transition-colors ${selectedCategory === category
+                className={`rounded-lg px-4 py-2 transition-colors ${
+                  selectedCategory === category
                     ? 'text-white'
                     : 'hover:bg-gray-100'
-                  }`}
+                }`}
                 style={{
-                  backgroundColor: selectedCategory === category ? theme.colors.primary : 'transparent',
-                  color: selectedCategory === category ? 'white' : theme.colors.text
+                  backgroundColor:
+                    selectedCategory === category
+                      ? theme.colors.primary
+                      : 'transparent',
+                  color:
+                    selectedCategory === category ? 'white' : theme.colors.text,
                 }}
               >
                 {category}
@@ -274,27 +292,30 @@ export default function ThemePreviewPage() {
         <section className="py-12">
           <div className="container mx-auto px-4">
             <h2
-              className="text-3xl font-bold mb-8 text-center"
+              className="mb-8 text-center text-3xl font-bold"
               style={{
                 fontFamily: theme.fonts.heading,
-                color: theme.colors.primary
+                color: theme.colors.primary,
               }}
             >
               Featured Products
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProducts.map((product) => (
-                <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {featuredProducts.map(product => (
+                <Card
+                  key={product.id}
+                  className="overflow-hidden transition-shadow hover:shadow-lg"
+                >
                   <div className="relative">
                     <Image
                       src={product.image}
                       alt={product.name}
                       width={300}
                       height={300}
-                      className="w-full h-48 object-cover"
+                      className="h-48 w-full object-cover"
                     />
                     <Badge
-                      className="absolute top-2 right-2"
+                      className="absolute right-2 top-2"
                       style={{ backgroundColor: theme.colors.accent }}
                     >
                       Featured
@@ -302,12 +323,14 @@ export default function ThemePreviewPage() {
                   </div>
                   <CardContent className="p-4">
                     <h3
-                      className="font-semibold text-lg mb-2"
+                      className="mb-2 text-lg font-semibold"
                       style={{ color: theme.colors.text }}
                     >
                       {product.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                    <p className="mb-3 text-sm text-gray-600">
+                      {product.description}
+                    </p>
                     <div className="flex items-center justify-between">
                       <span
                         className="text-2xl font-bold"
@@ -319,7 +342,7 @@ export default function ThemePreviewPage() {
                         size="sm"
                         style={{ backgroundColor: theme.colors.primary }}
                       >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        <ShoppingCart className="mr-2 h-4 w-4" />
                         Add to Cart
                       </Button>
                     </div>
@@ -335,28 +358,31 @@ export default function ThemePreviewPage() {
       <section className="py-12">
         <div className="container mx-auto px-4">
           <h2
-            className="text-3xl font-bold mb-8 text-center"
+            className="mb-8 text-center text-3xl font-bold"
             style={{
               fontFamily: theme.fonts.heading,
-              color: theme.colors.primary
+              color: theme.colors.primary,
             }}
           >
             {selectedCategory === 'All' ? 'All Products' : selectedCategory}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {filteredProducts.map(product => (
+              <Card
+                key={product.id}
+                className="overflow-hidden transition-shadow hover:shadow-lg"
+              >
                 <div className="relative">
                   <Image
                     src={product.image}
                     alt={product.name}
                     width={300}
                     height={300}
-                    className="w-full h-48 object-cover"
+                    className="h-48 w-full object-cover"
                   />
                   {product.featured && (
                     <Badge
-                      className="absolute top-2 right-2"
+                      className="absolute right-2 top-2"
                       style={{ backgroundColor: theme.colors.accent }}
                     >
                       Featured
@@ -365,12 +391,14 @@ export default function ThemePreviewPage() {
                 </div>
                 <CardContent className="p-4">
                   <h3
-                    className="font-semibold mb-2"
+                    className="mb-2 font-semibold"
                     style={{ color: theme.colors.text }}
                   >
                     {product.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                  <p className="mb-3 text-sm text-gray-600">
+                    {product.description}
+                  </p>
                   <div className="flex items-center justify-between">
                     <span
                       className="text-xl font-bold"
@@ -382,7 +410,7 @@ export default function ThemePreviewPage() {
                       size="sm"
                       style={{ backgroundColor: theme.colors.primary }}
                     >
-                      <ShoppingCart className="w-4 h-4" />
+                      <ShoppingCart className="h-4 w-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -394,17 +422,17 @@ export default function ThemePreviewPage() {
 
       {/* Footer */}
       <footer
-        className="py-12 mt-12"
+        className="mt-12 py-12"
         style={{ backgroundColor: theme.colors.primary }}
       >
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
+          <div className="grid grid-cols-1 gap-8 text-white md:grid-cols-3">
             <div>
-              <h3 className="text-xl font-bold mb-4">{DUMMY_CATALOG.name}</h3>
+              <h3 className="mb-4 text-xl font-bold">{DUMMY_CATALOG.name}</h3>
               <p className="opacity-90">{DUMMY_CATALOG.description}</p>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
+              <h4 className="mb-4 text-lg font-semibold">Contact Info</h4>
               <div className="space-y-2 opacity-90">
                 <p>{DUMMY_CATALOG.email}</p>
                 <p>{DUMMY_CATALOG.phone}</p>
@@ -412,16 +440,28 @@ export default function ThemePreviewPage() {
               </div>
             </div>
             <div>
-              <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
+              <h4 className="mb-4 text-lg font-semibold">Follow Us</h4>
               <div className="flex space-x-4">
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                  <Share2 className="w-4 h-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20"
+                >
+                  <Share2 className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                  <Heart className="w-4 h-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20"
+                >
+                  <Heart className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
-                  <Star className="w-4 h-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/20"
+                >
+                  <Star className="h-4 w-4" />
                 </Button>
               </div>
             </div>

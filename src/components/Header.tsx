@@ -30,7 +30,7 @@ import {
   Edit,
   Eye,
   Save,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -56,7 +56,17 @@ interface UserProfile {
   subscriptionPlan: string
 }
 
-export function Header({ title, showBackButton = false, backHref = '/dashboard', catalogueName, lastUpdated, showGradientBanner = false, onPreview, onSave, isSaving = false }: HeaderProps) {
+export function Header({
+  title,
+  showBackButton = false,
+  backHref = '/dashboard',
+  catalogueName,
+  lastUpdated,
+  showGradientBanner = false,
+  onPreview,
+  onSave,
+  isSaving = false,
+}: HeaderProps) {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -67,7 +77,9 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
   useEffect(() => {
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         setUser(user)
 
         if (user) {
@@ -111,7 +123,12 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
 
   const getInitials = (name: string | null, email: string) => {
     if (name) {
-      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      return name
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     }
     return email.slice(0, 2).toUpperCase()
   }
@@ -128,16 +145,16 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
 
   if (isLoading) {
     return (
-      <header className="bg-white border-b border-gray-200">
+      <header className="border-b border-gray-200 bg-white">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {showBackButton && (
-                <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
+                <div className="h-8 w-8 animate-pulse rounded bg-gray-200" />
               )}
-              <div className="h-6 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
             </div>
-            <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
           </div>
         </div>
       </header>
@@ -156,8 +173,11 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
             {/* Left Section - Logo and Search */}
             <div className="flex items-center space-x-6">
               {/* CATFY Logo */}
-              <Link href="/dashboard" className="flex items-center space-x-2 group">
-                <div className="relative w-8 h-8 border rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200 overflow-hidden">
+              <Link
+                href="/dashboard"
+                className="group flex items-center space-x-2"
+              >
+                <div className="relative flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg border transition-transform duration-200 group-hover:scale-105">
                   <Image
                     src="/assets/CATFYLogo.png"
                     alt="Catafy Logo"
@@ -168,8 +188,12 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold text-[#2D1B69] tracking-tight">CATFY</span>
-                  <span className="text-xs text-[#2d1b69a2] -mt-1">AI Catalogue Editor</span>
+                  <span className="text-lg font-bold tracking-tight text-[#2D1B69]">
+                    CATFY
+                  </span>
+                  <span className="-mt-1 text-xs text-[#2d1b69a2]">
+                    AI Catalogue Editor
+                  </span>
                 </div>
               </Link>
 
@@ -187,20 +211,26 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
             <div className="flex items-center space-x-1">
               {/* Plan Badge */}
               <Badge
-                variant={profile?.subscriptionPlan?.toLowerCase() === 'free' ? 'secondary' : 'default'}
-                className={`flex items-center space-x-1 text-xs px-3 py-1 rounded-full ${profile?.subscriptionPlan?.toLowerCase() === 'free'
-                  ? 'bg-gray-100 text-gray-600'
-                  : 'bg-transparent border-2 border-[#2D1B69]/10 text-[#2D1B69] hover:bg-[#2D1B69]/5'
-                  }`}
+                variant={
+                  profile?.subscriptionPlan?.toLowerCase() === 'free'
+                    ? 'secondary'
+                    : 'default'
+                }
+                className={`flex items-center space-x-1 rounded-full px-3 py-1 text-xs ${
+                  profile?.subscriptionPlan?.toLowerCase() === 'free'
+                    ? 'bg-gray-100 text-gray-600'
+                    : 'border-2 border-[#2D1B69]/10 bg-transparent text-[#2D1B69] hover:bg-[#2D1B69]/5'
+                }`}
               >
-                {(profile?.subscriptionPlan && profile.subscriptionPlan.toLowerCase() !== 'free') && (
-                  <Crown className="h-3 w-3" />
-                )}
+                {profile?.subscriptionPlan &&
+                  profile.subscriptionPlan.toLowerCase() !== 'free' && (
+                    <Crown className="h-3 w-3" />
+                  )}
                 <span>
                   {profile?.subscriptionPlan
-                    ? profile.subscriptionPlan.charAt(0).toUpperCase() + profile.subscriptionPlan.slice(1)
-                    : 'Free'
-                  }
+                    ? profile.subscriptionPlan.charAt(0).toUpperCase() +
+                      profile.subscriptionPlan.slice(1)
+                    : 'Free'}
                 </span>
               </Badge>
 
@@ -208,7 +238,7 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
               <Button
                 variant="ghost"
                 size="sm"
-                className="relative h-10 w-10 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 p-0"
+                className="relative h-10 w-10 rounded-lg p-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               >
                 <Bell className="h-5 w-5" />
               </Button>
@@ -218,28 +248,38 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                 variant="ghost"
                 size="sm"
                 asChild
-                className="h-10 w-10 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 p-0"
+                className="h-10 w-10 rounded-lg p-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
               >
                 <Link href="/settings">
                   <Settings className="h-5 w-5" />
                 </Link>
               </Button>
 
-
-
               {/* Profile Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-gray-100 p-0">
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full p-0 hover:bg-gray-100"
+                  >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
-                      <AvatarFallback className="text-xs bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-bold">
-                        <div className="flex flex-col space-y-2 p-3 border-b border-gray-100">
+                      <AvatarImage
+                        src={profile?.avatarUrl || ''}
+                        alt={profile?.fullName || user.email}
+                      />
+                      <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-xs font-bold text-white">
+                        <div className="flex flex-col space-y-2 border-b border-gray-100 p-3">
                           <div className="flex items-center space-x-3">
                             <Avatar className="h-10 w-10 border-2 border-[#A2E8DD]">
-                              <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
-                              <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-semibold">
-                                {getInitials(profile?.fullName || null, user.email)}
+                              <AvatarImage
+                                src={profile?.avatarUrl || ''}
+                                alt={profile?.fullName || user.email}
+                              />
+                              <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] font-semibold text-white">
+                                {getInitials(
+                                  profile?.fullName || null,
+                                  user.email
+                                )}
                               </AvatarFallback>
                             </Avatar>
                           </div>
@@ -248,12 +288,19 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-72 p-2 rounded-xl" align="end" forceMount>
-                  <div className="flex flex-col space-y-2 p-3 border-b border-gray-100">
+                <DropdownMenuContent
+                  className="w-72 rounded-xl p-2"
+                  align="end"
+                  forceMount
+                >
+                  <div className="flex flex-col space-y-2 border-b border-gray-100 p-3">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10 border-2 border-[#A2E8DD]">
-                        <AvatarImage src={profile?.avatarUrl || ''} alt={profile?.fullName || user.email} />
-                        <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white font-semibold">
+                        <AvatarImage
+                          src={profile?.avatarUrl || ''}
+                          alt={profile?.fullName || user.email}
+                        />
+                        <AvatarFallback className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] font-semibold text-white">
                           {getInitials(profile?.fullName || null, user.email)}
                         </AvatarFallback>
                       </Avatar>
@@ -261,14 +308,16 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                         <p className="text-sm font-semibold text-[#1A1B41]">
                           {profile?.fullName || 'User'}
                         </p>
-                        <p className="text-xs text-[#779CAB]">
-                          {user.email}
-                        </p>
+                        <p className="text-xs text-[#779CAB]">{user.email}</p>
                         {profile?.subscriptionPlan && (
-                          <div className="flex items-center space-x-1 mt-1">
+                          <div className="mt-1 flex items-center space-x-1">
                             <Crown className="h-3 w-3 text-[#301F70]" />
                             <span className="text-xs font-medium text-[#301F70]">
-                              {profile.subscriptionPlan.charAt(0).toUpperCase() + profile.subscriptionPlan.slice(1)} Plan
+                              {profile.subscriptionPlan
+                                .charAt(0)
+                                .toUpperCase() +
+                                profile.subscriptionPlan.slice(1)}{' '}
+                              Plan
                             </span>
                           </div>
                         )}
@@ -277,19 +326,28 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                   </div>
                   <div className="py-1">
                     <DropdownMenuItem asChild>
-                      <Link href="/profile" className="cursor-pointer text-[#1A1B41] hover:bg-gray-50">
+                      <Link
+                        href="/profile"
+                        className="cursor-pointer text-[#1A1B41] hover:bg-gray-50"
+                      >
                         <User className="mr-3 h-4 w-4 text-[#779CAB]" />
                         <span>Profile Settings</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href={isAdmin ? '/admin' : '/dashboard'} className="cursor-pointer text-[#1A1B41] hover:bg-gray-50">
+                      <Link
+                        href={isAdmin ? '/admin' : '/dashboard'}
+                        className="cursor-pointer text-[#1A1B41] hover:bg-gray-50"
+                      >
                         <Sparkles className="mr-3 h-4 w-4 text-[#779CAB]" />
                         <span>Dashboard</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/billing" className="cursor-pointer text-[#1A1B41] hover:bg-gray-50">
+                      <Link
+                        href="/billing"
+                        className="cursor-pointer text-[#1A1B41] hover:bg-gray-50"
+                      >
                         <CreditCard className="mr-3 h-4 w-4 text-[#779CAB]" />
                         <span>Billing & Plans</span>
                       </Link>
@@ -298,13 +356,19 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                   <DropdownMenuSeparator className="my-1" />
                   <div className="py-1">
                     <DropdownMenuItem asChild>
-                      <Link href="/help" className="cursor-pointer text-[#1A1B41] hover:bg-gray-50">
+                      <Link
+                        href="/help"
+                        className="cursor-pointer text-[#1A1B41] hover:bg-gray-50"
+                      >
                         <HelpCircle className="mr-3 h-4 w-4 text-[#779CAB]" />
                         <span>Help & Support</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link href="/documentation" className="cursor-pointer text-[#1A1B41] hover:bg-gray-50">
+                      <Link
+                        href="/documentation"
+                        className="cursor-pointer text-[#1A1B41] hover:bg-gray-50"
+                      >
                         <FileText className="mr-3 h-4 w-4 text-[#779CAB]" />
                         <span>Documentation</span>
                       </Link>
@@ -327,19 +391,20 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
 
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
-        <div className=' bg-gray-100 pt-4'>
-          <div className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white px-8 mx-8 rounded-t-3xl pt-8 h-40">
+        <div className=" bg-gray-100 pt-4">
+          <div className="mx-8 h-40 rounded-t-3xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-8 text-white">
             <div className="container mx-auto">
               <div className="flex items-center justify-between">
                 <div className="text-white">
-                  <div className="flex flex-col gap-2 mb-3">
-
+                  <div className="mb-3 flex flex-col gap-2">
                     <div>
-                      <h1 className="text-3xl font-bold pb-1">
+                      <h1 className="pb-1 text-3xl font-bold">
                         {title || 'Edit Catalogue'}
                       </h1>
-                      <div className="flex items-center text-purple-100 text-sm">
-                        <span className="font-medium text-white">{catalogueName}</span>
+                      <div className="flex items-center text-sm text-purple-100">
+                        <span className="font-medium text-white">
+                          {catalogueName}
+                        </span>
                         {lastUpdated && (
                           <>
                             <span className="mx-2">•</span>
@@ -358,34 +423,32 @@ export function Header({ title, showBackButton = false, backHref = '/dashboard',
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/30"
+                      className="border-white/20 bg-white/10 text-white hover:border-white/30 hover:bg-white/20"
                       onClick={onPreview}
                       disabled={!onPreview}
                     >
-                      <Eye className="h-4 w-4 mr-2" />
+                      <Eye className="mr-2 h-4 w-4" />
                       Preview
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-white text-[#2D1B69] hover:bg-white/90 font-medium"
+                      className="bg-white font-medium text-[#2D1B69] hover:bg-white/90"
                       onClick={onSave}
                       disabled={isSaving || !onSave}
                     >
                       {isSaving ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Saving...
                         </>
                       ) : (
                         <>
-                          <Save className="h-4 w-4 mr-2" />
+                          <Save className="mr-2 h-4 w-4" />
                           Save Changes
                         </>
                       )}
                     </Button>
                   </div>
-
-
                 </div>
               </div>
             </div>

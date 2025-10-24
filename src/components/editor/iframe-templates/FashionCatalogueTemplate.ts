@@ -1,18 +1,18 @@
 // src/components/editor/iframe-templates/FashionCatalogueTemplate.ts
 
 type IframePage = {
-    id: string
-    name: string
-    html: string
-    css?: string
+  id: string
+  name: string
+  html: string
+  css?: string
 }
 
 export type PrebuiltHtmlTemplate = {
-    id: string
-    name: string
-    engine: 'mustache' | 'handlebars'
-    pages: IframePage[]
-    sharedCss?: string
+  id: string
+  name: string
+  engine: 'mustache' | 'handlebars'
+  pages: IframePage[]
+  sharedCss?: string
 }
 
 const sharedCss = `
@@ -549,13 +549,13 @@ body, html {
 
 
 
-`;
+`
 
 const pages: IframePage[] = [
-    {
-        id: 'cover',
-        name: 'Cover',
-        html: `
+  {
+    id: 'cover',
+    name: 'Cover',
+    html: `
 <section class="fashion-cover">
   <div class="fashion-cover__background">
     <img src="https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80" alt="Catalogue Cover">
@@ -577,12 +577,12 @@ const pages: IframePage[] = [
   </div>
 </section>
     `,
-    },
+  },
 
-    {
-        id: 'intro',
-        name: 'Intro',
-        html: `
+  {
+    id: 'intro',
+    name: 'Intro',
+    html: `
 <section class="fashion-intro-container">
   <!-- Left: Image -->
   <div class="fashion-intro-left">
@@ -618,12 +618,12 @@ const pages: IframePage[] = [
   </div>
 </section>
     `,
-    },
+  },
 
-    {
-        id: 'products',
-        name: 'Products',
-        html: `
+  {
+    id: 'products',
+    name: 'Products',
+    html: `
 <!-- Product 1 -->
 <div class="fashion-product-section">
   <div class="fashion-product-image">
@@ -684,12 +684,12 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    },
+  },
 
-    {
-        id: 'contact',
-        name: 'Contact',
-        html: `
+  {
+    id: 'contact',
+    name: 'Contact',
+    html: `
 <div class="cp-container">
   <!-- Left Side -->
   <div class="cp-left">
@@ -763,15 +763,15 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    }
+  },
 ]
 
 export const FashionCatalogueTemplate: PrebuiltHtmlTemplate = {
-    id: 'fashion-catalogue',
-    name: 'Fashion Catalogue',
-    engine: 'mustache',
-    sharedCss,
-    pages,
+  id: 'fashion-catalogue',
+  name: 'Fashion Catalogue',
+  engine: 'mustache',
+  sharedCss,
+  pages,
 }
 
 export default FashionCatalogueTemplate

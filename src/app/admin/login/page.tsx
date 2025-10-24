@@ -7,7 +7,14 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Mail, Lock, Eye, EyeOff, Shield } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,7 +26,7 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -46,7 +53,7 @@ export default function AdminLoginPage() {
       // Use Supabase authentication for all users
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       })
 
       if (error) {
@@ -73,29 +80,29 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-red-50 to-orange-100 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
+          <div className="mb-4 flex items-center justify-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-100">
               <Shield className="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center">
+          <CardTitle className="text-center text-2xl font-bold">
             Admin Access
           </CardTitle>
           <CardDescription className="text-center">
             Sign in to CATFY Admin Dashboard
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <form onSubmit={handleAdminLogin} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">Admin Email</Label>
@@ -106,14 +113,14 @@ export default function AdminLoginPage() {
                   type="email"
                   placeholder="admin@catfy.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="pl-10"
                   required
                   disabled={isLoading}
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
@@ -123,7 +130,7 @@ export default function AdminLoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter admin password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="pl-10 pr-10"
                   required
                   disabled={isLoading}
@@ -142,7 +149,7 @@ export default function AdminLoginPage() {
                 </button>
               </div>
             </div>
-            
+
             <Button
               type="submit"
               className="w-full bg-red-600 hover:bg-red-700"
@@ -161,24 +168,23 @@ export default function AdminLoginPage() {
               )}
             </Button>
           </form>
-          
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start space-x-2">
-              <Shield className="h-4 w-4 text-amber-600 mt-0.5" />
+              <Shield className="mt-0.5 h-4 w-4 text-amber-600" />
               <div className="text-sm text-amber-800">
                 <p className="font-medium">Admin Access Only</p>
-                <p className="text-xs mt-1">This login is restricted to authorized administrators only.</p>
+                <p className="mt-1 text-xs">
+                  This login is restricted to authorized administrators only.
+                </p>
               </div>
             </div>
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-center text-gray-600">
-            <Link
-              href="/auth/login"
-              className="text-blue-600 hover:underline"
-            >
+          <div className="text-center text-sm text-gray-600">
+            <Link href="/auth/login" className="text-blue-600 hover:underline">
               ← Back to Regular Login
             </Link>
           </div>

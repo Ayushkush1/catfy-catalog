@@ -1,24 +1,38 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useNode, UserComponent } from '@craftjs/core';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
+import React from 'react'
+import { useNode, UserComponent } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 
 export interface DividerBlockProps {
-  style?: 'solid' | 'dashed' | 'dotted' | 'double' | 'groove' | 'ridge' | 'inset' | 'outset';
-  thickness?: number;
-  color?: string;
-  width?: string;
-  alignment?: 'left' | 'center' | 'right';
-  marginTop?: number;
-  marginBottom?: number;
-  marginLeft?: number;
-  marginRight?: number;
-  opacity?: number;
-  className?: string;
+  style?:
+    | 'solid'
+    | 'dashed'
+    | 'dotted'
+    | 'double'
+    | 'groove'
+    | 'ridge'
+    | 'inset'
+    | 'outset'
+  thickness?: number
+  color?: string
+  width?: string
+  alignment?: 'left' | 'center' | 'right'
+  marginTop?: number
+  marginBottom?: number
+  marginLeft?: number
+  marginRight?: number
+  opacity?: number
+  className?: string
 }
 
 export const DividerBlock: UserComponent<DividerBlockProps> = ({
@@ -32,37 +46,45 @@ export const DividerBlock: UserComponent<DividerBlockProps> = ({
   marginLeft = 0,
   marginRight = 0,
   opacity = 1,
-  className = ''
+  className = '',
 }) => {
   const {
     connectors: { connect, drag },
     selected,
-    actions: { setProp }
-  } = useNode((state) => ({
+    actions: { setProp },
+  } = useNode(state => ({
     selected: state.events.selected,
-  }));
+  }))
 
   const dividerStyle: React.CSSProperties = {
     borderTop: `${thickness}px ${style} ${color}`,
     width,
     margin: `${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft}px`,
     opacity,
-    alignSelf: alignment === 'left' ? 'flex-start' : 
-               alignment === 'right' ? 'flex-end' : 'center',
-  };
+    alignSelf:
+      alignment === 'left'
+        ? 'flex-start'
+        : alignment === 'right'
+          ? 'flex-end'
+          : 'center',
+  }
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
-    justifyContent: alignment === 'left' ? 'flex-start' : 
-                   alignment === 'right' ? 'flex-end' : 'center',
+    justifyContent:
+      alignment === 'left'
+        ? 'flex-start'
+        : alignment === 'right'
+          ? 'flex-end'
+          : 'center',
     width: '100%',
-  };
+  }
 
   return (
     <div
-      ref={(ref) => {
+      ref={ref => {
         if (ref) {
-          connect(drag(ref));
+          connect(drag(ref))
         }
       }}
       className={`divider-block ${selected ? 'ring-2 ring-blue-500' : ''} ${className}`}
@@ -70,16 +92,16 @@ export const DividerBlock: UserComponent<DividerBlockProps> = ({
     >
       <hr style={dividerStyle} />
     </div>
-  );
-};
+  )
+}
 
 export const DividerBlockSettings: React.FC = () => {
   const {
     actions: { setProp },
-    props
-  } = useNode((node) => ({
+    props,
+  } = useNode(node => ({
     props: node.data.props as DividerBlockProps,
-  }));
+  }))
 
   return (
     <div className="space-y-4">
@@ -88,7 +110,10 @@ export const DividerBlockSettings: React.FC = () => {
         <Select
           value={props.style}
           onValueChange={(value: string) =>
-            setProp((props: DividerBlockProps) => (props.style = value as DividerBlockProps['style']))
+            setProp(
+              (props: DividerBlockProps) =>
+                (props.style = value as DividerBlockProps['style'])
+            )
           }
         >
           <SelectTrigger>
@@ -108,7 +133,9 @@ export const DividerBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="divider-thickness">Thickness: {props.thickness}px</Label>
+        <Label htmlFor="divider-thickness">
+          Thickness: {props.thickness}px
+        </Label>
         <Slider
           value={[props.thickness || 1]}
           onValueChange={([value]) =>
@@ -126,8 +153,10 @@ export const DividerBlockSettings: React.FC = () => {
         <Input
           type="color"
           value={props.color}
-          onChange={(e) =>
-            setProp((props: DividerBlockProps) => (props.color = e.target.value))
+          onChange={e =>
+            setProp(
+              (props: DividerBlockProps) => (props.color = e.target.value)
+            )
           }
           className="mt-1"
         />
@@ -137,8 +166,10 @@ export const DividerBlockSettings: React.FC = () => {
         <Label htmlFor="divider-width">Width</Label>
         <Input
           value={props.width}
-          onChange={(e) =>
-            setProp((props: DividerBlockProps) => (props.width = e.target.value))
+          onChange={e =>
+            setProp(
+              (props: DividerBlockProps) => (props.width = e.target.value)
+            )
           }
           placeholder="100%, 200px, etc."
           className="mt-1"
@@ -150,7 +181,10 @@ export const DividerBlockSettings: React.FC = () => {
         <Select
           value={props.alignment}
           onValueChange={(value: string) =>
-            setProp((props: DividerBlockProps) => (props.alignment = value as DividerBlockProps['alignment']))
+            setProp(
+              (props: DividerBlockProps) =>
+                (props.alignment = value as DividerBlockProps['alignment'])
+            )
           }
         >
           <SelectTrigger>
@@ -165,7 +199,9 @@ export const DividerBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="divider-opacity">Opacity: {Math.round((props.opacity || 1) * 100)}%</Label>
+        <Label htmlFor="divider-opacity">
+          Opacity: {Math.round((props.opacity || 1) * 100)}%
+        </Label>
         <Slider
           value={[(props.opacity || 1) * 100]}
           onValueChange={([value]) =>
@@ -193,11 +229,15 @@ export const DividerBlockSettings: React.FC = () => {
           />
         </div>
         <div>
-          <Label htmlFor="margin-bottom">Margin Bottom: {props.marginBottom}px</Label>
+          <Label htmlFor="margin-bottom">
+            Margin Bottom: {props.marginBottom}px
+          </Label>
           <Slider
             value={[props.marginBottom || 16]}
             onValueChange={([value]) =>
-              setProp((props: DividerBlockProps) => (props.marginBottom = value))
+              setProp(
+                (props: DividerBlockProps) => (props.marginBottom = value)
+              )
             }
             max={100}
             min={0}
@@ -222,7 +262,9 @@ export const DividerBlockSettings: React.FC = () => {
           />
         </div>
         <div>
-          <Label htmlFor="margin-right">Margin Right: {props.marginRight}px</Label>
+          <Label htmlFor="margin-right">
+            Margin Right: {props.marginRight}px
+          </Label>
           <Slider
             value={[props.marginRight || 0]}
             onValueChange={([value]) =>
@@ -236,10 +278,9 @@ export const DividerBlockSettings: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-(DividerBlock as any).craft = {
+  )
+}
+;(DividerBlock as any).craft = {
   props: {
     style: 'solid',
     thickness: 1,
@@ -255,4 +296,4 @@ export const DividerBlockSettings: React.FC = () => {
   related: {
     settings: DividerBlockSettings,
   },
-};
+}

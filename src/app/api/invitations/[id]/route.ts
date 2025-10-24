@@ -18,22 +18,24 @@ export async function DELETE(
         id: invitationId,
         status: InvitationStatus.PENDING,
         catalogue: {
-          profileId: user.id
-        }
+          profileId: user.id,
+        },
       },
       include: {
         catalogue: {
           select: {
             id: true,
-            name: true
-          }
-        }
-      }
+            name: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
       return NextResponse.json(
-        { error: 'Invitation not found or you are not authorized to cancel it' },
+        {
+          error: 'Invitation not found or you are not authorized to cancel it',
+        },
         { status: 404 }
       )
     }
@@ -41,13 +43,13 @@ export async function DELETE(
     // Update invitation status to cancelled
     await prisma.invitation.update({
       where: { id: invitationId },
-      data: { 
-        status: InvitationStatus.DECLINED
-      }
+      data: {
+        status: InvitationStatus.DECLINED,
+      },
     })
 
     return NextResponse.json({
-      message: 'Invitation cancelled successfully'
+      message: 'Invitation cancelled successfully',
     })
   } catch (error) {
     console.error('Error cancelling invitation:', error)
@@ -80,16 +82,16 @@ export async function GET(
         token,
         status: InvitationStatus.PENDING,
         expiresAt: {
-          gt: new Date()
-        }
+          gt: new Date(),
+        },
       },
       include: {
         catalogue: {
           select: {
             id: true,
             name: true,
-            description: true
-          }
+            description: true,
+          },
         },
         sender: {
           select: {
@@ -98,10 +100,10 @@ export async function GET(
             fullName: true,
             firstName: true,
             lastName: true,
-            avatarUrl: true
-          }
-        }
-      }
+            avatarUrl: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
@@ -116,12 +118,12 @@ export async function GET(
         id: invitation.id,
         email: invitation.email,
         createdAt: invitation.createdAt,
-        expiresAt: invitation.expiresAt
+        expiresAt: invitation.expiresAt,
       },
       catalogue: {
         id: invitation.catalogue.id,
         name: invitation.catalogue.name,
-        description: invitation.catalogue.description
+        description: invitation.catalogue.description,
       },
       sender: {
         id: invitation.sender.id,
@@ -129,8 +131,8 @@ export async function GET(
         fullName: invitation.sender.fullName,
         firstName: invitation.sender.firstName,
         lastName: invitation.sender.lastName,
-        avatarUrl: invitation.sender.avatarUrl
-      }
+        avatarUrl: invitation.sender.avatarUrl,
+      },
     })
   } catch (error) {
     console.error('Error fetching invitation:', error)

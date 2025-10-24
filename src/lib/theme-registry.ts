@@ -17,26 +17,30 @@ export const ThemeConfigSchema = z.object({
     accent: z.string(),
     background: z.string(),
     surface: z.string().optional(),
-    text: z.object({
-      primary: z.string(),
-      secondary: z.string(),
-      muted: z.string()
-    }).optional(),
+    text: z
+      .object({
+        primary: z.string(),
+        secondary: z.string(),
+        muted: z.string(),
+      })
+      .optional(),
     border: z.string().optional(),
     success: z.string().optional(),
     warning: z.string().optional(),
-    error: z.string().optional()
+    error: z.string().optional(),
   }),
-  typography: z.object({
-    fontFamily: z.object({
-      primary: z.string(),
-      secondary: z.string(),
-      mono: z.string().optional()
-    }),
-    fontSize: z.record(z.string()),
-    fontWeight: z.record(z.string()),
-    lineHeight: z.record(z.string())
-  }).optional(),
+  typography: z
+    .object({
+      fontFamily: z.object({
+        primary: z.string(),
+        secondary: z.string(),
+        mono: z.string().optional(),
+      }),
+      fontSize: z.record(z.string()),
+      fontWeight: z.record(z.string()),
+      lineHeight: z.record(z.string()),
+    })
+    .optional(),
   spacing: z.record(z.string()).optional(),
   borderRadius: z.record(z.string()).optional(),
   shadows: z.record(z.string()).optional(),
@@ -44,7 +48,7 @@ export const ThemeConfigSchema = z.object({
   requiredFeatures: z.array(z.string()).default([]),
   customProperties: z.record(z.any()).optional(),
   createdAt: z.date().default(() => new Date()),
-  updatedAt: z.date().default(() => new Date())
+  updatedAt: z.date().default(() => new Date()),
 })
 
 export type ThemeConfig = z.infer<typeof ThemeConfigSchema>
@@ -86,19 +90,19 @@ export class ThemeRegistry {
           text: {
             primary: '#1F2937',
             secondary: '#4B5563',
-            muted: '#6B7280'
-          }
+            muted: '#6B7280',
+          },
         },
         typography: {
-           fontFamily: {
-             primary: 'Inter',
-             secondary: 'Inter'
-           },
-           fontSize: {},
-           fontWeight: {},
-           lineHeight: {}
-         },
-         version: '1.0.0'
+          fontFamily: {
+            primary: 'Inter',
+            secondary: 'Inter',
+          },
+          fontSize: {},
+          fontWeight: {},
+          lineHeight: {},
+        },
+        version: '1.0.0',
       },
       {
         name: 'Classic Warm',
@@ -113,19 +117,19 @@ export class ThemeRegistry {
           text: {
             primary: '#1F2937',
             secondary: '#4B5563',
-            muted: '#6B7280'
-          }
+            muted: '#6B7280',
+          },
         },
         typography: {
-           fontFamily: {
-             primary: 'Playfair Display',
-             secondary: 'Source Sans Pro'
-           },
-           fontSize: {},
-           fontWeight: {},
-           lineHeight: {}
-         },
-         version: '1.0.0'
+          fontFamily: {
+            primary: 'Playfair Display',
+            secondary: 'Source Sans Pro',
+          },
+          fontSize: {},
+          fontWeight: {},
+          lineHeight: {},
+        },
+        version: '1.0.0',
       },
       {
         name: 'Minimal White',
@@ -140,20 +144,20 @@ export class ThemeRegistry {
           text: {
             primary: '#111827',
             secondary: '#4B5563',
-            muted: '#6B7280'
-          }
+            muted: '#6B7280',
+          },
         },
         typography: {
-           fontFamily: {
-             primary: 'Inter',
-             secondary: 'Inter'
-           },
-           fontSize: {},
-           fontWeight: {},
-           lineHeight: {}
-         },
-         version: '1.0.0'
-      }
+          fontFamily: {
+            primary: 'Inter',
+            secondary: 'Inter',
+          },
+          fontSize: {},
+          fontWeight: {},
+          lineHeight: {},
+        },
+        version: '1.0.0',
+      },
     ]
 
     defaultThemes.forEach((theme, index) => {
@@ -189,9 +193,10 @@ export class ThemeRegistry {
   }
 
   getCompatibleThemes(templateId: string): ThemeConfig[] {
-    return this.getAllThemes().filter(theme => 
-      theme.compatibleTemplates.includes('*') || 
-      theme.compatibleTemplates.includes(templateId)
+    return this.getAllThemes().filter(
+      theme =>
+        theme.compatibleTemplates.includes('*') ||
+        theme.compatibleTemplates.includes(templateId)
     )
   }
 
@@ -218,7 +223,9 @@ export class ThemeRegistry {
       if (error instanceof z.ZodError) {
         return {
           valid: false,
-          errors: error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
+          errors: error.errors.map(
+            err => `${err.path.join('.')}: ${err.message}`
+          ),
         }
       }
       return { valid: false, errors: ['Unknown validation error'] }
@@ -240,7 +247,7 @@ export function getThemeColors(themeId: string) {
       accent: '#60A5FA',
       background: '#F8FAFC',
       text: '#1F2937',
-      muted: '#6B7280'
+      muted: '#6B7280',
     }
   }
   return theme.colors
@@ -248,18 +255,25 @@ export function getThemeColors(themeId: string) {
 
 export function getThemeFonts(themeId: string) {
   const theme = themeRegistry.getTheme(themeId)
-  return theme?.typography?.fontFamily || {
-    primary: 'Inter',
-    secondary: 'Inter'
-  }
+  return (
+    theme?.typography?.fontFamily || {
+      primary: 'Inter',
+      secondary: 'Inter',
+    }
+  )
 }
 
-export function isThemeCompatible(themeId: string, templateId: string): boolean {
+export function isThemeCompatible(
+  themeId: string,
+  templateId: string
+): boolean {
   const theme = themeRegistry.getTheme(themeId)
   if (!theme) return false
-  
-  return theme.compatibleTemplates.includes('*') || 
-         theme.compatibleTemplates.includes(templateId)
+
+  return (
+    theme.compatibleTemplates.includes('*') ||
+    theme.compatibleTemplates.includes(templateId)
+  )
 }
 
 export function getAllThemes(): ThemeConfig[] {

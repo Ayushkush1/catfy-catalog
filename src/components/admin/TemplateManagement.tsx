@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -6,11 +6,42 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Edit, CheckCircle, RefreshCw, Plus, UploadCloud } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Search,
+  Edit,
+  CheckCircle,
+  RefreshCw,
+  Plus,
+  UploadCloud,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import TemplateCreationDialog from './TemplateEditorDialog'
 
@@ -28,8 +59,6 @@ type AdminTemplateItem = {
   updatedAt: string
   source: 'database' | 'built_in'
 }
-
-
 
 export default function TemplateManagement() {
   const [items, setItems] = useState<AdminTemplateItem[]>([])
@@ -52,9 +81,9 @@ export default function TemplateManagement() {
       // Try to load admin templates, but continue gracefully if unavailable
       let dbItems: AdminTemplateItem[] = []
       try {
-        const res = await fetch('/api/admin/templates', { 
+        const res = await fetch('/api/admin/templates', {
           cache: 'no-store',
-          credentials: 'include'
+          credentials: 'include',
         })
         if (res.ok) {
           const json = await res.json()
@@ -83,12 +112,13 @@ export default function TemplateManagement() {
       // Load built-in templates directly from PrebuiltTemplates
       let builtIns: AdminTemplateItem[] = []
       try {
-        const { PrebuiltTemplates } = await import('@/components/editor/templates/PrebuiltTemplates')
+        const { PrebuiltTemplates } = await import(
+          '@/components/editor/templates/PrebuiltTemplates'
+        )
         const dbIds = new Set(dbItems.map(i => i.id))
-        
-        builtIns = PrebuiltTemplates
-          .filter((t: any) => !dbIds.has(t.id))
-          .map((t: any) => ({
+
+        builtIns = PrebuiltTemplates.filter((t: any) => !dbIds.has(t.id)).map(
+          (t: any) => ({
             id: t.id,
             name: t.name,
             description: t.description,
@@ -101,8 +131,9 @@ export default function TemplateManagement() {
             status: 'PUBLISHED' as const,
             updatedAt: new Date().toISOString(),
             source: 'built_in' as const,
-          }))
-        
+          })
+        )
+
         console.log('✅ Built-in templates loaded:', builtIns.length)
       } catch (err) {
         console.error('Failed to load built-in templates:', err)
@@ -116,16 +147,19 @@ export default function TemplateManagement() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const filteredItems = useMemo(() => {
     let list = items
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
-      list = list.filter(i =>
-        i.name.toLowerCase().includes(q) ||
-        (i.description || '').toLowerCase().includes(q) ||
-        (i.tags || []).some(tag => tag.toLowerCase().includes(q))
+      list = list.filter(
+        i =>
+          i.name.toLowerCase().includes(q) ||
+          (i.description || '').toLowerCase().includes(q) ||
+          (i.tags || []).some(tag => tag.toLowerCase().includes(q))
       )
     }
     if (categoryFilter !== 'all') {
@@ -168,22 +202,27 @@ export default function TemplateManagement() {
           tags: templateData.tags.length > 0 ? templateData.tags : null,
           previewImage: templateData.previewImage || null,
           pageCount: templateData.pageCount || null,
-          compatibleThemes: templateData.compatibleThemes.length > 0 ? templateData.compatibleThemes : null,
+          compatibleThemes:
+            templateData.compatibleThemes.length > 0
+              ? templateData.compatibleThemes
+              : null,
           contentType: templateData.contentType,
-          jsonData: templateData.jsonData
-        })
+          jsonData: templateData.jsonData,
+        }),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.text()
         throw new Error(`Failed to create template: ${errorData}`)
       }
-      
+
       await load()
       toast.success('Template created successfully')
     } catch (error) {
       console.error('Create error:', error)
-      toast.error(error instanceof Error ? error.message : 'Failed to create template')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create template'
+      )
       throw error // Re-throw to let the dialog handle it
     }
   }
@@ -197,13 +236,11 @@ export default function TemplateManagement() {
     router.push(`/admin/editor/${item.id}`)
   }
 
-
-
-
-
   const publish = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/templates/${id}/publish`, { method: 'POST' })
+      const res = await fetch(`/api/admin/templates/${id}/publish`, {
+        method: 'POST',
+      })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Publish failed')
       toast.success('Template published')
@@ -216,7 +253,9 @@ export default function TemplateManagement() {
 
   const unpublish = async (id: string) => {
     try {
-      const res = await fetch(`/api/admin/templates/${id}/unpublish`, { method: 'POST' })
+      const res = await fetch(`/api/admin/templates/${id}/unpublish`, {
+        method: 'POST',
+      })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Unpublish failed')
       toast.success('Template unpublished')
@@ -230,7 +269,9 @@ export default function TemplateManagement() {
   const remove = async (id: string) => {
     try {
       if (!confirm('Delete this template? This cannot be undone.')) return
-      const res = await fetch(`/api/admin/templates/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/admin/templates/${id}`, {
+        method: 'DELETE',
+      })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Delete failed')
       toast.success('Template deleted')
@@ -248,22 +289,22 @@ export default function TemplateManagement() {
         <h2 className="text-2xl font-bold">Template Management</h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={load}>
-            <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+            <RefreshCw className="mr-2 h-4 w-4" /> Refresh
           </Button>
           <Button onClick={openCreate}>
-            <Plus className="w-4 h-4 mr-2" /> New Template
+            <Plus className="mr-2 h-4 w-4" /> New Template
           </Button>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
         <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <Input
             placeholder="Search templates..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={e => setSearchQuery(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -272,8 +313,19 @@ export default function TemplateManagement() {
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
-            {['all','modern','classic','minimal','creative','industry','specialized','product'].map(c => (
-              <SelectItem key={c} value={c}>{c}</SelectItem>
+            {[
+              'all',
+              'modern',
+              'classic',
+              'minimal',
+              'creative',
+              'industry',
+              'specialized',
+              'product',
+            ].map(c => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -283,9 +335,13 @@ export default function TemplateManagement() {
       <Card>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-gray-500">Loading templates...</div>
+            <div className="py-8 text-center text-gray-500">
+              Loading templates...
+            </div>
           ) : filteredItems.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">No templates found</div>
+            <div className="py-8 text-center text-gray-500">
+              No templates found
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -303,35 +359,60 @@ export default function TemplateManagement() {
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.category || '-'}</TableCell>
-                    
+
                     <TableCell>
-                      <Badge variant={item.source === 'built_in' ? 'secondary' : 'outline'}>
+                      <Badge
+                        variant={
+                          item.source === 'built_in' ? 'secondary' : 'outline'
+                        }
+                      >
                         {item.source === 'built_in' ? 'Built-in' : 'Database'}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={item.status === 'PUBLISHED' ? 'default' : 'outline'}>
+                      <Badge
+                        variant={
+                          item.status === 'PUBLISHED' ? 'default' : 'outline'
+                        }
+                      >
                         {item.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {new Date(item.updatedAt).toLocaleString()}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         {item.source === 'database' && (
                           <>
-                            <Button variant="outline" size="sm" onClick={() => openEdit(item)}>
-                              <Edit className="w-4 h-4 mr-1" /> Edit
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openEdit(item)}
+                            >
+                              <Edit className="mr-1 h-4 w-4" /> Edit
                             </Button>
                             {item.status !== 'PUBLISHED' ? (
-                              <Button size="sm" onClick={() => publish(item.id)}>
-                                <UploadCloud className="w-4 h-4 mr-1" /> Publish
+                              <Button
+                                size="sm"
+                                onClick={() => publish(item.id)}
+                              >
+                                <UploadCloud className="mr-1 h-4 w-4" /> Publish
                               </Button>
                             ) : (
-                              <Button variant="secondary" size="sm" onClick={() => unpublish(item.id)}>
-                                <RefreshCw className="w-4 h-4 mr-1" /> Unpublish
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => unpublish(item.id)}
+                              >
+                                <RefreshCw className="mr-1 h-4 w-4" /> Unpublish
                               </Button>
                             )}
-                            <Button variant="destructive" size="sm" onClick={() => remove(item.id)}>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => remove(item.id)}
+                            >
                               Delete
                             </Button>
                           </>
@@ -352,8 +433,6 @@ export default function TemplateManagement() {
         onClose={() => setIsCreateOpen(false)}
         onTemplateCreated={handleTemplateCreated}
       />
-
-
     </div>
   )
 }

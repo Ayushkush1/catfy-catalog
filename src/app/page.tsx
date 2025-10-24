@@ -1,6 +1,13 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, Zap, Palette, Download, Users, Check } from 'lucide-react'
 import { SubscriptionPlan } from '@prisma/client'
@@ -10,22 +17,26 @@ const features = [
   {
     icon: Zap,
     title: 'AI-Powered',
-    description: 'Generate stunning catalogues with AI assistance and smart recommendations.',
+    description:
+      'Generate stunning catalogues with AI assistance and smart recommendations.',
   },
   {
     icon: Palette,
     title: 'Beautiful Themes',
-    description: 'Choose from professionally designed themes or customize your own.',
+    description:
+      'Choose from professionally designed themes or customize your own.',
   },
   {
     icon: Download,
     title: 'Export Ready',
-    description: 'Export to PDF, share online, or integrate with your existing systems.',
+    description:
+      'Export to PDF, share online, or integrate with your existing systems.',
   },
   {
     icon: Users,
     title: 'Team Collaboration',
-    description: 'Work together with your team to create the perfect catalogue.',
+    description:
+      'Work together with your team to create the perfect catalogue.',
   },
 ]
 
@@ -34,13 +45,15 @@ const testimonials = [
     name: 'Sarah Johnson',
     role: 'Marketing Director',
     company: 'TechCorp',
-    content: 'CATFY transformed how we present our products. The AI suggestions are spot-on!',
+    content:
+      'CATFY transformed how we present our products. The AI suggestions are spot-on!',
   },
   {
     name: 'Mike Chen',
     role: 'E-commerce Manager',
     company: 'StyleHub',
-    content: 'Creating professional catalogues has never been this easy. Highly recommended!',
+    content:
+      'Creating professional catalogues has never been this easy. Highly recommended!',
   },
   {
     name: 'Emily Davis',
@@ -55,20 +68,20 @@ const plans = [
     plan: SubscriptionPlan.FREE,
     popular: false,
     buttonText: 'Get Started',
-    buttonVariant: 'outline' as const
+    buttonVariant: 'outline' as const,
   },
   {
     plan: SubscriptionPlan.STANDARD,
     popular: true,
     buttonText: 'Start Free Trial',
-    buttonVariant: 'default' as const
+    buttonVariant: 'default' as const,
   },
   {
     plan: SubscriptionPlan.PROFESSIONAL,
     popular: false,
     buttonText: 'Start Free Trial',
-    buttonVariant: 'outline' as const
-  }
+    buttonVariant: 'outline' as const,
+  },
 ]
 
 export default function HomePage() {
@@ -120,8 +133,8 @@ export default function HomePage() {
           <span className="text-primary">AI-Driven Catalogues</span>
         </h1>
         <p className="max-w-[700px] text-lg text-muted-foreground sm:text-xl">
-          Transform your products into beautiful, dynamic catalogues with AI assistance.
-          Perfect for businesses of all sizes.
+          Transform your products into beautiful, dynamic catalogues with AI
+          assistance. Perfect for businesses of all sizes.
         </p>
         <div className="flex flex-col gap-4 pt-4 sm:flex-row">
           <Button size="lg" asChild>
@@ -142,7 +155,8 @@ export default function HomePage() {
             Everything you need
           </h2>
           <p className="mx-auto mt-4 max-w-[700px] text-muted-foreground md:text-xl">
-            Powerful features to help you create professional catalogues in minutes.
+            Powerful features to help you create professional catalogues in
+            minutes.
           </p>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
@@ -180,7 +194,9 @@ export default function HomePage() {
             {testimonials.map((testimonial, index) => (
               <Card key={index}>
                 <CardContent className="pt-6">
-                  <p className="text-muted-foreground">"{testimonial.content}"</p>
+                  <p className="text-muted-foreground">
+                    &quot;{testimonial.content}&quot;
+                  </p>
                   <div className="mt-4">
                     <p className="font-semibold">{testimonial.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -201,7 +217,8 @@ export default function HomePage() {
             Choose Your Plan
           </h2>
           <p className="mx-auto mt-4 max-w-[700px] text-muted-foreground md:text-xl">
-            Start free and scale as you grow. All plans include our core features.
+            Start free and scale as you grow. All plans include our core
+            features.
           </p>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
@@ -210,25 +227,28 @@ export default function HomePage() {
             const displayPrice = features.monthlyPrice
 
             return (
-              <Card key={plan} className={`relative ${popular ? 'ring-2 ring-primary scale-105' : ''}`}>
+              <Card
+                key={plan}
+                className={`relative ${popular ? 'scale-105 ring-2 ring-primary' : ''}`}
+              >
                 {popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 transform bg-primary">
                     Most Popular
                   </Badge>
                 )}
-                
+
                 <CardHeader className="text-center">
-                  <CardTitle className="text-xl font-bold">{features.name}</CardTitle>
+                  <CardTitle className="text-xl font-bold">
+                    {features.name}
+                  </CardTitle>
                   <CardDescription>{features.description}</CardDescription>
-                  
+
                   <div className="mt-4">
                     <div className="flex items-baseline justify-center">
                       <span className="text-4xl font-bold">
                         {formatPrice(displayPrice)}
                       </span>
-                      <span className="text-muted-foreground ml-1">
-                        /month
-                      </span>
+                      <span className="ml-1 text-muted-foreground">/month</span>
                     </div>
                   </div>
                 </CardHeader>
@@ -239,19 +259,25 @@ export default function HomePage() {
                     <div className="flex justify-between text-sm">
                       <span>Catalogues</span>
                       <span className="font-medium">
-                        {(features.maxCatalogues as number) === -1 ? 'Unlimited' : features.maxCatalogues}
+                        {(features.maxCatalogues as number) === -1
+                          ? 'Unlimited'
+                          : features.maxCatalogues}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Products per catalogue</span>
                       <span className="font-medium">
-                        {features.maxProductsPerCatalogue === -1 ? 'Unlimited' : features.maxProductsPerCatalogue}
+                        {features.maxProductsPerCatalogue === -1
+                          ? 'Unlimited'
+                          : features.maxProductsPerCatalogue}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Monthly exports</span>
                       <span className="font-medium">
-                        {(features.maxExportsPerMonth as number) === -1 ? 'Unlimited' : features.maxExportsPerMonth}
+                        {(features.maxExportsPerMonth as number) === -1
+                          ? 'Unlimited'
+                          : features.maxExportsPerMonth}
                       </span>
                     </div>
                   </div>
@@ -263,7 +289,7 @@ export default function HomePage() {
                     <ul className="space-y-1">
                       {features.included.slice(0, 4).map((feature, index) => (
                         <li key={index} className="flex items-center text-sm">
-                          <Check className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-600" />
                           {feature}
                         </li>
                       ))}
@@ -272,13 +298,19 @@ export default function HomePage() {
                 </CardContent>
 
                 <CardFooter>
-                  <Button 
-                    variant={buttonVariant} 
+                  <Button
+                    variant={buttonVariant}
                     className="w-full"
                     size="lg"
                     asChild
                   >
-                    <Link href={plan === SubscriptionPlan.FREE ? '/auth?mode=signup' : '/pricing'}>
+                    <Link
+                      href={
+                        plan === SubscriptionPlan.FREE
+                          ? '/auth?mode=signup'
+                          : '/pricing'
+                      }
+                    >
                       {buttonText}
                     </Link>
                   </Button>
@@ -287,10 +319,11 @@ export default function HomePage() {
             )
           })}
         </div>
-        <div className="text-center mt-8">
+        <div className="mt-8 text-center">
           <Button variant="ghost" asChild>
             <Link href="/pricing">
-              View all plans and features <ArrowRight className="ml-2 h-4 w-4" />
+              View all plans and features{' '}
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -320,33 +353,57 @@ export default function HomePage() {
             <div>
               <h3 className="font-semibold">Product</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/features">Features</Link></li>
-                <li><Link href="/pricing">Pricing</Link></li>
-                <li><Link href="/demo">Demo</Link></li>
+                <li>
+                  <Link href="/features">Features</Link>
+                </li>
+                <li>
+                  <Link href="/pricing">Pricing</Link>
+                </li>
+                <li>
+                  <Link href="/demo">Demo</Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold">Company</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/about">About</Link></li>
-                <li><Link href="/blog">Blog</Link></li>
-                <li><Link href="/careers">Careers</Link></li>
+                <li>
+                  <Link href="/about">About</Link>
+                </li>
+                <li>
+                  <Link href="/blog">Blog</Link>
+                </li>
+                <li>
+                  <Link href="/careers">Careers</Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold">Support</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/help">Help Center</Link></li>
-                <li><Link href="/contact">Contact</Link></li>
-                <li><Link href="/status">Status</Link></li>
+                <li>
+                  <Link href="/help">Help Center</Link>
+                </li>
+                <li>
+                  <Link href="/contact">Contact</Link>
+                </li>
+                <li>
+                  <Link href="/status">Status</Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold">Legal</h3>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/privacy">Privacy</Link></li>
-                <li><Link href="/terms">Terms</Link></li>
-                <li><Link href="/security">Security</Link></li>
+                <li>
+                  <Link href="/privacy">Privacy</Link>
+                </li>
+                <li>
+                  <Link href="/terms">Terms</Link>
+                </li>
+                <li>
+                  <Link href="/security">Security</Link>
+                </li>
               </ul>
             </div>
           </div>

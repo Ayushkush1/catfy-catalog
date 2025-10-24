@@ -1,11 +1,14 @@
-import { TemplateConfig, getTemplateById as getRegistryTemplateById } from '@/templates'
+import {
+  TemplateConfig,
+  getTemplateById as getRegistryTemplateById,
+} from '@/templates'
 
 /**
  * Get template configuration by ID
  */
 export function getTemplateById(templateId: string): TemplateConfig | null {
-  const template = getRegistryTemplateById(templateId);
-  return template || null;
+  const template = getRegistryTemplateById(templateId)
+  return template || null
 }
 
 /**
@@ -18,7 +21,7 @@ export function isFieldSupported(
 ): boolean {
   const template = getTemplateById(templateId)
   if (!template) return true // Default to allowing all fields if template not found
-  
+
   return template.supportedFields[fieldType].includes(fieldName)
 }
 
@@ -31,7 +34,7 @@ export function getSupportedFields(
 ): string[] {
   const template = getTemplateById(templateId)
   if (!template) return [] // Return empty array if template not found
-  
+
   return template.supportedFields[fieldType]
 }
 
@@ -47,20 +50,22 @@ export function validateFormData(
   if (!template) {
     return { isValid: true, errors: [] } // Allow all if template not found
   }
-  
+
   const supportedFields = template.supportedFields[fieldType]
   const errors: string[] = []
-  
+
   // Check if any unsupported fields are being used
   Object.keys(data).forEach(fieldName => {
     if (!supportedFields.includes(fieldName)) {
-      errors.push(`Field '${fieldName}' is not supported by template '${template.name}'`)
+      errors.push(
+        `Field '${fieldName}' is not supported by template '${template.name}'`
+      )
     }
   })
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   }
 }
 
@@ -74,16 +79,16 @@ export function filterSupportedFields(
 ): any {
   const template = getTemplateById(templateId)
   if (!template) return data // Return all data if template not found
-  
+
   const supportedFields = template.supportedFields[fieldType]
   const filteredData: any = {}
-  
+
   supportedFields.forEach(fieldName => {
     if (data.hasOwnProperty(fieldName)) {
       filteredData[fieldName] = data[fieldName]
     }
   })
-  
+
   return filteredData
 }
 
@@ -96,9 +101,9 @@ export function getTemplateFormSchema(
 ): { fieldName: string; isRequired: boolean; type: string }[] {
   const template = getTemplateById(templateId)
   if (!template) return []
-  
+
   const supportedFields = template.supportedFields[fieldType]
-  
+
   // Define field configurations (this could be extended or moved to template config)
   const fieldConfigs: Record<string, { isRequired: boolean; type: string }> = {
     // Product fields
@@ -110,10 +115,10 @@ export function getTemplateFormSchema(
     tags: { isRequired: false, type: 'array' },
     currency: { isRequired: false, type: 'select' },
     priceDisplay: { isRequired: false, type: 'select' },
-    
+
     // Category fields
     color: { isRequired: false, type: 'color' },
-    
+
     // Profile fields
     companyName: { isRequired: true, type: 'text' },
     logo: { isRequired: false, type: 'file' },
@@ -122,12 +127,12 @@ export function getTemplateFormSchema(
     website: { isRequired: false, type: 'url' },
     address: { isRequired: false, type: 'textarea' },
     tagline: { isRequired: false, type: 'text' },
-    socialLinks: { isRequired: false, type: 'object' }
+    socialLinks: { isRequired: false, type: 'object' },
   }
-  
+
   return supportedFields.map(fieldName => ({
     fieldName,
     isRequired: fieldConfigs[fieldName]?.isRequired || false,
-    type: fieldConfigs[fieldName]?.type || 'text'
+    type: fieldConfigs[fieldName]?.type || 'text',
   }))
 }

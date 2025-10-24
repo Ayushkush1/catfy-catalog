@@ -11,15 +11,21 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user via Supabase
     const supabase = createRouteHandlerClient({ cookies })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user is admin - only admin@catfy.com is allowed
     if (user.email !== 'admin@catfy.com') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
     }
 
     // Fetch all users with their profiles and subscription data
@@ -42,26 +48,26 @@ export async function GET(request: NextRequest) {
             billingCycle: true,
             amount: true,
             createdAt: true,
-            currentPeriodEnd: true
-          }
+            currentPeriodEnd: true,
+          },
         },
         catalogues: {
           select: {
             id: true,
             name: true,
             isPublic: true,
-            createdAt: true
-          }
+            createdAt: true,
+          },
         },
         _count: {
           select: {
-            catalogues: true
-          }
-        }
+            catalogues: true,
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     })
 
     // Transform the data for admin dashboard
@@ -70,24 +76,30 @@ export async function GET(request: NextRequest) {
       return {
         id: user.id,
         email: user.email,
-        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A',
+        fullName:
+          `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A',
         companyName: null, // Not available in current schema
-        subscriptionPlan: subscription ? 
-          (subscription.billingCycle === 'MONTHLY' ? 'monthly' : 'yearly') : 'free',
-        subscriptionStatus: subscription ? 
-          (subscription.status === 'ACTIVE' ? 'active' : 'inactive') : 'inactive',
+        subscriptionPlan: subscription
+          ? subscription.billingCycle === 'MONTHLY'
+            ? 'monthly'
+            : 'yearly'
+          : 'free',
+        subscriptionStatus: subscription
+          ? subscription.status === 'ACTIVE'
+            ? 'active'
+            : 'inactive'
+          : 'inactive',
         createdAt: user.createdAt.toISOString(),
         lastLoginAt: null, // Not tracked in current schema
         catalogueCount: user._count.catalogues,
-        isActive: true // Assuming all users are active by default
+        isActive: true, // Assuming all users are active by default
       }
     })
 
     return NextResponse.json({
       users: transformedUsers,
-      total: transformedUsers.length
+      total: transformedUsers.length,
     })
-
   } catch (error) {
     console.error('Admin users fetch error:', error)
     return NextResponse.json(

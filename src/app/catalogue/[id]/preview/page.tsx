@@ -1,16 +1,46 @@
 'use client'
 
 import IframeEditor from '@/components/editor/IframeEditor'
-import { HtmlTemplates, getTemplateById as getHtmlTemplateById, PrebuiltTemplate } from '@/components/editor/iframe-templates'
+import {
+  HtmlTemplates,
+  getTemplateById as getHtmlTemplateById,
+  PrebuiltTemplate,
+} from '@/components/editor/iframe-templates'
 import { getTemplateById as getRegistryTemplateById } from '@/templates'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, EyeOff, Eye, Edit3, ZoomIn, ZoomOut, Grid3X3, Undo, Redo, Save, Share, Share2, Link as LinkIcon, FileJson, FileType, Printer } from 'lucide-react'
+import {
+  ArrowLeft,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  EyeOff,
+  Eye,
+  Edit3,
+  ZoomIn,
+  ZoomOut,
+  Grid3X3,
+  Undo,
+  Redo,
+  Save,
+  Share,
+  Share2,
+  Link as LinkIcon,
+  FileJson,
+  FileType,
+  Printer,
+} from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 
 // Helper function to get HTML template from registry or direct lookup
@@ -23,7 +53,7 @@ function getTemplate(templateId: string): PrebuiltTemplate | null {
     templateId,
     found: !!directTemplate,
     templateName: directTemplate?.name,
-    availableTemplates: HtmlTemplates.map(t => ({ id: t.id, name: t.name }))
+    availableTemplates: HtmlTemplates.map(t => ({ id: t.id, name: t.name })),
   })
 
   if (directTemplate) {
@@ -36,12 +66,13 @@ function getTemplate(templateId: string): PrebuiltTemplate | null {
     templateId,
     found: !!registryTemplate,
     isHtmlTemplate: !!registryTemplate?.customProperties?.isHtmlTemplate,
-    hasHtmlTemplateData: !!registryTemplate?.customProperties?.htmlTemplateData
+    hasHtmlTemplateData: !!registryTemplate?.customProperties?.htmlTemplateData,
   })
 
   if (registryTemplate?.customProperties?.isHtmlTemplate) {
     // Extract the HTML template data from the registry template
-    return registryTemplate.customProperties.htmlTemplateData as PrebuiltTemplate
+    return registryTemplate.customProperties
+      .htmlTemplateData as PrebuiltTemplate
   }
 
   console.warn('❌ Template not found:', templateId)
@@ -51,41 +82,45 @@ function getTemplate(templateId: string): PrebuiltTemplate | null {
 export default function CataloguePreviewPage() {
   const [catalogue, setCatalogue] = useState<any | null>(null)
   const [liveData, setLiveData] = useState<Record<string, any> | null>(null)
-  const [styleMutations, setStyleMutations] = useState<Record<string, Partial<CSSStyleDeclaration>>>({})
+  const [styleMutations, setStyleMutations] = useState<
+    Record<string, Partial<CSSStyleDeclaration>>
+  >({})
   const [templateId, setTemplateId] = useState<string>('default-html')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved')
+  const [saveStatus, setSaveStatus] = useState<
+    'saved' | 'saving' | 'unsaved' | 'error'
+  >('saved')
   const [isEditorReady, setIsEditorReady] = useState(false) // NEW: Prevent flash on initial load
   const [isExportingPDF, setIsExportingPDF] = useState(false) // Loading state for PDF export
   const iframeGetterRef = useRef<() => HTMLIFrameElement | null>(() => null)
   const editorControlsRef = useRef<{
-    undo: () => void,
-    redo: () => void,
-    setZoom: (z: number) => void,
-    getZoom: () => number,
-    zoomIn?: () => void,
-    zoomOut?: () => void,
-    toggleGrid?: () => void,
-    setGrid?: (v: boolean) => void,
-    getGrid?: () => boolean,
-    hasUndo?: () => boolean,
-    hasRedo?: () => boolean,
-    print?: () => void,
-    exportHTML?: () => void,
-    exportJSON?: () => void,
-    exportPDF?: () => Promise<void>,
-    exportPNG?: () => Promise<void>,
-    saveToDatabase?: () => Promise<void>,
-    getSaveStatus?: () => 'saved' | 'saving' | 'unsaved' | 'error',
-    getLastSaved?: () => Date | null,
-    isDirty?: () => boolean,
+    undo: () => void
+    redo: () => void
+    setZoom: (z: number) => void
+    getZoom: () => number
+    zoomIn?: () => void
+    zoomOut?: () => void
+    toggleGrid?: () => void
+    setGrid?: (v: boolean) => void
+    getGrid?: () => boolean
+    hasUndo?: () => boolean
+    hasRedo?: () => boolean
+    print?: () => void
+    exportHTML?: () => void
+    exportJSON?: () => void
+    exportPDF?: () => Promise<void>
+    exportPNG?: () => Promise<void>
+    saveToDatabase?: () => Promise<void>
+    getSaveStatus?: () => 'saved' | 'saving' | 'unsaved' | 'error'
+    getLastSaved?: () => Date | null
+    isDirty?: () => boolean
     // Pages
-    getPages?: () => any[],
-    getCurrentPageIndex?: () => number,
-    setCurrentPageIndex?: (i: number) => void,
-    goPrev?: () => void,
-    goNext?: () => void,
+    getPages?: () => any[]
+    getCurrentPageIndex?: () => number
+    setCurrentPageIndex?: (i: number) => void
+    goPrev?: () => void
+    goNext?: () => void
   } | null>(null)
   const [toolbarZoom, setToolbarZoom] = useState<number>(100)
   const [showResizeMenu, setShowResizeMenu] = useState(false)
@@ -128,10 +163,14 @@ export default function CataloguePreviewPage() {
 
   // Timeout fallback: if iframe doesn't load in 10 seconds, show it anyway
   useEffect(() => {
-    console.log('⏰ Preview: Starting 10-second timeout for editor ready fallback')
+    console.log(
+      '⏰ Preview: Starting 10-second timeout for editor ready fallback'
+    )
     const timeout = setTimeout(() => {
       if (!isEditorReady) {
-        console.warn('⚠️ IframeEditor took too long to load (10s timeout), showing it anyway')
+        console.warn(
+          '⚠️ IframeEditor took too long to load (10s timeout), showing it anyway'
+        )
         setIsEditorReady(true)
       } else {
         console.log('✅ Preview: Editor already ready before timeout')
@@ -156,8 +195,15 @@ export default function CataloguePreviewPage() {
           catalogue: {
             id: data.catalogue.id,
             name: data.catalogue.name,
-            year: data.catalogue.year || ((data.catalogue.settings && data.catalogue.settings.displaySettings && data.catalogue.settings.displaySettings.defaultYear) || undefined),
-            nameUpper: data.catalogue.name ? String(data.catalogue.name).toUpperCase() : undefined,
+            year:
+              data.catalogue.year ||
+              (data.catalogue.settings &&
+                data.catalogue.settings.displaySettings &&
+                data.catalogue.settings.displaySettings.defaultYear) ||
+              undefined,
+            nameUpper: data.catalogue.name
+              ? String(data.catalogue.name).toUpperCase()
+              : undefined,
             // Tagline (template-level) — prefer catalogue.tagline if provided
             tagline: data.catalogue.tagline || undefined,
             // Split catalogue name into two parts for top/bottom title lines
@@ -174,57 +220,89 @@ export default function CataloguePreviewPage() {
             // Expose selected media assets to templates (cover image)
             settings: {
               mediaAssets: {
-                coverImageUrl: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.coverImageUrl) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.coverImageUrl) || undefined,
-                introImage: (data.catalogue.settings && data.catalogue.settings.mediaAssets && data.catalogue.settings.mediaAssets.introImage) || (data.catalogue.mediaAssets && data.catalogue.mediaAssets.introImage) || undefined
-              }
-            }
+                coverImageUrl:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.mediaAssets &&
+                    data.catalogue.settings.mediaAssets.coverImageUrl) ||
+                  (data.catalogue.mediaAssets &&
+                    data.catalogue.mediaAssets.coverImageUrl) ||
+                  undefined,
+                introImage:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.mediaAssets &&
+                    data.catalogue.settings.mediaAssets.introImage) ||
+                  (data.catalogue.mediaAssets &&
+                    data.catalogue.mediaAssets.introImage) ||
+                  undefined,
+              },
+            },
           },
           profile: {
             ...(data.catalogue.profile || {}),
-            companyName: (data.catalogue.settings && data.catalogue.settings.companyInfo && data.catalogue.settings.companyInfo.companyName) || (data.catalogue.profile && data.catalogue.profile.companyName) || ''
+            companyName:
+              (data.catalogue.settings &&
+                data.catalogue.settings.companyInfo &&
+                data.catalogue.settings.companyInfo.companyName) ||
+              (data.catalogue.profile && data.catalogue.profile.companyName) ||
+              '',
           },
           // Use first active product as default context
           product: (() => {
             const products = data.catalogue.products || []
-            const active = products.find((p: any) => p.isActive) || products[0] || {}
+            const active =
+              products.find((p: any) => p.isActive) || products[0] || {}
             return {
               title: active.name || '',
-              price: active.priceDisplay || (typeof active.price === 'number' ? `₹${active.price}` : ''),
-              image: active.imageUrl || (Array.isArray(active.images) && active.images[0]) || '',
-              description: active.description || ''
+              price:
+                active.priceDisplay ||
+                (typeof active.price === 'number' ? `₹${active.price}` : ''),
+              image:
+                active.imageUrl ||
+                (Array.isArray(active.images) && active.images[0]) ||
+                '',
+              description: active.description || '',
             }
           })(),
           products: data.catalogue.products || [],
           // Provide a small preview array limited to 3 items for templates that display a short selection
-          productsPreview: (data.catalogue.products || []).slice(0, 3).map((p: any) => ({
-            title: p.name || '',
-            price: p.priceDisplay || (typeof p.price === 'number' ? `₹${p.price}` : ''),
-            image: p.imageUrl || (Array.isArray(p.images) && p.images[0]) || '',
-            description: p.description || ''
-          })),
+          productsPreview: (data.catalogue.products || [])
+            .slice(0, 3)
+            .map((p: any) => ({
+              title: p.name || '',
+              price:
+                p.priceDisplay ||
+                (typeof p.price === 'number' ? `₹${p.price}` : ''),
+              image:
+                p.imageUrl || (Array.isArray(p.images) && p.images[0]) || '',
+              description: p.description || '',
+            })),
           categories: data.catalogue.categories || [],
           // Page info usable by templates
           page: {
             number: 1,
-            total: 1
-          }
+            total: 1,
+          },
         }
         setLiveData(initial)
         // Load previous iframe editor state if present
-        const iframeEditorSettings = (data.catalogue.settings as any)?.iframeEditor
+        const iframeEditorSettings = (data.catalogue.settings as any)
+          ?.iframeEditor
 
         // Load template ID from either settings.iframeEditor.templateId or catalogue.template
-        const savedTemplateId = iframeEditorSettings?.templateId || data.catalogue.template
+        const savedTemplateId =
+          iframeEditorSettings?.templateId || data.catalogue.template
 
         console.log('📋 Loading template from catalogue:', {
           templateId: savedTemplateId,
-          source: iframeEditorSettings?.templateId ? 'settings.iframeEditor.templateId' : 'catalogue.template',
+          source: iframeEditorSettings?.templateId
+            ? 'settings.iframeEditor.templateId'
+            : 'catalogue.template',
           catalogueName: data.catalogue.name,
           catalogueTemplate: data.catalogue.template,
           iframeEditorTemplateId: iframeEditorSettings?.templateId,
           hasSavedPages: !!iframeEditorSettings?.pages,
           savedPageCount: iframeEditorSettings?.pages?.length || 0,
-          fullIframeEditorSettings: iframeEditorSettings
+          fullIframeEditorSettings: iframeEditorSettings,
         })
 
         if (savedTemplateId) {
@@ -233,17 +311,22 @@ export default function CataloguePreviewPage() {
         } else {
           console.log('⚠️ No template ID found, using default:', {
             defaultTemplateId: templateId,
-            catalogueName: data.catalogue.name
+            catalogueName: data.catalogue.name,
           })
-        } if (iframeEditorSettings) {
-          if (iframeEditorSettings.liveData) setLiveData(iframeEditorSettings.liveData)
-          if (iframeEditorSettings.styleMutations) setStyleMutations(iframeEditorSettings.styleMutations)
+        }
+        if (iframeEditorSettings) {
+          if (iframeEditorSettings.liveData)
+            setLiveData(iframeEditorSettings.liveData)
+          if (iframeEditorSettings.styleMutations)
+            setStyleMutations(iframeEditorSettings.styleMutations)
           // Load additional editor state
-          if (typeof iframeEditorSettings.currentPageIndex === 'number') setPageIndex(iframeEditorSettings.currentPageIndex)
+          if (typeof iframeEditorSettings.currentPageIndex === 'number')
+            setPageIndex(iframeEditorSettings.currentPageIndex)
           if (typeof iframeEditorSettings.userZoom === 'number') {
             setToolbarZoom(Math.round(iframeEditorSettings.userZoom * 100))
           }
-          if (typeof iframeEditorSettings.showGrid === 'boolean') setGridOn(iframeEditorSettings.showGrid)
+          if (typeof iframeEditorSettings.showGrid === 'boolean')
+            setGridOn(iframeEditorSettings.showGrid)
         }
       } else if (response.status === 404) {
         setError('Catalogue not found')
@@ -281,9 +364,9 @@ export default function CataloguePreviewPage() {
           ...prev,
           ...updatedCatalogue,
           settings: {
-            ...(prev.settings as object || {}),
-            ...(updatedCatalogue.settings as object || {})
-          }
+            ...((prev.settings as object) || {}),
+            ...((updatedCatalogue.settings as object) || {}),
+          },
         }
       })
     } catch (error) {
@@ -325,8 +408,8 @@ export default function CataloguePreviewPage() {
         ...prev,
         page: {
           number: Math.min(pageIndex + 1, pageCount || 1),
-          total: pageCount || 1
-        }
+          total: pageCount || 1,
+        },
       }
     })
   }, [pageIndex, pageCount])
@@ -335,7 +418,7 @@ export default function CataloguePreviewPage() {
     return (
       <div className="h-screen overflow-hidden bg-gray-50">
         {/* Skeleton Toolbar */}
-        <div className="h-16 border-b bg-white flex items-center justify-between px-4">
+        <div className="flex h-16 items-center justify-between border-b bg-white px-4">
           <div className="flex items-center gap-10">
             <Skeleton className="h-9 w-24" />
             <Skeleton className="h-8 w-48" />
@@ -349,7 +432,7 @@ export default function CataloguePreviewPage() {
         </div>
 
         {/* Skeleton Canvas Area */}
-        <div className="h-[calc(100vh-64px)] bg-gray-50 flex items-center justify-center">
+        <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-gray-50">
           <Skeleton className="h-[90%] w-[80%] max-w-4xl" />
         </div>
       </div>
@@ -358,13 +441,13 @@ export default function CataloguePreviewPage() {
 
   if (error || !catalogue) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-600 mb-4">{error || 'Catalogue not found'}</p>
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">Error</h2>
+          <p className="mb-4 text-gray-600">{error || 'Catalogue not found'}</p>
           <Button asChild>
             <Link href="/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Link>
           </Button>
@@ -376,117 +459,146 @@ export default function CataloguePreviewPage() {
   return (
     <div className="h-screen overflow-hidden bg-gray-50">
       {/* Top Toolbar with center Zoom/Grid and right actions */}
-      <div className="h-16 border-b bg-white flex items-center justify-between px-4 relative">
+      <div className="relative flex h-16 items-center justify-between border-b bg-white px-4">
         <div className="flex items-center gap-10">
-          <Button asChild variant="ghost" className="px-3 py-2 text-gray-700 hover:text-gray-900 rounded-md transition-colors text-sm hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10">
+          <Button
+            asChild
+            variant="ghost"
+            className="rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10 hover:text-gray-900"
+          >
             <Link href={`/catalogue/${catalogueId}/edit`}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Link>
           </Button>
 
           {/* Mode Toggle - Segmented Control */}
           <div className="flex items-center gap-3">
-            <div className="inline-flex items-center bg-gray-100 rounded-xl p-1 ">
+            <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
               <button
-                className={`relative px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-2 ${!isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
+                  !isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
                 onClick={() => setIsPreviewMode(false)}
                 aria-label="Switch to edit mode"
               >
-                <Edit3 className="w-3.5 h-3.5" />
+                <Edit3 className="h-3.5 w-3.5" />
                 <span className="leading-none">Edit</span>
               </button>
               <button
-                className={`relative px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150 flex items-center gap-2 ${isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
+                  isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
                 onClick={() => setIsPreviewMode(true)}
                 aria-label="Switch to preview mode"
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="h-4 w-4" />
                 <span className="leading-none">Preview</span>
               </button>
             </div>
-
-
           </div>
         </div>
 
         {/* Center Zoom/Grid controls */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
           {/* Undo/Redo icons */}
-          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasUndo?.()} onClick={() => editorControlsRef.current?.undo?.()} aria-label="Undo">
-            <Undo className="w-4 h-4" />
+          <button
+            className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            disabled={!editorControlsRef.current?.hasUndo?.()}
+            onClick={() => editorControlsRef.current?.undo?.()}
+            aria-label="Undo"
+          >
+            <Undo className="h-4 w-4" />
           </button>
-          <button className="p-2 rounded-md hover:bg-gray-100 text-gray-700 disabled:opacity-50" disabled={!editorControlsRef.current?.hasRedo?.()} onClick={() => editorControlsRef.current?.redo?.()} aria-label="Redo">
-            <Redo className="w-4 h-4" />
+          <button
+            className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+            disabled={!editorControlsRef.current?.hasRedo?.()}
+            onClick={() => editorControlsRef.current?.redo?.()}
+            aria-label="Redo"
+          >
+            <Redo className="h-4 w-4" />
           </button>
 
-          <hr className="w-[1px] h-6 bg-gray-300"></hr>
+          <hr className="h-6 w-[1px] bg-gray-300"></hr>
           <button
             className="pl-2 text-gray-700"
             onClick={() => {
               editorControlsRef.current?.zoomOut?.()
               setTimeout(() => {
-                const pct = Math.round((editorControlsRef.current?.getZoom?.() || 1) * 100)
+                const pct = Math.round(
+                  (editorControlsRef.current?.getZoom?.() || 1) * 100
+                )
                 setToolbarZoom(pct)
               }, 0)
             }}
             aria-label="Zoom out"
           >
-            <ZoomOut className="w-4 h-4" />
+            <ZoomOut className="h-4 w-4" />
           </button>
-          <div className="px-3 py-1 rounded-xl bg-gray-100 text-gray-700 text-xs font-medium">{toolbarZoom}%</div>
+          <div className="rounded-xl bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+            {toolbarZoom}%
+          </div>
           <button
             className="pr-2  text-gray-700"
             onClick={() => {
               editorControlsRef.current?.zoomIn?.()
               setTimeout(() => {
-                const pct = Math.round((editorControlsRef.current?.getZoom?.() || 1) * 100)
+                const pct = Math.round(
+                  (editorControlsRef.current?.getZoom?.() || 1) * 100
+                )
                 setToolbarZoom(pct)
               }, 0)
             }}
             aria-label="Zoom in"
           >
-            <ZoomIn className="w-4 h-4" />
+            <ZoomIn className="h-4 w-4" />
           </button>
           {/* Page navigator: Page X of Y with prev/next chevrons */}
-          <div className="ml-3 flex items-center gap-2 px-3 py-1 rounded-2xl bg-white border">
-            <span className="text-xs text-gray-700">Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}</span>
+          <div className="ml-3 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1">
+            <span className="text-xs text-gray-700">
+              Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}
+            </span>
             <button
-              className="p-1 rounded-md hover:bg-gray-100 text-gray-600 disabled:opacity-40"
+              className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
               onClick={() => {
                 editorControlsRef.current?.goPrev?.()
                 setTimeout(() => {
-                  setPageIndex(editorControlsRef.current?.getCurrentPageIndex?.() || 0)
-                  setPageCount(editorControlsRef.current?.getPages?.()?.length || pageCount)
+                  setPageIndex(
+                    editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                  )
+                  setPageCount(
+                    editorControlsRef.current?.getPages?.()?.length || pageCount
+                  )
                 }, 0)
               }}
               disabled={pageIndex <= 0}
               aria-label="Previous page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
-              className="p-1 rounded-md hover:bg-gray-100 text-gray-600 disabled:opacity-40"
+              className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
               onClick={() => {
                 editorControlsRef.current?.goNext?.()
                 setTimeout(() => {
-                  setPageIndex(editorControlsRef.current?.getCurrentPageIndex?.() || 0)
-                  setPageCount(editorControlsRef.current?.getPages?.()?.length || pageCount)
+                  setPageIndex(
+                    editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                  )
+                  setPageCount(
+                    editorControlsRef.current?.getPages?.()?.length || pageCount
+                  )
                 }, 0)
               }}
               disabled={pageIndex >= pageCount - 1}
               aria-label="Next page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-
         </div>
 
         <div className="flex items-center gap-4">
@@ -495,31 +607,31 @@ export default function CataloguePreviewPage() {
             <>
               {saveStatus === 'saving' && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
                   Saving...
                 </div>
               )}
               {saveStatus === 'saved' && (
                 <div className="flex items-center gap-2 text-xs text-green-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
                   All changes saved
                 </div>
               )}
               {saveStatus === 'unsaved' && (
                 <div className="flex items-center gap-2 text-xs text-orange-600">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <div className="h-2 w-2 rounded-full bg-orange-500"></div>
                   Unsaved changes
                 </div>
               )}
               {saveStatus === 'error' && (
                 <div className="flex items-center gap-2 text-xs text-red-600">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                  <div className="h-2 w-2 rounded-full bg-red-500"></div>
                   Save failed
                 </div>
               )}
 
               <Button
-                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+                className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-50"
                 onClick={async () => {
                   try {
                     await editorControlsRef.current?.saveToDatabase?.()
@@ -530,17 +642,17 @@ export default function CataloguePreviewPage() {
                 }}
                 disabled={saveStatus === 'saving'}
               >
-                <Save className="w-3 h-3 mr-1" />
+                <Save className="mr-1 h-3 w-3" />
                 {saveStatus === 'saving' ? 'Saving...' : 'Save'}
               </Button>
             </>
           )}
           {/* Share */}
           <Button
-            className="px-3 py-2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white rounded-lg hover:from-[#1E1338] hover:to-[#4F46E5] transition-colors text-sm font-medium flex items-center"
+            className="flex items-center rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-3 py-2 text-sm font-medium text-white transition-colors hover:from-[#1E1338] hover:to-[#4F46E5]"
             onClick={() => setShareOpen(true)}
           >
-            <Share2 className="w-3 h-3 mr-2" />
+            <Share2 className="mr-2 h-3 w-3" />
             Share
           </Button>
 
@@ -549,13 +661,15 @@ export default function CataloguePreviewPage() {
       </div>
 
       {/* Iframe Editor */}
-      <div className="h-[calc(100vh-64px)] overflow-hidden relative bg-gray-50">
+      <div className="relative h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
         {/* Loading overlay - shows until editor is fully ready with user's edits */}
         {!isEditorReady && (
-          <div className="absolute inset-0 bg-gray-50 flex items-center justify-center z-50">
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-50">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3"></div>
-              <p className="text-sm text-gray-600 font-medium">Loading your catalogue...</p>
+              <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
+              <p className="text-sm font-medium text-gray-600">
+                Loading your catalogue...
+              </p>
             </div>
           </div>
         )}
@@ -578,12 +692,16 @@ export default function CataloguePreviewPage() {
                   templateName: template.name,
                   templateEngine: template.engine,
                   pageCount: template.pages?.length || 0,
-                  usingFallback: !foundTemplate
+                  usingFallback: !foundTemplate,
                 })
 
                 if (!foundTemplate) {
-                  console.error(`❌ Template "${templateId}" not found, using fallback: ${HtmlTemplates[0].name}`)
-                  toast.error(`Template "${templateId}" not found, using default template`)
+                  console.error(
+                    `❌ Template "${templateId}" not found, using fallback: ${HtmlTemplates[0].name}`
+                  )
+                  toast.error(
+                    `Template "${templateId}" not found, using default template`
+                  )
                 }
 
                 return template
@@ -592,13 +710,15 @@ export default function CataloguePreviewPage() {
               onLiveDataChange={setLiveData}
               initialStyleMutations={styleMutations}
               onStyleMutationsChange={setStyleMutations}
-              registerIframeGetter={(getter) => { iframeGetterRef.current = getter }}
+              registerIframeGetter={getter => {
+                iframeGetterRef.current = getter
+              }}
               previewMode={isPreviewMode}
-              onTemplateIdChange={async (id) => {
+              onTemplateIdChange={async id => {
                 console.log('� onTemplateIdChange CALLED with id:', id)
                 console.log('�🔄 Template changed:', {
                   oldTemplateId: templateId,
-                  newTemplateId: id
+                  newTemplateId: id,
                 })
 
                 // 🔥 FIX: Immediately update templateId to trigger React re-mount via key prop
@@ -607,73 +727,99 @@ export default function CataloguePreviewPage() {
                 // 🔥 FIX: Reset ALL editor state immediately
                 setStyleMutations({})
                 setLiveData({
-                  catalogue: catalogue ? {
-                    id: catalogue.id,
-                    name: catalogue.name,
-                  } : {},
+                  catalogue: catalogue
+                    ? {
+                        id: catalogue.id,
+                        name: catalogue.name,
+                      }
+                    : {},
                   profile: catalogue?.profile || {},
-                  product: catalogue?.products?.[0] ? {
-                    title: catalogue.products[0].name || '',
-                    price: catalogue.products[0].priceDisplay || '',
-                    image: catalogue.products[0].imageUrl || '',
-                    description: catalogue.products[0].description || ''
-                  } : {},
+                  product: catalogue?.products?.[0]
+                    ? {
+                        title: catalogue.products[0].name || '',
+                        price: catalogue.products[0].priceDisplay || '',
+                        image: catalogue.products[0].imageUrl || '',
+                        description: catalogue.products[0].description || '',
+                      }
+                    : {},
                   products: catalogue?.products || [],
-                  categories: catalogue?.categories || []
+                  categories: catalogue?.categories || [],
                 })
 
                 // 🔥 FIX: Save template change to database AND clear ALL saved editor state
                 if (catalogueId) {
                   try {
                     // First, get current catalogue data
-                    const getResponse = await fetch(`/api/catalogues/${catalogueId}`)
+                    const getResponse = await fetch(
+                      `/api/catalogues/${catalogueId}`
+                    )
                     const currentData = await getResponse.json()
-                    const currentSettings = currentData.catalogue?.settings || {}
+                    const currentSettings =
+                      currentData.catalogue?.settings || {}
 
-                    console.log('📦 Current settings before template change:', currentSettings)
+                    console.log(
+                      '📦 Current settings before template change:',
+                      currentSettings
+                    )
 
                     // Remove iframeEditor from settings completely
-                    const { iframeEditor, ...restSettings } = currentSettings as any
+                    const { iframeEditor, ...restSettings } =
+                      currentSettings as any
 
                     console.log('📦 Settings after removing iframeEditor:', {
                       restSettings,
-                      removedIframeEditor: iframeEditor
+                      removedIframeEditor: iframeEditor,
                     })
 
                     const updatePayload = {
                       template: id, // Update catalogue.template field
                       settings: {
                         ...restSettings,
-                        iframeEditor: null // 🔥 CRITICAL: Explicitly set to null to remove it
-                      }
+                        iframeEditor: null, // 🔥 CRITICAL: Explicitly set to null to remove it
+                      },
                     }
 
                     console.log('📤 Sending update payload:', updatePayload)
 
-                    const response = await fetch(`/api/catalogues/${catalogueId}`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify(updatePayload)
-                    })
+                    const response = await fetch(
+                      `/api/catalogues/${catalogueId}`,
+                      {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatePayload),
+                      }
+                    )
 
                     console.log('📥 Update response status:', response.status)
 
                     if (response.ok) {
                       const responseData = await response.json()
-                      console.log('✅ Template changed and all saved editor state cleared')
+                      console.log(
+                        '✅ Template changed and all saved editor state cleared'
+                      )
                       console.log('📦 Response data:', responseData)
-                      console.log('📦 Response settings:', responseData.catalogue?.settings)
-                      console.log('📦 Response template:', responseData.catalogue?.template)
-                      toast.success('Template changed - reloading with fresh template')
+                      console.log(
+                        '📦 Response settings:',
+                        responseData.catalogue?.settings
+                      )
+                      console.log(
+                        '📦 Response template:',
+                        responseData.catalogue?.template
+                      )
+                      toast.success(
+                        'Template changed - reloading with fresh template'
+                      )
 
                       // 🔥 CRITICAL: Force a hard reload to ensure clean state
                       window.location.href = `/catalogue/${catalogueId}/preview`
                     } else {
                       const errorData = await response.json()
                       console.error('❌ Failed to update template:', errorData)
-                      toast.error(`Failed to change template: ${errorData.error || 'Unknown error'}`)
+                      toast.error(
+                        `Failed to change template: ${errorData.error || 'Unknown error'}`
+                      )
                     }
                   } catch (error) {
                     console.error('Error updating template:', error)
@@ -687,10 +833,10 @@ export default function CataloguePreviewPage() {
               onSaveSuccess={() => {
                 // Don't show toast for auto-save, status indicator is enough
               }}
-              onSaveError={(error) => {
+              onSaveError={error => {
                 toast.error(`Auto-save failed: ${error}`)
               }}
-              registerEditorControls={(controls) => {
+              registerEditorControls={controls => {
                 editorControlsRef.current = controls
                 const pct = Math.round((controls.getZoom?.() || 1) * 100)
                 setToolbarZoom(pct)
@@ -703,7 +849,9 @@ export default function CataloguePreviewPage() {
               }}
               onIframeReady={() => {
                 // Mark editor as ready once iframe is fully loaded with user's saved edits
-                console.log('✅ Preview: onIframeReady callback received, hiding loading overlay')
+                console.log(
+                  '✅ Preview: onIframeReady callback received, hiding loading overlay'
+                )
                 setIsEditorReady(true)
               }}
             />
@@ -716,15 +864,25 @@ export default function CataloguePreviewPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Share & Export</DialogTitle>
-            <DialogDescription>Select an option to share or export your catalogue.</DialogDescription>
+            <DialogDescription>
+              Select an option to share or export your catalogue.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="flex items-center gap-2" onClick={() => editorControlsRef.current?.exportHTML?.()}>
-                <FileType className="w-4 h-4" /> Export HTML
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => editorControlsRef.current?.exportHTML?.()}
+              >
+                <FileType className="h-4 w-4" /> Export HTML
               </Button>
-              <Button variant="outline" className="flex  items-center gap-2" onClick={() => editorControlsRef.current?.exportJSON?.()}>
-                <FileJson className="w-4 h-4" /> Export JSON
+              <Button
+                variant="outline"
+                className="flex  items-center gap-2"
+                onClick={() => editorControlsRef.current?.exportJSON?.()}
+              >
+                <FileJson className="h-4 w-4" /> Export JSON
               </Button>
               <Button
                 variant="outline"
@@ -733,9 +891,13 @@ export default function CataloguePreviewPage() {
                 onClick={async () => {
                   try {
                     setIsExportingPDF(true)
-                    toast.loading('Generating PDF with Playwright...', { id: 'pdf-export' })
+                    toast.loading('Generating PDF with Playwright...', {
+                      id: 'pdf-export',
+                    })
                     await editorControlsRef.current?.exportPDF?.()
-                    toast.success('PDF exported successfully', { id: 'pdf-export' })
+                    toast.success('PDF exported successfully', {
+                      id: 'pdf-export',
+                    })
                   } catch (error) {
                     toast.error('Failed to export PDF', { id: 'pdf-export' })
                   } finally {
@@ -743,7 +905,7 @@ export default function CataloguePreviewPage() {
                   }
                 }}
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="h-4 w-4" />
                 {isExportingPDF ? 'Exporting...' : 'Export PDF'}
               </Button>
               <Button
@@ -758,24 +920,66 @@ export default function CataloguePreviewPage() {
                   }
                 }}
               >
-                <Share className="w-4 h-4" /> Export PNG
+                <Share className="h-4 w-4" /> Export PNG
               </Button>
             </div>
             <div className="space-y-2">
               <div className="text-sm font-medium">Share link</div>
               <div className="flex gap-2">
-                <input className="flex-1 border rounded px-2 py-1 text-sm" value={typeof window !== 'undefined' ? window.location.href : ''} readOnly />
-                <Button onClick={() => { navigator.clipboard.writeText(window.location.href); toast.success('Link copied') }} className="flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4" /> Copy
+                <input
+                  className="flex-1 rounded border px-2 py-1 text-sm"
+                  value={
+                    typeof window !== 'undefined' ? window.location.href : ''
+                  }
+                  readOnly
+                />
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href)
+                    toast.success('Link copied')
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <LinkIcon className="h-4 w-4" /> Copy
                 </Button>
               </div>
             </div>
             <div className="space-y-2">
               <div className="text-sm font-medium">Share to</div>
               <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`, '_blank')}>Twitter</Button>
-                <Button variant="secondary" onClick={() => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`, '_blank')}>LinkedIn</Button>
-                <Button variant="secondary" onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(window.location.href)}`, '_blank')}>WhatsApp</Button>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    window.open(
+                      `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
+                      '_blank'
+                    )
+                  }
+                >
+                  Twitter
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    window.open(
+                      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`,
+                      '_blank'
+                    )
+                  }
+                >
+                  LinkedIn
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    window.open(
+                      `https://wa.me/?text=${encodeURIComponent(window.location.href)}`,
+                      '_blank'
+                    )
+                  }
+                >
+                  WhatsApp
+                </Button>
               </div>
             </div>
           </div>

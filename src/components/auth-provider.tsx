@@ -27,7 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Regular Supabase auth
     const getUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
         setUser(user)
       } catch (error) {
         console.error('Error getting user:', error)
@@ -38,14 +40,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getUser()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (isTestUser) return // Don't override test user
-        
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (isTestUser) return // Don't override test user
+
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
 
     return () => subscription.unsubscribe()
   }, [isTestUser])

@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -31,7 +37,7 @@ import {
   Layout,
   FileText,
   ShoppingBag,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -52,7 +58,7 @@ interface CatalogueData {
   templateId: string
   theme: string
   isPublic: boolean
-  
+
   // Consolidated company/profile information
   companyName: string
   companyDescription: string
@@ -64,23 +70,23 @@ interface CatalogueData {
   city: string
   state: string
   country: string
-  
+
   // Media assets
   logoUrl: string
   coverImageUrl: string
-  
+
   // Contact page specific fields
   contactImage: string
   contactQuote: string
   contactQuoteBy: string
   contactDescription: string
-  
+
   // Social media
   facebook: string
   twitter: string
   instagram: string
   linkedin: string
-  
+
   // Template settings
   showPrices: boolean
   showCategories: boolean
@@ -100,8 +106,6 @@ interface UserProfile {
   } | null
 }
 
-
-
 interface CreateCatalogWizardProps {
   onComplete?: (catalogId: string) => void
 }
@@ -120,7 +124,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
     templateId: 'modern-4page',
     theme: 'modern',
     isPublic: false,
-    
+
     // Consolidated company/profile information
     companyName: '',
     companyDescription: '',
@@ -132,23 +136,23 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
     city: '',
     state: '',
     country: '',
-    
+
     // Media assets
     logoUrl: '',
     coverImageUrl: '',
-    
+
     // Contact page specific fields
     contactImage: '',
     contactQuote: '',
     contactQuoteBy: '',
     contactDescription: '',
-    
+
     // Social media
     facebook: '',
     twitter: '',
     instagram: '',
     linkedin: '',
-    
+
     // Template settings
     showPrices: true,
     showCategories: true,
@@ -194,11 +198,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           city: profileData.profile?.city || '',
           state: profileData.profile?.state || '',
           country: profileData.profile?.country || '',
-          
+
           // Media assets
           logoUrl: profileData.profile?.logoUrl || '',
           coverImageUrl: profileData.profile?.coverImageUrl || '',
-          
+
           // Social media
           facebook: profileData.profile?.facebook || '',
           twitter: profileData.profile?.twitter || '',
@@ -282,7 +286,9 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
         throw new Error(errorData.error || 'Failed to create catalogue')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create catalogue')
+      setError(
+        err instanceof Error ? err.message : 'Failed to create catalogue'
+      )
     } finally {
       setSaving(false)
     }
@@ -290,7 +296,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
@@ -307,20 +313,25 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 <h1 className="text-xl font-semibold text-white">
                   Create New Catalogue
                 </h1>
-                <p className="text-sm text-white/80">
-                  Step {currentStep} of 4
-                </p>
+                <p className="text-sm text-white/80">Step {currentStep} of 4</p>
               </div>
             </div>
 
             {profile?.subscription && (
               <div className="flex items-center gap-3">
-                <Badge variant="secondary"
-                  className="bg-white/20 text-white border-white/30 text-xs">
+                <Badge
+                  variant="secondary"
+                  className="border-white/30 bg-white/20 text-xs text-white"
+                >
                   {profile.subscription.plan === 'FREE' ? (
-                    <><Zap className="mr-1 h-3 w-3" /> Free</>
+                    <>
+                      <Zap className="mr-1 h-3 w-3" /> Free
+                    </>
                   ) : (
-                    <><Crown className="mr-1 h-3 w-3" /> {profile.subscription.plan}</>
+                    <>
+                      <Crown className="mr-1 h-3 w-3" />{' '}
+                      {profile.subscription.plan}
+                    </>
                   )}
                 </Badge>
               </div>
@@ -328,15 +339,18 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           </div>
 
           {/* Compact Progress Bar */}
-          <div className="flex items-center justify-center mt-4 space-x-3">
-            {[1, 2, 3, 4].map((step) => (
+          <div className="mt-4 flex items-center justify-center space-x-3">
+            {[1, 2, 3, 4].map(step => (
               <div key={step} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-all duration-300 ${step < currentStep
-                  ? 'bg-white text-[#301F70] shadow-sm'
-                  : step === currentStep
-                    ? 'bg-white text-[#1A1B41] shadow-md ring-2 ring-white/30'
-                    : 'bg-white/20 text-white/60'
-                  }`}>
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-all duration-300 ${
+                    step < currentStep
+                      ? 'bg-white text-[#301F70] shadow-sm'
+                      : step === currentStep
+                        ? 'bg-white text-[#1A1B41] shadow-md ring-2 ring-white/30'
+                        : 'bg-white/20 text-white/60'
+                  }`}
+                >
                   {step < currentStep ? (
                     <CheckCircle className="h-4 w-4" />
                   ) : (
@@ -344,28 +358,32 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   )}
                 </div>
                 {step < 4 && (
-                  <div className={`w-12 h-1 mx-2 rounded-full transition-all duration-300 ${step < currentStep
-                    ? 'bg-white/60'
-                    : 'bg-white/20'
-                    }`} />
+                  <div
+                    className={`mx-2 h-1 w-12 rounded-full transition-all duration-300 ${
+                      step < currentStep ? 'bg-white/60' : 'bg-white/20'
+                    }`}
+                  />
                 )}
               </div>
             ))}
           </div>
 
           {/* Compact Step Labels */}
-          <div className="flex justify-center mt-3 space-x-14">
+          <div className="mt-3 flex justify-center space-x-14">
             {[
               { step: 1, label: 'Plan' },
               { step: 2, label: 'Design' },
               { step: 3, label: 'Branding' },
-              { step: 4, label: 'Settings' }
+              { step: 4, label: 'Settings' },
             ].map(({ step, label }) => (
               <div key={step} className="text-center">
-                <span className={`text-xs transition-all duration-300 ${currentStep >= step
-                  ? 'text-white font-medium'
-                  : 'text-white/60'
-                  }`}>
+                <span
+                  className={`text-xs transition-all duration-300 ${
+                    currentStep >= step
+                      ? 'font-medium text-white'
+                      : 'text-white/60'
+                  }`}
+                >
                   {label}
                 </span>
               </div>
@@ -378,117 +396,155 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
       <div className="container mx-auto px-6 py-8">
         {/* Enhanced Plan Limit Warning */}
         {!canCreateCatalogue() && (
-          <Alert variant="destructive" className="mb-8 border-red-200 bg-red-50/80 backdrop-blur-sm">
+          <Alert
+            variant="destructive"
+            className="mb-8 border-red-200 bg-red-50/80 backdrop-blur-sm"
+          >
             <AlertTriangle className="h-5 w-5" />
             <AlertDescription className="text-red-800">
               You have reached the catalogue limit for your current plan.
               <button
                 onClick={() => setShowUpgradePrompt(true)}
-                className="underline ml-1 hover:no-underline font-medium text-red-700"
+                className="ml-1 font-medium text-red-700 underline hover:no-underline"
               >
                 Upgrade your plan
-              </button> to create more catalogues.
+              </button>{' '}
+              to create more catalogues.
             </AlertDescription>
           </Alert>
         )}
 
         {error && (
-          <Alert variant="destructive" className="mb-8 border-red-200 bg-red-50/80 backdrop-blur-sm">
+          <Alert
+            variant="destructive"
+            className="mb-8 border-red-200 bg-red-50/80 backdrop-blur-sm"
+          >
             <AlertTriangle className="h-5 w-5" />
-            <AlertDescription className="text-red-800">{error}</AlertDescription>
+            <AlertDescription className="text-red-800">
+              {error}
+            </AlertDescription>
           </Alert>
         )}
 
         {/* Enhanced Step Content */}
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           {currentStep === 1 && (
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+            <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+              <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                     <Settings className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-2xl text-[#1A1B41]">Basic Information</CardTitle>
-                    <CardDescription className="text-gray-600 text-lg">
-                      Let's start with the essential details for your catalogue
+                    <CardTitle className="text-2xl text-[#1A1B41]">
+                      Basic Information
+                    </CardTitle>
+                    <CardDescription className="text-lg text-gray-600">
+                      Let&apos;s start with the essential details for your
+                      catalogue
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-8 p-8">
                 <div className="space-y-3">
-                  <Label htmlFor="name" className="text-base font-medium text-[#1A1B41]">
+                  <Label
+                    htmlFor="name"
+                    className="text-base font-medium text-[#1A1B41]"
+                  >
                     Catalogue Name *
                   </Label>
                   <Input
                     id="name"
                     value={data.name}
-                    onChange={(e) => updateData('name', e.target.value)}
+                    onChange={e => updateData('name', e.target.value)}
                     placeholder="Enter a compelling catalogue name"
-                    className="h-12 border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20 text-lg"
+                    className="h-12 border-gray-200 text-lg focus:border-[#301F70] focus:ring-[#301F70]/20"
                     required
                   />
-                  <p className="text-sm text-gray-500">This will be the main title of your catalogue</p>
+                  <p className="text-sm text-gray-500">
+                    This will be the main title of your catalogue
+                  </p>
                 </div>
 
                 <div className="space-y-3">
-                  <Label htmlFor="description" className="text-base font-medium text-[#1A1B41]">
+                  <Label
+                    htmlFor="description"
+                    className="text-base font-medium text-[#1A1B41]"
+                  >
                     Description
                   </Label>
                   <Textarea
                     id="description"
                     value={data.description}
-                    onChange={(e) => updateData('description', e.target.value)}
+                    onChange={e => updateData('description', e.target.value)}
                     placeholder="Describe your catalogue and what products it contains..."
                     rows={4}
-                    className="border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20 text-base"
+                    className="border-gray-200 text-base focus:border-[#301F70] focus:ring-[#301F70]/20"
                   />
-                  <p className="text-sm text-gray-500">Help customers understand what they'll find in your catalogue</p>
+                  <p className="text-sm text-gray-500">
+                    Help customers understand what they&apos;ll find in your
+                    catalogue
+                  </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div className="space-y-3">
-                    <Label htmlFor="tagline" className="text-base font-medium text-[#1A1B41]">
+                    <Label
+                      htmlFor="tagline"
+                      className="text-base font-medium text-[#1A1B41]"
+                    >
                       Tagline
                     </Label>
                     <Input
                       id="tagline"
                       value={data.tagline}
-                      onChange={(e) => updateData('tagline', e.target.value)}
+                      onChange={e => updateData('tagline', e.target.value)}
                       placeholder="Your catchy tagline..."
                       className="h-12 border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20"
                     />
-                    <p className="text-sm text-gray-500">A memorable phrase for your brand</p>
+                    <p className="text-sm text-gray-500">
+                      A memorable phrase for your brand
+                    </p>
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="year" className="text-base font-medium text-[#1A1B41]">
+                    <Label
+                      htmlFor="year"
+                      className="text-base font-medium text-[#1A1B41]"
+                    >
                       Catalogue Year
                     </Label>
                     <Input
                       id="year"
                       value={data.year}
-                      onChange={(e) => updateData('year', e.target.value)}
+                      onChange={e => updateData('year', e.target.value)}
                       placeholder="2024"
                       className="h-12 border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20"
                     />
-                    <p className="text-sm text-gray-500">Year for this catalogue edition</p>
+                    <p className="text-sm text-gray-500">
+                      Year for this catalogue edition
+                    </p>
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="quote" className="text-base font-medium text-[#1A1B41]">
+                    <Label
+                      htmlFor="quote"
+                      className="text-base font-medium text-[#1A1B41]"
+                    >
                       Quote
                     </Label>
                     <Textarea
                       id="quote"
                       value={data.quote}
-                      onChange={(e) => updateData('quote', e.target.value)}
+                      onChange={e => updateData('quote', e.target.value)}
                       placeholder="An inspiring quote..."
                       rows={3}
                       className="border-gray-200 focus:border-[#301F70] focus:ring-[#301F70]/20"
                     />
-                    <p className="text-sm text-gray-500">Optional inspirational message</p>
+                    <p className="text-sm text-gray-500">
+                      Optional inspirational message
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -496,34 +552,39 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           )}
 
           {currentStep === 2 && (
-            <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+            <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+              <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                     <Layout className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg text-[#1A1B41]">Choose Template</CardTitle>
-                    <CardDescription className="text-gray-600 text-sm">
+                    <CardTitle className="text-lg text-[#1A1B41]">
+                      Choose Template
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600">
                       Select a template layout that best showcases your products
                     </CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="p-6">
-                <div className="bg-gradient-to-r from-[#779CAB]/10 to-[#A2E8DD]/10 rounded-xl p-4 mb-4">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="mb-4 rounded-xl bg-gradient-to-r from-[#779CAB]/10 to-[#A2E8DD]/10 p-4">
+                  <div className="mb-1 flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-[#779CAB]" />
-                    <span className="font-medium text-sm text-[#1A1B41]">Template Selection</span>
+                    <span className="text-sm font-medium text-[#1A1B41]">
+                      Template Selection
+                    </span>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Each template is professionally designed to highlight different types of products and business styles.
+                    Each template is professionally designed to highlight
+                    different types of products and business styles.
                   </p>
                 </div>
                 <TemplateThemeWorkflow
                   userProfile={profile}
                   initialTemplateId={data.templateId}
-                  onSelectionComplete={(templateId) => {
+                  onSelectionComplete={templateId => {
                     updateData('templateId', templateId)
                     updateData('settings.templateId', templateId)
                   }}
@@ -537,76 +598,99 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 3 && (
             <div className="space-y-6">
               {/* Company Information */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <Settings className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Company Information</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Company Information
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Add your company details to personalize your catalogue
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <Label htmlFor="companyName" className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Name</Label>
+                    <Label
+                      htmlFor="companyName"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Company Name
+                    </Label>
                     <Input
                       id="companyName"
                       value={data.companyName || ''}
-                      onChange={(e) => updateData('companyName', e.target.value)}
+                      onChange={e => updateData('companyName', e.target.value)}
                       placeholder="Enter your company name"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="companyDescription" className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Description</Label>
+                    <Label
+                      htmlFor="companyDescription"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Company Description
+                    </Label>
                     <Textarea
                       id="companyDescription"
                       value={data.companyDescription || ''}
-                      onChange={(e) => updateData('companyDescription', e.target.value)}
+                      onChange={e =>
+                        updateData('companyDescription', e.target.value)
+                      }
                       placeholder="Describe your company and what you do"
                       rows={3}
-                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg resize-none"
+                      className="resize-none rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Media & Assets */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <Image className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Media & Assets</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Media & Assets
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Upload your logo and cover image to brand your catalogue
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Company Logo</Label>
+                    <Label className="mb-2 block text-sm font-medium text-[#1A1B41]">
+                      Company Logo
+                    </Label>
                     {!data.logoUrl ? (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-[#779CAB]">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
-                          onUpload={(results) => {
+                          onUpload={results => {
                             if (results.length > 0) {
                               updateData('logoUrl', results[0].url)
                             }
                           }}
                           maxFiles={1}
-                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          accept={[
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'image/webp',
+                          ]}
                           className="w-full"
                         />
                       </div>
@@ -615,14 +699,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         <img
                           src={data.logoUrl}
                           alt="Logo preview"
-                          className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                          className="h-20 w-20 rounded-lg border-2 border-gray-200 object-cover shadow-sm"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => updateData('logoUrl', '')}
-                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                          className="border-2 text-xs hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Logo
                         </Button>
@@ -631,19 +715,26 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Cover Image</Label>
+                    <Label className="mb-2 block text-sm font-medium text-[#1A1B41]">
+                      Cover Image
+                    </Label>
                     {!data.coverImageUrl ? (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-[#779CAB]">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
-                          onUpload={(results) => {
+                          onUpload={results => {
                             if (results.length > 0) {
                               updateData('coverImageUrl', results[0].url)
                             }
                           }}
                           maxFiles={1}
-                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          accept={[
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'image/webp',
+                          ]}
                           className="w-full"
                         />
                       </div>
@@ -652,14 +743,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         <img
                           src={data.coverImageUrl}
                           alt="Cover image preview"
-                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                          className="h-20 w-32 rounded-lg border-2 border-gray-200 object-cover shadow-sm"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => updateData('coverImageUrl', '')}
-                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                          className="border-2 text-xs hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Cover Image
                         </Button>
@@ -668,19 +759,26 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Intro Image</Label>
+                    <Label className="mb-2 block text-sm font-medium text-[#1A1B41]">
+                      Intro Image
+                    </Label>
                     {!data.introImage ? (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-[#779CAB]">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
-                          onUpload={(results) => {
+                          onUpload={results => {
                             if (results.length > 0) {
                               updateData('introImage', results[0].url)
                             }
                           }}
                           maxFiles={1}
-                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          accept={[
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'image/webp',
+                          ]}
                           className="w-full"
                         />
                       </div>
@@ -689,14 +787,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         <img
                           src={data.introImage}
                           alt="Intro image preview"
-                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                          className="h-20 w-32 rounded-lg border-2 border-gray-200 object-cover shadow-sm"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => updateData('introImage', '')}
-                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                          className="border-2 text-xs hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Intro Image
                         </Button>
@@ -707,173 +805,233 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               </Card>
 
               {/* Contact Details */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <Mail className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Contact Details</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Contact Details
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Add your contact information to help customers reach you
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <Label htmlFor="email" className="text-sm font-medium text-[#1A1B41] mb-2 block">Email</Label>
+                    <Label
+                      htmlFor="email"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Email
+                    </Label>
                     <Input
                       id="email"
                       type="email"
                       value={data.email || ''}
-                      onChange={(e) => updateData('email', e.target.value)}
+                      onChange={e => updateData('email', e.target.value)}
                       placeholder="contact@company.com"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="phone" className="text-sm font-medium text-[#1A1B41] mb-2 block">Phone</Label>
+                    <Label
+                      htmlFor="phone"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Phone
+                    </Label>
                     <Input
                       id="phone"
                       value={data.phone || ''}
-                      onChange={(e) => updateData('phone', e.target.value)}
+                      onChange={e => updateData('phone', e.target.value)}
                       placeholder="+1 (555) 123-4567"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="website" className="text-sm font-medium text-[#1A1B41] mb-2 block">Website</Label>
+                    <Label
+                      htmlFor="website"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Website
+                    </Label>
                     <Input
                       id="website"
                       value={data.website || ''}
-                      onChange={(e) => updateData('website', e.target.value)}
+                      onChange={e => updateData('website', e.target.value)}
                       placeholder="https://www.company.com"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="address" className="text-sm font-medium text-[#1A1B41] mb-2 block">Address</Label>
+                    <Label
+                      htmlFor="address"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Address
+                    </Label>
                     <Textarea
                       id="address"
                       value={data.address || ''}
-                      onChange={(e) => updateData('address', e.target.value)}
+                      onChange={e => updateData('address', e.target.value)}
                       placeholder="123 Main Street, City, State, ZIP"
                       rows={3}
-                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Social Media */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <Share2 className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Social Media</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Social Media
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Connect your social media profiles (optional)
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <Label htmlFor="facebook" className="text-sm font-medium text-[#1A1B41] mb-2 block">Facebook</Label>
+                    <Label
+                      htmlFor="facebook"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Facebook
+                    </Label>
                     <Input
                       id="facebook"
                       value={data.facebook || ''}
-                      onChange={(e) => updateData('facebook', e.target.value)}
+                      onChange={e => updateData('facebook', e.target.value)}
                       placeholder="https://facebook.com/yourpage"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="twitter" className="text-sm font-medium text-[#1A1B41] mb-2 block">Twitter</Label>
+                    <Label
+                      htmlFor="twitter"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Twitter
+                    </Label>
                     <Input
                       id="twitter"
                       value={data.twitter || ''}
-                      onChange={(e) => updateData('twitter', e.target.value)}
+                      onChange={e => updateData('twitter', e.target.value)}
                       placeholder="https://twitter.com/yourhandle"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="instagram" className="text-sm font-medium text-[#1A1B41] mb-2 block">Instagram</Label>
+                    <Label
+                      htmlFor="instagram"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Instagram
+                    </Label>
                     <Input
                       id="instagram"
                       value={data.instagram || ''}
-                      onChange={(e) => updateData('instagram', e.target.value)}
+                      onChange={e => updateData('instagram', e.target.value)}
                       placeholder="https://instagram.com/yourhandle"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="linkedin" className="text-sm font-medium text-[#1A1B41] mb-2 block">LinkedIn</Label>
+                    <Label
+                      htmlFor="linkedin"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      LinkedIn
+                    </Label>
                     <Input
                       id="linkedin"
                       value={data.linkedin || ''}
-                      onChange={(e) => updateData('linkedin', e.target.value)}
+                      onChange={e => updateData('linkedin', e.target.value)}
                       placeholder="https://linkedin.com/company/yourcompany"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Contact Page Details */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <FileText className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Contact Page Details</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Contact Page Details
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Additional content for your contact page
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
+                <CardContent className="space-y-4 p-5">
                   <div>
-                    <Label htmlFor="contactDescription" className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Page Description</Label>
+                    <Label
+                      htmlFor="contactDescription"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Contact Page Description
+                    </Label>
                     <Textarea
                       id="contactDescription"
                       value={data.contactDescription || ''}
-                      onChange={(e) => updateData('contactDescription', e.target.value)}
+                      onChange={e =>
+                        updateData('contactDescription', e.target.value)
+                      }
                       placeholder="Describe your contact page or add a welcome message..."
                       rows={3}
-                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Image</Label>
+                    <Label className="mb-2 block text-sm font-medium text-[#1A1B41]">
+                      Contact Image
+                    </Label>
                     {!data.contactImage ? (
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#779CAB] transition-colors">
+                      <div className="rounded-lg border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-[#779CAB]">
                         <FileUpload
                           uploadType="catalogue"
                           catalogueId={data.id || 'temp'}
-                          onUpload={(results) => {
+                          onUpload={results => {
                             if (results.length > 0) {
                               updateData('contactImage', results[0].url)
                             }
                           }}
                           maxFiles={1}
-                          accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                          accept={[
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'image/webp',
+                          ]}
                           className="w-full"
                         />
                       </div>
@@ -882,14 +1040,14 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         <img
                           src={data.contactImage}
                           alt="Contact image preview"
-                          className="w-32 h-20 object-cover rounded-lg border-2 border-gray-200 shadow-sm"
+                          className="h-20 w-32 rounded-lg border-2 border-gray-200 object-cover shadow-sm"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => updateData('contactImage', '')}
-                          className="text-xs border-2 hover:border-[#779CAB] hover:text-[#779CAB]"
+                          className="border-2 text-xs hover:border-[#779CAB] hover:text-[#779CAB]"
                         >
                           Change Contact Image
                         </Button>
@@ -898,25 +1056,37 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   </div>
 
                   <div>
-                    <Label htmlFor="contactQuote" className="text-sm font-medium text-[#1A1B41] mb-2 block">Contact Quote</Label>
+                    <Label
+                      htmlFor="contactQuote"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Contact Quote
+                    </Label>
                     <Textarea
                       id="contactQuote"
                       value={data.contactQuote || ''}
-                      onChange={(e) => updateData('contactQuote', e.target.value)}
+                      onChange={e => updateData('contactQuote', e.target.value)}
                       placeholder="A quote or message for your contact page..."
                       rows={3}
-                      className="text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="contactQuoteBy" className="text-sm font-medium text-[#1A1B41] mb-2 block">Quote Attribution</Label>
+                    <Label
+                      htmlFor="contactQuoteBy"
+                      className="mb-2 block text-sm font-medium text-[#1A1B41]"
+                    >
+                      Quote Attribution
+                    </Label>
                     <Input
                       id="contactQuoteBy"
                       value={data.contactQuoteBy || ''}
-                      onChange={(e) => updateData('contactQuoteBy', e.target.value)}
+                      onChange={e =>
+                        updateData('contactQuoteBy', e.target.value)
+                      }
                       placeholder="- Author Name"
-                      className="h-10 text-sm border-2 border-gray-200 focus:border-[#779CAB] rounded-lg"
+                      className="h-10 rounded-lg border-2 border-gray-200 text-sm focus:border-[#779CAB]"
                     />
                   </div>
                 </CardContent>
@@ -927,29 +1097,37 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 4 && (
             <div className="space-y-6">
               {/* Display Settings */}
-              <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5 border-b border-gray-100">
+              <Card className="overflow-hidden border-0 bg-white/95 shadow-xl backdrop-blur-sm">
+                <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-[#301F70]/5 to-[#1A1B41]/5">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#301F70] to-[#1A1B41] rounded-xl flex items-center justify-center">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41]">
                       <Settings className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-lg text-[#1A1B41]">Display Settings</CardTitle>
-                      <CardDescription className="text-gray-600 text-sm">
+                      <CardTitle className="text-lg text-[#1A1B41]">
+                        Display Settings
+                      </CardTitle>
+                      <CardDescription className="text-sm text-gray-600">
                         Configure how your catalogue will be displayed
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-center justify-between bg-gray-50/50 rounded-lg p-3">
+                <CardContent className="space-y-4 p-5">
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50/50 p-3">
                     <div>
-                      <Label className="text-sm font-medium text-[#1A1B41]">Show Prices</Label>
-                      <p className="text-xs text-gray-600 mt-1">Display product prices in the catalogue</p>
+                      <Label className="text-sm font-medium text-[#1A1B41]">
+                        Show Prices
+                      </Label>
+                      <p className="mt-1 text-xs text-gray-600">
+                        Display product prices in the catalogue
+                      </p>
                     </div>
                     <Switch
                       checked={data.showPrices}
-                      onCheckedChange={(checked) => updateData('showPrices', checked)}
+                      onCheckedChange={checked =>
+                        updateData('showPrices', checked)
+                      }
                     />
                   </div>
 
@@ -958,11 +1136,15 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Show Categories</Label>
-                      <p className="text-sm text-gray-600">Group products by categories</p>
+                      <p className="text-sm text-gray-600">
+                        Group products by categories
+                      </p>
                     </div>
                     <Switch
                       checked={data.showCategories}
-                      onCheckedChange={(checked) => updateData('showCategories', checked)}
+                      onCheckedChange={checked =>
+                        updateData('showCategories', checked)
+                      }
                     />
                   </div>
 
@@ -971,11 +1153,15 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Allow Search</Label>
-                      <p className="text-sm text-gray-600">Enable search functionality</p>
+                      <p className="text-sm text-gray-600">
+                        Enable search functionality
+                      </p>
                     </div>
                     <Switch
                       checked={data.allowSearch}
-                      onCheckedChange={(checked) => updateData('allowSearch', checked)}
+                      onCheckedChange={checked =>
+                        updateData('allowSearch', checked)
+                      }
                     />
                   </div>
 
@@ -984,20 +1170,26 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Show Product Codes</Label>
-                      <p className="text-sm text-gray-600">Display SKU or product codes</p>
+                      <p className="text-sm text-gray-600">
+                        Display SKU or product codes
+                      </p>
                     </div>
                     <Switch
                       checked={data.showProductCodes}
-                      onCheckedChange={(checked) => updateData('showProductCodes', checked)}
+                      onCheckedChange={checked =>
+                        updateData('showProductCodes', checked)
+                      }
                     />
                   </div>
                 </CardContent>
               </Card>
 
               {/* Visibility Settings */}
-              <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-lg">
-                  <CardTitle className="text-xl text-gray-800">Visibility</CardTitle>
+              <Card className="border-0 bg-white/90 shadow-xl backdrop-blur-sm">
+                <CardHeader className="rounded-t-lg bg-gradient-to-r from-blue-50 to-purple-50">
+                  <CardTitle className="text-xl text-gray-800">
+                    Visibility
+                  </CardTitle>
                   <CardDescription className="text-gray-600">
                     Control who can access your catalogue
                   </CardDescription>
@@ -1005,33 +1197,39 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                 <CardContent>
                   <div className="space-y-4">
                     <div
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${!data.isPublic
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                      className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                        !data.isPublic
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
                       onClick={() => updateData('isPublic', false)}
                     >
                       <div className="flex items-center gap-3">
                         <Lock className="h-5 w-5 text-gray-600" />
                         <div>
                           <h4 className="font-medium">Private</h4>
-                          <p className="text-sm text-gray-600">Only you can access</p>
+                          <p className="text-sm text-gray-600">
+                            Only you can access
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${data.isPublic
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                      className={`cursor-pointer rounded-lg border p-4 transition-all ${
+                        data.isPublic
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
                       onClick={() => updateData('isPublic', true)}
                     >
                       <div className="flex items-center gap-3">
                         <Globe className="h-5 w-5 text-gray-600" />
                         <div>
                           <h4 className="font-medium">Public</h4>
-                          <p className="text-sm text-gray-600">Anyone with link can view</p>
+                          <p className="text-sm text-gray-600">
+                            Anyone with link can view
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1043,13 +1241,13 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
         </div>
 
         {/* Navigation */}
-        <div className="max-w-3xl mx-auto mt-12">
-          <div className="flex justify-between items-center">
+        <div className="mx-auto mt-12 max-w-3xl">
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="px-8 py-4 text-lg font-medium border-2 border-gray-300 hover:border-[#779CAB] hover:text-[#779CAB] shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+              className="rounded-xl border-2 border-gray-300 px-8 py-4 text-lg font-medium shadow-lg transition-all duration-300 hover:border-[#779CAB] hover:text-[#779CAB] hover:shadow-xl"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
               Previous
@@ -1058,7 +1256,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             {currentStep < 4 ? (
               <Button
                 onClick={nextStep}
-                className="px-8 py-4 text-lg font-medium bg-gradient-to-r from-[#301F70] to-[#1A1B41] hover:from-[#1A1B41] hover:to-[#301F70] text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+                className="rounded-xl bg-gradient-to-r from-[#301F70] to-[#1A1B41] px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:from-[#1A1B41] hover:to-[#301F70] hover:shadow-xl"
               >
                 Next
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -1067,7 +1265,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               <Button
                 onClick={saveCatalogue}
                 disabled={isSaving}
-                className="px-8 py-4 text-lg font-medium bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] hover:from-[#A2E8DD] hover:to-[#779CAB] text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-[#779CAB] to-[#A2E8DD] px-8 py-4 text-lg font-medium text-white shadow-lg transition-all duration-300 hover:from-[#A2E8DD] hover:to-[#779CAB] hover:shadow-xl disabled:opacity-50"
               >
                 {isSaving ? (
                   <>

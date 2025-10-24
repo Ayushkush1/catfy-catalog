@@ -1,1 +1,1 @@
-declare module 'mustache';
+declare module 'mustache'

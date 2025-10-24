@@ -17,10 +17,7 @@ export async function middleware(request: NextRequest) {
 
   try {
     const { url, anonKey } = getSupabaseConfig()
-    const supabase = createServerClient(
-      url,
-      anonKey,
-    {
+    const supabase = createServerClient(url, anonKey, {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value
@@ -60,87 +57,117 @@ export async function middleware(request: NextRequest) {
           })
         },
       },
-    }
-  )
+    })
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getUser()
+    // Refresh session if expired - required for Server Components
+    await supabase.auth.getUser()
 
-  // Protected routes
-  const protectedPaths = [
-    '/dashboard',
-    '/onboarding',
-    '/themes',
-    '/catalogues',
-    '/billing',
-  ]
+    // Protected routes
+    const protectedPaths = [
+      '/dashboard',
+      '/onboarding',
+      '/themes',
+      '/catalogues',
+      '/billing',
+    ]
 
-  const isProtectedPath = protectedPaths.some(path => 
-    request.nextUrl.pathname.startsWith(path)
-  ) || (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login'))
+    const isProtectedPath =
+      protectedPaths.some(path => request.nextUrl.pathname.startsWith(path)) ||
+      (request.nextUrl.pathname.startsWith('/admin') &&
+        !request.nextUrl.pathname.startsWith('/admin/login'))
 
-  if (isProtectedPath) {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      const redirectUrl = new URL('/auth', request.url)
-      redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
+    if (isProtectedPath) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-  // Admin routes (exclude admin login page)
-  if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
-    console.log('🔍 [MIDDLEWARE] Admin route detected:', request.nextUrl.pathname)
-    
-    const { data: { user } } = await supabase.auth.getUser()
-    console.log('🔍 [MIDDLEWARE] User from Supabase:', user ? { id: user.id, email: user.email } : 'No user')
-    
-    if (!user) {
-      console.log('❌ [MIDDLEWARE] No user found, returning auth error')
-      // For API routes, return JSON error instead of redirect
-      if (request.nextUrl.pathname.startsWith('/api/admin')) {
-        return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+      if (!user) {
+        const redirectUrl = new URL('/auth', request.url)
+        redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
+        return NextResponse.redirect(redirectUrl)
       }
-      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
-    // Check if user is admin
-    console.log('🔍 [MIDDLEWARE] Checking admin status for email:', user.email)
-    const isAdmin = user.email && isAdminEmail(user.email)
-    console.log('🔍 [MIDDLEWARE] Is admin?', isAdmin)
-    
-    if (!isAdmin) {
-      console.log('❌ [MIDDLEWARE] User is not admin, returning access denied')
-      // For API routes, return JSON error instead of redirect
-      if (request.nextUrl.pathname.startsWith('/api/admin')) {
-        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    // Admin routes (exclude admin login page)
+    if (
+      request.nextUrl.pathname.startsWith('/admin') &&
+      !request.nextUrl.pathname.startsWith('/admin/login')
+    ) {
+      console.log(
+        '🔍 [MIDDLEWARE] Admin route detected:',
+        request.nextUrl.pathname
+      )
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      console.log(
+        '🔍 [MIDDLEWARE] User from Supabase:',
+        user ? { id: user.id, email: user.email } : 'No user'
+      )
+
+      if (!user) {
+        console.log('❌ [MIDDLEWARE] No user found, returning auth error')
+        // For API routes, return JSON error instead of redirect
+        if (request.nextUrl.pathname.startsWith('/api/admin')) {
+          return NextResponse.json(
+            { error: 'Authentication required' },
+            { status: 401 }
+          )
+        }
+        return NextResponse.redirect(new URL('/admin/login', request.url))
       }
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-    
-    console.log('✅ [MIDDLEWARE] Admin access granted for:', request.nextUrl.pathname)
-  }
 
-  // Redirect authenticated users away from auth pages
-  if (request.nextUrl.pathname.startsWith('/auth')) {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (user) {
-      // Allow access to reset password page for password recovery
-      if (request.nextUrl.pathname === '/auth/reset-password') {
-        return NextResponse.next()
+      // Check if user is admin
+      console.log(
+        '🔍 [MIDDLEWARE] Checking admin status for email:',
+        user.email
+      )
+      const isAdmin = user.email && isAdminEmail(user.email)
+      console.log('🔍 [MIDDLEWARE] Is admin?', isAdmin)
+
+      if (!isAdmin) {
+        console.log(
+          '❌ [MIDDLEWARE] User is not admin, returning access denied'
+        )
+        // For API routes, return JSON error instead of redirect
+        if (request.nextUrl.pathname.startsWith('/api/admin')) {
+          return NextResponse.json(
+            { error: 'Admin access required' },
+            { status: 403 }
+          )
+        }
+        return NextResponse.redirect(new URL('/dashboard', request.url))
       }
-      
-      const redirectTo = request.nextUrl.searchParams.get('redirect') || '/dashboard'
-      return NextResponse.redirect(new URL(redirectTo, request.url))
-    }
-  }
 
-  // Catalogue access control for team collaboration
-  // Note: Temporarily disabled due to Prisma Edge Runtime limitations
-  // This check should be moved to the actual page components or API routes
-  /*
+      console.log(
+        '✅ [MIDDLEWARE] Admin access granted for:',
+        request.nextUrl.pathname
+      )
+    }
+
+    // Redirect authenticated users away from auth pages
+    if (request.nextUrl.pathname.startsWith('/auth')) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        // Allow access to reset password page for password recovery
+        if (request.nextUrl.pathname === '/auth/reset-password') {
+          return NextResponse.next()
+        }
+
+        const redirectTo =
+          request.nextUrl.searchParams.get('redirect') || '/dashboard'
+        return NextResponse.redirect(new URL(redirectTo, request.url))
+      }
+    }
+
+    // Catalogue access control for team collaboration
+    // Note: Temporarily disabled due to Prisma Edge Runtime limitations
+    // This check should be moved to the actual page components or API routes
+    /*
   const catalogueEditMatch = request.nextUrl.pathname.match(/^\/catalogue\/([^/]+)\/edit/)
   if (catalogueEditMatch && !isTestUser && !isAdminUser) {
     const catalogueId = catalogueEditMatch[1]
@@ -176,7 +203,7 @@ export async function middleware(request: NextRequest) {
   }
   */
 
-  return response
+    return response
   } catch (error) {
     console.error('Middleware error:', error)
     // Return response without authentication checks if environment validation fails

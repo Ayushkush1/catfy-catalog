@@ -4,26 +4,32 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Header } from '@/components/Header'
-import { 
-  Crown, 
-  Zap, 
-  Check, 
-  X, 
-  CreditCard, 
-  Calendar, 
-  Download, 
-  Users, 
-  Shield, 
+import {
+  Crown,
+  Zap,
+  Check,
+  X,
+  CreditCard,
+  Calendar,
+  Download,
+  Users,
+  Shield,
   Loader2,
   ExternalLink,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -67,13 +73,9 @@ const pricingPlans: PricingPlan[] = [
       'Up to 50 products per catalogue',
       'Basic themes',
       'PDF export',
-      'Public sharing'
+      'Public sharing',
     ],
-    limitations: [
-      'Limited customization',
-      'CATFY branding',
-      'Basic support'
-    ]
+    limitations: ['Limited customization', 'CATFY branding', 'Basic support'],
   },
   {
     id: 'MONTHLY',
@@ -89,9 +91,9 @@ const pricingPlans: PricingPlan[] = [
       'Advanced PDF export',
       'Analytics dashboard',
       'Priority support',
-      'Custom domains'
+      'Custom domains',
     ],
-    popular: true
+    popular: true,
   },
   {
     id: 'YEARLY',
@@ -105,9 +107,9 @@ const pricingPlans: PricingPlan[] = [
       'Advanced analytics',
       'White-label options',
       'API access',
-      'Dedicated support'
-    ]
-  }
+      'Dedicated support',
+    ],
+  },
 ]
 
 export default function BillingPage() {
@@ -117,7 +119,7 @@ export default function BillingPage() {
   const [error, setError] = useState('')
   const [couponCode, setCouponCode] = useState('')
   const [couponDiscount, setCouponDiscount] = useState<number | null>(null)
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -129,7 +131,7 @@ export default function BillingPage() {
     try {
       setIsLoading(true)
       const response = await fetch('/api/auth/profile')
-      
+
       if (response.ok) {
         const data = await response.json()
         setProfile(data.profile)
@@ -247,17 +249,17 @@ export default function BillingPage() {
     return (
       <>
         <Header title="Billing" />
-        <div className="container mx-auto py-8 px-4">
+        <div className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-24 w-full" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-96" />
-            ))}
+            <Skeleton className="h-24 w-full" />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-96" />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
       </>
     )
   }
@@ -265,276 +267,311 @@ export default function BillingPage() {
   return (
     <>
       <Header title="Billing" />
-      <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Billing & Subscription
-        </h1>
-        <p className="text-gray-600">
-          Manage your subscription and billing information
-        </p>
-      </div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Billing & Subscription
+          </h1>
+          <p className="text-gray-600">
+            Manage your subscription and billing information
+          </p>
+        </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-      {/* Current Subscription */}
-      {profile?.subscription && (
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Current Subscription
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <Label className="text-sm font-medium text-gray-600">Plan</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  {profile.subscription.plan === 'FREE' ? (
-                    <Zap className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <Crown className="h-4 w-4 text-yellow-500" />
-                  )}
-                  <span className="font-semibold">
-                    {profile.subscription.plan === 'FREE' ? 'Free' : 
-                     profile.subscription.plan === 'MONTHLY' ? 'Pro Monthly' : 'Pro Yearly'}
-                  </span>
-                  <Badge variant={profile.subscription.status === 'ACTIVE' ? 'default' : 'destructive'}>
-                    {profile.subscription.status}
-                  </Badge>
-                </div>
-              </div>
-              
-              {profile.subscription.plan !== 'FREE' && (
-                <>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Current Period</Label>
-                    <div className="mt-1">
-                      <div className="text-sm">
-                        {format(new Date(profile.subscription.currentPeriodStart), 'MMM d, yyyy')} - 
-                        {format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                      </div>
-                      {profile.subscription.cancelAtPeriodEnd && (
-                        <div className="text-sm text-orange-600 mt-1">
-                          Cancels at period end
-                        </div>
-                      )}
-                    </div>
+        {/* Current Subscription */}
+        {profile?.subscription && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Current Subscription
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Plan
+                  </Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    {profile.subscription.plan === 'FREE' ? (
+                      <Zap className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Crown className="h-4 w-4 text-yellow-500" />
+                    )}
+                    <span className="font-semibold">
+                      {profile.subscription.plan === 'FREE'
+                        ? 'Free'
+                        : profile.subscription.plan === 'MONTHLY'
+                          ? 'Pro Monthly'
+                          : 'Pro Yearly'}
+                    </span>
+                    <Badge
+                      variant={
+                        profile.subscription.status === 'ACTIVE'
+                          ? 'default'
+                          : 'destructive'
+                      }
+                    >
+                      {profile.subscription.status}
+                    </Badge>
                   </div>
-                  
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600">Actions</Label>
-                    <div className="mt-1">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={openCustomerPortal}
+                </div>
+
+                {profile.subscription.plan !== 'FREE' && (
+                  <>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Current Period
+                      </Label>
+                      <div className="mt-1">
+                        <div className="text-sm">
+                          {format(
+                            new Date(profile.subscription.currentPeriodStart),
+                            'MMM d, yyyy'
+                          )}{' '}
+                          -
+                          {format(
+                            new Date(profile.subscription.currentPeriodEnd),
+                            'MMM d, yyyy'
+                          )}
+                        </div>
+                        {profile.subscription.cancelAtPeriodEnd && (
+                          <div className="mt-1 text-sm text-orange-600">
+                            Cancels at period end
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium text-gray-600">
+                        Actions
+                      </Label>
+                      <div className="mt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={openCustomerPortal}
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                          )}
+                          Manage Billing
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Coupon Code */}
+        {(!profile?.subscription || profile.subscription.plan === 'FREE') && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Have a coupon code?</CardTitle>
+              <CardDescription>
+                Enter your coupon code to get a discount on your subscription
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                    onBlur={validateCoupon}
+                  />
+                </div>
+                <Button variant="outline" onClick={validateCoupon}>
+                  Apply
+                </Button>
+              </div>
+              {couponDiscount && (
+                <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <Check className="h-4 w-4" />
+                    <span className="font-medium">
+                      {couponDiscount}% discount applied!
+                    </span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pricing Plans */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {pricingPlans.map(plan => {
+            const isCurrentPlan = profile?.subscription?.plan === plan.id
+            const discountedPrice = calculateDiscountedPrice(plan.price)
+
+            return (
+              <Card
+                key={plan.id}
+                className={`relative ${
+                  plan.popular ? 'border-blue-500 shadow-lg' : ''
+                } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
+                    <Badge className="bg-blue-500 text-white">
+                      Most Popular
+                    </Badge>
+                  </div>
+                )}
+
+                {isCurrentPlan && (
+                  <div className="absolute -top-3 right-4">
+                    <Badge className="bg-green-500 text-white">
+                      Current Plan
+                    </Badge>
+                  </div>
+                )}
+
+                <CardHeader className="pb-4 text-center">
+                  <div className="mb-4 flex justify-center">
+                    {plan.id === 'FREE' ? (
+                      <Zap className="h-8 w-8 text-gray-500" />
+                    ) : (
+                      <Crown className="h-8 w-8 text-yellow-500" />
+                    )}
+                  </div>
+
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+
+                  <div className="mt-4">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-3xl font-bold">
+                        ${discountedPrice.toFixed(2)}
+                      </span>
+                      <span className="text-gray-600">/{plan.interval}</span>
+                    </div>
+
+                    {couponDiscount && plan.price > 0 && (
+                      <div className="mt-1 text-sm text-gray-500">
+                        <span className="line-through">
+                          ${plan.price.toFixed(2)}
+                        </span>
+                        <span className="ml-2 font-medium text-green-600">
+                          {couponDiscount}% off
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    {plan.features.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 flex-shrink-0 text-green-500" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+
+                    {plan.limitations?.map((limitation, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <X className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                        <span className="text-sm text-gray-600">
+                          {limitation}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4">
+                    {isCurrentPlan ? (
+                      <Button className="w-full" disabled>
+                        <Check className="mr-2 h-4 w-4" />
+                        Current Plan
+                      </Button>
+                    ) : plan.id === 'FREE' ? (
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        disabled={profile?.subscription?.plan === 'FREE'}
+                      >
+                        {profile?.subscription?.plan === 'FREE'
+                          ? 'Current Plan'
+                          : 'Downgrade'}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        onClick={() =>
+                          createCheckoutSession(plan.id as 'MONTHLY' | 'YEARLY')
+                        }
                         disabled={isProcessing}
                       >
                         {isProcessing ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
                         ) : (
-                          <ExternalLink className="mr-2 h-4 w-4" />
+                          <>
+                            {profile?.subscription?.plan === 'FREE'
+                              ? 'Upgrade'
+                              : 'Switch'}{' '}
+                            to {plan.name}
+                          </>
                         )}
-                        Manage Billing
                       </Button>
-                    </div>
+                    )}
                   </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
 
-      {/* Coupon Code */}
-      {(!profile?.subscription || profile.subscription.plan === 'FREE') && (
-        <Card className="mb-8">
+        {/* FAQ or Additional Info */}
+        <Card className="mt-8">
           <CardHeader>
-            <CardTitle>Have a coupon code?</CardTitle>
-            <CardDescription>
-              Enter your coupon code to get a discount on your subscription
-            </CardDescription>
+            <CardTitle>Billing Information</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Input
-                  placeholder="Enter coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  onBlur={validateCoupon}
-                />
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <h4 className="mb-2 font-medium">Payment & Security</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Secure payments powered by Stripe</li>
+                  <li>• Cancel anytime, no hidden fees</li>
+                  <li>• 30-day money-back guarantee</li>
+                  <li>• Automatic billing on renewal date</li>
+                </ul>
               </div>
-              <Button variant="outline" onClick={validateCoupon}>
-                Apply
-              </Button>
+
+              <div>
+                <h4 className="mb-2 font-medium">Need Help?</h4>
+                <ul className="space-y-1 text-sm text-gray-600">
+                  <li>• Contact support for billing questions</li>
+                  <li>• View detailed invoices in billing portal</li>
+                  <li>• Update payment methods anytime</li>
+                  <li>• Download receipts for tax purposes</li>
+                </ul>
+              </div>
             </div>
-            {couponDiscount && (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700">
-                  <Check className="h-4 w-4" />
-                  <span className="font-medium">{couponDiscount}% discount applied!</span>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
-      )}
-
-      {/* Pricing Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {pricingPlans.map((plan) => {
-          const isCurrentPlan = profile?.subscription?.plan === plan.id
-          const discountedPrice = calculateDiscountedPrice(plan.price)
-          
-          return (
-            <Card 
-              key={plan.id} 
-              className={`relative ${
-                plan.popular ? 'border-blue-500 shadow-lg' : ''
-              } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-blue-500 text-white">
-                    Most Popular
-                  </Badge>
-                </div>
-              )}
-              
-              {isCurrentPlan && (
-                <div className="absolute -top-3 right-4">
-                  <Badge className="bg-green-500 text-white">
-                    Current Plan
-                  </Badge>
-                </div>
-              )}
-              
-              <CardHeader className="text-center pb-4">
-                <div className="flex justify-center mb-4">
-                  {plan.id === 'FREE' ? (
-                    <Zap className="h-8 w-8 text-gray-500" />
-                  ) : (
-                    <Crown className="h-8 w-8 text-yellow-500" />
-                  )}
-                </div>
-                
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-                <CardDescription>{plan.description}</CardDescription>
-                
-                <div className="mt-4">
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-3xl font-bold">
-                      ${discountedPrice.toFixed(2)}
-                    </span>
-                    <span className="text-gray-600">/{plan.interval}</span>
-                  </div>
-                  
-                  {couponDiscount && plan.price > 0 && (
-                    <div className="text-sm text-gray-500 mt-1">
-                      <span className="line-through">${plan.price.toFixed(2)}</span>
-                      <span className="ml-2 text-green-600 font-medium">
-                        {couponDiscount}% off
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  {plan.features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
-                    </div>
-                  ))}
-                  
-                  {plan.limitations?.map((limitation, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <X className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                      <span className="text-sm text-gray-600">{limitation}</span>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="pt-4">
-                  {isCurrentPlan ? (
-                    <Button className="w-full" disabled>
-                      <Check className="mr-2 h-4 w-4" />
-                      Current Plan
-                    </Button>
-                  ) : plan.id === 'FREE' ? (
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      disabled={profile?.subscription?.plan === 'FREE'}
-                    >
-                      {profile?.subscription?.plan === 'FREE' ? 'Current Plan' : 'Downgrade'}
-                    </Button>
-                  ) : (
-                    <Button 
-                      className="w-full"
-                      onClick={() => createCheckoutSession(plan.id as 'MONTHLY' | 'YEARLY')}
-                      disabled={isProcessing}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          {profile?.subscription?.plan === 'FREE' ? 'Upgrade' : 'Switch'} to {plan.name}
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
       </div>
-      
-      {/* FAQ or Additional Info */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Billing Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium mb-2">Payment & Security</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Secure payments powered by Stripe</li>
-                <li>• Cancel anytime, no hidden fees</li>
-                <li>• 30-day money-back guarantee</li>
-                <li>• Automatic billing on renewal date</li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-medium mb-2">Need Help?</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Contact support for billing questions</li>
-                <li>• View detailed invoices in billing portal</li>
-                <li>• Update payment methods anytime</li>
-                <li>• Download receipts for tax purposes</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
     </>
   )
 }

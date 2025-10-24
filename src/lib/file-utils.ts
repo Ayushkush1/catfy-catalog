@@ -6,52 +6,62 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/jpg',
   'image/png',
   'image/webp',
-  'image/gif'
+  'image/gif',
 ] as const
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 export const MAX_FILES_PER_UPLOAD = 5
 
 // File validation functions
-export function validateFileType(file: File, allowedTypes: readonly string[] = ALLOWED_IMAGE_TYPES): boolean {
+export function validateFileType(
+  file: File,
+  allowedTypes: readonly string[] = ALLOWED_IMAGE_TYPES
+): boolean {
   return allowedTypes.includes(file.type)
 }
 
-export function validateFileSize(file: File, maxSize: number = MAX_FILE_SIZE): boolean {
+export function validateFileSize(
+  file: File,
+  maxSize: number = MAX_FILE_SIZE
+): boolean {
   return file.size <= maxSize
 }
 
-export function validateFile(file: File, options?: {
-  allowedTypes?: readonly string[]
-  maxSize?: number
-}): { isValid: boolean; error?: string } {
-  const { allowedTypes = ALLOWED_IMAGE_TYPES, maxSize = MAX_FILE_SIZE } = options || {}
-  
+export function validateFile(
+  file: File,
+  options?: {
+    allowedTypes?: readonly string[]
+    maxSize?: number
+  }
+): { isValid: boolean; error?: string } {
+  const { allowedTypes = ALLOWED_IMAGE_TYPES, maxSize = MAX_FILE_SIZE } =
+    options || {}
+
   if (!validateFileType(file, allowedTypes)) {
     return {
       isValid: false,
-      error: `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`
+      error: `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`,
     }
   }
-  
+
   if (!validateFileSize(file, maxSize)) {
     return {
       isValid: false,
-      error: `File size ${formatFileSize(file.size)} exceeds maximum allowed size of ${formatFileSize(maxSize)}`
+      error: `File size ${formatFileSize(file.size)} exceeds maximum allowed size of ${formatFileSize(maxSize)}`,
     }
   }
-  
+
   return { isValid: true }
 }
 
 // File utility functions
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
-  
+
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
@@ -59,12 +69,17 @@ export function getFileExtension(filename: string): string {
   return filename.split('.').pop()?.toLowerCase() || ''
 }
 
-export function generateFileName(originalName: string, prefix?: string): string {
+export function generateFileName(
+  originalName: string,
+  prefix?: string
+): string {
   const timestamp = Date.now()
   const extension = getFileExtension(originalName)
-  const baseName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_')
-  
-  return prefix 
+  const baseName = originalName
+    .replace(/\.[^/.]+$/, '')
+    .replace(/[^a-zA-Z0-9]/g, '_')
+
+  return prefix
     ? `${prefix}_${baseName}_${timestamp}.${extension}`
     : `${baseName}_${timestamp}.${extension}`
 }
@@ -76,9 +91,9 @@ export function createImagePreview(file: File): Promise<string> {
       reject(new Error('File is not an image'))
       return
     }
-    
+
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       resolve(e.target?.result as string)
     }
     reader.onerror = () => {
@@ -98,16 +113,16 @@ export function resizeImage(
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const img = new Image()
-    
+
     if (!ctx) {
       reject(new Error('Canvas context not available'))
       return
     }
-    
+
     img.onload = () => {
       // Calculate new dimensions
       let { width, height } = img
-      
+
       if (width > height) {
         if (width > maxWidth) {
           height = (height * maxWidth) / width
@@ -119,16 +134,16 @@ export function resizeImage(
           height = maxHeight
         }
       }
-      
+
       // Set canvas dimensions
       canvas.width = width
       canvas.height = height
-      
+
       // Draw and compress
       ctx.drawImage(img, 0, 0, width, height)
-      
+
       canvas.toBlob(
-        (blob) => {
+        blob => {
           if (blob) {
             resolve(blob)
           } else {
@@ -139,11 +154,11 @@ export function resizeImage(
         quality
       )
     }
-    
+
     img.onerror = () => {
       reject(new Error('Failed to load image'))
     }
-    
+
     img.src = URL.createObjectURL(file)
   })
 }
@@ -155,32 +170,32 @@ export async function uploadFileToSupabase(
   bucket: string = 'uploads'
 ): Promise<{ url: string; path: string }> {
   const supabase = createClient()
-  
+
   // Convert file to array buffer
   const arrayBuffer = await file.arrayBuffer()
   const buffer = new Uint8Array(arrayBuffer)
-  
+
   // Upload to Supabase
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, buffer, {
       contentType: file.type,
       cacheControl: '3600',
-      upsert: false
+      upsert: false,
     })
-  
+
   if (error) {
     throw new Error(`Upload failed: ${error.message}`)
   }
-  
+
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(path)
-  
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from(bucket).getPublicUrl(path)
+
   return {
     url: publicUrl,
-    path: data.path
+    path: data.path,
   }
 }
 
@@ -189,11 +204,9 @@ export async function deleteFileFromSupabase(
   bucket: string = 'uploads'
 ): Promise<void> {
   const supabase = createClient()
-  
-  const { error } = await supabase.storage
-    .from(bucket)
-    .remove([path])
-  
+
+  const { error } = await supabase.storage.from(bucket).remove([path])
+
   if (error) {
     throw new Error(`Delete failed: ${error.message}`)
   }
@@ -205,39 +218,42 @@ export async function getFileFromSupabase(
 ): Promise<Blob> {
   const supabase = createClient()
 
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .download(path)
-  
+  const { data, error } = await supabase.storage.from(bucket).download(path)
+
   if (error) {
     throw new Error(`Download failed: ${error.message}`)
   }
-  
+
   return data
 }
 
 // File download function
-export async function downloadFile(url: string, filename: string): Promise<void> {
+export async function downloadFile(
+  url: string,
+  filename: string
+): Promise<void> {
   try {
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    
+
     const blob = await response.blob()
     const downloadUrl = window.URL.createObjectURL(blob)
-    
+
     const link = document.createElement('a')
     link.href = downloadUrl
     link.download = filename
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    
+
     // Clean up
     window.URL.revokeObjectURL(downloadUrl)
   } catch (error) {
-    throw new Error(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
   }
 }
 
@@ -249,15 +265,15 @@ export async function uploadMultipleFiles(
   onProgress?: (progress: number) => void
 ): Promise<Array<{ file: File; url: string; path: string }>> {
   const results = []
-  
+
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
     const path = pathGenerator(file, i)
-    
+
     try {
       const result = await uploadFileToSupabase(file, path, bucket)
       results.push({ file, ...result })
-      
+
       // Report progress
       if (onProgress) {
         onProgress(((i + 1) / files.length) * 100)
@@ -267,7 +283,7 @@ export async function uploadMultipleFiles(
       throw error
     }
   }
-  
+
   return results
 }
 
@@ -276,11 +292,9 @@ export async function deleteMultipleFiles(
   bucket: string = 'uploads'
 ): Promise<void> {
   const supabase = createClient()
-  
-  const { error } = await supabase.storage
-    .from(bucket)
-    .remove(paths)
-  
+
+  const { error } = await supabase.storage.from(bucket).remove(paths)
+
   if (error) {
     throw new Error(`Batch delete failed: ${error.message}`)
   }
@@ -294,24 +308,24 @@ export function getOptimalImageDimensions(
   maxHeight: number
 ): { width: number; height: number } {
   const aspectRatio = originalWidth / originalHeight
-  
+
   let width = originalWidth
   let height = originalHeight
-  
+
   // Scale down if necessary
   if (width > maxWidth) {
     width = maxWidth
     height = width / aspectRatio
   }
-  
+
   if (height > maxHeight) {
     height = maxHeight
     width = height * aspectRatio
   }
-  
+
   return {
     width: Math.round(width),
-    height: Math.round(height)
+    height: Math.round(height),
   }
 }
 

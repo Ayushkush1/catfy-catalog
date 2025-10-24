@@ -31,15 +31,15 @@ export const PLAN_FEATURES = {
       'PDF export',
       'Basic analytics',
       'Email support',
-      'Team collaboration (up to 3 members)'
+      'Team collaboration (up to 3 members)',
     ],
     excluded: [
       'Custom domain',
       'Advanced analytics',
       'White label',
       'Priority support',
-      'API access'
-    ]
+      'API access',
+    ],
   },
   [SubscriptionPlan.STANDARD]: {
     name: 'Standard',
@@ -71,14 +71,14 @@ export const PLAN_FEATURES = {
       'Custom branding',
       'Advanced exports',
       'SEO optimization',
-      'Custom themes'
+      'Custom themes',
     ],
     excluded: [
       'White label',
       'Priority support',
       'API access',
-      'Team collaboration (up to 3 members)'
-    ]
+      'Team collaboration (up to 3 members)',
+    ],
   },
   [SubscriptionPlan.PROFESSIONAL]: {
     name: 'Professional',
@@ -108,11 +108,9 @@ export const PLAN_FEATURES = {
       'White label',
       'Priority support',
       'API access',
-      'Advanced integrations'
+      'Advanced integrations',
     ],
-    excluded: [
-      'Unlimited everything (see Business plan)'
-    ]
+    excluded: ['Unlimited everything (see Business plan)'],
   },
   [SubscriptionPlan.BUSINESS]: {
     name: 'Business',
@@ -145,10 +143,10 @@ export const PLAN_FEATURES = {
       'Unlimited storage',
       'Team collaboration (up to 3 members)',
       'Dedicated support',
-      'Custom integrations'
+      'Custom integrations',
     ],
-    excluded: []
-  }
+    excluded: [],
+  },
 } as const
 
 // Utility functions for subscription management
@@ -156,39 +154,60 @@ export function getPlanFeatures(plan: SubscriptionPlan) {
   return PLAN_FEATURES[plan]
 }
 
-export function canCreateCatalogue(plan: SubscriptionPlan, currentCount: number, userEmail?: string): boolean {
+export function canCreateCatalogue(
+  plan: SubscriptionPlan,
+  currentCount: number,
+  userEmail?: string
+): boolean {
   // Admin user has unlimited access
   if (userEmail === 'admin@catfy.com') {
     return true
   }
-  
+
   const features = getPlanFeatures(plan)
   return features.maxCatalogues === -1 || currentCount < features.maxCatalogues
 }
 
-export function canAddProduct(plan: SubscriptionPlan, currentCount: number, userEmail?: string): boolean {
+export function canAddProduct(
+  plan: SubscriptionPlan,
+  currentCount: number,
+  userEmail?: string
+): boolean {
   // Admin user has unlimited access
   if (userEmail === 'admin@catfy.com') {
     return true
   }
-  
+
   const features = getPlanFeatures(plan)
-  return features.maxProductsPerCatalogue === -1 || currentCount < features.maxProductsPerCatalogue
+  return (
+    features.maxProductsPerCatalogue === -1 ||
+    currentCount < features.maxProductsPerCatalogue
+  )
 }
 
-export function canAddCategory(plan: SubscriptionPlan, currentCount: number, userEmail?: string): boolean {
+export function canAddCategory(
+  plan: SubscriptionPlan,
+  currentCount: number,
+  userEmail?: string
+): boolean {
   // Admin user has unlimited access
   if (userEmail === 'admin@catfy.com') {
     return true
   }
-  
+
   const features = getPlanFeatures(plan)
   return features.maxCategories === -1 || currentCount < features.maxCategories
 }
 
-export function canExport(plan: SubscriptionPlan, monthlyExports: number): boolean {
+export function canExport(
+  plan: SubscriptionPlan,
+  monthlyExports: number
+): boolean {
   const features = getPlanFeatures(plan)
-  return features.maxExportsPerMonth === -1 || monthlyExports < features.maxExportsPerMonth
+  return (
+    features.maxExportsPerMonth === -1 ||
+    monthlyExports < features.maxExportsPerMonth
+  )
 }
 
 export function hasFeature(plan: SubscriptionPlan, feature: string): boolean {
@@ -196,14 +215,17 @@ export function hasFeature(plan: SubscriptionPlan, feature: string): boolean {
   return (planFeatures.features as any)[feature] as boolean
 }
 
-export function getUpgradeMessage(plan: SubscriptionPlan, feature: string): string {
+export function getUpgradeMessage(
+  plan: SubscriptionPlan,
+  feature: string
+): string {
   const planNames = {
     [SubscriptionPlan.FREE]: 'Standard',
     [SubscriptionPlan.STANDARD]: 'Professional',
     [SubscriptionPlan.PROFESSIONAL]: 'Business',
-    [SubscriptionPlan.BUSINESS]: 'Business'
+    [SubscriptionPlan.BUSINESS]: 'Business',
   }
-  
+
   const nextPlan = planNames[plan]
   return `Upgrade to ${nextPlan} plan to access ${feature}`
 }
@@ -215,11 +237,17 @@ export function formatPrice(price: number, currency: string = 'INR'): string {
   }).format(price)
 }
 
-export function calculateYearlySavings(monthlyPrice: number, yearlyPrice: number): number {
-  return (monthlyPrice * 12) - yearlyPrice
+export function calculateYearlySavings(
+  monthlyPrice: number,
+  yearlyPrice: number
+): number {
+  return monthlyPrice * 12 - yearlyPrice
 }
 
-export function getYearlySavingsPercentage(monthlyPrice: number, yearlyPrice: number): number {
+export function getYearlySavingsPercentage(
+  monthlyPrice: number,
+  yearlyPrice: number
+): number {
   if (monthlyPrice === 0) return 0
   const savings = calculateYearlySavings(monthlyPrice, yearlyPrice)
   return Math.round((savings / (monthlyPrice * 12)) * 100)
@@ -234,7 +262,10 @@ export function getMaxTeamMembers(plan: SubscriptionPlan): number {
   return PLAN_FEATURES[plan].maxTeamMembers
 }
 
-export function canAddTeamMember(plan: SubscriptionPlan, currentCount: number): boolean {
+export function canAddTeamMember(
+  plan: SubscriptionPlan,
+  currentCount: number
+): boolean {
   const maxMembers = getMaxTeamMembers(plan)
   return maxMembers === -1 || currentCount < maxMembers
 }
@@ -242,6 +273,6 @@ export function canAddTeamMember(plan: SubscriptionPlan, currentCount: number): 
 export function getTeamMemberUpgradeMessage(plan: SubscriptionPlan): string {
   const maxMembers = getMaxTeamMembers(plan)
   const planName = PLAN_FEATURES[plan].name
-  
+
   return `You have reached the maximum team member limit (${maxMembers}) for your ${planName} plan.`
 }

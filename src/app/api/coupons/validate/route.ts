@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const { code, billingCycle, amount } = validateCouponSchema.parse(body)
 
     // Use Prisma transaction for atomic coupon validation and reservation
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       // Find the coupon
       const coupon = await tx.coupon.findUnique({
         where: { code: code.toUpperCase() },
@@ -58,8 +58,12 @@ export async function POST(request: NextRequest) {
         coupon.allowedBillingCycles.length > 0 &&
         !coupon.allowedBillingCycles.includes(billingCycle as BillingCycle)
       ) {
-        const allowedCycles = coupon.allowedBillingCycles.join(', ').toLowerCase()
-        throw new Error(`This coupon is only valid for ${allowedCycles} billing`)
+        const allowedCycles = coupon.allowedBillingCycles
+          .join(', ')
+          .toLowerCase()
+        throw new Error(
+          `This coupon is only valid for ${allowedCycles} billing`
+        )
       }
 
       // Check if user has already used this coupon
@@ -79,8 +83,8 @@ export async function POST(request: NextRequest) {
           where: { id: user.id },
           select: {
             id: true,
-            createdAt: true
-          }
+            createdAt: true,
+          },
         })
 
         if (!profile) {
@@ -90,7 +94,9 @@ export async function POST(request: NextRequest) {
         // Check if this is truly a new user (created within last 24 hours)
         const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
         if (new Date(profile.createdAt) < dayAgo) {
-          throw new Error('FIRST100 coupon is only valid for new users within 24 hours of signup')
+          throw new Error(
+            'FIRST100 coupon is only valid for new users within 24 hours of signup'
+          )
         }
 
         // Check if user has any existing subscriptions
@@ -98,13 +104,19 @@ export async function POST(request: NextRequest) {
           where: {
             profileId: profile.id,
             status: {
-              in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.CANCELED, SubscriptionStatus.PAST_DUE]
-            }
-          }
+              in: [
+                SubscriptionStatus.ACTIVE,
+                SubscriptionStatus.CANCELED,
+                SubscriptionStatus.PAST_DUE,
+              ],
+            },
+          },
         })
 
         if (existingSubscription) {
-          throw new Error('FIRST100 coupon is only valid for first-time subscribers')
+          throw new Error(
+            'FIRST100 coupon is only valid for first-time subscribers'
+          )
         }
       }
 
@@ -133,7 +145,8 @@ export async function POST(request: NextRequest) {
         },
         discount: {
           amount: discountAmount,
-          percentage: coupon.type === 'PERCENTAGE' ? Number(coupon.value) : null,
+          percentage:
+            coupon.type === 'PERCENTAGE' ? Number(coupon.value) : null,
         },
         originalAmount: amount,
         finalAmount,
@@ -144,7 +157,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     console.error('Coupon validation error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -152,11 +165,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to validate coupon'
-    return NextResponse.json(
-      { error: message, valid: false },
-      { status: 400 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to validate coupon'
+    return NextResponse.json({ error: message, valid: false }, { status: 400 })
   }
 }
 
@@ -193,16 +204,14 @@ export async function GET(request: NextRequest) {
     })
 
     if (!coupon) {
-      return NextResponse.json(
-        { error: 'Coupon not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Coupon not found' }, { status: 404 })
     }
 
     // Calculate remaining uses if public
-    const remainingUses = coupon.isPublic && coupon.limitTotal 
-      ? Math.max(0, coupon.limitTotal - coupon.usedCount)
-      : null
+    const remainingUses =
+      coupon.isPublic && coupon.limitTotal
+        ? Math.max(0, coupon.limitTotal - coupon.usedCount)
+        : null
 
     const now = new Date()
     const isExpired = coupon.validUntil ? coupon.validUntil < now : false

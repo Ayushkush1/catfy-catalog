@@ -17,20 +17,22 @@ export async function GET(
         id: invitationId,
         status: 'PENDING',
         catalogue: {
-          profileId: user.id
-        }
+          profileId: user.id,
+        },
       },
       select: {
         id: true,
         token: true,
         email: true,
-        expiresAt: true
-      }
+        expiresAt: true,
+      },
     })
 
     if (!invitation) {
       return NextResponse.json(
-        { error: 'Invitation not found or you are not authorized to access it' },
+        {
+          error: 'Invitation not found or you are not authorized to access it',
+        },
         { status: 404 }
       )
     }
@@ -46,7 +48,7 @@ export async function GET(
     return NextResponse.json({
       token: invitation.token,
       email: invitation.email,
-      expiresAt: invitation.expiresAt
+      expiresAt: invitation.expiresAt,
     })
   } catch (error) {
     console.error('Error getting invitation token:', error)

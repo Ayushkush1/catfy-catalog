@@ -22,31 +22,65 @@ function adaptToTemplateConfig(t: TemplateWithContents) {
     previewImage: t.previewImage || null,
     features: [],
     tags: Array.isArray(t.tags) ? t.tags : [],
-    pageCount: t.pageCount ?? (isMulti && Array.isArray(latestContent?.data) ? latestContent.data.length : 1),
+    pageCount:
+      t.pageCount ??
+      (isMulti && Array.isArray(latestContent?.data)
+        ? latestContent.data.length
+        : 1),
     supportedFields: {
-      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay'],
+      products: [
+        'name',
+        'description',
+        'price',
+        'images',
+        'sku',
+        'tags',
+        'currency',
+        'priceDisplay',
+      ],
       categories: ['name', 'description', 'color'],
-      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+      profile: [
+        'companyName',
+        'logo',
+        'email',
+        'phone',
+        'website',
+        'address',
+        'description',
+        'tagline',
+        'socialLinks',
+      ],
     },
-    compatibleThemes: Array.isArray(t.compatibleThemes) && t.compatibleThemes.length ? t.compatibleThemes : ['*'],
+    compatibleThemes:
+      Array.isArray(t.compatibleThemes) && t.compatibleThemes.length
+        ? t.compatibleThemes
+        : ['*'],
     requiredThemeFeatures: [],
     customProperties: {
       isEditorTemplate: true,
       ...(isMulti
-        ? { isMultiPageTemplate: true, multiPageData: latestContent?.data || [] }
-        : { editorData: latestContent?.data || {} }
-      )
+        ? {
+            isMultiPageTemplate: true,
+            multiPageData: latestContent?.data || [],
+          }
+        : { editorData: latestContent?.data || {} }),
     },
     createdAt: t.createdAt,
     updatedAt: t.updatedAt,
   }
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const { id } = params
   try {
     if (!prisma.template) {
-      return NextResponse.json({ error: 'Templates not available' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Templates not available' },
+        { status: 404 }
+      )
     }
 
     const t = await prisma.template.findUnique({
@@ -61,6 +95,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ template: adaptToTemplateConfig(t) })
   } catch (error) {
     console.error('Public GET template by id error:', error)
-    return NextResponse.json({ error: 'Failed to fetch template' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch template' },
+      { status: 500 }
+    )
   }
 }

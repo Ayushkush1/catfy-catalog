@@ -1,6 +1,8 @@
 import React from 'react'
 import IframeEditor from '@/components/editor/IframeEditor'
 
+export const dynamic = 'force-dynamic'
+
 const template = {
   id: 'prebuilt-001',
   name: 'Simple Product Catalogue',
@@ -39,7 +41,7 @@ const template = {
             <div class="subtitle">{{product.description}}</div>
           </div>
         </div>
-      `
+      `,
     },
     {
       id: 'details',
@@ -66,19 +68,19 @@ const template = {
             </div>
           </div>
         </div>
-      `
-    }
-  ]
+      `,
+    },
+  ],
 }
 
 export default function Page() {
   return (
     <div className="h-screen">
-      <div className="h-16 border-b flex items-center px-4 justify-between">
+      <div className="flex h-16 items-center justify-between border-b px-4">
         <div className="font-semibold">User Editor · {template.name}</div>
         <div className="text-sm text-gray-500">Engine: {template.engine}</div>
       </div>
-      <IframeEditor 
+      <IframeEditor
         template={template}
         catalogueId="test-catalogue-id"
         autoSave={true}
@@ -86,7 +88,7 @@ export default function Page() {
         onSaveSuccess={() => {
           console.log('Test: Changes saved successfully')
         }}
-        onSaveError={(error) => {
+        onSaveError={error => {
           console.error('Test: Failed to save changes:', error)
         }}
       />

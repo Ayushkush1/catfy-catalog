@@ -7,10 +7,26 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, Mail, Lock, Eye, EyeOff, User, Layout, Share2 } from 'lucide-react'
+import {
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Layout,
+  Share2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
@@ -32,8 +48,6 @@ export default function SignupPage() {
 
   const router = useRouter()
   const supabase = createClient()
-
-
 
   const validateForm = () => {
     if (!formData.firstName.trim()) {
@@ -144,54 +158,66 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] relative overflow-hidden">
+      <div className="relative hidden overflow-hidden bg-gradient-to-r from-[#2D1B69] to-[#6366F1] lg:flex lg:w-1/2">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 flex flex-col justify-center px-40 text-white h-screen">
+        <div className="relative z-10 flex h-screen flex-col justify-center px-40 text-white">
           <div className="mb-6">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-white/20">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatalogueAI Logo"
                 width={48}
                 height={48}
-                className="w-full h-full object-contain"
+                className="h-full w-full object-contain"
               />
             </div>
-            <h1 className="text-2xl xl:text-3xl font-bold mb-3">AI-Powered<br />Catalogue Builder</h1>
-            <p className="text-base xl:text-lg text-purple-100 mb-2 leading-relaxed">Create stunning product catalogues in minutes with AI assistance.</p>
+            <h1 className="mb-3 text-2xl font-bold xl:text-3xl">
+              AI-Powered
+              <br />
+              Catalogue Builder
+            </h1>
+            <p className="mb-2 text-base leading-relaxed text-purple-100 xl:text-lg">
+              Create stunning product catalogues in minutes with AI assistance.
+            </p>
           </div>
 
           {/* Features */}
-          <div className="space-y-5 mb-6">
+          <div className="mb-6 space-y-5">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Mail className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">AI-Generated Content</h3>
-                <p className="text-xs text-purple-100">Smart descriptions & categorization</p>
+                <p className="text-xs text-purple-100">
+                  Smart descriptions & categorization
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Layout className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Layout className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Professional Themes</h3>
-                <p className="text-xs text-purple-100">5 stunning designs to choose from</p>
+                <p className="text-xs text-purple-100">
+                  5 stunning designs to choose from
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Share2 className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Share2 className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Export & Share</h3>
-                <p className="text-xs text-purple-100">PDF-ready catalogues in one click</p>
+                <p className="text-xs text-purple-100">
+                  PDF-ready catalogues in one click
+                </p>
               </div>
             </div>
           </div>
@@ -210,22 +236,26 @@ export default function SignupPage() {
       </div>
 
       {/* Right Side - Signup Form */}
-      <div className="flex-1 flex flex-col justify-center py-4 px-4 lg:px-6 bg-gray-50 h-screen overflow-y-auto">
+      <div className="flex h-screen flex-1 flex-col justify-center overflow-y-auto bg-gray-50 px-4 py-4 lg:px-6">
         <div className="mx-auto w-full max-w-sm">
           {/* Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Welcome to CatalogueAI</h2>
-            <p className="text-sm text-gray-600">Enter your credentials to access your catalogues</p>
+          <div className="mb-6 text-center">
+            <h2 className="mb-1 text-xl font-bold text-gray-900">
+              Welcome to CatalogueAI
+            </h2>
+            <p className="text-sm text-gray-600">
+              Enter your credentials to access your catalogues
+            </p>
 
             {/* Toggle Buttons */}
-            <div className="flex bg-gray-100 rounded-lg p-1 mt-4">
+            <div className="mt-4 flex rounded-lg bg-gray-100 p-1">
               <Link
                 href="/auth/login"
-                className="flex-1 py-1.5 px-3 text-gray-600 hover:text-gray-900 font-medium text-center text-sm"
+                className="flex-1 px-3 py-1.5 text-center text-sm font-medium text-gray-600 hover:text-gray-900"
               >
                 Sign In
               </Link>
-              <button className="flex-1 py-1.5 px-3 bg-white text-gray-900 rounded-md shadow-sm font-medium text-sm">
+              <button className="flex-1 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm">
                 Sign Up
               </button>
             </div>
@@ -241,31 +271,56 @@ export default function SignupPage() {
             <form onSubmit={handleSignup} className="space-y-3">
               {/* Account Type Selection */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-gray-700">Account Type</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Account Type
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${formData.accountType === 'INDIVIDUAL'
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    onClick={() => setFormData({ ...formData, accountType: 'INDIVIDUAL' })}
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                      formData.accountType === 'INDIVIDUAL'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() =>
+                      setFormData({ ...formData, accountType: 'INDIVIDUAL' })
+                    }
                   >
                     <div className="flex items-center space-x-2">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded ${formData.accountType === 'INDIVIDUAL' ? 'bg-purple-100' : 'bg-gray-100'
-                        }`}>
-                        <User className={`h-3 w-3 ${formData.accountType === 'INDIVIDUAL' ? 'text-purple-600' : 'text-gray-600'
-                          }`} />
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded ${
+                          formData.accountType === 'INDIVIDUAL'
+                            ? 'bg-purple-100'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <User
+                          className={`h-3 w-3 ${
+                            formData.accountType === 'INDIVIDUAL'
+                              ? 'text-purple-600'
+                              : 'text-gray-600'
+                          }`}
+                        />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-xs">Individual</h3>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-medium text-gray-900">
+                          Individual
+                        </h3>
                         <p className="text-xs text-gray-500">Personal use</p>
                       </div>
                     </div>
                     {formData.accountType === 'INDIVIDUAL' && (
-                      <div className="absolute top-1 right-1">
-                        <div className="h-3 w-3 rounded-full bg-purple-500 flex items-center justify-center">
-                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <div className="absolute right-1 top-1">
+                        <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
+                          <svg
+                            className="h-2 w-2 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -273,30 +328,61 @@ export default function SignupPage() {
                   </div>
 
                   <div
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${formData.accountType === 'BUSINESS'
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    onClick={() => setFormData({ ...formData, accountType: 'BUSINESS' })}
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                      formData.accountType === 'BUSINESS'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                    onClick={() =>
+                      setFormData({ ...formData, accountType: 'BUSINESS' })
+                    }
                   >
                     <div className="flex items-center space-x-2">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded ${formData.accountType === 'BUSINESS' ? 'bg-purple-100' : 'bg-gray-100'
-                        }`}>
-                        <svg className={`h-3 w-3 ${formData.accountType === 'BUSINESS' ? 'text-purple-600' : 'text-gray-600'
-                          }`} fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h8z" clipRule="evenodd" />
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded ${
+                          formData.accountType === 'BUSINESS'
+                            ? 'bg-purple-100'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <svg
+                          className={`h-3 w-3 ${
+                            formData.accountType === 'BUSINESS'
+                              ? 'text-purple-600'
+                              : 'text-gray-600'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h8z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-xs">Business</h3>
-                        <p className="text-xs text-gray-500">Teams & commercial</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-medium text-gray-900">
+                          Business
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Teams & commercial
+                        </p>
                       </div>
                     </div>
                     {formData.accountType === 'BUSINESS' && (
-                      <div className="absolute top-1 right-1">
-                        <div className="h-3 w-3 rounded-full bg-purple-500 flex items-center justify-center">
-                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <div className="absolute right-1 top-1">
+                        <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
+                          <svg
+                            className="h-2 w-2 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -308,53 +394,82 @@ export default function SignupPage() {
               {/* Name Fields */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label htmlFor="firstName" className="text-xs font-medium text-gray-700">First name</Label>
+                  <Label
+                    htmlFor="firstName"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    First name
+                  </Label>
                   <Input
                     id="firstName"
                     type="text"
                     placeholder="John"
                     value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    onChange={e =>
+                      setFormData({ ...formData, firstName: e.target.value })
+                    }
                     required
                     disabled={isLoading}
-                    className="w-full h-8 px-2 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="h-8 w-full rounded-lg border-gray-200 px-2 text-sm focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="lastName" className="text-xs font-medium text-gray-700">Last name</Label>
+                  <Label
+                    htmlFor="lastName"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Last name
+                  </Label>
                   <Input
                     id="lastName"
                     type="text"
                     placeholder="Doe"
                     value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    onChange={e =>
+                      setFormData({ ...formData, lastName: e.target.value })
+                    }
                     required
                     disabled={isLoading}
-                    className="w-full h-8 px-2 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="h-8 w-full rounded-lg border-gray-200 px-2 text-sm focus:border-purple-500 focus:ring-purple-500"
                   />
                 </div>
               </div>
 
-              <div className='grid grid-cols-2 gap-2'>
+              <div className="grid grid-cols-2 gap-2">
                 {/* Company Name (Business only) */}
                 {formData.accountType === 'BUSINESS' && (
                   <div className="space-y-1">
-                    <Label htmlFor="companyName" className="text-xs font-medium text-gray-700">Company name</Label>
+                    <Label
+                      htmlFor="companyName"
+                      className="text-xs font-medium text-gray-700"
+                    >
+                      Company name
+                    </Label>
                     <Input
                       id="companyName"
                       type="text"
                       placeholder="Your Company Inc."
                       value={formData.companyName}
-                      onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          companyName: e.target.value,
+                        })
+                      }
                       required
                       disabled={isLoading}
-                      className="w-full h-8 px-2 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                      className="h-8 w-full rounded-lg border-gray-200 px-2 text-sm focus:border-purple-500 focus:ring-purple-500"
                     />
                   </div>
                 )}
 
                 <div className="space-y-1">
-                  <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
+                  <Label
+                    htmlFor="email"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-2 top-2 h-3.5 w-3.5 text-gray-400" />
                     <Input
@@ -362,8 +477,10 @@ export default function SignupPage() {
                       type="email"
                       placeholder="name@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full h-8 pl-8 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                      onChange={e =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      className="h-8 w-full rounded-lg border-gray-200 pl-8 text-sm focus:border-purple-500 focus:ring-purple-500"
                       required
                       disabled={isLoading}
                     />
@@ -372,18 +489,28 @@ export default function SignupPage() {
               </div>
 
               {/* Password Fields */}
-              <div className='grid grid-cols-2 gap-2'>
+              <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label htmlFor="password" className="text-xs font-medium text-gray-700">Password</Label>
+                  <Label
+                    htmlFor="password"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Password
+                  </Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       value={formData.password}
-                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       required
                       disabled={isLoading}
-                      className="w-full h-8 px-2 pr-8 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                      className="h-8 w-full rounded-lg border-gray-200 px-2 pr-8 text-sm focus:border-purple-500 focus:ring-purple-500"
                       placeholder="Create a password"
                     />
                     <button
@@ -400,45 +527,60 @@ export default function SignupPage() {
                     </button>
                   </div>
                 </div>
-                  
 
                 <div className="space-y-1">
-                  <Label htmlFor="confirmPassword" className="text-xs font-medium text-gray-700">Confirm Password</Label>
+                  <Label
+                    htmlFor="confirmPassword"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Confirm Password
+                  </Label>
                   <Input
                     id="confirmPassword"
                     type="password"
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        confirmPassword: e.target.value,
+                      }))
+                    }
                     required
                     disabled={isLoading}
-                    className="w-full h-8 px-2 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    className="h-8 w-full rounded-lg border-gray-200 px-2 text-sm focus:border-purple-500 focus:ring-purple-500"
                     placeholder="Confirm password"
                   />
                 </div>
               </div>
-                <p className="text-xs text-gray-500">
-                    Must be at least 8 characters long
-                  </p>
+              <p className="text-xs text-gray-500">
+                Must be at least 8 characters long
+              </p>
 
               <div className="flex items-start space-x-2">
                 <Checkbox
                   id="terms"
                   checked={acceptTerms}
-                  onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                  onCheckedChange={checked => setAcceptTerms(checked === true)}
                   disabled={isLoading}
                   className="mt-0.5"
                 />
                 <div className="grid gap-1.5 leading-none">
                   <Label
                     htmlFor="terms"
-                    className="text-xs leading-relaxed text-gray-600 cursor-pointer"
+                    className="cursor-pointer text-xs leading-relaxed text-gray-600"
                   >
                     I agree to the{' '}
-                    <Link href="/terms" className="text-purple-600 hover:text-purple-500 underline">
+                    <Link
+                      href="/terms"
+                      className="text-purple-600 underline hover:text-purple-500"
+                    >
                       Terms of Service
-                    </Link>
-                    {' '}and{' '}
-                    <Link href="/privacy" className="text-purple-600 hover:text-purple-500 underline">
+                    </Link>{' '}
+                    and{' '}
+                    <Link
+                      href="/privacy"
+                      className="text-purple-600 underline hover:text-purple-500"
+                    >
                       Privacy Policy
                     </Link>
                   </Label>
@@ -447,7 +589,7 @@ export default function SignupPage() {
 
               <Button
                 type="submit"
-                className="w-full h-9 bg-black hover:bg-gray-800 text-white rounded-lg font-medium text-sm"
+                className="h-9 w-full rounded-lg bg-black text-sm font-medium text-white hover:bg-gray-800"
                 disabled={isLoading || !acceptTerms}
               >
                 {isLoading ? (
@@ -466,7 +608,7 @@ export default function SignupPage() {
                 <span className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-50 px-2 text-gray-500 font-medium">
+                <span className="bg-gray-50 px-2 font-medium text-gray-500">
                   OR
                 </span>
               </div>
@@ -475,7 +617,7 @@ export default function SignupPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-9 border-gray-200 hover:bg-gray-50 rounded-lg font-medium text-sm"
+              className="h-9 w-full rounded-lg border-gray-200 text-sm font-medium hover:bg-gray-50"
               onClick={handleGoogleSignup}
               disabled={isLoading}
             >
@@ -505,11 +647,11 @@ export default function SignupPage() {
             </Button>
 
             {/* Footer Links */}
-            <div className="text-center mt-4">
+            <div className="mt-4 text-center">
               <div className="text-xs text-gray-600">
                 <Link
                   href="/admin/login"
-                  className="text-gray-500 hover:text-gray-700 font-medium"
+                  className="font-medium text-gray-500 hover:text-gray-700"
                 >
                   Admin Login
                 </Link>

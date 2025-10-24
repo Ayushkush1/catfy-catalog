@@ -1,5 +1,11 @@
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
 import { Check, Copy, Mail, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
@@ -10,7 +16,11 @@ interface ShareDialogProps {
   children: React.ReactNode
 }
 
-export function ShareDialog({ shareUrl, catalogueName, children }: ShareDialogProps) {
+export function ShareDialog({
+  shareUrl,
+  catalogueName,
+  children,
+}: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
 
   const handleCopyToClipboard = async () => {
@@ -18,15 +28,15 @@ export function ShareDialog({ shareUrl, catalogueName, children }: ShareDialogPr
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       toast({
-        title: "Link copied!",
-        description: "The catalogue link has been copied to your clipboard.",
+        title: 'Link copied!',
+        description: 'The catalogue link has been copied to your clipboard.',
       })
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
       toast({
-        title: "Failed to copy",
-        description: "Could not copy link to clipboard.",
-        variant: "destructive"
+        title: 'Failed to copy',
+        description: 'Could not copy link to clipboard.',
+        variant: 'destructive',
       })
     }
   }
@@ -44,21 +54,19 @@ export function ShareDialog({ shareUrl, catalogueName, children }: ShareDialogPr
     window.open(emailUrl)
   }
 
-
-
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Share Catalogue</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Share Catalogue
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {/* Copy Link Section */}
           <div className="flex items-center space-x-2">
-            <div className="flex-1 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 border">
+            <div className="flex-1 rounded-lg border bg-gray-50 p-3 text-sm text-gray-600">
               {shareUrl}
             </div>
             <Button
@@ -83,7 +91,7 @@ export function ShareDialog({ shareUrl, catalogueName, children }: ShareDialogPr
               <Button
                 onClick={handleWhatsAppShare}
                 variant="outline"
-                className="flex items-center justify-center space-x-2 p-3 h-auto"
+                className="flex h-auto items-center justify-center space-x-2 p-3"
               >
                 <MessageCircle className="h-5 w-5 text-green-500" />
                 <span className="text-sm">WhatsApp</span>
@@ -93,7 +101,7 @@ export function ShareDialog({ shareUrl, catalogueName, children }: ShareDialogPr
               <Button
                 onClick={handleEmailShare}
                 variant="outline"
-                className="flex items-center justify-center space-x-2 p-3 h-auto"
+                className="flex h-auto items-center justify-center space-x-2 p-3"
               >
                 <Mail className="h-5 w-5 text-blue-500" />
                 <span className="text-sm">Email</span>

@@ -25,13 +25,22 @@ const updateTemplateSchema = z.object({
     .optional(),
 })
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   await requireAdmin()
   const { id } = params
 
   try {
     if (!prisma.template) {
-      return NextResponse.json({ error: 'Prisma client not updated for Template model. Please run `npx prisma generate`.' }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            'Prisma client not updated for Template model. Please run `npx prisma generate`.',
+        },
+        { status: 500 }
+      )
     }
 
     const template = await prisma.template.findUnique({
@@ -46,11 +55,17 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ template })
   } catch (error) {
     console.error('Admin GET template error:', error)
-    return NextResponse.json({ error: 'Failed to fetch template' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch template' },
+      { status: 500 }
+    )
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   const user = await requireAdmin()
   const profile = await getUserProfile(user.id)
   const { id } = params
@@ -60,7 +75,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const parsed = updateTemplateSchema.parse(body)
 
     if (!prisma.template) {
-      return NextResponse.json({ error: 'Prisma client not updated for Template model. Please run `npx prisma generate`.' }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            'Prisma client not updated for Template model. Please run `npx prisma generate`.',
+        },
+        { status: 500 }
+      )
     }
 
     // Build update data
@@ -69,18 +90,24 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     if (parsed.name !== undefined) updateData.name = parsed.name
-    if (parsed.description !== undefined) updateData.description = parsed.description
+    if (parsed.description !== undefined)
+      updateData.description = parsed.description
     if (parsed.category !== undefined) updateData.category = parsed.category
     if (parsed.isPremium !== undefined) updateData.isPremium = parsed.isPremium
     if (parsed.tags !== undefined) updateData.tags = parsed.tags
-    if (parsed.previewImage !== undefined) updateData.previewImage = parsed.previewImage || undefined
-    if (parsed.pageCount !== undefined) updateData.pageCount = parsed.pageCount ?? undefined
-    if (parsed.compatibleThemes !== undefined) updateData.compatibleThemes = parsed.compatibleThemes.length ? parsed.compatibleThemes : ['*']
+    if (parsed.previewImage !== undefined)
+      updateData.previewImage = parsed.previewImage || undefined
+    if (parsed.pageCount !== undefined)
+      updateData.pageCount = parsed.pageCount ?? undefined
+    if (parsed.compatibleThemes !== undefined)
+      updateData.compatibleThemes = parsed.compatibleThemes.length
+        ? parsed.compatibleThemes
+        : ['*']
     if (parsed.version !== undefined) updateData.version = parsed.version
     if (parsed.status !== undefined) updateData.status = parsed.status
     if (profile?.id) {
       updateData.author = {
-        connect: { id: profile.id }
+        connect: { id: profile.id },
       }
     }
 
@@ -103,18 +130,28 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ template: updated })
   } catch (error) {
     console.error('Admin PUT template error:', error)
-    const msg = error instanceof Error ? error.message : 'Failed to update template'
+    const msg =
+      error instanceof Error ? error.message : 'Failed to update template'
     return NextResponse.json({ error: msg }, { status: 400 })
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
   await requireAdmin()
   const { id } = params
 
   try {
     if (!prisma.template) {
-      return NextResponse.json({ error: 'Prisma client not updated for Template model. Please run `npx prisma generate`.' }, { status: 500 })
+      return NextResponse.json(
+        {
+          error:
+            'Prisma client not updated for Template model. Please run `npx prisma generate`.',
+        },
+        { status: 500 }
+      )
     }
 
     // Cascade delete will remove contents via Prisma relation
@@ -123,6 +160,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Admin DELETE template error:', error)
-    return NextResponse.json({ error: 'Failed to delete template' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Failed to delete template' },
+      { status: 400 }
+    )
   }
 }

@@ -54,121 +54,161 @@ const updateCatalogueSchema = z.object({
   template: z.string().optional(), // 🔥 ADD: catalogue.template field
 
   // Legacy settings object for backward compatibility
-  settings: z.object({
-    // Style Customizations
-    customColors: z.object({
-      textColors: z.object({
-        companyName: z.string().optional(),
-        title: z.string().optional(),
-        description: z.string().optional(),
-        productName: z.string().optional(),
-        productDescription: z.string().optional(),
-        productPrice: z.string().optional(),
-        categoryName: z.string().optional(),
-      }).optional(),
-      backgroundColors: z.object({
-        main: z.string().optional(),
-        cover: z.string().optional(),
-        productCard: z.string().optional(),
-        categorySection: z.string().optional(),
-      }).optional(),
-    }).optional(),
-    fontCustomization: z.object({
-      fontFamily: z.object({
-        title: z.string().optional(),
-        description: z.string().optional(),
-        productName: z.string().optional(),
-        productDescription: z.string().optional(),
-        companyName: z.string().optional(),
-        categoryName: z.string().optional(),
-      }).optional(),
-      fontSize: z.object({
-        title: z.number().optional(),
-        description: z.number().optional(),
-        productName: z.number().optional(),
-        productDescription: z.number().optional(),
-        companyName: z.number().optional(),
-        categoryName: z.number().optional(),
-      }).optional(),
-      fontWeight: z.object({
-        title: z.string().optional(),
-        description: z.string().optional(),
-        productName: z.string().optional(),
-        productDescription: z.string().optional(),
-        companyName: z.string().optional(),
-        categoryName: z.string().optional(),
-      }).optional(),
-      // Legacy fields for backward compatibility
-      headingFont: z.string().optional(),
-      bodyFont: z.string().optional(),
-      headingSize: z.number().optional(),
-      bodySize: z.number().optional(),
-      headingWeight: z.number().optional(),
-      bodyWeight: z.number().optional(),
-      lineHeight: z.number().optional(),
-      letterSpacing: z.number().optional(),
-    }).optional(),
-    spacingCustomization: z.object({
-      padding: z.object({
-        page: z.number().optional(),
-        productCard: z.number().optional(),
-        section: z.number().optional(),
-      }).optional(),
-      margin: z.object({
-        elements: z.number().optional(),
-        sections: z.number().optional(),
-      }).optional(),
-      gap: z.object({
-        products: z.number().optional(),
-        content: z.number().optional(),
-      }).optional(),
-    }).optional(),
-    advancedStyles: z.object({
-      borders: z.object({
-        productCard: z.object({
-          width: z.number().optional(),
-          style: z.string().optional(),
-          color: z.string().optional(),
-          radius: z.number().optional(),
-        }).optional(),
-        buttons: z.object({
-          width: z.number().optional(),
-          style: z.string().optional(),
-          color: z.string().optional(),
-          radius: z.number().optional(),
-        }).optional(),
-      }).optional(),
-      shadows: z.object({
-        productCard: z.object({
-          enabled: z.boolean().optional(),
-          blur: z.number().optional(),
-          spread: z.number().optional(),
-          color: z.string().optional(),
-          opacity: z.number().optional(),
-        }).optional(),
-        buttons: z.object({
-          enabled: z.boolean().optional(),
-          blur: z.number().optional(),
-          spread: z.number().optional(),
-          color: z.string().optional(),
-          opacity: z.number().optional(),
-        }).optional(),
-      }).optional(),
-    }).optional(),
-    // Editor template data
-    editorData: z.string().optional(),
-    // IframeEditor persistence data
-    iframeEditor: z.object({
-      liveData: z.record(z.any()).optional(),
-      styleMutations: z.record(z.any()).optional(), // Changed from array to record (object)
-      templateId: z.string().optional(),
-      pages: z.array(z.any()).optional(),
-      currentPageIndex: z.number().optional(),
-      userZoom: z.number().optional(),
-      showGrid: z.boolean().optional(),
-      lastSaved: z.string().optional(),
-    }).optional(),
-  }).optional(),
+  settings: z
+    .object({
+      // Style Customizations
+      customColors: z
+        .object({
+          textColors: z
+            .object({
+              companyName: z.string().optional(),
+              title: z.string().optional(),
+              description: z.string().optional(),
+              productName: z.string().optional(),
+              productDescription: z.string().optional(),
+              productPrice: z.string().optional(),
+              categoryName: z.string().optional(),
+            })
+            .optional(),
+          backgroundColors: z
+            .object({
+              main: z.string().optional(),
+              cover: z.string().optional(),
+              productCard: z.string().optional(),
+              categorySection: z.string().optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+      fontCustomization: z
+        .object({
+          fontFamily: z
+            .object({
+              title: z.string().optional(),
+              description: z.string().optional(),
+              productName: z.string().optional(),
+              productDescription: z.string().optional(),
+              companyName: z.string().optional(),
+              categoryName: z.string().optional(),
+            })
+            .optional(),
+          fontSize: z
+            .object({
+              title: z.number().optional(),
+              description: z.number().optional(),
+              productName: z.number().optional(),
+              productDescription: z.number().optional(),
+              companyName: z.number().optional(),
+              categoryName: z.number().optional(),
+            })
+            .optional(),
+          fontWeight: z
+            .object({
+              title: z.string().optional(),
+              description: z.string().optional(),
+              productName: z.string().optional(),
+              productDescription: z.string().optional(),
+              companyName: z.string().optional(),
+              categoryName: z.string().optional(),
+            })
+            .optional(),
+          // Legacy fields for backward compatibility
+          headingFont: z.string().optional(),
+          bodyFont: z.string().optional(),
+          headingSize: z.number().optional(),
+          bodySize: z.number().optional(),
+          headingWeight: z.number().optional(),
+          bodyWeight: z.number().optional(),
+          lineHeight: z.number().optional(),
+          letterSpacing: z.number().optional(),
+        })
+        .optional(),
+      spacingCustomization: z
+        .object({
+          padding: z
+            .object({
+              page: z.number().optional(),
+              productCard: z.number().optional(),
+              section: z.number().optional(),
+            })
+            .optional(),
+          margin: z
+            .object({
+              elements: z.number().optional(),
+              sections: z.number().optional(),
+            })
+            .optional(),
+          gap: z
+            .object({
+              products: z.number().optional(),
+              content: z.number().optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+      advancedStyles: z
+        .object({
+          borders: z
+            .object({
+              productCard: z
+                .object({
+                  width: z.number().optional(),
+                  style: z.string().optional(),
+                  color: z.string().optional(),
+                  radius: z.number().optional(),
+                })
+                .optional(),
+              buttons: z
+                .object({
+                  width: z.number().optional(),
+                  style: z.string().optional(),
+                  color: z.string().optional(),
+                  radius: z.number().optional(),
+                })
+                .optional(),
+            })
+            .optional(),
+          shadows: z
+            .object({
+              productCard: z
+                .object({
+                  enabled: z.boolean().optional(),
+                  blur: z.number().optional(),
+                  spread: z.number().optional(),
+                  color: z.string().optional(),
+                  opacity: z.number().optional(),
+                })
+                .optional(),
+              buttons: z
+                .object({
+                  enabled: z.boolean().optional(),
+                  blur: z.number().optional(),
+                  spread: z.number().optional(),
+                  color: z.string().optional(),
+                  opacity: z.number().optional(),
+                })
+                .optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+      // Editor template data
+      editorData: z.string().optional(),
+      // IframeEditor persistence data
+      iframeEditor: z
+        .object({
+          liveData: z.record(z.any()).optional(),
+          styleMutations: z.record(z.any()).optional(), // Changed from array to record (object)
+          templateId: z.string().optional(),
+          pages: z.array(z.any()).optional(),
+          currentPageIndex: z.number().optional(),
+          userZoom: z.number().optional(),
+          showGrid: z.boolean().optional(),
+          lastSaved: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 })
 
 interface RouteParams {
@@ -178,10 +218,7 @@ interface RouteParams {
 }
 
 // GET - Retrieve specific catalogue
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -193,10 +230,7 @@ export async function GET(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Continue with normal database query for all users
@@ -210,11 +244,11 @@ export async function GET(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
       include: {
         products: {
@@ -263,24 +297,30 @@ export async function GET(
         introImage: catalogue.introImage,
         theme: catalogue.theme,
         isPublic: catalogue.isPublic,
-        settings: catalogue.settings as Record<string, any> || {},
+        settings: (catalogue.settings as Record<string, any>) || {},
         products: catalogue.products.map(product => ({
           id: product.id,
           name: product.name,
           description: product.description,
           price: Number(product.price), // Convert Decimal to number
           priceDisplay: product.priceDisplay,
-          imageUrl: product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : null),
+          imageUrl:
+            product.imageUrl ||
+            (product.images && product.images.length > 0
+              ? product.images[0]
+              : null),
           images: product.images,
           tags: product.tags,
           categoryId: product.categoryId,
           isActive: product.isActive,
           sortOrder: product.sortOrder,
-          category: product.category ? {
-            id: product.category.id,
-            name: product.category.name,
-            color: product.category.color,
-          } : null,
+          category: product.category
+            ? {
+                id: product.category.id,
+                name: product.category.name,
+                color: product.category.color,
+              }
+            : null,
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
         })),
@@ -328,10 +368,7 @@ export async function GET(
 }
 
 // PUT - Update catalogue
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -343,10 +380,7 @@ export async function PUT(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Continue with normal database operations for all users
@@ -360,11 +394,11 @@ export async function PUT(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
     })
 
@@ -387,17 +421,47 @@ export async function PUT(
 
     // Extract flattened fields and reconstruct settings object
     const {
-      name, description, quote, tagline, year, introImage, theme, isPublic,
+      name,
+      description,
+      quote,
+      tagline,
+      year,
+      introImage,
+      theme,
+      isPublic,
       // Extract flattened fields
-      companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
-      logoUrl, coverImageUrl, contactImage, contactDescription, contactQuote, contactQuoteBy,
-      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId, template,
+      companyName,
+      companyDescription,
+      fullName,
+      email,
+      phone,
+      website,
+      address,
+      city,
+      state,
+      country,
+      logoUrl,
+      coverImageUrl,
+      contactImage,
+      contactDescription,
+      contactQuote,
+      contactQuoteBy,
+      facebook,
+      twitter,
+      instagram,
+      linkedin,
+      showPrices,
+      showCategories,
+      allowSearch,
+      showProductCodes,
+      templateId,
+      template,
       settings: legacySettings,
       ...rest
     } = validatedData
 
     // Reconstruct settings object, merging with existing settings
-    const existingSettings = existingCatalogue.settings as any || {}
+    const existingSettings = (existingCatalogue.settings as any) || {}
 
     // Build new settings object from flat fields (if provided) or legacy settings object
     const newSettingsFromFlat = {
@@ -408,27 +472,35 @@ export async function PUT(
       ...(templateId !== undefined && { templateId }),
 
       // Company Information
-      ...(companyName !== undefined || companyDescription !== undefined) && {
+      ...((companyName !== undefined || companyDescription !== undefined) && {
         companyInfo: {
           ...existingSettings.companyInfo,
           ...(companyName !== undefined && { companyName }),
           ...(companyDescription !== undefined && { companyDescription }),
-        }
-      },
+        },
+      }),
 
       // Media & Assets
-      ...(logoUrl !== undefined || coverImageUrl !== undefined) && {
+      ...((logoUrl !== undefined || coverImageUrl !== undefined) && {
         mediaAssets: {
           ...existingSettings.mediaAssets,
           ...(logoUrl !== undefined && { logoUrl }),
           ...(coverImageUrl !== undefined && { coverImageUrl }),
-        }
-      },
+        },
+      }),
 
       // Contact Details
-      ...(email !== undefined || phone !== undefined || website !== undefined || address !== undefined ||
-        contactImage !== undefined || contactQuote !== undefined || contactQuoteBy !== undefined ||
-        city !== undefined || state !== undefined || country !== undefined || fullName !== undefined) && {
+      ...((email !== undefined ||
+        phone !== undefined ||
+        website !== undefined ||
+        address !== undefined ||
+        contactImage !== undefined ||
+        contactQuote !== undefined ||
+        contactQuoteBy !== undefined ||
+        city !== undefined ||
+        state !== undefined ||
+        country !== undefined ||
+        fullName !== undefined) && {
         contactDetails: {
           ...existingSettings.contactDetails,
           ...(email !== undefined && { email }),
@@ -442,22 +514,25 @@ export async function PUT(
           ...(state !== undefined && { state }),
           ...(country !== undefined && { country }),
           ...(fullName !== undefined && { fullName }),
-        }
-      },
+        },
+      }),
 
       // Contact Page Description
       ...(contactDescription !== undefined && { contactDescription }),
 
       // Social Media
-      ...(facebook !== undefined || twitter !== undefined || instagram !== undefined || linkedin !== undefined) && {
+      ...((facebook !== undefined ||
+        twitter !== undefined ||
+        instagram !== undefined ||
+        linkedin !== undefined) && {
         socialMedia: {
           ...existingSettings.socialMedia,
           ...(facebook !== undefined && { facebook }),
           ...(twitter !== undefined && { twitter }),
           ...(instagram !== undefined && { instagram }),
           ...(linkedin !== undefined && { linkedin }),
-        }
-      },
+        },
+      }),
     }
 
     // Merge with existing settings and legacy settings object
@@ -482,12 +557,12 @@ export async function PUT(
       ...(template !== undefined && { template }), // 🔥 ADD: Update catalogue.template field
     }
 
-    const updatedCatalogue = await prisma.catalogue.update({
+    const updatedCatalogue = (await prisma.catalogue.update({
       where: { id: params.id },
       data: {
         ...dbFields,
         settings: updatedSettings,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
         _count: {
@@ -497,7 +572,7 @@ export async function PUT(
           },
         },
       },
-    }) as any
+    })) as any
 
     console.log('Catalogue updated successfully:', updatedCatalogue.id)
     console.log('Final settings saved:', updatedCatalogue.settings)
@@ -543,27 +618,19 @@ export async function PUT(
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to update catalogue'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to update catalogue'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
 // PATCH - Update catalogue (same as PUT for compatibility)
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
   return PUT(request, { params })
 }
 
 // DELETE - Delete catalogue
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -575,10 +642,7 @@ export async function DELETE(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Verify catalogue ownership
@@ -601,7 +665,7 @@ export async function DELETE(
     }
 
     // Delete catalogue and related data (cascade)
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       // Delete products first (due to foreign key constraints)
       await tx.product.deleteMany({
         where: { catalogueId: params.id },
@@ -635,10 +699,8 @@ export async function DELETE(
   } catch (error) {
     console.error('Catalogue deletion error:', error)
 
-    const message = error instanceof Error ? error.message : 'Failed to delete catalogue'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to delete catalogue'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

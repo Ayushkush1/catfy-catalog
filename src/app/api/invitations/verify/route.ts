@@ -20,16 +20,16 @@ export async function GET(request: NextRequest) {
         token,
         status: 'PENDING',
         expiresAt: {
-          gt: new Date()
-        }
+          gt: new Date(),
+        },
       },
       include: {
         catalogue: {
           select: {
             id: true,
             name: true,
-            description: true
-          }
+            description: true,
+          },
         },
         sender: {
           select: {
@@ -38,10 +38,10 @@ export async function GET(request: NextRequest) {
             fullName: true,
             firstName: true,
             lastName: true,
-            avatarUrl: true
-          }
-        }
-      }
+            avatarUrl: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
@@ -56,12 +56,12 @@ export async function GET(request: NextRequest) {
         id: invitation.id,
         email: invitation.email,
         createdAt: invitation.createdAt,
-        expiresAt: invitation.expiresAt
+        expiresAt: invitation.expiresAt,
       },
       catalogue: {
         id: invitation.catalogue.id,
         name: invitation.catalogue.name,
-        description: invitation.catalogue.description
+        description: invitation.catalogue.description,
       },
       sender: {
         id: invitation.sender.id,
@@ -69,8 +69,8 @@ export async function GET(request: NextRequest) {
         fullName: invitation.sender.fullName,
         firstName: invitation.sender.firstName,
         lastName: invitation.sender.lastName,
-        avatarUrl: invitation.sender.avatarUrl
-      }
+        avatarUrl: invitation.sender.avatarUrl,
+      },
     })
   } catch (error) {
     console.error('Error verifying invitation:', error)

@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander'
-import { generateTheme, type ThemeGeneratorOptions } from './generators/theme-generator'
-import { generateTemplate, type TemplateGeneratorOptions } from './generators/template-generator'
+import {
+  generateTheme,
+  type ThemeGeneratorOptions,
+} from './generators/theme-generator'
+import {
+  generateTemplate,
+  type TemplateGeneratorOptions,
+} from './generators/template-generator'
 import { z } from 'zod'
 
 const program = new Command()
@@ -26,7 +32,7 @@ program
   .option('-s, --secondary <color>', 'Secondary color', '#64748b')
   .option('--accent <color>', 'Accent color', '#f59e0b')
   .option('-o, --output-dir <dir>', 'Output directory', 'src/themes')
-  .action(async (options) => {
+  .action(async options => {
     try {
       const themeOptions: Partial<ThemeGeneratorOptions> = {
         name: options.name,
@@ -37,12 +43,15 @@ program
         primaryColor: options.primary,
         secondaryColor: options.secondary,
         accentColor: options.accent,
-        outputDir: options.outputDir
+        outputDir: options.outputDir,
       }
-      
+
       await generateTheme(themeOptions)
     } catch (error) {
-      console.error('❌ Error generating theme:', error instanceof Error ? error.message : error)
+      console.error(
+        '❌ Error generating theme:',
+        error instanceof Error ? error.message : error
+      )
       process.exit(1)
     }
   })
@@ -60,10 +69,12 @@ program
   .option('--premium', 'Mark as premium template', false)
   .option('-f, --features <features>', 'Comma-separated list of features')
   .option('-o, --output-dir <dir>', 'Output directory', 'src/templates')
-  .action(async (options) => {
+  .action(async options => {
     try {
-      const features = options.features ? options.features.split(',').map((f: string) => f.trim()) : []
-      
+      const features = options.features
+        ? options.features.split(',').map((f: string) => f.trim())
+        : []
+
       const templateOptions: Partial<TemplateGeneratorOptions> = {
         name: options.name,
         id: options.id,
@@ -73,12 +84,15 @@ program
         pageCount: parseInt(options.pages),
         isPremium: options.premium,
         features,
-        outputDir: options.outputDir
+        outputDir: options.outputDir,
       }
-      
+
       await generateTemplate(templateOptions)
     } catch (error) {
-      console.error('❌ Error generating template:', error instanceof Error ? error.message : error)
+      console.error(
+        '❌ Error generating template:',
+        error instanceof Error ? error.message : error
+      )
       process.exit(1)
     }
   })
@@ -92,27 +106,32 @@ program
       const { ThemeRegistry } = await import('../lib/theme-registry')
       const registry = ThemeRegistry.getInstance()
       // Themes are now registered statically
-      
+
       const themes = registry.getAllThemes()
-      
+
       console.log('🎨 Available Themes:')
       console.log('===================')
-      
+
       if (themes.length === 0) {
         console.log('No themes found.')
         return
       }
-      
+
       themes.forEach(theme => {
         console.log(`\n📦 ${theme.name} (${theme.id})`)
         console.log(`   Description: ${theme.description}`)
         console.log(`   Category: ${theme.category}`)
         console.log(`   Author: ${theme.author}`)
         console.log(`   Version: ${theme.version}`)
-        console.log(`   Colors: Primary(${theme.colors.primary}), Secondary(${theme.colors.secondary}), Accent(${theme.colors.accent})`)
+        console.log(
+          `   Colors: Primary(${theme.colors.primary}), Secondary(${theme.colors.secondary}), Accent(${theme.colors.accent})`
+        )
       })
     } catch (error) {
-      console.error('❌ Error listing themes:', error instanceof Error ? error.message : error)
+      console.error(
+        '❌ Error listing themes:',
+        error instanceof Error ? error.message : error
+      )
       process.exit(1)
     }
   })
@@ -126,17 +145,17 @@ program
       const { TemplateRegistry } = await import('../lib/template-registry')
       const registry = TemplateRegistry.getInstance()
       // Templates are now registered statically, no loading needed
-      
+
       const templates = registry.getAllTemplates()
-      
+
       console.log('📄 Available Templates:')
       console.log('=======================')
-      
+
       if (templates.length === 0) {
         console.log('No templates found.')
         return
       }
-      
+
       templates.forEach(template => {
         console.log(`\n📋 ${template.name} (${template.id})`)
         console.log(`   Description: ${template.description}`)
@@ -148,7 +167,10 @@ program
         console.log(`   Features: ${template.features.join(', ')}`)
       })
     } catch (error) {
-      console.error('❌ Error listing templates:', error instanceof Error ? error.message : error)
+      console.error(
+        '❌ Error listing templates:',
+        error instanceof Error ? error.message : error
+      )
       process.exit(1)
     }
   })
@@ -159,24 +181,30 @@ program
   .description('Validate theme-template compatibility')
   .option('-t, --theme <themeId>', 'Theme ID to check')
   .option('--template <templateId>', 'Template ID to check')
-  .action(async (options) => {
+  .action(async options => {
     try {
-      const { CompatibilityMatrix } = await import('../lib/compatibility-matrix')
+      const { CompatibilityMatrix } = await import(
+        '../lib/compatibility-matrix'
+      )
       const { ThemeRegistry } = await import('../lib/theme-registry')
       const { TemplateRegistry } = await import('../lib/template-registry')
-      
+
       const themeRegistry = ThemeRegistry.getInstance()
       const templateRegistry = TemplateRegistry.getInstance()
       const matrix = new CompatibilityMatrix()
-      
+
       // Themes are now registered statically, no loading needed
       // Templates are now registered statically, no loading needed
-      
+
       if (options.theme && options.template) {
         // Check specific combination
         const result = matrix.testCompatibility(options.template, options.theme)
-        console.log(`🔍 Compatibility Check: ${options.theme} + ${options.template}`)
-        console.log(`Result: ${result.compatible ? '✅ Compatible' : '❌ Not Compatible'}`)
+        console.log(
+          `🔍 Compatibility Check: ${options.theme} + ${options.template}`
+        )
+        console.log(
+          `Result: ${result.compatible ? '✅ Compatible' : '❌ Not Compatible'}`
+        )
         console.log(`Score: ${result.score}/100`)
         if (result.issues.length > 0) {
           console.log(`Issues: ${result.issues.join(', ')}`)
@@ -202,20 +230,25 @@ program
         const fullMatrix = matrix.getFullMatrix()
         console.log('🔗 Full Compatibility Matrix:')
         console.log('=============================')
-        
+
         Object.entries(fullMatrix).forEach(([templateId, themes]) => {
           const template = templateRegistry.getTemplate(templateId)
           console.log(`\n📄 ${template?.name || templateId} (${templateId}):`)
           Object.entries(themes).forEach(([themeId, result]) => {
             if (result.compatible) {
               const theme = themeRegistry.getTheme(themeId)
-              console.log(`   ✅ ${theme?.name || themeId} (${themeId}) - Score: ${result.score}`)
+              console.log(
+                `   ✅ ${theme?.name || themeId} (${themeId}) - Score: ${result.score}`
+              )
             }
           })
         })
       }
     } catch (error) {
-      console.error('❌ Error validating compatibility:', error instanceof Error ? error.message : error)
+      console.error(
+        '❌ Error validating compatibility:',
+        error instanceof Error ? error.message : error
+      )
       process.exit(1)
     }
   })
@@ -226,9 +259,11 @@ program
   .description('Start development server with hot-reload')
   .option('-p, --port <port>', 'Port number', '3000')
   .option('-h, --host <host>', 'Host address', 'localhost')
-  .action(async (options) => {
+  .action(async options => {
     console.log('🚀 Starting Catfy development server...')
-    console.log(`📍 Server will be available at http://${options.host}:${options.port}`)
+    console.log(
+      `📍 Server will be available at http://${options.host}:${options.port}`
+    )
     console.log('🔥 Hot-reload enabled for themes and templates')
     console.log('\n💡 Features:')
     console.log('   - Live theme editing')
@@ -238,7 +273,6 @@ program
     console.log('\n⚠️  Development server implementation coming soon!')
     console.log('   This will integrate with your Next.js dev server.')
   })
-
 
 // Parse command line arguments
 program.parse(process.argv)

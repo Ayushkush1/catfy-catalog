@@ -1,6 +1,6 @@
-export { TemplateManager } from './TemplateManager';
-export { PrebuiltTemplates } from './PrebuiltTemplates';
-export type { Template, TemplateCategory } from './types';
+export { TemplateManager } from './TemplateManager'
+export { PrebuiltTemplates } from './PrebuiltTemplates'
+export type { Template, TemplateCategory } from './types'
 
 // Export the new modular template system
 export {
@@ -12,8 +12,8 @@ export {
   getAvailableCategories,
   addTemplate,
   removeTemplate,
-  templateRegistry
-} from './ModularTemplates';
+  templateRegistry,
+} from './ModularTemplates'
 
 // Export template builder utilities for creating new templates
-export * from './utils/template-builder';
+export * from './utils/template-builder'

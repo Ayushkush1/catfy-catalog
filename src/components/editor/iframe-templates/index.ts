@@ -1,4 +1,3 @@
-
 import SmellAddaCatalogTemplate from './FurnitureCatalogueTemplate'
 import FashionCatalogueTemplate from './FashionCatalogueTemplate'
 // Local template types to avoid importing editor internals
@@ -18,7 +17,6 @@ export type PrebuiltTemplate = {
 }
 
 export const HtmlTemplates: PrebuiltTemplate[] = [
-
   SmellAddaCatalogTemplate as unknown as PrebuiltTemplate,
   FashionCatalogueTemplate as unknown as PrebuiltTemplate,
 ].filter(Boolean)

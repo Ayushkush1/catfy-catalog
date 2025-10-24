@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser, getUserProfile } from '@/lib/auth'
-import { stripe, STRIPE_PLANS, createCheckoutSession, createCustomer } from '@/lib/stripe'
+import {
+  stripe,
+  STRIPE_PLANS,
+  createCheckoutSession,
+  createCustomer,
+} from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { BillingCycle, SubscriptionStatus, Prisma } from '@prisma/client'
@@ -24,18 +29,16 @@ export async function POST(request: NextRequest) {
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     const body = await request.json()
-    const { plan, couponCode, successUrl, cancelUrl } = createSessionSchema.parse(body)
+    const { plan, couponCode, successUrl, cancelUrl } =
+      createSessionSchema.parse(body)
 
     const selectedPlan = STRIPE_PLANS[plan]
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    
+
     const finalSuccessUrl = successUrl || `${baseUrl}/dashboard?success=true`
     const finalCancelUrl = cancelUrl || `${baseUrl}/billing?canceled=true`
 
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || '',
+          Authorization: request.headers.get('Authorization') || '',
         },
         body: JSON.stringify({
           code: couponCode,
@@ -68,7 +71,7 @@ export async function POST(request: NextRequest) {
               { status: 500 }
             )
           }
-          
+
           try {
             await stripe.coupons.retrieve(couponCode.toUpperCase())
             couponId = couponCode.toUpperCase()
@@ -78,14 +81,16 @@ export async function POST(request: NextRequest) {
             await stripe.coupons.create({
               id: coupon.code,
               name: coupon.name,
-              [coupon.type === 'PERCENTAGE' ? 'percent_off' : 'amount_off']: 
-                coupon.type === 'PERCENTAGE' ? coupon.value : coupon.value * 100,
+              [coupon.type === 'PERCENTAGE' ? 'percent_off' : 'amount_off']:
+                coupon.type === 'PERCENTAGE'
+                  ? coupon.value
+                  : coupon.value * 100,
               duration: 'once',
               ...(coupon.type === 'FIXED' && { currency: 'usd' }),
             })
             couponId = coupon.code
           }
-          
+
           discountAmount = couponResult.discount.amount
           finalAmount = couponResult.finalAmount
         }
@@ -94,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     // Get or create Stripe customer
     let customerId = profile.stripeCustomerId
-    
+
     if (!customerId) {
       const customer = await createCustomer({
         email: user.email!,
@@ -104,9 +109,9 @@ export async function POST(request: NextRequest) {
           accountType: profile.accountType,
         },
       })
-      
+
       customerId = customer.id
-      
+
       // Update profile with Stripe customer ID
       await prisma.profile.update({
         where: { id: profile.id },
@@ -128,13 +133,14 @@ export async function POST(request: NextRequest) {
           currentPeriodEnd: new Date(
             Date.now() + (plan === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000
           ),
-          billingCycle: plan === 'yearly' ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
+          billingCycle:
+            plan === 'yearly' ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
         },
       })
 
       // Record coupon usage if applicable
       if (couponCode) {
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async tx => {
           const coupon = await tx.coupon.findUnique({
             where: { code: couponCode.toUpperCase() },
           })
@@ -185,7 +191,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Checkout session creation error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -193,10 +199,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to create checkout session'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Failed to create checkout session'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

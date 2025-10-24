@@ -15,10 +15,10 @@ const uploadSchema = z.object({
 // Allowed file types and sizes
 const ALLOWED_TYPES = [
   'image/jpeg',
-  'image/jpg', 
+  'image/jpg',
   'image/png',
   'image/webp',
-  'image/gif'
+  'image/gif',
 ]
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -39,13 +39,8 @@ export async function POST(request: NextRequest) {
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
-
-
 
     const formData = await request.formData()
     const files = formData.getAll('files') as File[]
@@ -57,15 +52,12 @@ export async function POST(request: NextRequest) {
     const validatedData = uploadSchema.parse({
       type,
       catalogueId: catalogueId || undefined,
-      productId: productId || undefined
+      productId: productId || undefined,
     })
 
     // Validate files
     if (!files || files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files provided' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No files provided' }, { status: 400 })
     }
 
     if (files.length > MAX_FILES) {
@@ -79,14 +71,18 @@ export async function POST(request: NextRequest) {
     for (const file of files) {
       if (!ALLOWED_TYPES.includes(file.type)) {
         return NextResponse.json(
-          { error: `File type ${file.type} not allowed. Allowed types: ${ALLOWED_TYPES.join(', ')}` },
+          {
+            error: `File type ${file.type} not allowed. Allowed types: ${ALLOWED_TYPES.join(', ')}`,
+          },
           { status: 400 }
         )
       }
 
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: `File ${file.name} is too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB` },
+          {
+            error: `File ${file.name} is too large. Maximum size: ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+          },
           { status: 400 }
         )
       }
@@ -102,12 +98,12 @@ export async function POST(request: NextRequest) {
             {
               teamMembers: {
                 some: {
-                  profileId: profile.id
-                }
-              }
-            } // User is a team member
-          ]
-        }
+                  profileId: profile.id,
+                },
+              },
+            }, // User is a team member
+          ],
+        },
       })
 
       if (!catalogue) {
@@ -128,13 +124,13 @@ export async function POST(request: NextRequest) {
               {
                 teamMembers: {
                   some: {
-                    profileId: profile.id
-                  }
-                }
-              } // User is a team member
-            ]
-          }
-        }
+                    profileId: profile.id,
+                  },
+                },
+              }, // User is a team member
+            ],
+          },
+        },
       })
 
       if (!product) {
@@ -153,7 +149,7 @@ export async function POST(request: NextRequest) {
       const file = files[i]
       const fileExtension = file.name.split('.').pop()
       const fileName = `${validatedData.type}_${timestamp}_${i + 1}.${fileExtension}`
-      
+
       // Create storage path based on type
       let storagePath: string
       switch (validatedData.type) {
@@ -175,13 +171,14 @@ export async function POST(request: NextRequest) {
       const buffer = new Uint8Array(arrayBuffer)
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-        .from('catfy-uploads')
-        .upload(storagePath, buffer, {
-          contentType: file.type,
-          cacheControl: '3600',
-          upsert: false
-        })
+      const { data: uploadData, error: uploadError } =
+        await supabaseAdmin.storage
+          .from('catfy-uploads')
+          .upload(storagePath, buffer, {
+            contentType: file.type,
+            cacheControl: '3600',
+            upsert: false,
+          })
 
       if (uploadError) {
         console.error('Upload error:', uploadError)
@@ -192,9 +189,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabaseAdmin.storage
-        .from('catfy-uploads')
-        .getPublicUrl(storagePath)
+      const {
+        data: { publicUrl },
+      } = supabaseAdmin.storage.from('catfy-uploads').getPublicUrl(storagePath)
 
       uploadResults.push({
         fileName: file.name,
@@ -202,19 +199,18 @@ export async function POST(request: NextRequest) {
         size: file.size,
         type: file.type,
         url: publicUrl,
-        path: storagePath
+        path: storagePath,
       })
     }
 
     return NextResponse.json({
       success: true,
       files: uploadResults,
-      message: `Successfully uploaded ${uploadResults.length} file(s)`
+      message: `Successfully uploaded ${uploadResults.length} file(s)`,
     })
-
   } catch (error) {
     console.error('File upload error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -234,7 +230,9 @@ export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient()
     const supabaseAdmin = createServiceRoleClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json(
@@ -256,22 +254,16 @@ export async function DELETE(request: NextRequest) {
     // Get user profile
     const profile = await prisma.profile.findUnique({
       where: { id: user.id },
-      select: { id: true }
+      select: { id: true },
     })
 
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Verify the file belongs to the user (check if path contains user's profile ID)
     if (!filePath.includes(profile.id)) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
     }
 
     // Delete from Supabase Storage
@@ -289,9 +281,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'File deleted successfully'
+      message: 'File deleted successfully',
     })
-
   } catch (error) {
     console.error('File deletion error:', error)
     return NextResponse.json(

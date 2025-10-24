@@ -20,10 +20,16 @@ export interface TeamInvitationEmailData {
 }
 
 export async function sendTeamInvitation(data: TeamInvitationEmailData) {
-  const { inviterName, inviterEmail, catalogueName, invitationToken, recipientEmail } = data
-  
+  const {
+    inviterName,
+    inviterEmail,
+    catalogueName,
+    invitationToken,
+    recipientEmail,
+  } = data
+
   const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${invitationToken}`
-  
+
   try {
     const emailData = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
@@ -85,7 +91,7 @@ Note: This invitation will expire in 7 days.
 If you didn't expect this invitation, you can safely ignore this email.
 
 © 2024 Catfy. All rights reserved.
-      `
+      `,
     })
 
     return { success: true, messageId: emailData.messageId }
@@ -103,7 +109,7 @@ export async function sendInvitationAcceptedNotification(data: {
   catalogueName: string
 }) {
   const { ownerEmail, ownerName, memberName, memberEmail, catalogueName } = data
-  
+
   try {
     const emailData = await transporter.sendMail({
       from: process.env.SMTP_FROM || process.env.SMTP_USER,
@@ -155,7 +161,7 @@ ${memberName} (${memberEmail}) has accepted your invitation and joined your team
 They now have full access to collaborate on your catalogue.
 
 © 2024 Catfy. All rights reserved.
-      `
+      `,
     })
 
     return { success: true, messageId: emailData.messageId }

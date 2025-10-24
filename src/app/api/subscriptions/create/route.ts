@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser, getUserProfile } from '@/lib/auth'
-import { stripe, STRIPE_PLANS, createSubscription, createCustomer } from '@/lib/stripe'
+import {
+  stripe,
+  STRIPE_PLANS,
+  createSubscription,
+  createCustomer,
+} from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { BillingCycle, SubscriptionStatus, Prisma } from '@prisma/client'
@@ -23,20 +28,18 @@ export async function POST(request: NextRequest) {
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     const body = await request.json()
-    const { plan, paymentMethodId, couponCode } = createSubscriptionSchema.parse(body)
+    const { plan, paymentMethodId, couponCode } =
+      createSubscriptionSchema.parse(body)
 
     const selectedPlan = STRIPE_PLANS[plan]
 
     // Get or create Stripe customer
     let customerId = profile.stripeCustomerId
-    
+
     if (!customerId) {
       const customer = await createCustomer({
         email: user.email!,
@@ -46,9 +49,9 @@ export async function POST(request: NextRequest) {
           accountType: profile.accountType,
         },
       })
-      
+
       customerId = customer.id
-      
+
       // Update profile with Stripe customer ID
       await prisma.profile.update({
         where: { id: profile.id },
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-    
+
     await stripe.paymentMethods.attach(paymentMethodId, {
       customer: customerId,
     })
@@ -85,7 +88,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': request.headers.get('Authorization') || '',
+          Authorization: request.headers.get('Authorization') || '',
         },
         body: JSON.stringify({
           code: couponCode,
@@ -104,7 +107,7 @@ export async function POST(request: NextRequest) {
               { status: 500 }
             )
           }
-          
+
           try {
             await stripe.coupons.retrieve(couponCode.toUpperCase())
             couponId = couponCode.toUpperCase()
@@ -114,14 +117,16 @@ export async function POST(request: NextRequest) {
             await stripe.coupons.create({
               id: coupon.code,
               name: coupon.name,
-              [coupon.type === 'PERCENTAGE' ? 'percent_off' : 'amount_off']: 
-                coupon.type === 'PERCENTAGE' ? coupon.value : coupon.value * 100,
+              [coupon.type === 'PERCENTAGE' ? 'percent_off' : 'amount_off']:
+                coupon.type === 'PERCENTAGE'
+                  ? coupon.value
+                  : coupon.value * 100,
               duration: 'once',
               ...(coupon.type === 'FIXED' && { currency: 'usd' }),
             })
             couponId = coupon.code
           }
-          
+
           discountAmount = couponResult.discount.amount
         }
       }
@@ -161,7 +166,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create subscription in database
-    const subscription = await prisma.$transaction(async (tx) => {
+    const subscription = await prisma.$transaction(async tx => {
       const newSubscription = await tx.subscription.create({
         data: {
           profileId: profile.id,
@@ -170,9 +175,14 @@ export async function POST(request: NextRequest) {
           stripePriceId: selectedPlan.priceId,
           status: mapStripeStatus(stripeSubscription.status),
           amount: new Prisma.Decimal(selectedPlan.amount),
-          currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-          currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
-          billingCycle: plan === 'yearly' ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
+          currentPeriodStart: new Date(
+            stripeSubscription.current_period_start * 1000
+          ),
+          currentPeriodEnd: new Date(
+            stripeSubscription.current_period_end * 1000
+          ),
+          billingCycle:
+            plan === 'yearly' ? BillingCycle.YEARLY : BillingCycle.MONTHLY,
           cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
         },
       })
@@ -215,12 +225,17 @@ export async function POST(request: NextRequest) {
       stripeSubscription: {
         id: stripeSubscription.id,
         status: stripeSubscription.status,
-        clientSecret: typeof stripeSubscription.latest_invoice === 'object' && stripeSubscription.latest_invoice?.payment_intent && typeof stripeSubscription.latest_invoice.payment_intent === 'object' ? stripeSubscription.latest_invoice.payment_intent.client_secret : null,
+        clientSecret:
+          typeof stripeSubscription.latest_invoice === 'object' &&
+          stripeSubscription.latest_invoice?.payment_intent &&
+          typeof stripeSubscription.latest_invoice.payment_intent === 'object'
+            ? stripeSubscription.latest_invoice.payment_intent.client_secret
+            : null,
       },
     })
   } catch (error) {
     console.error('Subscription creation error:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -234,7 +249,10 @@ export async function POST(request: NextRequest) {
       switch (stripeError.type) {
         case 'StripeCardError':
           return NextResponse.json(
-            { error: 'Your card was declined. Please try a different payment method.' },
+            {
+              error:
+                'Your card was declined. Please try a different payment method.',
+            },
             { status: 400 }
           )
         case 'StripeInvalidRequestError':
@@ -247,10 +265,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to create subscription'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to create subscription'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

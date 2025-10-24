@@ -1,14 +1,11 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatBytes(
-  bytes: number,
-  decimals: number = 2
-): string {
+export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0) return '0 Bytes'
 
   const k = 1024
@@ -29,7 +26,10 @@ export function formatDate(date: Date | string): string {
   })
 }
 
-export function formatCurrency(amount: number, currency: string = 'INR'): string {
+export function formatCurrency(
+  amount: number,
+  currency: string = 'INR'
+): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,

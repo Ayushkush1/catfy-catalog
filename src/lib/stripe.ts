@@ -4,14 +4,17 @@ import Stripe from 'stripe'
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 if (!stripeSecretKey && process.env.NODE_ENV !== 'development') {
-  console.warn('STRIPE_SECRET_KEY is not set. Stripe functionality will be disabled.')
+  console.warn(
+    'STRIPE_SECRET_KEY is not set. Stripe functionality will be disabled.'
+  )
 }
 
-
-export const stripe = stripeSecretKey ? new Stripe(stripeSecretKey, {
-  apiVersion: '2023-10-16',
-  typescript: true,
-}) : null
+export const stripe = stripeSecretKey
+  ? new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16',
+      typescript: true,
+    })
+  : null
 
 export const STRIPE_PLANS = {
   monthly: {
@@ -69,7 +72,7 @@ export async function createCheckoutSession({
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY.')
   }
-  
+
   const sessionParams: Stripe.Checkout.SessionCreateParams = {
     mode: 'subscription',
     payment_method_types: ['card'],
@@ -136,7 +139,10 @@ export async function createSubscription({
   return await stripe.subscriptions.create(subscriptionParams)
 }
 
-export async function cancelSubscription(subscriptionId: string, atPeriodEnd = true) {
+export async function cancelSubscription(
+  subscriptionId: string,
+  atPeriodEnd = true
+) {
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY.')
   }
@@ -161,7 +167,7 @@ export async function updateSubscription({
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY.')
   }
-  
+
   const subscription = await stripe.subscriptions.retrieve(subscriptionId)
 
   const updateParams: Stripe.SubscriptionUpdateParams = {}
@@ -204,7 +210,7 @@ export async function createStripeCoupon({
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY.')
   }
-  
+
   const couponParams: Stripe.CouponCreateParams = {
     id,
     name,
@@ -229,11 +235,14 @@ export async function createStripeCoupon({
   return await stripe.coupons.create(couponParams)
 }
 
-export async function getCustomerPortalUrl(customerId: string, returnUrl: string) {
+export async function getCustomerPortalUrl(
+  customerId: string,
+  returnUrl: string
+) {
   if (!stripe) {
     throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY.')
   }
-  
+
   const session = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,

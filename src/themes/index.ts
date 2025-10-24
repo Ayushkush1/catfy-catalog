@@ -13,32 +13,32 @@ let themeRegistry: ThemeRegistry | null = null
 export function initializeThemeRegistry(): ThemeRegistry {
   if (!themeRegistry) {
     themeRegistry = ThemeRegistry.getInstance()
-    
+
     // Register all themes
     registerAllThemes()
   }
-  
+
   return themeRegistry
 }
 
 // Register all available themes
 function registerAllThemes() {
   if (!themeRegistry) return
-  
+
   // Register themes with auto-generated IDs
   themeRegistry.registerTheme({
     id: 'modern-blue',
-    ...modernBlueTheme
+    ...modernBlueTheme,
   })
-  
+
   themeRegistry.registerTheme({
     id: 'classic-warm',
-    ...classicWarmTheme
+    ...classicWarmTheme,
   })
-  
+
   themeRegistry.registerTheme({
     id: 'minimal-mono',
-    ...minimalMonoTheme
+    ...minimalMonoTheme,
   })
 }
 
@@ -57,7 +57,9 @@ export function getThemeById(themeId: string) {
   return registry.getTheme(themeId)
 }
 
-export function getThemesByCategory(category: 'modern' | 'classic' | 'minimal' | 'creative' | 'industry') {
+export function getThemesByCategory(
+  category: 'modern' | 'classic' | 'minimal' | 'creative' | 'industry'
+) {
   const registry = getThemeRegistry()
   return registry.getThemesByCategory(category)
 }
@@ -72,15 +74,20 @@ export function getPremiumThemes() {
   return registry.getPremiumThemes()
 }
 
-export function validateThemeCompatibility(themeId: string, templateId: string): boolean {
+export function validateThemeCompatibility(
+  themeId: string,
+  templateId: string
+): boolean {
   const registry = getThemeRegistry()
   const theme = registry.getTheme(themeId)
-  
+
   if (!theme) return false
-  
+
   // Check if theme is compatible with template
-  return theme.compatibleTemplates.includes('*') || 
-         theme.compatibleTemplates.includes(templateId)
+  return (
+    theme.compatibleTemplates.includes('*') ||
+    theme.compatibleTemplates.includes(templateId)
+  )
 }
 
 // Auto-discovery function for dynamic theme loading
@@ -91,11 +98,7 @@ export async function discoverThemes(): Promise<void> {
 }
 
 // Export theme configurations for direct access
-export {
-  modernBlueTheme,
-  classicWarmTheme,
-  minimalMonoTheme
-}
+export { modernBlueTheme, classicWarmTheme, minimalMonoTheme }
 
 // Export types
 export type { ThemeConfig } from '@/lib/theme-registry'

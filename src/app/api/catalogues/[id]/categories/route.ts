@@ -25,10 +25,7 @@ interface RouteParams {
 }
 
 // GET - Get all categories for a catalogue
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -40,10 +37,7 @@ export async function GET(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Continue with normal database query for all users
@@ -57,11 +51,11 @@ export async function GET(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
     })
 
@@ -100,10 +94,7 @@ export async function GET(
 }
 
 // POST - Create a new category
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -115,10 +106,7 @@ export async function POST(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Verify catalogue access (ownership or team membership)
@@ -130,11 +118,11 @@ export async function POST(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
     })
 

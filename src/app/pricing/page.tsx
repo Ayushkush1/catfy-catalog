@@ -2,58 +2,72 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Check, X } from 'lucide-react'
 import { SubscriptionPlan } from '@prisma/client'
-import { PLAN_FEATURES, formatPrice, getYearlySavingsPercentage } from '@/lib/subscription'
+import {
+  PLAN_FEATURES,
+  formatPrice,
+  getYearlySavingsPercentage,
+} from '@/lib/subscription'
 
 export default function PricingPage() {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(
+    'monthly'
+  )
 
   const plans = [
     {
       plan: SubscriptionPlan.FREE,
       popular: false,
       buttonText: 'Get Started',
-      buttonVariant: 'outline' as const
+      buttonVariant: 'outline' as const,
     },
     {
       plan: SubscriptionPlan.STANDARD,
       popular: true,
       buttonText: 'Start Free Trial',
-      buttonVariant: 'default' as const
+      buttonVariant: 'default' as const,
     },
     {
       plan: SubscriptionPlan.PROFESSIONAL,
       popular: false,
       buttonText: 'Start Free Trial',
-      buttonVariant: 'outline' as const
+      buttonVariant: 'outline' as const,
     },
     {
       plan: SubscriptionPlan.BUSINESS,
       popular: false,
       buttonText: 'Contact Sales',
-      buttonVariant: 'outline' as const
-    }
+      buttonVariant: 'outline' as const,
+    },
   ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <div className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">
             Choose Your Perfect Plan
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Start free and scale as you grow. All plans include our core features.
+          <p className="mb-8 text-xl text-gray-600">
+            Start free and scale as you grow. All plans include our core
+            features.
           </p>
-          
+
           {/* Billing Toggle */}
-          <div className="inline-flex items-center bg-white rounded-lg p-1 shadow-sm">
+          <div className="inline-flex items-center rounded-lg bg-white p-1 shadow-sm">
             <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
                 billingCycle === 'monthly'
                   ? 'bg-blue-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -63,7 +77,7 @@ export default function PricingPage() {
               Monthly
             </button>
             <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
                 billingCycle === 'yearly'
                   ? 'bg-blue-500 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -71,7 +85,10 @@ export default function PricingPage() {
               onClick={() => setBillingCycle('yearly')}
             >
               Yearly
-              <Badge variant="secondary" className="ml-2 bg-green-100 text-green-800">
+              <Badge
+                variant="secondary"
+                className="ml-2 bg-green-100 text-green-800"
+              >
                 Save 17%
               </Badge>
             </button>
@@ -79,36 +96,50 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
           {plans.map(({ plan, popular, buttonText, buttonVariant }) => {
             const features = PLAN_FEATURES[plan]
-            const price = billingCycle === 'monthly' ? features.monthlyPrice : features.yearlyPrice
+            const price =
+              billingCycle === 'monthly'
+                ? features.monthlyPrice
+                : features.yearlyPrice
             const displayPrice = billingCycle === 'yearly' ? price / 12 : price
-            const savings = billingCycle === 'yearly' ? getYearlySavingsPercentage(features.monthlyPrice, features.yearlyPrice) : 0
+            const savings =
+              billingCycle === 'yearly'
+                ? getYearlySavingsPercentage(
+                    features.monthlyPrice,
+                    features.yearlyPrice
+                  )
+                : 0
 
             return (
-              <Card key={plan} className={`relative ${popular ? 'ring-2 ring-blue-500 scale-105' : ''}`}>
+              <Card
+                key={plan}
+                className={`relative ${popular ? 'scale-105 ring-2 ring-blue-500' : ''}`}
+              >
                 {popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-500">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 transform bg-blue-500">
                     Most Popular
                   </Badge>
                 )}
-                
+
                 <CardHeader className="text-center">
-                  <CardTitle className="text-xl font-bold">{features.name}</CardTitle>
+                  <CardTitle className="text-xl font-bold">
+                    {features.name}
+                  </CardTitle>
                   <CardDescription>{features.description}</CardDescription>
-                  
+
                   <div className="mt-4">
                     <div className="flex items-baseline justify-center">
                       <span className="text-4xl font-bold">
                         {formatPrice(displayPrice)}
                       </span>
-                      <span className="text-gray-500 ml-1">
+                      <span className="ml-1 text-gray-500">
                         /{billingCycle === 'yearly' ? 'mo' : 'month'}
                       </span>
                     </div>
                     {billingCycle === 'yearly' && features.monthlyPrice > 0 && (
-                      <p className="text-sm text-green-600 mt-1">
+                      <p className="mt-1 text-sm text-green-600">
                         Billed annually • Save {savings}%
                       </p>
                     )}
@@ -121,25 +152,33 @@ export default function PricingPage() {
                     <div className="flex justify-between text-sm">
                       <span>Catalogues</span>
                       <span className="font-medium">
-                        {features.maxCatalogues === -1 ? 'Unlimited' : features.maxCatalogues}
+                        {features.maxCatalogues === -1
+                          ? 'Unlimited'
+                          : features.maxCatalogues}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Products per catalogue</span>
                       <span className="font-medium">
-                        {features.maxProductsPerCatalogue === -1 ? 'Unlimited' : features.maxProductsPerCatalogue}
+                        {features.maxProductsPerCatalogue === -1
+                          ? 'Unlimited'
+                          : features.maxProductsPerCatalogue}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Monthly exports</span>
                       <span className="font-medium">
-                        {features.maxExportsPerMonth === -1 ? 'Unlimited' : features.maxExportsPerMonth}
+                        {features.maxExportsPerMonth === -1
+                          ? 'Unlimited'
+                          : features.maxExportsPerMonth}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Storage</span>
                       <span className="font-medium">
-                        {features.maxStorageGB === -1 ? 'Unlimited' : `${features.maxStorageGB}GB`}
+                        {features.maxStorageGB === -1
+                          ? 'Unlimited'
+                          : `${features.maxStorageGB}GB`}
                       </span>
                     </div>
                   </div>
@@ -151,8 +190,11 @@ export default function PricingPage() {
                     <h4 className="font-medium text-green-900">✓ Included:</h4>
                     <ul className="space-y-1">
                       {features.included.map((feature, index) => (
-                        <li key={index} className="flex items-center text-sm text-green-800">
-                          <Check className="h-4 w-4 text-green-600 mr-2 flex-shrink-0" />
+                        <li
+                          key={index}
+                          className="flex items-center text-sm text-green-800"
+                        >
+                          <Check className="mr-2 h-4 w-4 flex-shrink-0 text-green-600" />
                           {feature}
                         </li>
                       ))}
@@ -162,11 +204,16 @@ export default function PricingPage() {
                   {/* Excluded Features */}
                   {features.excluded.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="font-medium text-gray-600">✗ Not included:</h4>
+                      <h4 className="font-medium text-gray-600">
+                        ✗ Not included:
+                      </h4>
                       <ul className="space-y-1">
                         {features.excluded.map((feature, index) => (
-                          <li key={index} className="flex items-center text-sm text-gray-500">
-                            <X className="h-4 w-4 text-gray-400 mr-2 flex-shrink-0" />
+                          <li
+                            key={index}
+                            className="flex items-center text-sm text-gray-500"
+                          >
+                            <X className="mr-2 h-4 w-4 flex-shrink-0 text-gray-400" />
                             {feature}
                           </li>
                         ))}
@@ -176,11 +223,7 @@ export default function PricingPage() {
                 </CardContent>
 
                 <CardFooter>
-                  <Button 
-                    variant={buttonVariant} 
-                    className="w-full"
-                    size="lg"
-                  >
+                  <Button variant={buttonVariant} className="w-full" size="lg">
                     {buttonText}
                   </Button>
                 </CardFooter>
@@ -191,30 +234,40 @@ export default function PricingPage() {
 
         {/* FAQ Section */}
         <div className="mt-16 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <h2 className="mb-8 text-2xl font-bold text-gray-900">
+            Frequently Asked Questions
+          </h2>
+          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
             <div className="text-left">
-              <h3 className="font-semibold mb-2">Can I change plans anytime?</h3>
-              <p className="text-gray-600 text-sm">
-                Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.
+              <h3 className="mb-2 font-semibold">
+                Can I change plans anytime?
+              </h3>
+              <p className="text-sm text-gray-600">
+                Yes, you can upgrade or downgrade your plan at any time. Changes
+                take effect immediately.
               </p>
             </div>
             <div className="text-left">
-              <h3 className="font-semibold mb-2">Is there a free trial?</h3>
-              <p className="text-gray-600 text-sm">
-                Yes, all paid plans come with a 14-day free trial. No credit card required.
+              <h3 className="mb-2 font-semibold">Is there a free trial?</h3>
+              <p className="text-sm text-gray-600">
+                Yes, all paid plans come with a 14-day free trial. No credit
+                card required.
               </p>
             </div>
             <div className="text-left">
-              <h3 className="font-semibold mb-2">What payment methods do you accept?</h3>
-              <p className="text-gray-600 text-sm">
-                We accept all major credit cards, PayPal, and bank transfers for annual plans.
+              <h3 className="mb-2 font-semibold">
+                What payment methods do you accept?
+              </h3>
+              <p className="text-sm text-gray-600">
+                We accept all major credit cards, PayPal, and bank transfers for
+                annual plans.
               </p>
             </div>
             <div className="text-left">
-              <h3 className="font-semibold mb-2">Can I cancel anytime?</h3>
-              <p className="text-gray-600 text-sm">
-                Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.
+              <h3 className="mb-2 font-semibold">Can I cancel anytime?</h3>
+              <p className="text-sm text-gray-600">
+                Yes, you can cancel your subscription at any time. You&apos;ll
+                continue to have access until the end of your billing period.
               </p>
             </div>
           </div>

@@ -1,48 +1,59 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useNode } from '@craftjs/core';
-import ContentEditable from 'react-contenteditable';
-import { BlockWrapper } from '../components/BlockWrapper';
+import React from 'react'
+import { useNode } from '@craftjs/core'
+import ContentEditable from 'react-contenteditable'
+import { BlockWrapper } from '../components/BlockWrapper'
 
 export interface HeadingBlockProps {
-  text: string;
-  level: 1 | 2 | 3 | 4 | 5 | 6;
-  fontSize: number;
-  fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
-  fontFamily: string;
-  color: string;
-  textAlign: 'left' | 'center' | 'right' | 'justify';
-  lineHeight: number;
-  letterSpacing: number;
-  textDecoration: 'none' | 'underline' | 'line-through';
-  textTransform: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  text: string
+  level: 1 | 2 | 3 | 4 | 5 | 6
+  fontSize: number
+  fontWeight:
+    | 'normal'
+    | 'bold'
+    | '100'
+    | '200'
+    | '300'
+    | '400'
+    | '500'
+    | '600'
+    | '700'
+    | '800'
+    | '900'
+  fontFamily: string
+  color: string
+  textAlign: 'left' | 'center' | 'right' | 'justify'
+  lineHeight: number
+  letterSpacing: number
+  textDecoration: 'none' | 'underline' | 'line-through'
+  textTransform: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
   margin: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
   padding: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
-  backgroundColor: string;
-  borderRadius: number;
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
+  backgroundColor: string
+  borderRadius: number
   border: {
-    width: number;
-    style: 'solid' | 'dashed' | 'dotted' | 'none';
-    color: string;
-  };
+    width: number
+    style: 'solid' | 'dashed' | 'dotted' | 'none'
+    color: string
+  }
   shadow: {
-    enabled: boolean;
-    x: number;
-    y: number;
-    blur: number;
-    color: string;
-  };
+    enabled: boolean
+    x: number
+    y: number
+    blur: number
+    color: string
+  }
 }
 
 const defaultProps: HeadingBlockProps = {
@@ -62,15 +73,15 @@ const defaultProps: HeadingBlockProps = {
   backgroundColor: 'transparent',
   borderRadius: 0,
   border: { width: 0, style: 'solid', color: '#000000' },
-  shadow: { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' }
-};
+  shadow: { enabled: false, x: 0, y: 0, blur: 0, color: '#000000' },
+}
 
-export const HeadingBlock: React.FC<Partial<HeadingBlockProps>> = (props) => {
+export const HeadingBlock: React.FC<Partial<HeadingBlockProps>> = props => {
   const {
-    actions: { setProp }
-  } = useNode();
+    actions: { setProp },
+  } = useNode()
 
-  const finalProps = { ...defaultProps, ...props };
+  const finalProps = { ...defaultProps, ...props }
 
   const {
     text,
@@ -89,14 +100,14 @@ export const HeadingBlock: React.FC<Partial<HeadingBlockProps>> = (props) => {
     backgroundColor,
     borderRadius,
     border,
-    shadow
-  } = finalProps;
+    shadow,
+  } = finalProps
 
   const handleTextChange = (evt: any) => {
     setProp((props: HeadingBlockProps) => {
-      props.text = evt.target.value;
-    });
-  };
+      props.text = evt.target.value
+    })
+  }
 
   const headingStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
@@ -112,19 +123,24 @@ export const HeadingBlock: React.FC<Partial<HeadingBlockProps>> = (props) => {
     padding: `${padding.top}px ${padding.right}px ${padding.bottom}px ${padding.left}px`,
     backgroundColor,
     borderRadius: `${borderRadius}px`,
-    border: border.width > 0 ? `${border.width}px ${border.style} ${border.color}` : 'none',
-    boxShadow: shadow.enabled ? `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}` : 'none',
+    border:
+      border.width > 0
+        ? `${border.width}px ${border.style} ${border.color}`
+        : 'none',
+    boxShadow: shadow.enabled
+      ? `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}`
+      : 'none',
     cursor: 'text',
     outline: 'none',
     minHeight: '1em',
     display: 'block',
     width: '100%',
-    wordBreak: 'break-word'
-  };
+    wordBreak: 'break-word',
+  }
 
   const renderHeading = () => {
     const commonProps = {
-      className: "heading-block",
+      className: 'heading-block',
       style: headingStyle,
       children: (
         <ContentEditable
@@ -138,70 +154,77 @@ export const HeadingBlock: React.FC<Partial<HeadingBlockProps>> = (props) => {
             background: 'transparent',
             width: '100%',
             minHeight: 'inherit',
-            display: 'inline-block'
+            display: 'inline-block',
           }}
         />
-      )
-    };
+      ),
+    }
 
     switch (level) {
-      case 1: return <h1 {...commonProps} />;
-      case 2: return <h2 {...commonProps} />;
-      case 3: return <h3 {...commonProps} />;
-      case 4: return <h4 {...commonProps} />;
-      case 5: return <h5 {...commonProps} />;
-      case 6: return <h6 {...commonProps} />;
-      default: return <h1 {...commonProps} />;
+      case 1:
+        return <h1 {...commonProps} />
+      case 2:
+        return <h2 {...commonProps} />
+      case 3:
+        return <h3 {...commonProps} />
+      case 4:
+        return <h4 {...commonProps} />
+      case 5:
+        return <h5 {...commonProps} />
+      case 6:
+        return <h6 {...commonProps} />
+      default:
+        return <h1 {...commonProps} />
     }
-  };
+  }
 
-  return (
-    <BlockWrapper>
-      {renderHeading()}
-    </BlockWrapper>
-  );
-};
+  return <BlockWrapper>{renderHeading()}</BlockWrapper>
+}
 
 // Settings component for the HeadingBlock
 export const HeadingBlockSettings: React.FC = () => {
   const {
     actions: { setProp },
-    props
-  } = useNode((node) => ({
-    props: node.data.props as HeadingBlockProps
-  }));
+    props,
+  } = useNode(node => ({
+    props: node.data.props as HeadingBlockProps,
+  }))
 
   return (
     <div className="space-y-4">
       {/* Text Content */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
           Heading Text
         </label>
         <input
           type="text"
           value={props.text}
-          onChange={(e) => setProp((props: HeadingBlockProps) => {
-            props.text = e.target.value;
-          })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
+          onChange={e =>
+            setProp((props: HeadingBlockProps) => {
+              props.text = e.target.value
+            })
+          }
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
       {/* Heading Level */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
           Heading Level
         </label>
         <select
           value={props.level}
-          onChange={(e) => setProp((props: HeadingBlockProps) => {
-            props.level = parseInt(e.target.value) as any;
-            // Auto-adjust font size based on heading level
-            const fontSizes = { 1: 32, 2: 28, 3: 24, 4: 20, 5: 18, 6: 16 };
-            props.fontSize = fontSizes[props.level];
-          })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
+          onChange={e =>
+            setProp((props: HeadingBlockProps) => {
+              props.level = parseInt(e.target.value) as any
+              // Auto-adjust font size based on heading level
+              const fontSizes = { 1: 32, 2: 28, 3: 24, 4: 20, 5: 18, 6: 16 }
+              props.fontSize = fontSizes[props.level]
+            })
+          }
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         >
           <option value={1}>H1</option>
           <option value={2}>H2</option>
@@ -215,28 +238,36 @@ export const HeadingBlockSettings: React.FC = () => {
       {/* Typography */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-900">Typography</h4>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Font Size</label>
+            <label className="mb-1 block text-xs text-gray-600">
+              Font Size
+            </label>
             <input
               type="number"
               value={props.fontSize}
-              onChange={(e) => setProp((props: HeadingBlockProps) => {
-                props.fontSize = parseInt(e.target.value) || 32;
-              })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={e =>
+                setProp((props: HeadingBlockProps) => {
+                  props.fontSize = parseInt(e.target.value) || 32
+                })
+              }
+              className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
             />
           </div>
-          
+
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Font Weight</label>
+            <label className="mb-1 block text-xs text-gray-600">
+              Font Weight
+            </label>
             <select
               value={props.fontWeight}
-              onChange={(e) => setProp((props: HeadingBlockProps) => {
-                props.fontWeight = e.target.value as any;
-              })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={e =>
+                setProp((props: HeadingBlockProps) => {
+                  props.fontWeight = e.target.value as any
+                })
+              }
+              className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
             >
               <option value="normal">Normal</option>
               <option value="bold">Bold</option>
@@ -254,25 +285,29 @@ export const HeadingBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Color</label>
+          <label className="mb-1 block text-xs text-gray-600">Color</label>
           <input
             type="color"
             value={props.color}
-            onChange={(e) => setProp((props: HeadingBlockProps) => {
-              props.color = e.target.value;
-            })}
-            className="w-full h-8 border border-gray-300 rounded"
+            onChange={e =>
+              setProp((props: HeadingBlockProps) => {
+                props.color = e.target.value
+              })
+            }
+            className="h-8 w-full rounded border border-gray-300"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Text Align</label>
+          <label className="mb-1 block text-xs text-gray-600">Text Align</label>
           <select
             value={props.textAlign}
-            onChange={(e) => setProp((props: HeadingBlockProps) => {
-              props.textAlign = e.target.value as any;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            onChange={e =>
+              setProp((props: HeadingBlockProps) => {
+                props.textAlign = e.target.value as any
+              })
+            }
+            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
           >
             <option value="left">Left</option>
             <option value="center">Center</option>
@@ -285,102 +320,118 @@ export const HeadingBlockSettings: React.FC = () => {
       {/* Spacing */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-900">Spacing</h4>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Margin</label>
+            <label className="mb-1 block text-xs text-gray-600">Margin</label>
             <div className="grid grid-cols-2 gap-1">
               <input
                 type="number"
                 placeholder="Top"
                 value={props.margin.top}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.margin.top = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.margin.top = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Right"
                 value={props.margin.right}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.margin.right = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.margin.right = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Bottom"
                 value={props.margin.bottom}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.margin.bottom = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.margin.bottom = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Left"
                 value={props.margin.left}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.margin.left = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.margin.left = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
             </div>
           </div>
-          
+
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Padding</label>
+            <label className="mb-1 block text-xs text-gray-600">Padding</label>
             <div className="grid grid-cols-2 gap-1">
               <input
                 type="number"
                 placeholder="Top"
                 value={props.padding.top}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.padding.top = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.padding.top = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Right"
                 value={props.padding.right}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.padding.right = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.padding.right = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Bottom"
                 value={props.padding.bottom}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.padding.bottom = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.padding.bottom = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
                 type="number"
                 placeholder="Left"
                 value={props.padding.left}
-                onChange={(e) => setProp((props: HeadingBlockProps) => {
-                  props.padding.left = parseInt(e.target.value) || 0;
-                })}
-                className="px-1 py-1 border border-gray-300 rounded text-xs"
+                onChange={e =>
+                  setProp((props: HeadingBlockProps) => {
+                    props.padding.left = parseInt(e.target.value) || 0
+                  })
+                }
+                className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Craft.js configuration
 HeadingBlock.craft = {
   props: defaultProps,
   related: {
-    settings: HeadingBlockSettings
+    settings: HeadingBlockSettings,
   },
-  displayName: 'Heading'
-};
+  displayName: 'Heading',
+}

@@ -1,9 +1,9 @@
-import { SmartProductSort } from "@/components/catalog/SmartProductSort"
+import { SmartProductSort } from '@/components/catalog/SmartProductSort'
 
 export function SmartProductSortButton({
   enabled,
   onToggle,
-  productTags
+  productTags,
 }: {
   enabled: boolean
   onToggle: (enabled: boolean) => void
@@ -11,7 +11,11 @@ export function SmartProductSortButton({
 }) {
   return (
     <div className="mb-6 flex items-center justify-end">
-      <SmartProductSort enabled={enabled} onToggle={onToggle} productTags={productTags} />
+      <SmartProductSort
+        enabled={enabled}
+        onToggle={onToggle}
+        productTags={productTags}
+      />
     </div>
   )
 }

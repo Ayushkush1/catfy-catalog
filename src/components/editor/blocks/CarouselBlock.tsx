@@ -1,52 +1,84 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNode } from '@craftjs/core';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Plus, X, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Upload } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react'
+import { useNode } from '@craftjs/core'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
+import {
+  Plus,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  Upload,
+} from 'lucide-react'
 
 export interface CarouselSlide {
-  id: string;
-  type: 'image' | 'content';
-  src?: string;
-  alt?: string;
-  title?: string;
-  content?: string;
-  link?: string;
+  id: string
+  type: 'image' | 'content'
+  src?: string
+  alt?: string
+  title?: string
+  content?: string
+  link?: string
 }
 
 export interface CarouselBlockProps {
-  slides: CarouselSlide[];
-  autoplay?: boolean;
-  autoplayInterval?: number;
-  showArrows?: boolean;
-  showDots?: boolean;
-  infinite?: boolean;
-  slidesToShow?: number;
-  slidesToScroll?: number;
-  height?: string;
-  width?: string;
-  borderRadius?: number;
-  backgroundColor?: string;
-  arrowColor?: string;
-  dotColor?: string;
-  activeDotColor?: string;
-  padding?: number;
-  margin?: number;
-  slideSpacing?: number;
-  animationDuration?: number;
-  pauseOnHover?: boolean;
+  slides: CarouselSlide[]
+  autoplay?: boolean
+  autoplayInterval?: number
+  showArrows?: boolean
+  showDots?: boolean
+  infinite?: boolean
+  slidesToShow?: number
+  slidesToScroll?: number
+  height?: string
+  width?: string
+  borderRadius?: number
+  backgroundColor?: string
+  arrowColor?: string
+  dotColor?: string
+  activeDotColor?: string
+  padding?: number
+  margin?: number
+  slideSpacing?: number
+  animationDuration?: number
+  pauseOnHover?: boolean
 }
 
 export const CarouselBlock: React.FC<CarouselBlockProps> = ({
   slides = [
-    { id: '1', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 1', title: 'Slide 1' },
-    { id: '2', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 2', title: 'Slide 2' },
-    { id: '3', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 3', title: 'Slide 3' }
+    {
+      id: '1',
+      type: 'image',
+      src: 'https://via.placeholder.com/800x400',
+      alt: 'Slide 1',
+      title: 'Slide 1',
+    },
+    {
+      id: '2',
+      type: 'image',
+      src: 'https://via.placeholder.com/800x400',
+      alt: 'Slide 2',
+      title: 'Slide 2',
+    },
+    {
+      id: '3',
+      type: 'image',
+      src: 'https://via.placeholder.com/800x400',
+      alt: 'Slide 3',
+      title: 'Slide 3',
+    },
   ],
   autoplay = false,
   autoplayInterval = 3000,
@@ -66,61 +98,73 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
   margin = 0,
   slideSpacing = 16,
   animationDuration = 300,
-  pauseOnHover = true
+  pauseOnHover = true,
 }) => {
-  const { connectors: { connect, drag } } = useNode();
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const {
+    connectors: { connect, drag },
+  } = useNode()
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const totalSlides = slides.length;
-  const maxSlide = infinite ? totalSlides : totalSlides - slidesToShow;
+  const totalSlides = slides.length
+  const maxSlide = infinite ? totalSlides : totalSlides - slidesToShow
 
   useEffect(() => {
     if (autoplay && !isHovered && totalSlides > 1) {
       intervalRef.current = setInterval(() => {
         setCurrentSlide(prev => {
           if (infinite) {
-            return (prev + slidesToScroll) % totalSlides;
+            return (prev + slidesToScroll) % totalSlides
           } else {
-            return prev + slidesToScroll >= maxSlide ? 0 : prev + slidesToScroll;
+            return prev + slidesToScroll >= maxSlide ? 0 : prev + slidesToScroll
           }
-        });
-      }, autoplayInterval);
+        })
+      }, autoplayInterval)
     }
 
     return () => {
       if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        clearInterval(intervalRef.current)
       }
-    };
-  }, [autoplay, isHovered, autoplayInterval, totalSlides, slidesToScroll, infinite, maxSlide]);
+    }
+  }, [
+    autoplay,
+    isHovered,
+    autoplayInterval,
+    totalSlides,
+    slidesToScroll,
+    infinite,
+    maxSlide,
+  ])
 
   const goToSlide = (index: number) => {
-    setCurrentSlide(index);
-  };
+    setCurrentSlide(index)
+  }
 
   const nextSlide = () => {
     if (infinite) {
-      setCurrentSlide((prev) => (prev + slidesToScroll) % totalSlides);
+      setCurrentSlide(prev => (prev + slidesToScroll) % totalSlides)
     } else {
-      setCurrentSlide((prev) => 
+      setCurrentSlide(prev =>
         prev + slidesToScroll >= maxSlide ? maxSlide : prev + slidesToScroll
-      );
+      )
     }
-  };
+  }
 
   const prevSlide = () => {
     if (infinite) {
-      setCurrentSlide((prev) => 
-        prev - slidesToScroll < 0 ? totalSlides - slidesToScroll : prev - slidesToScroll
-      );
+      setCurrentSlide(prev =>
+        prev - slidesToScroll < 0
+          ? totalSlides - slidesToScroll
+          : prev - slidesToScroll
+      )
     } else {
-      setCurrentSlide((prev) => 
+      setCurrentSlide(prev =>
         prev - slidesToScroll < 0 ? 0 : prev - slidesToScroll
-      );
+      )
     }
-  };
+  }
 
   const containerStyles = {
     position: 'relative' as const,
@@ -130,22 +174,22 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
     borderRadius: `${borderRadius}px`,
     padding: `${padding}px`,
     margin: `${margin}px`,
-    overflow: 'hidden'
-  };
+    overflow: 'hidden',
+  }
 
   const slidesContainerStyles = {
     display: 'flex',
     transition: `transform ${animationDuration}ms ease-in-out`,
     transform: `translateX(-${currentSlide * (100 / slidesToShow)}%)`,
-    height: '100%'
-  };
+    height: '100%',
+  }
 
   const slideStyles = {
     minWidth: `${100 / slidesToShow}%`,
     height: '100%',
     paddingRight: `${slideSpacing}px`,
-    boxSizing: 'border-box' as const
-  };
+    boxSizing: 'border-box' as const,
+  }
 
   const arrowStyles = {
     position: 'absolute' as const,
@@ -162,8 +206,8 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
     justifyContent: 'center',
     cursor: 'pointer',
     zIndex: 2,
-    transition: 'opacity 0.2s ease'
-  };
+    transition: 'opacity 0.2s ease',
+  }
 
   const dotsContainerStyles = {
     position: 'absolute' as const,
@@ -172,8 +216,8 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
     transform: 'translateX(-50%)',
     display: 'flex',
     gap: '8px',
-    zIndex: 2
-  };
+    zIndex: 2,
+  }
 
   const dotStyles = (isActive: boolean) => ({
     width: '12px',
@@ -181,14 +225,14 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
     borderRadius: '50%',
     backgroundColor: isActive ? activeDotColor : dotColor,
     cursor: 'pointer',
-    transition: 'background-color 0.2s ease'
-  });
+    transition: 'background-color 0.2s ease',
+  })
 
   return (
     <div
-      ref={(ref) => {
+      ref={ref => {
         if (ref) {
-          connect(drag(ref));
+          connect(drag(ref))
         }
       }}
       style={containerStyles}
@@ -200,29 +244,34 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
         {slides.map((slide, index) => (
           <div key={slide.id} style={slideStyles}>
             {slide.type === 'image' ? (
-              <div className="relative w-full h-full">
+              <div className="relative h-full w-full">
                 <img
                   src={slide.src}
                   alt={slide.alt || `Slide ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className="h-full w-full object-cover"
                   style={{ borderRadius: `${borderRadius}px` }}
                 />
                 {slide.title && (
-                  <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded">
+                  <div className="absolute bottom-4 left-4 rounded bg-black bg-opacity-50 px-3 py-2 text-white">
                     <h3 className="font-semibold">{slide.title}</h3>
                   </div>
                 )}
               </div>
             ) : (
-              <div 
-                className="w-full h-full flex flex-col justify-center items-center text-center p-6"
-                style={{ borderRadius: `${borderRadius}px`, backgroundColor: '#ffffff' }}
+              <div
+                className="flex h-full w-full flex-col items-center justify-center p-6 text-center"
+                style={{
+                  borderRadius: `${borderRadius}px`,
+                  backgroundColor: '#ffffff',
+                }}
               >
                 {slide.title && (
-                  <h3 className="text-2xl font-bold mb-4">{slide.title}</h3>
+                  <h3 className="mb-4 text-2xl font-bold">{slide.title}</h3>
                 )}
                 {slide.content && (
-                  <div className="text-gray-600 whitespace-pre-wrap">{slide.content}</div>
+                  <div className="whitespace-pre-wrap text-gray-600">
+                    {slide.content}
+                  </div>
                 )}
               </div>
             )}
@@ -237,91 +286,109 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
             onClick={prevSlide}
             className="hover:opacity-80"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             style={{ ...arrowStyles, right: '16px' }}
             onClick={nextSlide}
             className="hover:opacity-80"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="h-5 w-5" />
           </button>
         </>
       )}
 
       {showDots && totalSlides > 1 && (
         <div style={dotsContainerStyles}>
-          {Array.from({ length: Math.ceil(totalSlides / slidesToShow) }).map((_, index) => (
-            <div
-              key={index}
-              style={dotStyles(Math.floor(currentSlide / slidesToShow) === index)}
-              onClick={() => goToSlide(index * slidesToShow)}
-            />
-          ))}
+          {Array.from({ length: Math.ceil(totalSlides / slidesToShow) }).map(
+            (_, index) => (
+              <div
+                key={index}
+                style={dotStyles(
+                  Math.floor(currentSlide / slidesToShow) === index
+                )}
+                onClick={() => goToSlide(index * slidesToShow)}
+              />
+            )
+          )}
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 export const CarouselBlockSettings: React.FC = () => {
-  const { actions: { setProp }, props } = useNode((node) => ({
-    props: node.data.props as CarouselBlockProps
-  }));
+  const {
+    actions: { setProp },
+    props,
+  } = useNode(node => ({
+    props: node.data.props as CarouselBlockProps,
+  }))
 
   const addSlide = (type: 'image' | 'content') => {
     const newSlide: CarouselSlide = {
       id: Date.now().toString(),
       type,
-      ...(type === 'image' 
-        ? { src: 'https://via.placeholder.com/800x400', alt: `Slide ${props.slides.length + 1}`, title: `Slide ${props.slides.length + 1}` }
-        : { title: `Content Slide ${props.slides.length + 1}`, content: 'Add your content here...' }
-      )
-    };
+      ...(type === 'image'
+        ? {
+            src: 'https://via.placeholder.com/800x400',
+            alt: `Slide ${props.slides.length + 1}`,
+            title: `Slide ${props.slides.length + 1}`,
+          }
+        : {
+            title: `Content Slide ${props.slides.length + 1}`,
+            content: 'Add your content here...',
+          }),
+    }
     setProp((props: CarouselBlockProps) => {
-      props.slides.push(newSlide);
-    });
-  };
+      props.slides.push(newSlide)
+    })
+  }
 
   const removeSlide = (slideId: string) => {
     if (props.slides.length > 1) {
       setProp((props: CarouselBlockProps) => {
-        props.slides = props.slides.filter(slide => slide.id !== slideId);
-      });
+        props.slides = props.slides.filter(slide => slide.id !== slideId)
+      })
     }
-  };
+  }
 
-  const updateSlide = (slideId: string, field: keyof CarouselSlide, value: string) => {
+  const updateSlide = (
+    slideId: string,
+    field: keyof CarouselSlide,
+    value: string
+  ) => {
     setProp((props: CarouselBlockProps) => {
-      const slide = props.slides.find(s => s.id === slideId);
+      const slide = props.slides.find(s => s.id === slideId)
       if (slide) {
-        (slide as any)[field] = value;
+        ;(slide as any)[field] = value
       }
-    });
-  };
+    })
+  }
 
   const moveSlide = (slideId: string, direction: 'up' | 'down') => {
     setProp((props: CarouselBlockProps) => {
-      const currentIndex = props.slides.findIndex(slide => slide.id === slideId);
-      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-      
+      const currentIndex = props.slides.findIndex(slide => slide.id === slideId)
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1
+
       if (newIndex >= 0 && newIndex < props.slides.length) {
-        const [movedSlide] = props.slides.splice(currentIndex, 1);
-        props.slides.splice(newIndex, 0, movedSlide);
+        const [movedSlide] = props.slides.splice(currentIndex, 1)
+        props.slides.splice(newIndex, 0, movedSlide)
       }
-    });
-  };
+    })
+  }
 
   return (
     <div className="space-y-4">
       <div>
         <Label className="text-sm font-medium">Slides</Label>
-        <div className="space-y-2 mt-2">
+        <div className="mt-2 space-y-2">
           {props.slides.map((slide, index) => (
-            <div key={slide.id} className="border rounded-lg p-3 space-y-2">
+            <div key={slide.id} className="space-y-2 rounded-lg border p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  {slide.type === 'image' ? 'Image' : 'Content'} Slide {index + 1}
+                  {slide.type === 'image' ? 'Image' : 'Content'} Slide{' '}
+                  {index + 1}
                 </span>
                 <div className="flex items-center gap-1">
                   <Button
@@ -330,7 +397,7 @@ export const CarouselBlockSettings: React.FC = () => {
                     onClick={() => moveSlide(slide.id, 'up')}
                     disabled={index === 0}
                   >
-                    <ChevronUp className="w-3 h-3" />
+                    <ChevronUp className="h-3 w-3" />
                   </Button>
                   <Button
                     size="sm"
@@ -338,7 +405,7 @@ export const CarouselBlockSettings: React.FC = () => {
                     onClick={() => moveSlide(slide.id, 'down')}
                     disabled={index === props.slides.length - 1}
                   >
-                    <ChevronDown className="w-3 h-3" />
+                    <ChevronDown className="h-3 w-3" />
                   </Button>
                   <Button
                     size="sm"
@@ -346,18 +413,20 @@ export const CarouselBlockSettings: React.FC = () => {
                     onClick={() => removeSlide(slide.id)}
                     disabled={props.slides.length <= 1}
                   >
-                    <X className="w-3 h-3" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
-              
+
               {slide.type === 'image' ? (
                 <>
                   <div>
                     <Label className="text-xs">Image URL</Label>
                     <Input
                       value={slide.src || ''}
-                      onChange={(e) => updateSlide(slide.id, 'src', e.target.value)}
+                      onChange={e =>
+                        updateSlide(slide.id, 'src', e.target.value)
+                      }
                       placeholder="https://example.com/image.jpg"
                     />
                   </div>
@@ -365,7 +434,9 @@ export const CarouselBlockSettings: React.FC = () => {
                     <Label className="text-xs">Alt Text</Label>
                     <Input
                       value={slide.alt || ''}
-                      onChange={(e) => updateSlide(slide.id, 'alt', e.target.value)}
+                      onChange={e =>
+                        updateSlide(slide.id, 'alt', e.target.value)
+                      }
                       placeholder="Image description"
                     />
                   </div>
@@ -373,7 +444,9 @@ export const CarouselBlockSettings: React.FC = () => {
                     <Label className="text-xs">Title (Optional)</Label>
                     <Input
                       value={slide.title || ''}
-                      onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
+                      onChange={e =>
+                        updateSlide(slide.id, 'title', e.target.value)
+                      }
                       placeholder="Slide title"
                     />
                   </div>
@@ -384,7 +457,9 @@ export const CarouselBlockSettings: React.FC = () => {
                     <Label className="text-xs">Title</Label>
                     <Input
                       value={slide.title || ''}
-                      onChange={(e) => updateSlide(slide.id, 'title', e.target.value)}
+                      onChange={e =>
+                        updateSlide(slide.id, 'title', e.target.value)
+                      }
                       placeholder="Content slide title"
                     />
                   </div>
@@ -392,32 +467,44 @@ export const CarouselBlockSettings: React.FC = () => {
                     <Label className="text-xs">Content</Label>
                     <Textarea
                       value={slide.content || ''}
-                      onChange={(e) => updateSlide(slide.id, 'content', e.target.value)}
+                      onChange={e =>
+                        updateSlide(slide.id, 'content', e.target.value)
+                      }
                       placeholder="Slide content"
                       rows={3}
                     />
                   </div>
                 </>
               )}
-              
+
               <div>
                 <Label className="text-xs">Link (Optional)</Label>
                 <Input
                   value={slide.link || ''}
-                  onChange={(e) => updateSlide(slide.id, 'link', e.target.value)}
+                  onChange={e => updateSlide(slide.id, 'link', e.target.value)}
                   placeholder="https://example.com"
                 />
               </div>
             </div>
           ))}
-          
+
           <div className="flex gap-2">
-            <Button onClick={() => addSlide('image')} variant="outline" size="sm" className="flex-1">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button
+              onClick={() => addSlide('image')}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Add Image
             </Button>
-            <Button onClick={() => addSlide('content')} variant="outline" size="sm" className="flex-1">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button
+              onClick={() => addSlide('content')}
+              variant="outline"
+              size="sm"
+              className="flex-1"
+            >
+              <Plus className="mr-2 h-4 w-4" />
               Add Content
             </Button>
           </div>
@@ -427,17 +514,25 @@ export const CarouselBlockSettings: React.FC = () => {
       <div className="flex items-center space-x-2">
         <Switch
           checked={props.autoplay}
-          onCheckedChange={(checked) => setProp((props: CarouselBlockProps) => props.autoplay = checked)}
+          onCheckedChange={checked =>
+            setProp((props: CarouselBlockProps) => (props.autoplay = checked))
+          }
         />
         <Label className="text-sm">Autoplay</Label>
       </div>
 
       {props.autoplay && (
         <div>
-          <Label className="text-sm font-medium">Autoplay Interval: {props.autoplayInterval}ms</Label>
+          <Label className="text-sm font-medium">
+            Autoplay Interval: {props.autoplayInterval}ms
+          </Label>
           <Slider
             value={[props.autoplayInterval || 3000]}
-            onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.autoplayInterval = value)}
+            onValueChange={([value]) =>
+              setProp(
+                (props: CarouselBlockProps) => (props.autoplayInterval = value)
+              )
+            }
             min={1000}
             max={10000}
             step={500}
@@ -448,7 +543,9 @@ export const CarouselBlockSettings: React.FC = () => {
       <div className="flex items-center space-x-2">
         <Switch
           checked={props.showArrows}
-          onCheckedChange={(checked) => setProp((props: CarouselBlockProps) => props.showArrows = checked)}
+          onCheckedChange={checked =>
+            setProp((props: CarouselBlockProps) => (props.showArrows = checked))
+          }
         />
         <Label className="text-sm">Show Arrows</Label>
       </div>
@@ -456,7 +553,9 @@ export const CarouselBlockSettings: React.FC = () => {
       <div className="flex items-center space-x-2">
         <Switch
           checked={props.showDots}
-          onCheckedChange={(checked) => setProp((props: CarouselBlockProps) => props.showDots = checked)}
+          onCheckedChange={checked =>
+            setProp((props: CarouselBlockProps) => (props.showDots = checked))
+          }
         />
         <Label className="text-sm">Show Dots</Label>
       </div>
@@ -464,7 +563,9 @@ export const CarouselBlockSettings: React.FC = () => {
       <div className="flex items-center space-x-2">
         <Switch
           checked={props.infinite}
-          onCheckedChange={(checked) => setProp((props: CarouselBlockProps) => props.infinite = checked)}
+          onCheckedChange={checked =>
+            setProp((props: CarouselBlockProps) => (props.infinite = checked))
+          }
         />
         <Label className="text-sm">Infinite Loop</Label>
       </div>
@@ -472,16 +573,24 @@ export const CarouselBlockSettings: React.FC = () => {
       <div className="flex items-center space-x-2">
         <Switch
           checked={props.pauseOnHover}
-          onCheckedChange={(checked) => setProp((props: CarouselBlockProps) => props.pauseOnHover = checked)}
+          onCheckedChange={checked =>
+            setProp(
+              (props: CarouselBlockProps) => (props.pauseOnHover = checked)
+            )
+          }
         />
         <Label className="text-sm">Pause on Hover</Label>
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Slides to Show: {props.slidesToShow}</Label>
+        <Label className="text-sm font-medium">
+          Slides to Show: {props.slidesToShow}
+        </Label>
         <Slider
           value={[props.slidesToShow || 1]}
-          onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.slidesToShow = value)}
+          onValueChange={([value]) =>
+            setProp((props: CarouselBlockProps) => (props.slidesToShow = value))
+          }
           min={1}
           max={5}
           step={1}
@@ -489,10 +598,16 @@ export const CarouselBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Slides to Scroll: {props.slidesToScroll}</Label>
+        <Label className="text-sm font-medium">
+          Slides to Scroll: {props.slidesToScroll}
+        </Label>
         <Slider
           value={[props.slidesToScroll || 1]}
-          onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.slidesToScroll = value)}
+          onValueChange={([value]) =>
+            setProp(
+              (props: CarouselBlockProps) => (props.slidesToScroll = value)
+            )
+          }
           min={1}
           max={3}
           step={1}
@@ -500,30 +615,44 @@ export const CarouselBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Border Radius: {props.borderRadius}px</Label>
+        <Label className="text-sm font-medium">
+          Border Radius: {props.borderRadius}px
+        </Label>
         <Slider
           value={[props.borderRadius || 0]}
-          onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.borderRadius = value)}
+          onValueChange={([value]) =>
+            setProp((props: CarouselBlockProps) => (props.borderRadius = value))
+          }
           max={50}
           step={1}
         />
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Slide Spacing: {props.slideSpacing}px</Label>
+        <Label className="text-sm font-medium">
+          Slide Spacing: {props.slideSpacing}px
+        </Label>
         <Slider
           value={[props.slideSpacing || 0]}
-          onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.slideSpacing = value)}
+          onValueChange={([value]) =>
+            setProp((props: CarouselBlockProps) => (props.slideSpacing = value))
+          }
           max={50}
           step={1}
         />
       </div>
 
       <div>
-        <Label className="text-sm font-medium">Animation Duration: {props.animationDuration}ms</Label>
+        <Label className="text-sm font-medium">
+          Animation Duration: {props.animationDuration}ms
+        </Label>
         <Slider
           value={[props.animationDuration || 300]}
-          onValueChange={([value]) => setProp((props: CarouselBlockProps) => props.animationDuration = value)}
+          onValueChange={([value]) =>
+            setProp(
+              (props: CarouselBlockProps) => (props.animationDuration = value)
+            )
+          }
           min={100}
           max={1000}
           step={50}
@@ -534,7 +663,11 @@ export const CarouselBlockSettings: React.FC = () => {
         <Label className="text-sm font-medium">Height</Label>
         <Input
           value={props.height}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.height = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) => (props.height = e.target.value)
+            )
+          }
           placeholder="e.g., 400px, 50vh, auto"
         />
       </div>
@@ -543,7 +676,11 @@ export const CarouselBlockSettings: React.FC = () => {
         <Label className="text-sm font-medium">Width</Label>
         <Input
           value={props.width}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.width = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) => (props.width = e.target.value)
+            )
+          }
           placeholder="e.g., 100%, 800px, auto"
         />
       </div>
@@ -553,7 +690,12 @@ export const CarouselBlockSettings: React.FC = () => {
         <Input
           type="color"
           value={props.backgroundColor}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.backgroundColor = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) =>
+                (props.backgroundColor = e.target.value)
+            )
+          }
         />
       </div>
 
@@ -562,7 +704,11 @@ export const CarouselBlockSettings: React.FC = () => {
         <Input
           type="color"
           value={props.arrowColor}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.arrowColor = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) => (props.arrowColor = e.target.value)
+            )
+          }
         />
       </div>
 
@@ -571,7 +717,11 @@ export const CarouselBlockSettings: React.FC = () => {
         <Input
           type="color"
           value={props.dotColor}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.dotColor = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) => (props.dotColor = e.target.value)
+            )
+          }
         />
       </div>
 
@@ -580,19 +730,41 @@ export const CarouselBlockSettings: React.FC = () => {
         <Input
           type="color"
           value={props.activeDotColor}
-          onChange={(e) => setProp((props: CarouselBlockProps) => props.activeDotColor = e.target.value)}
+          onChange={e =>
+            setProp(
+              (props: CarouselBlockProps) =>
+                (props.activeDotColor = e.target.value)
+            )
+          }
         />
       </div>
     </div>
-  );
-};
-
-(CarouselBlock as any).craft = {
+  )
+}
+;(CarouselBlock as any).craft = {
   props: {
     slides: [
-      { id: '1', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 1', title: 'Slide 1' },
-      { id: '2', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 2', title: 'Slide 2' },
-      { id: '3', type: 'image', src: 'https://via.placeholder.com/800x400', alt: 'Slide 3', title: 'Slide 3' }
+      {
+        id: '1',
+        type: 'image',
+        src: 'https://via.placeholder.com/800x400',
+        alt: 'Slide 1',
+        title: 'Slide 1',
+      },
+      {
+        id: '2',
+        type: 'image',
+        src: 'https://via.placeholder.com/800x400',
+        alt: 'Slide 2',
+        title: 'Slide 2',
+      },
+      {
+        id: '3',
+        type: 'image',
+        src: 'https://via.placeholder.com/800x400',
+        alt: 'Slide 3',
+        title: 'Slide 3',
+      },
     ],
     autoplay: false,
     autoplayInterval: 3000,
@@ -612,9 +784,9 @@ export const CarouselBlockSettings: React.FC = () => {
     margin: 0,
     slideSpacing: 16,
     animationDuration: 300,
-    pauseOnHover: true
+    pauseOnHover: true,
   },
   related: {
-    settings: CarouselBlockSettings
-  }
-};
+    settings: CarouselBlockSettings,
+  },
+}

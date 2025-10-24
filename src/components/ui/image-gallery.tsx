@@ -3,7 +3,12 @@
 import React, { useState } from 'react'
 import { X, Eye, Download, Trash2, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +53,7 @@ export function ImageGallery({
   aspectRatio = 'square',
   allowPreview = true,
   allowDownload = true,
-  allowDelete = true
+  allowDelete = true,
 }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
   const [previewIndex, setPreviewIndex] = useState<number>(0)
@@ -67,10 +72,11 @@ export function ImageGallery({
   }
 
   const navigatePreview = (direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev' 
-      ? (previewIndex - 1 + images.length) % images.length
-      : (previewIndex + 1) % images.length
-    
+    const newIndex =
+      direction === 'prev'
+        ? (previewIndex - 1 + images.length) % images.length
+        : (previewIndex + 1) % images.length
+
     setPreviewIndex(newIndex)
     setSelectedImage(images[newIndex])
   }
@@ -94,7 +100,7 @@ export function ImageGallery({
 
   const handleDelete = async (image: ImageItem, index: number) => {
     if (!allowDelete || !onDelete) return
-    
+
     try {
       await onDelete(image, index)
     } catch (error) {
@@ -139,8 +145,8 @@ export function ImageGallery({
 
   if (images.length === 0) {
     return (
-      <div className={cn('text-center py-8 text-gray-500', className)}>
-        <Eye className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+      <div className={cn('py-8 text-center text-gray-500', className)}>
+        <Eye className="mx-auto mb-4 h-12 w-12 text-gray-300" />
         <p>No images to display</p>
       </div>
     )
@@ -148,16 +154,13 @@ export function ImageGallery({
 
   return (
     <>
-      <div 
-        className={cn('w-full', className)}
-        style={{ maxHeight }}
-      >
+      <div className={cn('w-full', className)} style={{ maxHeight }}>
         <div className={cn('grid gap-4 overflow-y-auto', getGridClass())}>
           {images.map((image, index) => (
             <div key={image.id || index} className="group relative">
-              <div 
+              <div
                 className={cn(
-                  'relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50 cursor-pointer transition-all hover:shadow-md',
+                  'relative cursor-pointer overflow-hidden rounded-lg border border-gray-200 bg-gray-50 transition-all hover:shadow-md',
                   getAspectRatioClass()
                 )}
                 onClick={() => openPreview(image, index)}
@@ -165,22 +168,22 @@ export function ImageGallery({
                 <img
                   src={image.url}
                   alt={image.alt || image.name}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
-                
+
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center">
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 transition-all group-hover:bg-opacity-30">
+                  <div className="opacity-0 transition-opacity group-hover:opacity-100">
                     <Eye className="h-6 w-6 text-white" />
                   </div>
                 </div>
 
                 {/* File info badge */}
                 {image.size && (
-                  <Badge 
-                    variant="secondary" 
-                    className="absolute top-2 left-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  <Badge
+                    variant="secondary"
+                    className="absolute left-2 top-2 text-xs opacity-0 transition-opacity group-hover:opacity-100"
                   >
                     {formatFileSize(image.size)}
                   </Badge>
@@ -188,26 +191,28 @@ export function ImageGallery({
               </div>
 
               {/* Image name */}
-              <p className="mt-2 text-sm text-gray-600 truncate">
+              <p className="mt-2 truncate text-sm text-gray-600">
                 {image.name}
               </p>
 
               {/* Actions dropdown */}
               {showActions && (allowDownload || allowDelete) && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+                        className="h-8 w-8 bg-white/90 p-0 hover:bg-white"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {allowPreview && (
-                        <DropdownMenuItem onClick={() => openPreview(image, index)}>
+                        <DropdownMenuItem
+                          onClick={() => openPreview(image, index)}
+                        >
                           <Eye className="mr-2 h-4 w-4" />
                           Preview
                         </DropdownMenuItem>
@@ -219,7 +224,7 @@ export function ImageGallery({
                         </DropdownMenuItem>
                       )}
                       {allowDelete && onDelete && (
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDelete(image, index)}
                           className="text-red-600 focus:text-red-600"
                         >
@@ -238,7 +243,7 @@ export function ImageGallery({
 
       {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+        <DialogContent className="max-h-[90vh] max-w-4xl p-0">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="flex items-center justify-between">
               <span>{selectedImage?.name}</span>
@@ -246,33 +251,29 @@ export function ImageGallery({
                 <Badge variant="outline">
                   {previewIndex + 1} of {images.length}
                 </Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={closePreview}
-                >
+                <Button variant="ghost" size="sm" onClick={closePreview}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="relative flex-1 p-6 pt-0">
             {selectedImage && (
               <div className="relative">
                 <img
                   src={selectedImage.url}
                   alt={selectedImage.alt || selectedImage.name}
-                  className="w-full h-auto max-h-[60vh] object-contain rounded-lg"
+                  className="h-auto max-h-[60vh] w-full rounded-lg object-contain"
                 />
-                
+
                 {/* Navigation buttons */}
                 {images.length > 1 && (
                   <>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 transform"
                       onClick={() => navigatePreview('prev')}
                     >
                       ←
@@ -280,7 +281,7 @@ export function ImageGallery({
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 transform"
                       onClick={() => navigatePreview('next')}
                     >
                       →
@@ -289,31 +290,39 @@ export function ImageGallery({
                 )}
               </div>
             )}
-            
+
             {/* Image details */}
             {selectedImage && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-4 rounded-lg bg-gray-50 p-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-700">File name:</span>
+                    <span className="font-medium text-gray-700">
+                      File name:
+                    </span>
                     <p className="text-gray-600">{selectedImage.name}</p>
                   </div>
                   {selectedImage.size && (
                     <div>
-                      <span className="font-medium text-gray-700">File size:</span>
-                      <p className="text-gray-600">{formatFileSize(selectedImage.size)}</p>
+                      <span className="font-medium text-gray-700">
+                        File size:
+                      </span>
+                      <p className="text-gray-600">
+                        {formatFileSize(selectedImage.size)}
+                      </p>
                     </div>
                   )}
                   {selectedImage.type && (
                     <div>
-                      <span className="font-medium text-gray-700">File type:</span>
+                      <span className="font-medium text-gray-700">
+                        File type:
+                      </span>
                       <p className="text-gray-600">{selectedImage.type}</p>
                     </div>
                   )}
                 </div>
-                
+
                 {/* Action buttons */}
-                <div className="flex gap-2 mt-4">
+                <div className="mt-4 flex gap-2">
                   {allowDownload && (
                     <Button
                       variant="outline"

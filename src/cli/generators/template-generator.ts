@@ -13,7 +13,7 @@ const TemplateGeneratorOptionsSchema = z.object({
   author: z.string().default('Unknown'),
   pageCount: z.number().min(1).default(4),
   features: z.array(z.string()).default([]),
-  outputDir: z.string().default('src/templates')
+  outputDir: z.string().default('src/templates'),
 })
 
 type TemplateGeneratorOptions = z.infer<typeof TemplateGeneratorOptionsSchema>
@@ -30,7 +30,9 @@ export class TemplateGenerator {
   private generateTemplateConfig(): Omit<TemplateConfig, 'id'> {
     return {
       name: this.options.name,
-      description: this.options.description || `A ${this.options.category} catalog template with ${this.options.pageCount} pages`,
+      description:
+        this.options.description ||
+        `A ${this.options.category} catalog template with ${this.options.pageCount} pages`,
       category: this.options.category,
       isPremium: this.options.isPremium,
       version: '1.0.0',
@@ -43,7 +45,7 @@ export class TemplateGenerator {
         'Contact information',
         'Responsive grid',
         'Print-optimized',
-        ...this.options.features
+        ...this.options.features,
       ],
       tags: [this.options.category, 'generated', 'custom'],
       pageCount: this.options.pageCount,
@@ -57,14 +59,9 @@ export class TemplateGenerator {
           'tags',
           'currency',
           'priceDisplay',
-          'category'
+          'category',
         ],
-        categories: [
-          'name',
-          'description',
-          'color',
-          'sortOrder'
-        ],
+        categories: ['name', 'description', 'color', 'sortOrder'],
         profile: [
           'companyName',
           'fullName',
@@ -77,15 +74,15 @@ export class TemplateGenerator {
           'state',
           'country',
           'tagline',
-          'socialLinks'
-        ]
+          'socialLinks',
+        ],
       },
       compatibleThemes: ['*'],
       requiredThemeFeatures: [],
       layoutOptions: {
         responsive: true,
         printOptimized: true,
-        customizable: true
+        customizable: true,
       },
       customProperties: {
         supportsSmartSort: true,
@@ -93,17 +90,17 @@ export class TemplateGenerator {
         supportsColorCustomization: true,
         supportsFontCustomization: true,
         supportsSpacingCustomization: true,
-        supportsAdvancedStyles: true
+        supportsAdvancedStyles: true,
       },
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     }
   }
 
   // Generate main template component
   private generateTemplateComponent(): string {
     const componentName = this.toPascalCase(this.options.id)
-    
+
     return `'use client'
 
 import { Catalogue, Category, Product, Profile } from '@prisma/client'
@@ -202,7 +199,7 @@ export default ${componentName}
   // Generate page structure based on page count
   private generatePageStructure(): string {
     const pages = []
-    
+
     for (let i = 1; i <= this.options.pageCount; i++) {
       const pageName = this.getPageName(i)
       pages.push(`      {/* Page ${i}: ${pageName} */}
@@ -214,7 +211,7 @@ export default ${componentName}
         </div>
       </div>`)
     }
-    
+
     return pages.join('\n\n')
   }
 
@@ -228,16 +225,16 @@ export default ${componentName}
       'About Us',
       'Services',
       'Gallery',
-      'Testimonials'
+      'Testimonials',
     ]
-    
+
     return commonPages[pageIndex - 1] || `Page ${pageIndex}`
   }
 
   // Generate template configuration file
   private generateConfigFile(): string {
     const config = this.generateTemplateConfig()
-    
+
     return `import { TemplateConfig } from '@/lib/template-registry'
 
 const template: Omit<TemplateConfig, 'id'> = ${JSON.stringify(config, null, 2)}
@@ -249,7 +246,7 @@ export default template
   // Generate index file for the template
   private generateIndexFile(): string {
     const componentName = this.toPascalCase(this.options.id)
-    
+
     return `export { default as ${componentName} } from './${componentName}'
 export { default as templateConfig } from './template.config'
 `
@@ -301,43 +298,55 @@ This template is compatible with all themes by default.
   }
 
   // Generate all template files
-  async generateTemplate(): Promise<{ success: boolean, files?: string[], error?: string }> {
+  async generateTemplate(): Promise<{
+    success: boolean
+    files?: string[]
+    error?: string
+  }> {
     try {
-      const templateDir = path.join(process.cwd(), this.options.outputDir, this.options.id)
+      const templateDir = path.join(
+        process.cwd(),
+        this.options.outputDir,
+        this.options.id
+      )
       const files: string[] = []
-      
+
       // Ensure template directory exists
       await fs.mkdir(templateDir, { recursive: true })
-      
+
       // Generate main component file
       const componentName = this.toPascalCase(this.options.id)
       const componentFile = path.join(templateDir, `${componentName}.tsx`)
-      await fs.writeFile(componentFile, this.generateTemplateComponent(), 'utf-8')
+      await fs.writeFile(
+        componentFile,
+        this.generateTemplateComponent(),
+        'utf-8'
+      )
       files.push(componentFile)
-      
+
       // Generate config file
       const configFile = path.join(templateDir, 'template.config.ts')
       await fs.writeFile(configFile, this.generateConfigFile(), 'utf-8')
       files.push(configFile)
-      
+
       // Generate index file
       const indexFile = path.join(templateDir, 'index.ts')
       await fs.writeFile(indexFile, this.generateIndexFile(), 'utf-8')
       files.push(indexFile)
-      
+
       // Generate README
       const readmeFile = path.join(templateDir, 'README.md')
       await fs.writeFile(readmeFile, this.generateReadme(), 'utf-8')
       files.push(readmeFile)
-      
+
       return {
         success: true,
-        files
+        files,
       }
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
   }
@@ -352,24 +361,28 @@ This template is compatible with all themes by default.
 }
 
 // CLI command function
-export async function generateTemplate(options: Partial<TemplateGeneratorOptions>): Promise<void> {
+export async function generateTemplate(
+  options: Partial<TemplateGeneratorOptions>
+): Promise<void> {
   const generator = new TemplateGenerator(options)
-  
+
   console.log(`📄 Generating template: ${options.name}...`)
-  
+
   const result = await generator.generateTemplate()
   if (!result.success) {
     console.error(`❌ Failed to generate template: ${result.error}`)
     return
   }
-  
+
   console.log(`✅ Template generated successfully!`)
   console.log(`📁 Files created:`)
   result.files?.forEach(file => {
     console.log(`   - ${file}`)
   })
-  
-  console.log(`\n🚀 Template '${options.name}' has been generated successfully!`)
+
+  console.log(
+    `\n🚀 Template '${options.name}' has been generated successfully!`
+  )
   console.log(`\nNext steps:`)
   console.log(`1. Implement the page components in the template`)
   console.log(`2. Add the template to your template registry`)

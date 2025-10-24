@@ -5,7 +5,7 @@ export const ADMIN_CONFIG = {
   // Admin credentials
   email: 'admin@catfy.com',
   password: 'CatfyAdmin2024!',
-  
+
   // Admin user details
   profile: {
     firstName: 'Admin',
@@ -16,7 +16,7 @@ export const ADMIN_CONFIG = {
     phone: '+1-555-ADMIN',
     website: 'https://catfy.com',
   },
-  
+
   // Admin permissions
   permissions: {
     canAccessAdminDashboard: true,
@@ -24,7 +24,7 @@ export const ADMIN_CONFIG = {
     canManageCatalogues: true,
     canViewAnalytics: true,
     canManageSettings: true,
-  }
+  },
 }
 
 // Function to check if an email is an admin email
@@ -33,7 +33,10 @@ export function isAdminEmail(email: string): boolean {
 }
 
 // Function to validate admin credentials
-export function validateAdminCredentials(email: string, password: string): boolean {
+export function validateAdminCredentials(
+  email: string,
+  password: string
+): boolean {
   // Only allow the main admin account
   return email === ADMIN_CONFIG.email && password === ADMIN_CONFIG.password
 }
@@ -50,7 +53,7 @@ export function getAdminProfile(email: string) {
       updatedAt: new Date(),
     }
   }
-  
+
   return null
 }
 

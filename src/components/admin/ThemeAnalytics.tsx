@@ -1,33 +1,45 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
   LineChart,
   Line,
-  Legend
+  Legend,
 } from 'recharts'
-import { 
-  Palette, 
-  TrendingUp, 
-  Users, 
+import {
+  Palette,
+  TrendingUp,
+  Users,
   Calendar,
   RefreshCw,
-  Download
+  Download,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -89,12 +101,14 @@ export function ThemeAnalytics() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`/api/admin/theme-analytics?timeRange=${timeRange}`)
-      
+      const response = await fetch(
+        `/api/admin/theme-analytics?timeRange=${timeRange}`
+      )
+
       if (!response.ok) {
         throw new Error('Failed to fetch theme analytics')
       }
-      
+
       const analyticsData = await response.json()
       setData(analyticsData)
     } catch (err) {
@@ -111,14 +125,16 @@ export function ThemeAnalytics() {
 
   const exportData = () => {
     if (!data) return
-    
+
     const csvContent = [
       ['Theme ID', 'Theme Name', 'Usage Count', 'Percentage'].join(','),
-      ...data.themeUsage.map(theme => 
-        [theme.themeId, theme.themeName, theme.count, theme.percentage].join(',')
-      )
+      ...data.themeUsage.map(theme =>
+        [theme.themeId, theme.themeName, theme.count, theme.percentage].join(
+          ','
+        )
+      ),
     ].join('\n')
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -137,12 +153,12 @@ export function ThemeAnalytics() {
             <RefreshCw className="h-5 w-5" />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
+                <div className="mb-2 h-4 rounded bg-gray-200"></div>
+                <div className="h-8 rounded bg-gray-200"></div>
               </CardContent>
             </Card>
           ))}
@@ -157,13 +173,13 @@ export function ThemeAnalytics() {
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Theme Analytics</h2>
           <Button onClick={fetchAnalytics} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Retry
           </Button>
         </div>
         <Card>
           <CardContent className="p-6 text-center">
-            <div className="text-red-500 mb-2">Error loading analytics</div>
+            <div className="mb-2 text-red-500">Error loading analytics</div>
             <div className="text-gray-600">{error}</div>
           </CardContent>
         </Card>
@@ -179,7 +195,7 @@ export function ThemeAnalytics() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+        <h2 className="flex items-center gap-2 text-2xl font-bold">
           <Palette className="h-6 w-6" />
           Theme Analytics
         </h2>
@@ -196,42 +212,50 @@ export function ThemeAnalytics() {
             </SelectContent>
           </Select>
           <Button onClick={fetchAnalytics} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
           <Button onClick={exportData} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Selections</p>
-                <p className="text-2xl font-bold">{data.totalSelections.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Selections
+                </p>
+                <p className="text-2xl font-bold">
+                  {data.totalSelections.toLocaleString()}
+                </p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Unique Users</p>
-                <p className="text-2xl font-bold">{data.uniqueUsers.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Unique Users
+                </p>
+                <p className="text-2xl font-bold">
+                  {data.uniqueUsers.toLocaleString()}
+                </p>
               </div>
               <Users className="h-8 w-8 text-green-500" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -243,12 +267,14 @@ export function ThemeAnalytics() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg. per Day</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Avg. per Day
+                </p>
                 <p className="text-2xl font-bold">
                   {Math.round(data.totalSelections / data.timeRange)}
                 </p>
@@ -266,9 +292,9 @@ export function ThemeAnalytics() {
           <TabsTrigger value="trends">Usage Trends</TabsTrigger>
           <TabsTrigger value="recent">Recent Activity</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="usage" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Bar Chart */}
             <Card>
               <CardHeader>
@@ -281,8 +307,8 @@ export function ThemeAnalytics() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={data.themeUsage}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="themeName" 
+                    <XAxis
+                      dataKey="themeName"
                       angle={-45}
                       textAnchor="end"
                       height={80}
@@ -294,7 +320,7 @@ export function ThemeAnalytics() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-            
+
             {/* Pie Chart */}
             <Card>
               <CardHeader>
@@ -311,13 +337,18 @@ export function ThemeAnalytics() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ themeName, percentage }) => `${themeName} (${percentage}%)`}
+                      label={({ themeName, percentage }) =>
+                        `${themeName} (${percentage}%)`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
                     >
                       {data.themeUsage.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -327,14 +358,12 @@ export function ThemeAnalytics() {
             </Card>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="trends">
           <Card>
             <CardHeader>
               <CardTitle>Daily Usage Trends</CardTitle>
-              <CardDescription>
-                Theme selections over time
-              </CardDescription>
+              <CardDescription>Theme selections over time</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -344,10 +373,10 @@ export function ThemeAnalytics() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#3B82F6" 
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#3B82F6"
                     strokeWidth={2}
                     name="Theme Selections"
                   />
@@ -356,7 +385,7 @@ export function ThemeAnalytics() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="recent">
           <Card>
             <CardHeader>
@@ -368,25 +397,33 @@ export function ThemeAnalytics() {
             <CardContent>
               <div className="space-y-4">
                 {data.recentSelections.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="py-8 text-center text-gray-500">
                     No recent theme selections found
                   </div>
                 ) : (
-                  data.recentSelections.map((selection) => (
-                    <div key={selection.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  data.recentSelections.map(selection => (
+                    <div
+                      key={selection.id}
+                      className="flex items-center justify-between rounded-lg border p-4"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                        <div className="h-3 w-3 rounded-full bg-blue-500"></div>
                         <div>
-                          <div className="font-medium">{selection.themeName}</div>
+                          <div className="font-medium">
+                            {selection.themeName}
+                          </div>
                           <div className="text-sm text-gray-600">
-                            {selection.user.name || selection.user.email} • {selection.catalogue.name}
+                            {selection.user.name || selection.user.email} •{' '}
+                            {selection.catalogue.name}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
                         <Badge variant="secondary">{selection.themeId}</Badge>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {formatDistanceToNow(new Date(selection.selectedAt), { addSuffix: true })}
+                        <div className="mt-1 text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(selection.selectedAt), {
+                            addSuffix: true,
+                          })}
                         </div>
                       </div>
                     </div>

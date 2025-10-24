@@ -1,62 +1,73 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useNode } from '@craftjs/core';
-import { BlockWrapper } from '../components/BlockWrapper';
+import React from 'react'
+import { useNode } from '@craftjs/core'
+import { BlockWrapper } from '../components/BlockWrapper'
 
 export interface ButtonBlockProps {
-  text: string;
-  href: string;
-  target: '_self' | '_blank' | '_parent' | '_top';
-  variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link';
-  size: 'sm' | 'md' | 'lg' | 'xl';
-  fontSize: number;
-  fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
-  fontFamily: string;
-  color: string;
-  backgroundColor: string;
-  borderColor: string;
-  borderWidth: number;
-  borderRadius: number;
+  text: string
+  href: string
+  target: '_self' | '_blank' | '_parent' | '_top'
+  variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link'
+  size: 'sm' | 'md' | 'lg' | 'xl'
+  fontSize: number
+  fontWeight:
+    | 'normal'
+    | 'bold'
+    | '100'
+    | '200'
+    | '300'
+    | '400'
+    | '500'
+    | '600'
+    | '700'
+    | '800'
+    | '900'
+  fontFamily: string
+  color: string
+  backgroundColor: string
+  borderColor: string
+  borderWidth: number
+  borderRadius: number
   padding: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
   margin: {
-    top: number;
-    right: number;
-    bottom: number;
-    left: number;
-  };
-  width: 'auto' | 'full' | 'fit';
-  textAlign: 'left' | 'center' | 'right';
+    top: number
+    right: number
+    bottom: number
+    left: number
+  }
+  width: 'auto' | 'full' | 'fit'
+  textAlign: 'left' | 'center' | 'right'
   shadow: {
-    enabled: boolean;
-    x: number;
-    y: number;
-    blur: number;
-    color: string;
-  };
+    enabled: boolean
+    x: number
+    y: number
+    blur: number
+    color: string
+  }
   hoverEffect: {
-    enabled: boolean;
-    backgroundColor: string;
-    color: string;
-    transform: 'none' | 'scale' | 'translateY';
-    transformValue: number;
-  };
+    enabled: boolean
+    backgroundColor: string
+    color: string
+    transform: 'none' | 'scale' | 'translateY'
+    transformValue: number
+  }
   icon: {
-    enabled: boolean;
-    name: string;
-    position: 'left' | 'right';
-    size: number;
-  };
+    enabled: boolean
+    name: string
+    position: 'left' | 'right'
+    size: number
+  }
   animation: {
-    type: 'none' | 'fadeIn' | 'slideIn' | 'bounce' | 'pulse';
-    duration: number;
-    delay: number;
-  };
+    type: 'none' | 'fadeIn' | 'slideIn' | 'bounce' | 'pulse'
+    duration: number
+    delay: number
+  }
 }
 
 const defaultProps: ButtonBlockProps = {
@@ -83,18 +94,18 @@ const defaultProps: ButtonBlockProps = {
     backgroundColor: '#2563eb',
     color: '#ffffff',
     transform: 'none',
-    transformValue: 0
+    transformValue: 0,
   },
   icon: { enabled: false, name: '', position: 'left', size: 16 },
-  animation: { type: 'none', duration: 300, delay: 0 }
-};
+  animation: { type: 'none', duration: 300, delay: 0 },
+}
 
-export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
+export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = props => {
   const {
-    actions: { setProp }
-  } = useNode();
+    actions: { setProp },
+  } = useNode()
 
-  const finalProps = { ...defaultProps, ...props };
+  const finalProps = { ...defaultProps, ...props }
 
   const {
     text,
@@ -117,8 +128,8 @@ export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
     shadow,
     hoverEffect,
     icon,
-    animation
-  } = finalProps;
+    animation,
+  } = finalProps
 
   const buttonStyle: React.CSSProperties = {
     fontSize: `${fontSize}px`,
@@ -132,7 +143,9 @@ export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
     margin: `${margin.top}px ${margin.right}px ${margin.bottom}px ${margin.left}px`,
     width: width === 'full' ? '100%' : width === 'fit' ? 'fit-content' : 'auto',
     textAlign,
-    boxShadow: shadow.enabled ? `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}` : 'none',
+    boxShadow: shadow.enabled
+      ? `${shadow.x}px ${shadow.y}px ${shadow.blur}px ${shadow.color}`
+      : 'none',
     cursor: 'pointer',
     textDecoration: 'none',
     display: 'inline-flex',
@@ -141,24 +154,22 @@ export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
     gap: icon.enabled ? '8px' : '0',
     transition: 'all 0.2s ease-in-out',
     outline: 'none',
-    userSelect: 'none'
-  };
-
-
+    userSelect: 'none',
+  }
 
   // Size presets
   const sizePresets = {
     sm: { fontSize: 14, padding: { top: 8, right: 16, bottom: 8, left: 16 } },
     md: { fontSize: 16, padding: { top: 12, right: 24, bottom: 12, left: 24 } },
     lg: { fontSize: 18, padding: { top: 16, right: 32, bottom: 16, left: 32 } },
-    xl: { fontSize: 20, padding: { top: 20, right: 40, bottom: 20, left: 40 } }
-  };
+    xl: { fontSize: 20, padding: { top: 20, right: 40, bottom: 20, left: 40 } },
+  }
 
   // Apply size preset if using preset sizes
   if (sizePresets[size]) {
-    const preset = sizePresets[size];
-    buttonStyle.fontSize = `${preset.fontSize}px`;
-    buttonStyle.padding = `${preset.padding.top}px ${preset.padding.right}px ${preset.padding.bottom}px ${preset.padding.left}px`;
+    const preset = sizePresets[size]
+    buttonStyle.fontSize = `${preset.fontSize}px`
+    buttonStyle.padding = `${preset.padding.top}px ${preset.padding.right}px ${preset.padding.bottom}px ${preset.padding.left}px`
   }
 
   // Variant styles
@@ -166,53 +177,53 @@ export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
     primary: {
       backgroundColor: '#3b82f6',
       color: '#ffffff',
-      borderColor: '#3b82f6'
+      borderColor: '#3b82f6',
     },
     secondary: {
       backgroundColor: '#6b7280',
       color: '#ffffff',
-      borderColor: '#6b7280'
+      borderColor: '#6b7280',
     },
     outline: {
       backgroundColor: 'transparent',
       color: '#3b82f6',
-      borderColor: '#3b82f6'
+      borderColor: '#3b82f6',
     },
     ghost: {
       backgroundColor: 'transparent',
       color: '#3b82f6',
-      borderColor: 'transparent'
+      borderColor: 'transparent',
     },
     link: {
       backgroundColor: 'transparent',
       color: '#3b82f6',
       borderColor: 'transparent',
-      textDecoration: 'underline'
-    }
-  };
+      textDecoration: 'underline',
+    },
+  }
 
   // Apply variant styles if using preset variants
   if (variantStyles[variant]) {
-    const variantStyle = variantStyles[variant];
-    Object.assign(buttonStyle, variantStyle);
+    const variantStyle = variantStyles[variant]
+    Object.assign(buttonStyle, variantStyle)
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (href && href !== '#') {
-      window.open(href, target);
+      window.open(href, target)
     }
-  };
+  }
 
   const handleTextEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newText = prompt('Edit button text:', text);
+    e.stopPropagation()
+    const newText = prompt('Edit button text:', text)
     if (newText !== null) {
       setProp((props: ButtonBlockProps) => {
-        props.text = newText;
-      });
+        props.text = newText
+      })
     }
-  };
+  }
 
   return (
     <BlockWrapper>
@@ -221,98 +232,102 @@ export const ButtonBlock: React.FC<Partial<ButtonBlockProps>> = (props) => {
         style={buttonStyle}
         onClick={handleClick}
         onDoubleClick={handleTextEdit}
-        onMouseEnter={(e) => {
+        onMouseEnter={e => {
           if (hoverEffect.enabled) {
-            const target = e.target as HTMLElement;
-            target.style.backgroundColor = hoverEffect.backgroundColor;
-            target.style.color = hoverEffect.color;
+            const target = e.target as HTMLElement
+            target.style.backgroundColor = hoverEffect.backgroundColor
+            target.style.color = hoverEffect.color
             if (hoverEffect.transform === 'scale') {
-              target.style.transform = `scale(${1 + hoverEffect.transformValue / 100})`;
+              target.style.transform = `scale(${1 + hoverEffect.transformValue / 100})`
             } else if (hoverEffect.transform === 'translateY') {
-              target.style.transform = `translateY(-${hoverEffect.transformValue}px)`;
+              target.style.transform = `translateY(-${hoverEffect.transformValue}px)`
             }
           }
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={e => {
           if (hoverEffect.enabled) {
-            const target = e.target as HTMLElement;
-            target.style.backgroundColor = backgroundColor;
-            target.style.color = color;
-            target.style.transform = 'none';
+            const target = e.target as HTMLElement
+            target.style.backgroundColor = backgroundColor
+            target.style.color = color
+            target.style.transform = 'none'
           }
         }}
       >
         {icon.enabled && icon.position === 'left' && (
           <span style={{ fontSize: `${icon.size}px` }}>
-            {/* Icon placeholder - you can integrate with an icon library */}
-            ⭐
+            {/* Icon placeholder - you can integrate with an icon library */}⭐
           </span>
         )}
         {text}
         {icon.enabled && icon.position === 'right' && (
           <span style={{ fontSize: `${icon.size}px` }}>
-            {/* Icon placeholder - you can integrate with an icon library */}
-            ⭐
+            {/* Icon placeholder - you can integrate with an icon library */}⭐
           </span>
         )}
       </button>
     </BlockWrapper>
-  );
-};
+  )
+}
 
 // Settings component for the ButtonBlock
 export const ButtonBlockSettings: React.FC = () => {
   const {
     actions: { setProp },
-    props
-  } = useNode((node) => ({
-    props: node.data.props as ButtonBlockProps
-  }));
+    props,
+  } = useNode(node => ({
+    props: node.data.props as ButtonBlockProps,
+  }))
 
   return (
     <div className="space-y-4">
       {/* Button Content */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
           Button Text
         </label>
         <input
           type="text"
           value={props.text}
-          onChange={(e) => setProp((props: ButtonBlockProps) => {
-            props.text = e.target.value;
-          })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
+          onChange={e =>
+            setProp((props: ButtonBlockProps) => {
+              props.text = e.target.value
+            })
+          }
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
       {/* Link */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
           Link URL
         </label>
         <input
           type="url"
           value={props.href}
-          onChange={(e) => setProp((props: ButtonBlockProps) => {
-            props.href = e.target.value;
-          })}
+          onChange={e =>
+            setProp((props: ButtonBlockProps) => {
+              props.href = e.target.value
+            })
+          }
           placeholder="https://example.com"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         />
       </div>
 
       {/* Target */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="mb-2 block text-sm font-medium text-gray-700">
           Link Target
         </label>
         <select
           value={props.target}
-          onChange={(e) => setProp((props: ButtonBlockProps) => {
-            props.target = e.target.value as any;
-          })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
+          onChange={e =>
+            setProp((props: ButtonBlockProps) => {
+              props.target = e.target.value as any
+            })
+          }
+          className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#2D1B69]"
         >
           <option value="_self">Same window</option>
           <option value="_blank">New window</option>
@@ -324,16 +339,18 @@ export const ButtonBlockSettings: React.FC = () => {
       {/* Style */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-900">Style</h4>
-        
+
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Variant</label>
+            <label className="mb-1 block text-xs text-gray-600">Variant</label>
             <select
               value={props.variant}
-              onChange={(e) => setProp((props: ButtonBlockProps) => {
-                props.variant = e.target.value as any;
-              })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={e =>
+                setProp((props: ButtonBlockProps) => {
+                  props.variant = e.target.value as any
+                })
+              }
+              className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
             >
               <option value="primary">Primary</option>
               <option value="secondary">Secondary</option>
@@ -342,15 +359,17 @@ export const ButtonBlockSettings: React.FC = () => {
               <option value="link">Link</option>
             </select>
           </div>
-          
+
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Size</label>
+            <label className="mb-1 block text-xs text-gray-600">Size</label>
             <select
               value={props.size}
-              onChange={(e) => setProp((props: ButtonBlockProps) => {
-                props.size = e.target.value as any;
-              })}
-              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={e =>
+                setProp((props: ButtonBlockProps) => {
+                  props.size = e.target.value as any
+                })
+              }
+              className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
             >
               <option value="sm">Small</option>
               <option value="md">Medium</option>
@@ -362,50 +381,64 @@ export const ButtonBlockSettings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Background Color</label>
+            <label className="mb-1 block text-xs text-gray-600">
+              Background Color
+            </label>
             <input
               type="color"
               value={props.backgroundColor}
-              onChange={(e) => setProp((props: ButtonBlockProps) => {
-                props.backgroundColor = e.target.value;
-              })}
-              className="w-full h-8 border border-gray-300 rounded"
+              onChange={e =>
+                setProp((props: ButtonBlockProps) => {
+                  props.backgroundColor = e.target.value
+                })
+              }
+              className="h-8 w-full rounded border border-gray-300"
             />
           </div>
-          
+
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Text Color</label>
+            <label className="mb-1 block text-xs text-gray-600">
+              Text Color
+            </label>
             <input
               type="color"
               value={props.color}
-              onChange={(e) => setProp((props: ButtonBlockProps) => {
-                props.color = e.target.value;
-              })}
-              className="w-full h-8 border border-gray-300 rounded"
+              onChange={e =>
+                setProp((props: ButtonBlockProps) => {
+                  props.color = e.target.value
+                })
+              }
+              className="h-8 w-full rounded border border-gray-300"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Border Radius</label>
+          <label className="mb-1 block text-xs text-gray-600">
+            Border Radius
+          </label>
           <input
             type="number"
             value={props.borderRadius}
-            onChange={(e) => setProp((props: ButtonBlockProps) => {
-              props.borderRadius = parseInt(e.target.value) || 0;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            onChange={e =>
+              setProp((props: ButtonBlockProps) => {
+                props.borderRadius = parseInt(e.target.value) || 0
+              })
+            }
+            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Width</label>
+          <label className="mb-1 block text-xs text-gray-600">Width</label>
           <select
             value={props.width}
-            onChange={(e) => setProp((props: ButtonBlockProps) => {
-              props.width = e.target.value as any;
-            })}
-            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+            onChange={e =>
+              setProp((props: ButtonBlockProps) => {
+                props.width = e.target.value as any
+              })
+            }
+            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
           >
             <option value="auto">Auto</option>
             <option value="full">Full Width</option>
@@ -417,14 +450,16 @@ export const ButtonBlockSettings: React.FC = () => {
       {/* Hover Effects */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-900">Hover Effects</h4>
-        
+
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
             checked={props.hoverEffect.enabled}
-            onChange={(e) => setProp((props: ButtonBlockProps) => {
-              props.hoverEffect.enabled = e.target.checked;
-            })}
+            onChange={e =>
+              setProp((props: ButtonBlockProps) => {
+                props.hoverEffect.enabled = e.target.checked
+              })
+            }
             className="rounded"
           />
           <label className="text-xs text-gray-600">Enable hover effects</label>
@@ -433,40 +468,48 @@ export const ButtonBlockSettings: React.FC = () => {
         {props.hoverEffect.enabled && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Hover Background</label>
+              <label className="mb-1 block text-xs text-gray-600">
+                Hover Background
+              </label>
               <input
                 type="color"
                 value={props.hoverEffect.backgroundColor}
-                onChange={(e) => setProp((props: ButtonBlockProps) => {
-                  props.hoverEffect.backgroundColor = e.target.value;
-                })}
-                className="w-full h-8 border border-gray-300 rounded"
+                onChange={e =>
+                  setProp((props: ButtonBlockProps) => {
+                    props.hoverEffect.backgroundColor = e.target.value
+                  })
+                }
+                className="h-8 w-full rounded border border-gray-300"
               />
             </div>
-            
+
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Hover Text Color</label>
+              <label className="mb-1 block text-xs text-gray-600">
+                Hover Text Color
+              </label>
               <input
                 type="color"
                 value={props.hoverEffect.color}
-                onChange={(e) => setProp((props: ButtonBlockProps) => {
-                  props.hoverEffect.color = e.target.value;
-                })}
-                className="w-full h-8 border border-gray-300 rounded"
+                onChange={e =>
+                  setProp((props: ButtonBlockProps) => {
+                    props.hoverEffect.color = e.target.value
+                  })
+                }
+                className="h-8 w-full rounded border border-gray-300"
               />
             </div>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Craft.js configuration
-(ButtonBlock as any).craft = {
+;(ButtonBlock as any).craft = {
   props: defaultProps,
   related: {
-    settings: ButtonBlockSettings
+    settings: ButtonBlockSettings,
   },
-  displayName: 'Button'
-};
+  displayName: 'Button',
+}

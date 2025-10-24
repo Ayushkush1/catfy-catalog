@@ -142,11 +142,11 @@ export async function GET(request: NextRequest) {
         {
           teamMembers: {
             some: {
-              profileId: profile.id
-            }
-          }
-        } // Catalogues where user is a team member
-      ]
+              profileId: profile.id,
+            },
+          },
+        }, // Catalogues where user is a team member
+      ],
     }
 
     // Add search filters if provided
@@ -156,8 +156,8 @@ export async function GET(request: NextRequest) {
           OR: [
             { name: { contains: search, mode: 'insensitive' } },
             { description: { contains: search, mode: 'insensitive' } },
-          ]
-        }
+          ],
+        },
       ]
     }
 
@@ -185,11 +185,11 @@ export async function GET(request: NextRequest) {
         },
         teamMembers: {
           where: {
-            profileId: profile.id
+            profileId: profile.id,
           },
           select: {
-            role: true
-          }
+            role: true,
+          },
         },
         _count: {
           select: {
@@ -210,7 +210,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       catalogues: catalogues.map(catalogue => {
         const isOwner = catalogue.profileId === profile.id
-        const teamMemberRole = catalogue.teamMembers.length > 0 ? catalogue.teamMembers[0].role : null
+        const teamMemberRole =
+          catalogue.teamMembers.length > 0
+            ? catalogue.teamMembers[0].role
+            : null
 
         return {
           id: catalogue.id,
@@ -354,11 +357,40 @@ export async function POST(request: NextRequest) {
 
     // Extract basic catalogue fields
     const {
-      name, description, quote, tagline, year, introImage, theme, isPublic,
+      name,
+      description,
+      quote,
+      tagline,
+      year,
+      introImage,
+      theme,
+      isPublic,
       // Extract flattened fields to reconstruct settings object for database
-      companyName, companyDescription, fullName, email, phone, website, address, city, state, country,
-      logoUrl, coverImageUrl, contactImage, contactDescription, contactQuote, contactQuoteBy,
-      facebook, twitter, instagram, linkedin, showPrices, showCategories, allowSearch, showProductCodes, templateId,
+      companyName,
+      companyDescription,
+      fullName,
+      email,
+      phone,
+      website,
+      address,
+      city,
+      state,
+      country,
+      logoUrl,
+      coverImageUrl,
+      contactImage,
+      contactDescription,
+      contactQuote,
+      contactQuoteBy,
+      facebook,
+      twitter,
+      instagram,
+      linkedin,
+      showPrices,
+      showCategories,
+      allowSearch,
+      showProductCodes,
+      templateId,
       ...rest
     } = validatedData
 
@@ -403,13 +435,15 @@ export async function POST(request: NextRequest) {
         linkedin,
       },
       // IframeEditor settings for HTML templates
-      ...(templateId ? {
-        iframeEditor: {
-          templateId,
-          engine: 'mustache', // Default engine for HTML templates
-          pageCount: 1, // Will be updated when template is loaded
-        }
-      } : {})
+      ...(templateId
+        ? {
+            iframeEditor: {
+              templateId,
+              engine: 'mustache', // Default engine for HTML templates
+              pageCount: 1, // Will be updated when template is loaded
+            },
+          }
+        : {}),
     }
 
     const catalogue = await prisma.catalogue.create({
@@ -462,7 +496,10 @@ export async function POST(request: NextRequest) {
           },
         })
       } catch (analyticsError) {
-        console.error('Failed to track theme selection during catalogue creation:', analyticsError)
+        console.error(
+          'Failed to track theme selection during catalogue creation:',
+          analyticsError
+        )
         // Don't fail the catalogue creation if analytics tracking fails
       }
     }
@@ -492,10 +529,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const message = error instanceof Error ? error.message : 'Failed to create catalogue'
-    return NextResponse.json(
-      { error: message },
-      { status: 500 }
-    )
+    const message =
+      error instanceof Error ? error.message : 'Failed to create catalogue'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

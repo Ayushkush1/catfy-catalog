@@ -17,16 +17,28 @@ import {
   Calendar,
   Palette,
   Sparkles,
-  Book
+  Book,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Header } from '@/components/Header'
@@ -256,7 +268,8 @@ export default function DashboardPage() {
 
         // Calculate basic stats
         const totalProducts = cataloguesData.catalogues.reduce(
-          (sum: number, cat: Catalogue) => sum + (cat._count?.products || 0), 0
+          (sum: number, cat: Catalogue) => sum + (cat._count?.products || 0),
+          0
         )
         setStats({
           totalCatalogues: cataloguesData.catalogues.length,
@@ -274,7 +287,11 @@ export default function DashboardPage() {
   }
 
   const deleteCatalogue = async (catalogueId: string) => {
-    if (!confirm('Are you sure you want to delete this catalogue? This action cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete this catalogue? This action cannot be undone.'
+      )
+    ) {
       return
     }
 
@@ -291,7 +308,9 @@ export default function DashboardPage() {
         throw new Error(errorData.error || 'Failed to delete catalogue')
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to delete catalogue')
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to delete catalogue'
+      )
     }
   }
 
@@ -336,7 +355,7 @@ export default function DashboardPage() {
           catalogueId,
           theme: 'modern',
           format: 'A4',
-          orientation: 'portrait'
+          orientation: 'portrait',
         }),
       })
 
@@ -371,15 +390,19 @@ export default function DashboardPage() {
         throw new Error(errorData.error || 'Failed to export PDF')
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to export PDF', { id: 'pdf-export' })
+      toast.error(err instanceof Error ? err.message : 'Failed to export PDF', {
+        id: 'pdf-export',
+      })
     }
   }
 
   const filteredCatalogues = catalogues.filter(catalogue => {
-    const matchesSearch = catalogue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch =
+      catalogue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       catalogue.description?.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesFilter = filterType === 'all' ||
+    const matchesFilter =
+      filterType === 'all' ||
       (filterType === 'public' && catalogue.isPublic) ||
       (filterType === 'private' && !catalogue.isPublic)
 
@@ -393,15 +416,15 @@ export default function DashboardPage() {
     return (
       <>
         <Header title="Dashboard" />
-        <div className="container mx-auto py-8 px-4">
+        <div className="container mx-auto px-4 py-8">
           <div className="space-y-6">
             <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
               {[...Array(4)].map((_, i) => (
                 <Skeleton key={i} className="h-24" />
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-48" />
               ))}
@@ -415,35 +438,40 @@ export default function DashboardPage() {
   return (
     <>
       <Header title="Dashboard" />
-      <div className="min-h-screen pb-10 bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-10">
         {/* Purple Gradient Hero Section */}
-        <div className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white px-6 mx-8 rounded-3xl py-12">
+        <div className="mx-8 rounded-3xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-12 text-white">
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
-              <div className="text-white pb-6">
-                <div className="flex flex-col gap-8 mb-6">
-
+              <div className="pb-6 text-white">
+                <div className="mb-6 flex flex-col gap-8">
                   <div>
                     <h1
-                      className="text-4xl font-extrabold pt-4 pb-4"
-                      style={{ fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif" }}
+                      className="pb-4 pt-4 text-4xl font-extrabold"
+                      style={{
+                        fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif",
+                      }}
                     >
                       Hi, {profile?.fullName || 'Ayush Kumar'}
                     </h1>
                     <p
-                      className="text-white text-md max-w-[760px]"
-                      style={{ fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif" }}
+                      className="text-md max-w-[760px] text-white"
+                      style={{
+                        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
+                      }}
                     >
-                      Welcome back to your AI-powered catalogue studio. Effortlessly create, manage, and share beautiful product catalogues.
-                      Try out instant PDF export, pro themes, and more!
+                      Welcome back to your AI-powered catalogue studio.
+                      Effortlessly create, manage, and share beautiful product
+                      catalogues. Try out instant PDF export, pro themes, and
+                      more!
                     </p>
 
                     {profile?.subscription?.plan === 'FREE' && (
                       <div className="mt-2">
-                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 px-2 py-1 text-xs font-medium">
+                        <Badge className="border-amber-200 bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
                           Free Plan
                         </Badge>
-                        <span className="ml-2 text-amber-200 text-xs">
+                        <span className="ml-2 text-xs text-amber-200">
                           Upgrade for unlimited exports and premium features.
                         </span>
                       </div>
@@ -451,32 +479,61 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-
                 {/* Feature Highlights */}
-                <div className="flex flex-wrap gap-1 mt-2 mb-8">
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
-                    <div className="w-4 h-4 bg-emerald-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <div className="mb-8 mt-2 flex flex-wrap gap-1">
+                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400">
+                      <svg
+                        className="h-2 w-2 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
-                    <span className="text-white text-[11px] font-medium">AI-Powered</span>
+                    <span className="text-[11px] font-medium text-white">
+                      AI-Powered
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
-                    <div className="w-4 h-4 bg-blue-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-400">
+                      <svg
+                        className="h-2 w-2 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
-                    <span className="text-white text-[11px] font-medium">5 Pro Themes</span>
+                    <span className="text-[11px] font-medium text-white">
+                      5 Pro Themes
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-1 bg-white/10 backdrop-blur-sm rounded-full px-2 py-0.5 border border-white/20">
-                    <div className="w-4 h-4 bg-purple-400 rounded-full flex items-center justify-center">
-                      <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-400">
+                      <svg
+                        className="h-2 w-2 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
-                    <span className="text-white text-[11px] font-medium">Instant Export</span>
+                    <span className="text-[11px] font-medium text-white">
+                      Instant Export
+                    </span>
                   </div>
                 </div>
 
@@ -488,7 +545,7 @@ export default function DashboardPage() {
                       setShowUpgradePrompt(true)
                     }
                   }}
-                  className="bg-white text-[#2D1B69] hover:bg-purple-50 font-semibold px-4 py-3 rounded-lg flex items-center gap-2 transition-all duration-300 shadow-md hover:shadow-xl  hover:scale-105"
+                  className="flex items-center gap-2 rounded-lg bg-white px-4 py-3 font-semibold text-[#2D1B69] shadow-md transition-all duration-300 hover:scale-105 hover:bg-purple-50  hover:shadow-xl"
                 >
                   <FolderOpen className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" />
                   Create Catalogue
@@ -496,24 +553,20 @@ export default function DashboardPage() {
               </div>
 
               {/* Enhanced Floating Catalogue Cards with Micro Animations */}
-              <div className='absolute top-16 right-56 h-[350px] w-[410px] hidden xl:block'>
+              <div className="absolute right-56 top-16 hidden h-[350px] w-[410px] xl:block">
                 <Image
                   height={350}
                   width={410}
                   src="/assets/heroImage.png"
                   alt="Catalogue Hero"
-                  className="w-full h-full object-contain z-10 pointer-events-none select-none drop-shadow-xl"
+                  className="pointer-events-none z-10 h-full w-full select-none object-contain drop-shadow-xl"
                 />
-
-
-
               </div>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-6 -mt-6 relative z-10">
-
+        <div className="container relative z-10 mx-auto -mt-6 px-6">
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertDescription>{error}</AlertDescription>
@@ -522,57 +575,73 @@ export default function DashboardPage() {
 
           {/* Stats Cards */}
           {stats && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
+              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Catalogues</p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalCatalogues}</p>
+                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
+                        Total Catalogues
+                      </p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">
+                        {stats.totalCatalogues}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
                       <Book className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Products</p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalProducts}</p>
+                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
+                        Total Products
+                      </p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">
+                        {stats.totalProducts}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
                       <Package className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Views</p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalViews}</p>
+                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
+                        Total Views
+                      </p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">
+                        {stats.totalViews}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
                       <Eye className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="group bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1 rounded-2xl overflow-hidden h-24">
+              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[#779CAB] mb-1">Total Exports</p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">{stats.totalExports}</p>
+                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
+                        Total Exports
+                      </p>
+                      <p className="text-2xl font-bold text-[#1A1B41]">
+                        {stats.totalExports}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
                       <Download className="h-6 w-6 text-white" />
                     </div>
                   </div>
@@ -583,16 +652,20 @@ export default function DashboardPage() {
 
           {/* Catalogues Section */}
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Your Catalogues</h2>
-                <p className="text-gray-600 mt-1">Manage and organize your creative collections</p>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Your Catalogues
+                </h2>
+                <p className="mt-1 text-gray-600">
+                  Manage and organize your creative collections
+                </p>
               </div>
 
-              <div className="flex items-center gap-3 w-full md:w-auto">
+              <div className="flex w-full items-center gap-3 md:w-auto">
                 <Button
                   variant="ghost"
-                  className="text-[#2D1B69] hover:text-[#2d1b69b8] hover:bg-purple-50"
+                  className="text-[#2D1B69] hover:bg-purple-50 hover:text-[#2d1b69b8]"
                 >
                   VIEW ALL
                 </Button>
@@ -604,7 +677,7 @@ export default function DashboardPage() {
                       setShowUpgradePrompt(true)
                     }
                   }}
-                  className=" px-6 py-2 rounded-lg text-white bg-gradient-to-r from-[#2D1B69] to-[#6366F1] font-medium"
+                  className=" rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-2 font-medium text-white"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   New Catalog
@@ -614,19 +687,20 @@ export default function DashboardPage() {
 
             {/* Catalogues Grid */}
             {filteredCatalogues.length === 0 ? (
-              <Card className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-lg transition-all duration-300 hover:shadow-xl">
                 <CardContent className="p-12 text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-[#2D1B69] to-[#6366F1] rounded-2xl mx-auto mb-6 flex items-center justify-center">
+                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1B69] to-[#6366F1]">
                     <Package className="h-10 w-10 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    {catalogues.length === 0 ? 'No catalogues yet' : 'No catalogues found'}
+                  <h3 className="mb-3 text-xl font-bold text-gray-900">
+                    {catalogues.length === 0
+                      ? 'No catalogues yet'
+                      : 'No catalogues found'}
                   </h3>
-                  <p className="text-gray-600 mb-8 max-w-sm mx-auto leading-relaxed">
+                  <p className="mx-auto mb-8 max-w-sm leading-relaxed text-gray-600">
                     {catalogues.length === 0
                       ? 'Create your first catalogue to get started and showcase your amazing products'
-                      : 'Try adjusting your search or filter criteria to find what you\'re looking for'
-                    }
+                      : "Try adjusting your search or filter criteria to find what you're looking for"}
                   </p>
                   {catalogues.length === 0 && (
                     <Button
@@ -637,7 +711,7 @@ export default function DashboardPage() {
                           setShowUpgradePrompt(true)
                         }
                       }}
-                      className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] hover:from-[#1e1348] hover:to-[#4f46e5] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="transform rounded-xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#1e1348] hover:to-[#4f46e5] hover:shadow-xl"
                     >
                       <Plus className="mr-2 h-5 w-5" />
                       Create Your First Catalogue
@@ -646,25 +720,32 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredCatalogues.map((catalogue) => (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {filteredCatalogues.map(catalogue => (
                   <Card
-                    onClick={() => router.push(`/catalogue/${catalogue.id}/edit`)}
+                    onClick={() =>
+                      router.push(`/catalogue/${catalogue.id}/edit`)
+                    }
                     key={catalogue.id}
-                    className="group hover:shadow-2xl transition-all cursor-pointer duration-500 overflow-hidden border-0 bg-white shadow-lg hover:-translate-y-2 rounded-2xl relative">
+                    className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                  >
                     {/* Enhanced Image Header with Gradient */}
                     <div className="relative h-48 overflow-hidden">
                       {/* Dynamic Theme-based Gradients */}
-                      {catalogue.name === "Fragrance" && (
+                      {catalogue.name === 'Fragrance' && (
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700" />
                       )}
-                      {catalogue.name === "Fashion Collection" && (
+                      {catalogue.name === 'Fashion Collection' && (
                         <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-600 to-red-700" />
                       )}
-                      {catalogue.name === "Tech Gadgets" && (
+                      {catalogue.name === 'Tech Gadgets' && (
                         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700" />
                       )}
-                      {!["Fragrance", "Fashion Collection", "Tech Gadgets"].includes(catalogue.name) && (
+                      {![
+                        'Fragrance',
+                        'Fashion Collection',
+                        'Tech Gadgets',
+                      ].includes(catalogue.name) && (
                         <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B69] via-[#6366F1] to-[#8B5CF6]" />
                       )}
 
@@ -672,24 +753,24 @@ export default function DashboardPage() {
                       <div className="absolute inset-0 opacity-30">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white/20 rounded-full"></div>
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border border-white/30 rounded-full"></div>
+                        <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-white/20"></div>
+                        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-white/30"></div>
                       </div>
 
                       {/* Content Overlay */}
-                      <div className="absolute inset-0 flex flex-col justify-center items-center text-center p-6">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                         {/* Catalogue Icon */}
-                        <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mb-4 ">
+                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ">
                           <Package className="h-8 w-8 text-white" />
                         </div>
 
                         {/* Catalogue Name */}
-                        <h3 className="text-2xl font-bold text-white mb-2 ">
+                        <h3 className="mb-2 text-2xl font-bold text-white ">
                           {catalogue.name}
                         </h3>
 
                         {/* Quick Stats */}
-                        <div className="flex items-center space-x-4 text-white/90 text-sm">
+                        <div className="flex items-center space-x-4 text-sm text-white/90">
                           <div className="flex items-center space-x-1">
                             <Package className="h-4 w-4" />
                             <span>{catalogue._count?.products || 0} items</span>
@@ -702,27 +783,28 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Status Badge */}
-                      <div className="absolute top-4 left-4">
+                      <div className="absolute left-4 top-4">
                         <Badge
                           variant={catalogue.isPublic ? 'default' : 'secondary'}
-                          className={`text-xs px-3 py-1 font-medium backdrop-blur-sm border ${catalogue.isPublic
-                            ? 'bg-emerald-500/90 text-white border-emerald-400'
-                            : 'bg-red-500/90 text-white border-red-400'
-                            }`}
+                          className={`border px-3 py-1 text-xs font-medium backdrop-blur-sm ${
+                            catalogue.isPublic
+                              ? 'border-emerald-400 bg-emerald-500/90 text-white'
+                              : 'border-red-400 bg-red-500/90 text-white'
+                          }`}
                         >
                           {catalogue.isPublic ? 'Public' : 'Private'}
                         </Badge>
                       </div>
 
                       {/* Direct Action Buttons - Show on Hover */}
-                      <div className="absolute top-4 right-4 flex flex-col space-y-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+                      <div className="absolute right-4 top-4 flex translate-x-2 transform flex-col space-y-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
                         <Button
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation()
                             router.push(`/catalogue/${catalogue.id}/preview`)
                           }}
-                          className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
+                          className="h-9 w-9 rounded-lg border border-white/30 bg-white/20 p-0 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/30 hover:text-white"
                           title="Preview Catalogue"
                         >
                           <Eye className="h-4 w-4" />
@@ -732,16 +814,19 @@ export default function DashboardPage() {
                           <DropdownMenuTrigger asChild>
                             <Button
                               size="sm"
-                              onClick={(e) => e.stopPropagation()}
-                              className="h-9 w-9 p-0 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg text-white hover:text-white transition-all duration-200"
+                              onClick={e => e.stopPropagation()}
+                              className="h-9 w-9 rounded-lg border border-white/30 bg-white/20 p-0 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/30 hover:text-white"
                               title="More Options"
                             >
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white/95 backdrop-blur-sm">
+                          <DropdownMenuContent
+                            align="end"
+                            className="w-48 bg-white/95 backdrop-blur-sm"
+                          >
                             <DropdownMenuItem
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation()
                                 shareCatalogue(catalogue)
                               }}
@@ -751,7 +836,7 @@ export default function DashboardPage() {
                               Share Catalogue
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation()
                                 exportToPDF(catalogue.id)
                               }}
@@ -760,12 +845,14 @@ export default function DashboardPage() {
                             >
                               <Download className="mr-3 h-4 w-4 text-green-600" />
                               Export PDF
-                              {!canExport() && <Crown className="ml-auto h-3 w-3 text-amber-500" />}
+                              {!canExport() && (
+                                <Crown className="ml-auto h-3 w-3 text-amber-500" />
+                              )}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              className="cursor-pointer text-red-600 focus:text-red-600 hover:bg-red-50"
-                              onClick={(e) => {
+                              className="cursor-pointer text-red-600 hover:bg-red-50 focus:text-red-600"
+                              onClick={e => {
                                 e.stopPropagation()
                                 deleteCatalogue(catalogue.id)
                               }}
@@ -779,41 +866,53 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Enhanced Content Section */}
-                    <div className="p-6 bg-white">
+                    <div className="bg-white p-6">
                       {/* Description */}
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-                        {catalogue.description || 'A beautifully crafted catalogue showcasing premium products with modern design and user-friendly interface.'}
+                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-gray-600">
+                        {catalogue.description ||
+                          'A beautifully crafted catalogue showcasing premium products with modern design and user-friendly interface.'}
                       </p>
 
                       {/* Enhanced Stats Grid */}
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 text-center border border-blue-100">
-                          <div className="text-lg font-bold text-blue-700 mb-1">{catalogue._count?.products || 0}</div>
-                          <div className="text-xs text-blue-600 font-medium">Products</div>
+                      <div className="mb-4 grid grid-cols-2 gap-3">
+                        <div className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 text-center">
+                          <div className="mb-1 text-lg font-bold text-blue-700">
+                            {catalogue._count?.products || 0}
+                          </div>
+                          <div className="text-xs font-medium text-blue-600">
+                            Products
+                          </div>
                         </div>
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 text-center border border-purple-100">
-                          <div className="text-lg font-bold text-purple-700 mb-1">{catalogue._count?.categories || 0}</div>
-                          <div className="text-xs text-purple-600 font-medium">Categories</div>
+                        <div className="rounded-lg border border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50 p-3 text-center">
+                          <div className="mb-1 text-lg font-bold text-purple-700">
+                            {catalogue._count?.categories || 0}
+                          </div>
+                          <div className="text-xs font-medium text-purple-600">
+                            Categories
+                          </div>
                         </div>
                       </div>
 
                       {/* Theme and Date Info */}
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="bg-gradient-to-r from-gray-50 to-gray-100 border-gray-200 text-gray-700 text-xs px-3 py-1">
-                          <Palette className="h-3 w-3 mr-1" />
+                        <Badge
+                          variant="outline"
+                          className="border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 px-3 py-1 text-xs text-gray-700"
+                        >
+                          <Palette className="mr-1 h-3 w-3" />
                           {catalogue.theme || 'Modern'}
                         </Badge>
-                        <div className="text-xs text-gray-500 flex items-center">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {formatDistanceToNow(new Date(catalogue.updatedAt), { addSuffix: true })}
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Calendar className="mr-1 h-3 w-3" />
+                          {formatDistanceToNow(new Date(catalogue.updatedAt), {
+                            addSuffix: true,
+                          })}
                         </div>
                       </div>
-
-
                     </div>
 
                     {/* Subtle Hover Glow Effect */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/0 via-purple-400/0 to-pink-400/0 group-hover:from-blue-400/5 group-hover:via-purple-400/5 group-hover:to-pink-400/5 transition-all duration-500 pointer-events-none"></div>
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/0 via-purple-400/0 to-pink-400/0 transition-all duration-500 group-hover:from-blue-400/5 group-hover:via-purple-400/5 group-hover:to-pink-400/5"></div>
                   </Card>
                 ))}
               </div>

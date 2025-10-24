@@ -1,18 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  Check, 
-  Eye, 
-  Palette, 
-  Sparkles, 
-  Zap, 
-  Crown, 
-  Monitor, 
-  Gem
+import {
+  Check,
+  Eye,
+  Palette,
+  Sparkles,
+  Zap,
+  Crown,
+  Monitor,
+  Gem,
 } from 'lucide-react'
 
 interface Theme {
@@ -48,9 +54,13 @@ const THEMES: Theme[] = [
       primary: '#3B82F6',
       secondary: '#1E40AF',
       accent: '#60A5FA',
-      background: '#F8FAFC'
+      background: '#F8FAFC',
     },
-    features: ['Responsive grid layout', 'Clean typography', 'Blue color scheme']
+    features: [
+      'Responsive grid layout',
+      'Clean typography',
+      'Blue color scheme',
+    ],
   },
   {
     id: 'classic',
@@ -63,9 +73,13 @@ const THEMES: Theme[] = [
       primary: '#F59E0B',
       secondary: '#D97706',
       accent: '#FCD34D',
-      background: '#FFFBEB'
+      background: '#FFFBEB',
     },
-    features: ['Traditional layout', 'Warm color palette', 'Elegant typography']
+    features: [
+      'Traditional layout',
+      'Warm color palette',
+      'Elegant typography',
+    ],
   },
   {
     id: 'minimal',
@@ -78,9 +92,9 @@ const THEMES: Theme[] = [
       primary: '#374151',
       secondary: '#111827',
       accent: '#6B7280',
-      background: '#FFFFFF'
+      background: '#FFFFFF',
     },
-    features: ['Minimalist design', 'Maximum whitespace', 'Content-focused']
+    features: ['Minimalist design', 'Maximum whitespace', 'Content-focused'],
   },
   {
     id: 'bold',
@@ -93,9 +107,14 @@ const THEMES: Theme[] = [
       primary: '#8B5CF6',
       secondary: '#7C3AED',
       accent: '#A78BFA',
-      background: '#FAF5FF'
+      background: '#FAF5FF',
     },
-    features: ['Gradient backgrounds', 'Bold typography', 'Purple color scheme', 'Premium animations']
+    features: [
+      'Gradient backgrounds',
+      'Bold typography',
+      'Purple color scheme',
+      'Premium animations',
+    ],
   },
   {
     id: 'elegant',
@@ -108,9 +127,14 @@ const THEMES: Theme[] = [
       primary: '#64748B',
       secondary: '#475569',
       accent: '#94A3B8',
-      background: '#F8FAFC'
+      background: '#F8FAFC',
     },
-    features: ['Sophisticated layout', 'Premium typography', 'Elegant spacing', 'Advanced animations']
+    features: [
+      'Sophisticated layout',
+      'Premium typography',
+      'Elegant spacing',
+      'Advanced animations',
+    ],
   },
   {
     id: 'tech',
@@ -123,10 +147,15 @@ const THEMES: Theme[] = [
       primary: '#06B6D4',
       secondary: '#0891B2',
       accent: '#67E8F9',
-      background: '#ECFEFF'
+      background: '#ECFEFF',
     },
-    features: ['Futuristic design', 'Tech-inspired elements', 'Cyan accents', 'Interactive components']
-  }
+    features: [
+      'Futuristic design',
+      'Tech-inspired elements',
+      'Cyan accents',
+      'Interactive components',
+    ],
+  },
 ]
 
 const THEME_ICONS = {
@@ -135,7 +164,7 @@ const THEME_ICONS = {
   minimal: Sparkles,
   bold: Zap,
   elegant: Crown,
-  tech: Gem
+  tech: Gem,
 }
 
 interface ThemeSelectorProps {
@@ -146,18 +175,21 @@ interface ThemeSelectorProps {
   compact?: boolean
 }
 
-export function ThemeSelector({ 
-  selectedTheme, 
-  onThemeSelect, 
-  profile, 
+export function ThemeSelector({
+  selectedTheme,
+  onThemeSelect,
+  profile,
   onUpgradeRequired,
-  compact = false 
+  compact = false,
 }: ThemeSelectorProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   const canUseTheme = (theme: Theme) => {
     if (!theme.isPremium) return true
-    return profile?.subscriptionStatus === 'active' && profile?.subscriptionPlan !== 'free'
+    return (
+      profile?.subscriptionStatus === 'active' &&
+      profile?.subscriptionPlan !== 'free'
+    )
   }
 
   const handleThemeSelect = (themeId: string) => {
@@ -181,8 +213,16 @@ export function ThemeSelector({
 
   const categories = [
     { id: 'all', name: 'All Themes', count: THEMES.length },
-    { id: 'free', name: 'Free', count: THEMES.filter(t => !t.isPremium).length },
-    { id: 'premium', name: 'Premium', count: THEMES.filter(t => t.isPremium).length },
+    {
+      id: 'free',
+      name: 'Free',
+      count: THEMES.filter(t => !t.isPremium).length,
+    },
+    {
+      id: 'premium',
+      name: 'Premium',
+      count: THEMES.filter(t => t.isPremium).length,
+    },
   ]
 
   if (compact) {
@@ -190,8 +230,8 @@ export function ThemeSelector({
     return (
       <div className="space-y-4">
         {/* Category Filter */}
-        <div className="flex gap-2 flex-wrap">
-          {categories.map((category) => (
+        <div className="flex flex-wrap gap-2">
+          {categories.map(category => (
             <Button
               key={category.id}
               variant={selectedCategory === category.id ? 'default' : 'outline'}
@@ -205,51 +245,57 @@ export function ThemeSelector({
         </div>
 
         {/* Themes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredThemes.map((theme) => {
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {filteredThemes.map(theme => {
             const IconComponent = THEME_ICONS[theme.category]
             const canUse = canUseTheme(theme)
-            
+
             return (
-              <Card 
-                key={theme.id} 
+              <Card
+                key={theme.id}
                 className={`group cursor-pointer transition-all hover:shadow-md ${
                   !canUse ? 'opacity-75' : ''
-                } ${selectedTheme === theme.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''}`}
+                } ${selectedTheme === theme.id ? 'bg-blue-50 ring-2 ring-blue-500' : ''}`}
                 onClick={() => handleThemeSelect(theme.id)}
               >
                 {/* Preview */}
-                <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                  <div 
-                    className="w-full h-full"
+                <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                  <div
+                    className="h-full w-full"
                     style={{
-                      background: `linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.primary}20 100%)`
+                      background: `linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.primary}20 100%)`,
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <IconComponent className="h-8 w-8 mx-auto mb-2" style={{ color: theme.colors.primary }} />
-                        <div className="text-sm font-medium" style={{ color: theme.colors.secondary }}>
+                        <IconComponent
+                          className="mx-auto mb-2 h-8 w-8"
+                          style={{ color: theme.colors.primary }}
+                        />
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: theme.colors.secondary }}
+                        >
                           {theme.name}
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Premium Badge */}
                   {theme.isPremium && (
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                    <div className="absolute right-2 top-2">
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-xs text-white">
                         <Crown className="mr-1 h-2 w-2" />
                         Pro
                       </Badge>
                     </div>
                   )}
-                  
+
                   {/* Selected Badge */}
                   {selectedTheme === theme.id && (
-                    <div className="absolute top-2 left-2">
-                      <Badge className="bg-blue-500 text-white text-xs">
+                    <div className="absolute left-2 top-2">
+                      <Badge className="bg-blue-500 text-xs text-white">
                         <Check className="mr-1 h-2 w-2" />
                         Selected
                       </Badge>
@@ -258,30 +304,32 @@ export function ThemeSelector({
                 </div>
 
                 <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-2">
+                  <div className="mb-2 flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm flex items-center gap-2">
+                      <h4 className="flex items-center gap-2 text-sm font-medium">
                         {theme.name}
                         {!canUse && (
                           <Crown className="h-3 w-3 text-yellow-500" />
                         )}
                       </h4>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="mt-1 text-xs text-gray-600">
                         {theme.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Color Palette */}
-                  <div className="flex gap-1 mt-2">
-                    {Object.entries(theme.colors).slice(0, 4).map(([name, color]) => (
-                      <div 
-                        key={name}
-                        className="w-4 h-4 rounded-full border border-gray-200"
-                        style={{ backgroundColor: color }}
-                        title={`${name}: ${color}`}
-                      />
-                    ))}
+                  <div className="mt-2 flex gap-1">
+                    {Object.entries(theme.colors)
+                      .slice(0, 4)
+                      .map(([name, color]) => (
+                        <div
+                          key={name}
+                          className="h-4 w-4 rounded-full border border-gray-200"
+                          style={{ backgroundColor: color }}
+                          title={`${name}: ${color}`}
+                        />
+                      ))}
                   </div>
 
                   {/* Preview Button */}
@@ -289,13 +337,16 @@ export function ThemeSelector({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-xs hover:bg-blue-50 hover:border-blue-300"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/preview/theme/${theme.id}?demo=true`, '_blank');
+                      className="w-full text-xs hover:border-blue-300 hover:bg-blue-50"
+                      onClick={e => {
+                        e.stopPropagation()
+                        window.open(
+                          `/preview/theme/${theme.id}?demo=true`,
+                          '_blank'
+                        )
                       }}
                     >
-                      <Eye className="w-3 h-3 mr-1" />
+                      <Eye className="mr-1 h-3 w-3" />
                       Preview
                     </Button>
                   </div>
@@ -310,21 +361,23 @@ export function ThemeSelector({
 
   // Full version for standalone use
   return (
-    <div className="flex flex-col lg:flex-row gap-8">
+    <div className="flex flex-col gap-8 lg:flex-row">
       {/* Sidebar */}
-      <div className="lg:w-64 flex-shrink-0">
+      <div className="flex-shrink-0 lg:w-64">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Categories</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1">
-              {categories.map((category) => (
+              {categories.map(category => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${
-                    selectedCategory === category.id ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-700'
+                  className={`w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50 ${
+                    selectedCategory === category.id
+                      ? 'border-r-2 border-blue-700 bg-blue-50 text-blue-700'
+                      : 'text-gray-700'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -344,13 +397,22 @@ export function ThemeSelector({
           <Card className="mt-6">
             <CardContent className="p-4">
               <div className="text-sm">
-                <div className="font-medium text-gray-900 mb-1">
+                <div className="mb-1 font-medium text-gray-900">
                   Current Plan
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={profile.subscriptionPlan === 'free' ? 'secondary' : 'default'}>
-                    {profile.subscriptionPlan === 'free' ? 'Free' : 
-                     profile.subscriptionPlan === 'monthly' ? 'Pro Monthly' : 'Pro Yearly'}
+                  <Badge
+                    variant={
+                      profile.subscriptionPlan === 'free'
+                        ? 'secondary'
+                        : 'default'
+                    }
+                  >
+                    {profile.subscriptionPlan === 'free'
+                      ? 'Free'
+                      : profile.subscriptionPlan === 'monthly'
+                        ? 'Pro Monthly'
+                        : 'Pro Yearly'}
                   </Badge>
                   {profile.subscriptionPlan === 'free' && (
                     <span className="text-xs text-gray-500">
@@ -367,75 +429,81 @@ export function ThemeSelector({
       {/* Themes Grid */}
       <div className="flex-1">
         <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            {selectedCategory === 'all' ? 'All Themes' : 
-             categories.find(c => c.id === selectedCategory)?.name} 
+          <h2 className="mb-2 text-lg font-semibold text-gray-900">
+            {selectedCategory === 'all'
+              ? 'All Themes'
+              : categories.find(c => c.id === selectedCategory)?.name}
             ({filteredThemes.length})
           </h2>
           <p className="text-gray-600">
-            {selectedCategory === 'premium' 
+            {selectedCategory === 'premium'
               ? 'Premium themes with advanced features and animations'
               : selectedCategory === 'free'
-              ? 'Free themes available to all users'
-              : 'Choose from our collection of professionally designed themes'
-            }
+                ? 'Free themes available to all users'
+                : 'Choose from our collection of professionally designed themes'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredThemes.map((theme) => {
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredThemes.map(theme => {
             const IconComponent = THEME_ICONS[theme.category]
             const canUse = canUseTheme(theme)
-            
+
             return (
-              <Card 
-                key={theme.id} 
+              <Card
+                key={theme.id}
                 className={`group cursor-pointer transition-all hover:shadow-lg ${
                   !canUse ? 'opacity-75' : ''
                 } ${selectedTheme === theme.id ? 'ring-2 ring-blue-500' : ''}`}
                 onClick={() => handleThemeSelect(theme.id)}
               >
                 {/* Preview Image */}
-                <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                  <div 
-                    className="w-full h-full"
+                <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                  <div
+                    className="h-full w-full"
                     style={{
-                      background: `linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.primary}20 100%)`
+                      background: `linear-gradient(135deg, ${theme.colors.background} 0%, ${theme.colors.primary}20 100%)`,
                     }}
                   >
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <IconComponent className="h-12 w-12 mx-auto mb-2" style={{ color: theme.colors.primary }} />
-                        <div className="text-sm font-medium" style={{ color: theme.colors.secondary }}>
+                        <IconComponent
+                          className="mx-auto mb-2 h-12 w-12"
+                          style={{ color: theme.colors.primary }}
+                        />
+                        <div
+                          className="text-sm font-medium"
+                          style={{ color: theme.colors.secondary }}
+                        >
                           {theme.name}
                         </div>
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/10">
+                    <div className="opacity-0 transition-opacity group-hover:opacity-100">
                       <Button size="sm" variant="secondary">
                         <Eye className="mr-2 h-4 w-4" />
                         {canUse ? 'Select Theme' : 'Upgrade to Use'}
                       </Button>
                     </div>
                   </div>
-                  
+
                   {/* Premium Badge */}
                   {theme.isPremium && (
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute right-2 top-2">
                       <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
                         <Crown className="mr-1 h-3 w-3" />
                         Premium
                       </Badge>
                     </div>
                   )}
-                  
+
                   {/* Selected Badge */}
                   {selectedTheme === theme.id && (
-                    <div className="absolute top-2 left-2">
+                    <div className="absolute left-2 top-2">
                       <Badge className="bg-blue-500 text-white">
                         <Check className="mr-1 h-3 w-3" />
                         Selected
@@ -447,7 +515,7 @@ export function ThemeSelector({
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="flex items-center gap-2 text-lg">
                         {theme.name}
                         {!canUse && (
                           <Crown className="h-4 w-4 text-yellow-500" />
@@ -463,12 +531,14 @@ export function ThemeSelector({
                 <CardContent>
                   {/* Color Palette */}
                   <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-700 mb-2">Color Palette</div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">
+                      Color Palette
+                    </div>
                     <div className="flex gap-2">
                       {Object.entries(theme.colors).map(([name, color]) => (
                         <div key={name} className="flex flex-col items-center">
-                          <div 
-                            className="w-6 h-6 rounded-full border border-gray-200"
+                          <div
+                            className="h-6 w-6 rounded-full border border-gray-200"
                             style={{ backgroundColor: color }}
                             title={`${name}: ${color}`}
                           />
@@ -479,10 +549,15 @@ export function ThemeSelector({
 
                   {/* Features */}
                   <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-700 mb-2">Features</div>
+                    <div className="mb-2 text-sm font-medium text-gray-700">
+                      Features
+                    </div>
                     <div className="space-y-1">
                       {theme.features.slice(0, 3).map((feature, index) => (
-                        <div key={index} className="text-xs text-gray-600 flex items-center gap-1">
+                        <div
+                          key={index}
+                          className="flex items-center gap-1 text-xs text-gray-600"
+                        >
                           <Check className="h-3 w-3 text-green-500" />
                           {feature}
                         </div>
@@ -500,13 +575,16 @@ export function ThemeSelector({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full text-sm hover:bg-blue-50 hover:border-blue-300"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(`/preview/theme/${theme.id}?demo=true`, '_blank');
+                      className="w-full text-sm hover:border-blue-300 hover:bg-blue-50"
+                      onClick={e => {
+                        e.stopPropagation()
+                        window.open(
+                          `/preview/theme/${theme.id}?demo=true`,
+                          '_blank'
+                        )
                       }}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
+                      <Eye className="mr-2 h-4 w-4" />
                       Preview Theme
                     </Button>
                   </div>
@@ -519,8 +597,8 @@ export function ThemeSelector({
         {filteredThemes.length === 0 && (
           <Card>
             <CardContent className="p-12 text-center">
-              <Palette className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <Palette className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">
                 No themes found
               </h3>
               <p className="text-gray-600">

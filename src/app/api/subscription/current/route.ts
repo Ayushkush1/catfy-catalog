@@ -7,10 +7,13 @@ import { SubscriptionPlan } from '@prisma/client'
 export async function GET(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    
+
     // Get the current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -22,20 +25,20 @@ export async function GET(request: NextRequest) {
         subscriptions: {
           where: { status: 'ACTIVE' },
           orderBy: { createdAt: 'desc' },
-          take: 1
+          take: 1,
         },
         catalogues: {
-          select: { id: true }
+          select: { id: true },
         },
         exports: {
           where: {
             createdAt: {
-              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) // Start of current month
-            }
+              gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of current month
+            },
           },
-          select: { id: true }
-        }
-      }
+          select: { id: true },
+        },
+      },
     })
 
     if (!profile) {
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
         plan: SubscriptionPlan.BUSINESS, // Give admin users the highest plan
         usage: {
           catalogues: profile.catalogues.length,
-          monthlyExports: profile.exports.length
+          monthlyExports: profile.exports.length,
         },
         subscription: {
           id: 'admin-subscription',
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest) {
           profileId: profile.id,
           createdAt: new Date(),
           updatedAt: new Date(),
-        }
+        },
       })
     }
 
@@ -76,15 +79,14 @@ export async function GET(request: NextRequest) {
     // Calculate usage
     const usage = {
       catalogues: profile.catalogues.length,
-      monthlyExports: profile.exports.length
+      monthlyExports: profile.exports.length,
     }
 
     return NextResponse.json({
       plan,
       usage,
-      subscription: currentSubscription || null
+      subscription: currentSubscription || null,
     })
-
   } catch (error) {
     console.error('Error fetching subscription:', error)
     return NextResponse.json(

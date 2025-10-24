@@ -7,7 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Mail } from 'lucide-react'
 
@@ -16,7 +22,7 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -44,17 +50,18 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Reset your password
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your email address and we'll send you a link to reset your password.
+            Enter your email address and we&apos;ll send you a link to reset
+            your password.
           </p>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -62,7 +69,7 @@ export default function ForgotPasswordPage() {
               Forgot Password
             </CardTitle>
             <CardDescription>
-              We'll send you a secure link to reset your password
+              We&apos;ll send you a secure link to reset your password
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -76,7 +83,7 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   placeholder="Enter your email address"
                   disabled={isLoading}
                 />
@@ -108,7 +115,7 @@ export default function ForgotPasswordPage() {
             <div className="mt-6">
               <Link
                 href="/auth/login"
-                className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center justify-center gap-2 text-sm text-gray-600 transition-colors hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login

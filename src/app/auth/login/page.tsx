@@ -7,14 +7,32 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Mail, Lock, Eye, EyeOff, User, Layout, Share2 } from 'lucide-react'
+import {
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  User,
+  Layout,
+  Share2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const [accountType, setAccountType] = useState<'INDIVIDUAL' | 'BUSINESS'>('INDIVIDUAL')
+  const [accountType, setAccountType] = useState<'INDIVIDUAL' | 'BUSINESS'>(
+    'INDIVIDUAL'
+  )
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -32,7 +50,7 @@ export default function LoginPage() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       })
 
       if (error) {
@@ -75,55 +93,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden">
       {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] relative overflow-hidden">
+      <div className="relative hidden overflow-hidden bg-gradient-to-r from-[#2D1B69] to-[#6366F1] lg:flex lg:w-1/2">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative z-10 flex flex-col justify-center text-white px-40 h-screen">
+        <div className="relative z-10 flex h-screen flex-col justify-center px-40 text-white">
           {/* Logo */}
           <div className="mb-6">
-            <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-white/20">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatalogueAI Logo"
                 width={48}
                 height={48}
-                className="w-full h-full object-contain"
+                className="h-full w-full object-contain"
               />
             </div>
-            <h1 className="text-2xl xl:text-3xl font-bold mb-3">AI-Powered<br />Catalogue Builder</h1>
-            <p className="text-base xl:text-lg text-purple-100 mb-2 leading-relaxed">Create stunning product catalogues in minutes with AI assistance.</p>
+            <h1 className="mb-3 text-2xl font-bold xl:text-3xl">
+              AI-Powered
+              <br />
+              Catalogue Builder
+            </h1>
+            <p className="mb-2 text-base leading-relaxed text-purple-100 xl:text-lg">
+              Create stunning product catalogues in minutes with AI assistance.
+            </p>
           </div>
 
           {/* Features */}
-          <div className="space-y-5 mb-6">
+          <div className="mb-6 space-y-5">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Mail className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">AI-Generated Content</h3>
-                <p className="text-xs text-purple-100">Smart descriptions & categorization</p>
+                <p className="text-xs text-purple-100">
+                  Smart descriptions & categorization
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Layout className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Layout className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Professional Themes</h3>
-                <p className="text-xs text-purple-100">5 stunning designs to choose from</p>
+                <p className="text-xs text-purple-100">
+                  5 stunning designs to choose from
+                </p>
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Share2 className="w-4 h-4 text-white" />
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/20">
+                <Share2 className="h-4 w-4 text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold">Export & Share</h3>
-                <p className="text-xs text-purple-100">PDF-ready catalogues in one click</p>
+                <p className="text-xs text-purple-100">
+                  PDF-ready catalogues in one click
+                </p>
               </div>
             </div>
           </div>
@@ -132,32 +162,36 @@ export default function LoginPage() {
           <div className="flex space-x-4">
             <div>
               <div className="text-lg font-bold">10K+</div>
-              <div className="text-purple-200 text-xs">Happy Users</div>
+              <div className="text-xs text-purple-200">Happy Users</div>
             </div>
             <div>
               <div className="text-lg font-bold">50K+</div>
-              <div className="text-purple-200 text-xs">Catalogues Created</div>
+              <div className="text-xs text-purple-200">Catalogues Created</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Right Side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-4 lg:p-6 bg-gray-50 h-screen overflow-hidden">
+      <div className="flex h-screen flex-1 items-center justify-center overflow-hidden bg-gray-50 p-4 lg:p-6">
         <div className="w-full max-w-sm">
           {/* Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-1">Welcome to CATFY</h2>
-            <p className="text-sm text-gray-600">Sign in to access your catalogues</p>
+          <div className="mb-6 text-center">
+            <h2 className="mb-1 text-3xl font-bold text-gray-900">
+              Welcome to CATFY
+            </h2>
+            <p className="text-sm text-gray-600">
+              Sign in to access your catalogues
+            </p>
 
             {/* Toggle Buttons */}
-            <div className="flex bg-gray-100 rounded-lg p-1 mt-4">
-              <button className="flex-1 py-1.5 px-3 bg-white text-gray-900 rounded-md shadow-sm font-medium text-sm">
+            <div className="mt-4 flex rounded-lg bg-gray-100 p-1">
+              <button className="flex-1 rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-900 shadow-sm">
                 Sign In
               </button>
               <Link
                 href="/auth/signup"
-                className="flex-1 py-1.5 px-3 text-gray-600 hover:text-gray-900 font-medium text-center text-sm"
+                className="flex-1 px-3 py-1.5 text-center text-sm font-medium text-gray-600 hover:text-gray-900"
               >
                 Sign Up
               </Link>
@@ -174,31 +208,54 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Account Type Selection */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-gray-700">Account Type</Label>
+                <Label className="text-xs font-medium text-gray-700">
+                  Account Type
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div
                     onClick={() => setAccountType('INDIVIDUAL')}
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'INDIVIDUAL'
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                      accountType === 'INDIVIDUAL'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
                     <div className="flex items-center space-x-2">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'INDIVIDUAL' ? 'bg-purple-100' : 'bg-gray-100'
-                        }`}>
-                        <User className={`h-3 w-3 ${accountType === 'INDIVIDUAL' ? 'text-purple-600' : 'text-gray-600'
-                          }`} />
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded ${
+                          accountType === 'INDIVIDUAL'
+                            ? 'bg-purple-100'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <User
+                          className={`h-3 w-3 ${
+                            accountType === 'INDIVIDUAL'
+                              ? 'text-purple-600'
+                              : 'text-gray-600'
+                          }`}
+                        />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-xs">Individual</h3>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-medium text-gray-900">
+                          Individual
+                        </h3>
                         <p className="text-xs text-gray-500">Personal use</p>
                       </div>
                     </div>
                     {accountType === 'INDIVIDUAL' && (
-                      <div className="absolute top-1 right-1">
+                      <div className="absolute right-1 top-1">
                         <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
-                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="h-2 w-2 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -207,41 +264,74 @@ export default function LoginPage() {
 
                   <div
                     onClick={() => setAccountType('BUSINESS')}
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'BUSINESS'
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
+                      accountType === 'BUSINESS'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
                   >
                     <div className="flex items-center space-x-2">
-                      <div className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'BUSINESS' ? 'bg-purple-100' : 'bg-gray-100'
-                        }`}>
-                        <svg className={`h-3 w-3 ${accountType === 'BUSINESS' ? 'text-purple-600' : 'text-gray-600'
-                          }`} fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded ${
+                          accountType === 'BUSINESS'
+                            ? 'bg-purple-100'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <svg
+                          className={`h-3 w-3 ${
+                            accountType === 'BUSINESS'
+                              ? 'text-purple-600'
+                              : 'text-gray-600'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-gray-900 text-xs">Business</h3>
-                        <p className="text-xs text-gray-500">Teams & commercial</p>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-xs font-medium text-gray-900">
+                          Business
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Teams & commercial
+                        </p>
                       </div>
                     </div>
                     {accountType === 'BUSINESS' && (
-                      <div className="absolute top-1 right-1">
+                      <div className="absolute right-1 top-1">
                         <div className="flex h-3 w-3 items-center justify-center rounded-full bg-purple-500">
-                          <svg className="h-2 w-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="h-2 w-2 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
-
               </div>
 
               {/* Email Field */}
               <div className="space-y-1">
-                <Label htmlFor="email" className="text-xs font-medium text-gray-700">Email</Label>
+                <Label
+                  htmlFor="email"
+                  className="text-xs font-medium text-gray-700"
+                >
+                  Email
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                   <Input
@@ -249,8 +339,8 @@ export default function LoginPage() {
                     type="email"
                     placeholder="name@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="h-9 pl-9 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    onChange={e => setEmail(e.target.value)}
+                    className="h-9 rounded-lg border-gray-200 pl-9 text-sm focus:border-purple-500 focus:ring-purple-500"
                     required
                     disabled={isLoading}
                   />
@@ -259,7 +349,12 @@ export default function LoginPage() {
 
               {/* Password Field */}
               <div className="space-y-1">
-                <Label htmlFor="password" className="text-xs font-medium text-gray-700">Password</Label>
+                <Label
+                  htmlFor="password"
+                  className="text-xs font-medium text-gray-700"
+                >
+                  Password
+                </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
                   <Input
@@ -267,8 +362,8 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="h-9 pl-9 pr-9 text-sm rounded-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                    onChange={e => setPassword(e.target.value)}
+                    className="h-9 rounded-lg border-gray-200 pl-9 pr-9 text-sm focus:border-purple-500 focus:ring-purple-500"
                     required
                     disabled={isLoading}
                   />
@@ -289,7 +384,7 @@ export default function LoginPage() {
               {/* Sign In Button */}
               <Button
                 type="submit"
-                className="w-full h-9 bg-black hover:bg-gray-800 text-white rounded-lg font-medium text-sm"
+                className="h-9 w-full rounded-lg bg-black text-sm font-medium text-white hover:bg-gray-800"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -309,7 +404,7 @@ export default function LoginPage() {
                 <span className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-gray-50 px-2 text-gray-500 font-medium">
+                <span className="bg-gray-50 px-2 font-medium text-gray-500">
                   OR
                 </span>
               </div>
@@ -319,7 +414,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="w-full h-9 border-gray-200 hover:bg-gray-50 rounded-lg font-medium text-sm"
+              className="h-9 w-full rounded-lg border-gray-200 text-sm font-medium hover:bg-gray-50"
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
@@ -349,11 +444,11 @@ export default function LoginPage() {
             </Button>
 
             {/* Footer Links */}
-            <div className="text-center space-y-2">
+            <div className="space-y-2 text-center">
               <div className="text-xs text-gray-600">
                 <Link
                   href="/auth/forgot-password"
-                  className="text-purple-600 hover:text-purple-500 font-medium"
+                  className="font-medium text-purple-600 hover:text-purple-500"
                 >
                   Forgot your password?
                 </Link>
@@ -361,13 +456,12 @@ export default function LoginPage() {
               <div className="text-xs text-gray-600">
                 <Link
                   href="/admin/login"
-                  className="text-red-500 hover:text-red-700 font-medium underline"
+                  className="font-medium text-red-500 underline hover:text-red-700"
                 >
                   Admin Login
                 </Link>
               </div>
             </div>
-
           </div>
         </div>
       </div>

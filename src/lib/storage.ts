@@ -12,7 +12,10 @@ export interface UploadResult {
   error?: string
 }
 
-export function validateFile(file: File, allowPdf: boolean = false): { valid: boolean; error?: string } {
+export function validateFile(
+  file: File,
+  allowPdf: boolean = false
+): { valid: boolean; error?: string } {
   if (file.size > MAX_FILE_SIZE) {
     return {
       valid: false,
@@ -20,11 +23,15 @@ export function validateFile(file: File, allowPdf: boolean = false): { valid: bo
     }
   }
 
-  const allowedTypes = allowPdf ? [...ALLOWED_TYPES, ...ALLOWED_PDF_TYPES] : ALLOWED_TYPES
+  const allowedTypes = allowPdf
+    ? [...ALLOWED_TYPES, ...ALLOWED_PDF_TYPES]
+    : ALLOWED_TYPES
   if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
-      error: allowPdf ? 'File type must be JPEG, PNG, WebP, GIF, or PDF' : 'File type must be JPEG, PNG, WebP, or GIF',
+      error: allowPdf
+        ? 'File type must be JPEG, PNG, WebP, GIF, or PDF'
+        : 'File type must be JPEG, PNG, WebP, or GIF',
     }
   }
 
@@ -48,7 +55,9 @@ export async function uploadFile(
     const supabase = useServiceRole ? createServiceRoleClient() : createClient()
     const fileExt = file.name.split('.').pop()
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-    const filePath = userId ? `${folder}/${userId}/${fileName}` : `${folder}/${fileName}`
+    const filePath = userId
+      ? `${folder}/${userId}/${fileName}`
+      : `${folder}/${fileName}`
 
     const { data, error } = await supabase.storage
       .from(BUCKET_NAME)
@@ -89,7 +98,9 @@ export async function uploadMultipleFiles(
   return Promise.all(uploadPromises)
 }
 
-export async function deleteFile(path: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteFile(
+  path: string
+): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createServiceRoleClient()
     const { error } = await supabase.storage.from(BUCKET_NAME).remove([path])
@@ -129,7 +140,8 @@ export async function getSignedUrl(
     console.error('Signed URL error:', error)
     return {
       url: null,
-      error: error instanceof Error ? error.message : 'Failed to create signed URL',
+      error:
+        error instanceof Error ? error.message : 'Failed to create signed URL',
     }
   }
 }
@@ -146,7 +158,9 @@ export async function moveFile(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createServiceRoleClient()
-    const { error } = await supabase.storage.from(BUCKET_NAME).move(fromPath, toPath)
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .move(fromPath, toPath)
 
     if (error) {
       console.error('Move error:', error)
@@ -167,7 +181,9 @@ export async function moveFile(
 export function extractPathFromUrl(url: string): string | null {
   try {
     const urlObj = new URL(url)
-    const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/[^/]+\/(.+)$/)
+    const pathMatch = urlObj.pathname.match(
+      /\/storage\/v1\/object\/public\/[^/]+\/(.+)$/
+    )
     return pathMatch ? pathMatch[1] : null
   } catch {
     return null

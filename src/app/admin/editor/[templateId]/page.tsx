@@ -3,7 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { CraftJSEditor, CraftJSEditorRef } from '@/components/editor/CraftJSEditor'
+import {
+  CraftJSEditor,
+  CraftJSEditorRef,
+} from '@/components/editor/CraftJSEditor'
 
 interface Template {
   id: string
@@ -41,38 +44,45 @@ export default function AdminEditorPage() {
         }
         const data = await response.json()
         const template = data.template
-        
+
         // Get the latest content from the contents array
-        const latestContent = template.contents && template.contents.length > 0 
-          ? template.contents[template.contents.length - 1] 
-          : null
-        
+        const latestContent =
+          template.contents && template.contents.length > 0
+            ? template.contents[template.contents.length - 1]
+            : null
+
         console.log('Template loaded:', {
           templateId: template.id,
           contentsCount: template.contents?.length || 0,
-          latestContent: latestContent ? { id: latestContent.id, type: latestContent.type } : null
+          latestContent: latestContent
+            ? { id: latestContent.id, type: latestContent.type }
+            : null,
         })
-        
+
         // Convert content data to JSON string for the editor
-        const editorData = latestContent 
+        const editorData = latestContent
           ? JSON.stringify(latestContent.data, null, 2)
-          : JSON.stringify({
-              ROOT: {
-                type: { resolvedName: 'Container' },
-                isCanvas: true,
-                props: {},
-                displayName: 'Container',
-                custom: {},
-                hidden: false,
-                nodes: [],
-                linkedNodes: {}
-              }
-            }, null, 2)
-        
+          : JSON.stringify(
+              {
+                ROOT: {
+                  type: { resolvedName: 'Container' },
+                  isCanvas: true,
+                  props: {},
+                  displayName: 'Container',
+                  custom: {},
+                  hidden: false,
+                  nodes: [],
+                  linkedNodes: {},
+                },
+              },
+              null,
+              2
+            )
+
         setTemplate({
           ...template,
           contentType: latestContent?.type || 'SINGLE_PAGE_JSON',
-          jsonData: editorData
+          jsonData: editorData,
         })
         setEditorData(editorData)
       } catch (error) {
@@ -117,9 +127,9 @@ export default function AdminEditorPage() {
           tags: template.tags,
           content: {
             type: template.contentType || 'SINGLE_PAGE_JSON',
-            data: JSON.parse(dataToSave)
-          }
-        })
+            data: JSON.parse(dataToSave),
+          },
+        }),
       })
 
       if (!response.ok) {
@@ -141,7 +151,11 @@ export default function AdminEditorPage() {
   const handleBack = () => {
     const hasUnsavedChanges = editorData && editorData !== template?.jsonData
     if (hasUnsavedChanges) {
-      if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
+      if (
+        window.confirm(
+          'You have unsaved changes. Are you sure you want to leave?'
+        )
+      ) {
         router.push('/admin?tab=templates')
       }
     } else {
@@ -151,9 +165,9 @@ export default function AdminEditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="text-gray-600">Loading template...</p>
         </div>
       </div>
@@ -162,12 +176,12 @@ export default function AdminEditorPage() {
 
   if (!template) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Template not found</p>
-          <button 
+          <p className="mb-4 text-gray-600">Template not found</p>
+          <button
             onClick={() => router.push('/admin?tab=templates')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
           >
             Back to Templates
           </button>
@@ -184,8 +198,8 @@ export default function AdminEditorPage() {
         onSave={handleSave}
         templateName={template?.name}
         backButton={{
-          catalogueName: "Back to Templates",
-          href: "/admin?tab=templates"
+          catalogueName: 'Back to Templates',
+          href: '/admin?tab=templates',
         }}
       />
     </div>

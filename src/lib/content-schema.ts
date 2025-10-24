@@ -15,7 +15,7 @@ export const ContentSchema = z.object({
     settings: z.any().optional(),
     createdAt: z.date(),
     updatedAt: z.date(),
-    profileId: z.string()
+    profileId: z.string(),
   }),
   profile: z.object({
     id: z.string(),
@@ -30,36 +30,42 @@ export const ContentSchema = z.object({
     country: z.string().nullable(),
     logo: z.string().nullable(),
     tagline: z.string().nullable(),
-    socialLinks: z.record(z.string()).nullable()
+    socialLinks: z.record(z.string()).nullable(),
   }),
-  products: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().nullable(),
-    price: z.any().nullable(), // Decimal type
-    currency: z.string().default('INR'),
-    priceDisplay: z.string().nullable(),
-    sku: z.string().nullable(),
-    tags: z.array(z.string()).default([]),
-    images: z.array(z.string()).default([]),
-    sortOrder: z.number().default(0),
-    isActive: z.boolean().default(true),
-    categoryId: z.string().nullable(),
-    category: z.object({
+  products: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      price: z.any().nullable(), // Decimal type
+      currency: z.string().default('INR'),
+      priceDisplay: z.string().nullable(),
+      sku: z.string().nullable(),
+      tags: z.array(z.string()).default([]),
+      images: z.array(z.string()).default([]),
+      sortOrder: z.number().default(0),
+      isActive: z.boolean().default(true),
+      categoryId: z.string().nullable(),
+      category: z
+        .object({
+          id: z.string(),
+          name: z.string(),
+          description: z.string().nullable(),
+          color: z.string().nullable(),
+          sortOrder: z.number().default(0),
+        })
+        .nullable(),
+    })
+  ),
+  categories: z.array(
+    z.object({
       id: z.string(),
       name: z.string(),
       description: z.string().nullable(),
       color: z.string().nullable(),
-      sortOrder: z.number().default(0)
-    }).nullable()
-  })),
-  categories: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string().nullable(),
-    color: z.string().nullable(),
-    sortOrder: z.number().default(0)
-  }))
+      sortOrder: z.number().default(0),
+    })
+  ),
 })
 
 export type StandardizedContent = z.infer<typeof ContentSchema>
@@ -87,7 +93,7 @@ export class ContentMapper {
         settings: catalogue.settings,
         createdAt: catalogue.createdAt,
         updatedAt: catalogue.updatedAt,
-        profileId: catalogue.profileId
+        profileId: catalogue.profileId,
       },
       profile: {
         id: profile.id,
@@ -102,7 +108,7 @@ export class ContentMapper {
         country: profile.country,
         logo: profile.logo || null,
         tagline: profile.tagline || null,
-        socialLinks: (profile.socialLinks as Record<string, string>) || null
+        socialLinks: (profile.socialLinks as Record<string, string>) || null,
       },
       products: catalogue.products.map(product => ({
         id: product.id,
@@ -112,26 +118,30 @@ export class ContentMapper {
         currency: product.currency || 'INR',
         priceDisplay: product.priceDisplay,
         sku: product.sku,
-        tags: Array.isArray(product.tags) ? product.tags as string[] : [],
-        images: Array.isArray(product.images) ? product.images as string[] : [],
+        tags: Array.isArray(product.tags) ? (product.tags as string[]) : [],
+        images: Array.isArray(product.images)
+          ? (product.images as string[])
+          : [],
         sortOrder: product.sortOrder || 0,
         isActive: product.isActive,
         categoryId: product.categoryId,
-        category: product.category ? {
-          id: product.category.id,
-          name: product.category.name,
-          description: product.category.description,
-          color: product.category.color,
-          sortOrder: product.category.sortOrder || 0
-        } : null
+        category: product.category
+          ? {
+              id: product.category.id,
+              name: product.category.name,
+              description: product.category.description,
+              color: product.category.color,
+              sortOrder: product.category.sortOrder || 0,
+            }
+          : null,
       })),
       categories: catalogue.categories.map(category => ({
         id: category.id,
         name: category.name,
         description: category.description,
         color: category.color,
-        sortOrder: category.sortOrder || 0
-      }))
+        sortOrder: category.sortOrder || 0,
+      })),
     }
   }
 
@@ -160,23 +170,35 @@ export const ContentHelpers = {
   getFeaturedProducts(content: StandardizedContent) {
     return content.products.filter(product =>
       product.tags.some(tag =>
-        ['featured', 'bestseller', 'trending', 'new'].includes(tag.toLowerCase())
+        ['featured', 'bestseller', 'trending', 'new'].includes(
+          tag.toLowerCase()
+        )
       )
     )
   },
 
   // Sort products by priority tags
   sortProductsByPriority(products: StandardizedContent['products']) {
-    const priorityOrder = ['bestseller', 'featured', 'trending', 'new', 'seasonal']
+    const priorityOrder = [
+      'bestseller',
+      'featured',
+      'trending',
+      'new',
+      'seasonal',
+    ]
 
     return products.sort((a, b) => {
-      const aPriority = Math.min(...a.tags.map(tag =>
-        priorityOrder.indexOf(tag.toLowerCase())
-      ).filter(index => index !== -1))
+      const aPriority = Math.min(
+        ...a.tags
+          .map(tag => priorityOrder.indexOf(tag.toLowerCase()))
+          .filter(index => index !== -1)
+      )
 
-      const bPriority = Math.min(...b.tags.map(tag =>
-        priorityOrder.indexOf(tag.toLowerCase())
-      ).filter(index => index !== -1))
+      const bPriority = Math.min(
+        ...b.tags
+          .map(tag => priorityOrder.indexOf(tag.toLowerCase()))
+          .filter(index => index !== -1)
+      )
 
       if (aPriority === Infinity && bPriority === Infinity) {
         return a.sortOrder - b.sortOrder
@@ -192,11 +214,12 @@ export const ContentHelpers = {
   formatPrice(price: any, currency: string = 'INR'): string {
     if (!price) return 'Price on request'
 
-    const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price)
+    const numPrice =
+      typeof price === 'string' ? parseFloat(price) : Number(price)
 
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency
+      currency: currency,
     }).format(numPrice)
   },
 
@@ -212,9 +235,10 @@ export const ContentHelpers = {
       email: profile.email,
       phone: profile.phone,
       website: profile.website,
-      address: [profile.address, profile.city, profile.state, profile.country]
-        .filter(Boolean)
-        .join(', ') || null
+      address:
+        [profile.address, profile.city, profile.state, profile.country]
+          .filter(Boolean)
+          .join(', ') || null,
     }
-  }
+  },
 }

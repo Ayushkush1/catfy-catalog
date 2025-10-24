@@ -18,7 +18,7 @@ interface UserProfile {
 export default function ThemesPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  
+
   const router = useRouter()
   const supabase = createClient()
 
@@ -28,8 +28,10 @@ export default function ThemesPage() {
 
   const loadProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
       if (!user) {
         router.push('/auth/login')
         return
@@ -60,10 +62,10 @@ export default function ThemesPage() {
       <>
         <Header title="Create Catalog" />
         <div className="min-h-screen bg-gray-50">
-          <div className="container mx-auto py-8 px-4">
+          <div className="container mx-auto px-4 py-8">
             <div className="space-y-6">
               <Skeleton className="h-8 w-64" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {[...Array(6)].map((_, i) => (
                   <Skeleton key={i} className="h-80" />
                 ))}
@@ -79,7 +81,7 @@ export default function ThemesPage() {
     <>
       <Header title="Create Catalog" />
       <div className="min-h-screen bg-gray-50">
-        <TemplateThemeWorkflow 
+        <TemplateThemeWorkflow
           userProfile={profile}
           onSelectionComplete={handleSelectionComplete}
         />

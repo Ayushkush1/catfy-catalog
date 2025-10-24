@@ -1,7 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Check, Crown, Eye, Star } from 'lucide-react'
@@ -25,12 +31,16 @@ export function TemplateSelector({
   onTemplateSelect,
   showPreview = true,
   filterCategory,
-  className
+  className,
 }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<TemplateConfig[]>([])
   const [loading, setLoading] = useState(true)
-  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>([])
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null)
+  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>(
+    []
+  )
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
+    null
+  )
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
 
   useEffect(() => {
@@ -72,13 +82,13 @@ export function TemplateSelector({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {[...Array(6)].map((_, i) => (
           <Card key={i} className="animate-pulse">
-            <div className="h-48 bg-gray-200 rounded-t-lg" />
+            <div className="h-48 rounded-t-lg bg-gray-200" />
             <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-3/4" />
-              <div className="h-3 bg-gray-200 rounded w-full" />
+              <div className="h-4 w-3/4 rounded bg-gray-200" />
+              <div className="h-3 w-full rounded bg-gray-200" />
             </CardHeader>
           </Card>
         ))}
@@ -88,14 +98,14 @@ export function TemplateSelector({
 
   return (
     <div className={cn('space-y-6', className)}>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTemplates.map((template) => (
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredTemplates.map(template => (
           <Card
             key={template.id}
             className={cn(
               'cursor-pointer transition-all duration-200 hover:shadow-lg',
               selectedTemplateId === template.id
-                ? 'ring-2 ring-blue-500 shadow-lg'
+                ? 'shadow-lg ring-2 ring-blue-500'
                 : 'hover:shadow-md'
             )}
             onClick={() => handleTemplateSelect(template.id)}
@@ -106,16 +116,16 @@ export function TemplateSelector({
                 <img
                   src={template.previewImage}
                   alt={`${template.name} preview`}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
+                  className="h-full w-full object-cover"
+                  onError={e => {
                     // Fallback to gradient background if image fails to load
                     e.currentTarget.style.display = 'none'
                   }}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-400">
+                <div className="flex h-full items-center justify-center text-gray-400">
                   <div className="text-center">
-                    <div className="text-4xl mb-2">📄</div>
+                    <div className="mb-2 text-4xl">📄</div>
                     <div className="text-sm font-medium">{template.name}</div>
                   </div>
                 </div>
@@ -123,16 +133,19 @@ export function TemplateSelector({
 
               {/* Selection Indicator */}
               {selectedTemplateId === template.id && (
-                <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                  <Check className="w-4 h-4" />
+                <div className="absolute right-2 top-2 rounded-full bg-blue-500 p-1 text-white">
+                  <Check className="h-4 w-4" />
                 </div>
               )}
 
               {/* Premium Badge */}
               {template.isPremium && (
-                <div className="absolute top-2 left-2">
-                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                    <Crown className="w-3 h-3 mr-1" />
+                <div className="absolute left-2 top-2">
+                  <Badge
+                    variant="secondary"
+                    className="bg-yellow-100 text-yellow-800"
+                  >
+                    <Crown className="mr-1 h-3 w-3" />
                     Premium
                   </Badge>
                 </div>
@@ -145,12 +158,12 @@ export function TemplateSelector({
                     size="sm"
                     variant="secondary"
                     className="bg-white/90 hover:bg-white"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation()
                       handlePreview(template.id)
                     }}
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="h-4 w-4" />
                   </Button>
                 </div>
               )}
@@ -162,14 +175,14 @@ export function TemplateSelector({
                   <CardTitle className="text-lg font-semibold">
                     {template.name}
                   </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 mt-1">
+                  <CardDescription className="mt-1 text-sm text-gray-600">
                     {template.description}
                   </CardDescription>
                 </div>
               </div>
 
               {/* Template Metadata */}
-              <div className="flex items-center gap-2 mt-3">
+              <div className="mt-3 flex items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   {template.category}
                 </Badge>
@@ -188,10 +201,16 @@ export function TemplateSelector({
               {/* Features */}
               {template.features && template.features.length > 0 && (
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700">Features:</div>
+                  <div className="text-sm font-medium text-gray-700">
+                    Features:
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {template.features.slice(0, 3).map((feature, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
+                      <Badge
+                        key={index}
+                        variant="secondary"
+                        className="text-xs"
+                      >
                         {feature}
                       </Badge>
                     ))}
@@ -207,19 +226,19 @@ export function TemplateSelector({
               {/* Action Button */}
               <Button
                 className={cn(
-                  'w-full mt-4',
+                  'mt-4 w-full',
                   selectedTemplateId === template.id
                     ? 'bg-blue-500 hover:bg-blue-600'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 )}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation()
                   handleTemplateSelect(template.id)
                 }}
               >
                 {selectedTemplateId === template.id ? (
                   <>
-                    <Check className="w-4 h-4 mr-2" />
+                    <Check className="mr-2 h-4 w-4" />
                     Selected
                   </>
                 ) : (
@@ -232,9 +251,9 @@ export function TemplateSelector({
       </div>
 
       {templates.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-lg mb-2">No templates found</div>
-          <div className="text-gray-500 text-sm">
+        <div className="py-12 text-center">
+          <div className="mb-2 text-lg text-gray-400">No templates found</div>
+          <div className="text-sm text-gray-500">
             {filterCategory
               ? `No templates available in the "${filterCategory}" category.`
               : 'No templates are currently available.'}

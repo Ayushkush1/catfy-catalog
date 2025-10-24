@@ -13,6 +13,15 @@ const requiredEnvVars = [
   'SUPABASE_ANON_KEY'
 ];
 
+// Default values for CLI/development mode
+const defaultValues = {
+  'DATABASE_URL': 'postgresql://postgres:postgres@localhost:5432/catfy',
+  'NEXTAUTH_SECRET': 'dev-secret-key-change-in-production',
+  'NEXTAUTH_URL': 'http://localhost:3000',
+  'SUPABASE_URL': 'https://placeholder.supabase.co',
+  'SUPABASE_ANON_KEY': 'placeholder-anon-key'
+};
+
 const optionalEnvVars = [
   'STRIPE_SECRET_KEY',
   'STRIPE_PUBLISHABLE_KEY',
@@ -26,11 +35,17 @@ function validateEnvironment() {
   
   const missing = [];
   const warnings = [];
+  const usingDefaults = [];
   
-  // Check required variables
+  // Check required variables and apply defaults if missing
   requiredEnvVars.forEach(varName => {
     if (!process.env[varName]) {
-      missing.push(varName);
+      if (defaultValues[varName]) {
+        process.env[varName] = defaultValues[varName];
+        usingDefaults.push(varName);
+      } else {
+        missing.push(varName);
+      }
     }
   });
   
@@ -40,6 +55,14 @@ function validateEnvironment() {
       warnings.push(varName);
     }
   });
+  
+  if (usingDefaults.length > 0) {
+    console.log('ℹ️  Using default values for:');
+    usingDefaults.forEach(varName => {
+      console.log(`   - ${varName}`);
+    });
+    console.log('');
+  }
   
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');

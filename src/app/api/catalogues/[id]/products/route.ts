@@ -35,10 +35,7 @@ interface RouteParams {
 }
 
 // GET - Get all products for a catalogue
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -50,10 +47,7 @@ export async function GET(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Continue with normal database query for all users
@@ -67,11 +61,11 @@ export async function GET(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
     })
 
@@ -99,7 +93,11 @@ export async function GET(
     const transformedProducts = products.map(product => ({
       ...product,
       price: product.price ? Number(product.price) : null, // Convert Decimal to number
-      imageUrl: product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : null)
+      imageUrl:
+        product.imageUrl ||
+        (product.images && product.images.length > 0
+          ? product.images[0]
+          : null),
     }))
 
     return NextResponse.json({ products: transformedProducts })
@@ -113,10 +111,7 @@ export async function GET(
 }
 
 // POST - Create a new product
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const user = await getUser()
     if (!user) {
@@ -128,10 +123,7 @@ export async function POST(
 
     const profile = await getUserProfile(user.id)
     if (!profile) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
 
     // Verify catalogue access (ownership or team membership)
@@ -143,11 +135,11 @@ export async function POST(
           {
             teamMembers: {
               some: {
-                profileId: profile.id
-              }
-            }
-          } // User is a team member
-        ]
+                profileId: profile.id,
+              },
+            },
+          }, // User is a team member
+        ],
       },
     })
 
@@ -184,7 +176,7 @@ export async function POST(
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
     console.error('Error creating product:', error)
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.errors },

@@ -1,18 +1,24 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { useNode, UserComponent } from '@craftjs/core';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import React from 'react'
+import { useNode, UserComponent } from '@craftjs/core'
+import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export interface SpacerBlockProps {
-  height?: number;
-  width?: number;
-  unit?: 'px' | 'rem' | 'em' | '%' | 'vh' | 'vw';
-  backgroundColor?: string;
-  showBackground?: boolean;
-  className?: string;
+  height?: number
+  width?: number
+  unit?: 'px' | 'rem' | 'em' | '%' | 'vh' | 'vw'
+  backgroundColor?: string
+  showBackground?: boolean
+  className?: string
 }
 
 export const SpacerBlock: UserComponent<SpacerBlockProps> = ({
@@ -21,15 +27,15 @@ export const SpacerBlock: UserComponent<SpacerBlockProps> = ({
   unit = 'px',
   backgroundColor = 'transparent',
   showBackground = false,
-  className = ''
+  className = '',
 }) => {
   const {
     connectors: { connect, drag },
     selected,
-    actions: { setProp }
-  } = useNode((state) => ({
+    actions: { setProp },
+  } = useNode(state => ({
     selected: state.events.selected,
-  }));
+  }))
 
   const spacerStyle: React.CSSProperties = {
     height: unit === '%' || unit === 'vh' ? `${height}${unit}` : `${height}px`,
@@ -41,39 +47,43 @@ export const SpacerBlock: UserComponent<SpacerBlockProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-  };
+  }
 
   return (
     <div
-      ref={(ref) => {
+      ref={ref => {
         if (ref) {
-          connect(drag(ref));
+          connect(drag(ref))
         }
       }}
       className={`spacer-block ${selected ? 'ring-2 ring-blue-500' : ''} ${className}`}
       style={spacerStyle}
     >
       {selected && (
-        <div className="absolute inset-0 flex items-center justify-center bg-blue-50 bg-opacity-50 text-blue-600 text-xs font-medium border border-dashed border-blue-300">
-          Spacer ({height}{unit === 'px' ? 'px' : unit})
+        <div className="absolute inset-0 flex items-center justify-center border border-dashed border-blue-300 bg-blue-50 bg-opacity-50 text-xs font-medium text-blue-600">
+          Spacer ({height}
+          {unit === 'px' ? 'px' : unit})
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 export const SpacerBlockSettings: React.FC = () => {
   const {
     actions: { setProp },
-    props
-  } = useNode((node) => ({
+    props,
+  } = useNode(node => ({
     props: node.data.props as SpacerBlockProps,
-  }));
+  }))
 
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="spacer-height">Height: {props.height}{props.unit}</Label>
+        <Label htmlFor="spacer-height">
+          Height: {props.height}
+          {props.unit}
+        </Label>
         <Slider
           value={[props.height || 40]}
           onValueChange={([value]) =>
@@ -87,7 +97,10 @@ export const SpacerBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="spacer-width">Width: {props.width}{props.unit}</Label>
+        <Label htmlFor="spacer-width">
+          Width: {props.width}
+          {props.unit}
+        </Label>
         <Slider
           value={[props.width || 100]}
           onValueChange={([value]) =>
@@ -105,7 +118,10 @@ export const SpacerBlockSettings: React.FC = () => {
         <Select
           value={props.unit}
           onValueChange={(value: string) =>
-            setProp((props: SpacerBlockProps) => (props.unit = value as SpacerBlockProps['unit']))
+            setProp(
+              (props: SpacerBlockProps) =>
+                (props.unit = value as SpacerBlockProps['unit'])
+            )
           }
         >
           <SelectTrigger>
@@ -127,8 +143,11 @@ export const SpacerBlockSettings: React.FC = () => {
           type="checkbox"
           id="show-background"
           checked={props.showBackground}
-          onChange={(e) =>
-            setProp((props: SpacerBlockProps) => (props.showBackground = e.target.checked))
+          onChange={e =>
+            setProp(
+              (props: SpacerBlockProps) =>
+                (props.showBackground = e.target.checked)
+            )
           }
           className="rounded"
         />
@@ -141,18 +160,20 @@ export const SpacerBlockSettings: React.FC = () => {
           <input
             type="color"
             value={props.backgroundColor}
-            onChange={(e) =>
-              setProp((props: SpacerBlockProps) => (props.backgroundColor = e.target.value))
+            onChange={e =>
+              setProp(
+                (props: SpacerBlockProps) =>
+                  (props.backgroundColor = e.target.value)
+              )
             }
-            className="mt-1 w-full h-10 rounded border"
+            className="mt-1 h-10 w-full rounded border"
           />
         </div>
       )}
     </div>
-  );
-};
-
-(SpacerBlock as any).craft = {
+  )
+}
+;(SpacerBlock as any).craft = {
   props: {
     height: 40,
     width: 100,
@@ -163,4 +184,4 @@ export const SpacerBlockSettings: React.FC = () => {
   related: {
     settings: SpacerBlockSettings,
   },
-};
+}

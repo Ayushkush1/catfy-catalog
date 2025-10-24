@@ -8,7 +8,15 @@ export const TemplateConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  category: z.enum(['modern', 'classic', 'minimal', 'creative', 'industry', 'specialized', 'product']),
+  category: z.enum([
+    'modern',
+    'classic',
+    'minimal',
+    'creative',
+    'industry',
+    'specialized',
+    'product',
+  ]),
   isPremium: z.boolean().default(false),
   version: z.string().default('1.0.0'),
   author: z.string().optional(),
@@ -19,18 +27,20 @@ export const TemplateConfigSchema = z.object({
   supportedFields: z.object({
     products: z.array(z.string()).default([]),
     categories: z.array(z.string()).default([]),
-    profile: z.array(z.string()).default([])
+    profile: z.array(z.string()).default([]),
   }),
   compatibleThemes: z.array(z.string()).default(['*']), // '*' means compatible with all
   requiredThemeFeatures: z.array(z.string()).default([]),
-  layoutOptions: z.object({
-    responsive: z.boolean().default(true),
-    printOptimized: z.boolean().default(true),
-    customizable: z.boolean().default(true)
-  }).optional(),
+  layoutOptions: z
+    .object({
+      responsive: z.boolean().default(true),
+      printOptimized: z.boolean().default(true),
+      customizable: z.boolean().default(true),
+    })
+    .optional(),
   customProperties: z.record(z.any()).optional(),
   createdAt: z.date().default(() => new Date()),
-  updatedAt: z.date().default(() => new Date())
+  updatedAt: z.date().default(() => new Date()),
 })
 
 export type TemplateConfig = z.infer<typeof TemplateConfigSchema>
@@ -83,8 +93,12 @@ export class TemplateRegistry {
     return this.components.get(id)
   }
 
-  getTemplatesByCategory(category: TemplateConfig['category']): TemplateConfig[] {
-    return this.getAllTemplates().filter(template => template.category === category)
+  getTemplatesByCategory(
+    category: TemplateConfig['category']
+  ): TemplateConfig[] {
+    return this.getAllTemplates().filter(
+      template => template.category === category
+    )
   }
 
   getFreeTemplates(): TemplateConfig[] {
@@ -96,19 +110,26 @@ export class TemplateRegistry {
   }
 
   getCompatibleTemplates(themeId: string): TemplateConfig[] {
-    return this.getAllTemplates().filter(template =>
-      template.compatibleThemes.includes('*') ||
-      template.compatibleThemes.includes(themeId)
+    return this.getAllTemplates().filter(
+      template =>
+        template.compatibleThemes.includes('*') ||
+        template.compatibleThemes.includes(themeId)
     )
   }
 
-  isTemplateThemeCompatible(templateId: string, themeId: string, theme?: ThemeConfig): boolean {
+  isTemplateThemeCompatible(
+    templateId: string,
+    themeId: string,
+    theme?: ThemeConfig
+  ): boolean {
     const template = this.getTemplate(templateId)
     if (!template) return false
 
     // Check basic compatibility
-    if (!template.compatibleThemes.includes('*') &&
-      !template.compatibleThemes.includes(themeId)) {
+    if (
+      !template.compatibleThemes.includes('*') &&
+      !template.compatibleThemes.includes(themeId)
+    ) {
       return false
     }
 
@@ -127,7 +148,10 @@ export class TemplateRegistry {
     const result = TemplateConfigSchema.safeParse(config)
 
     if (!result.success) {
-      console.warn(`⚠️ Template validation failed for "${config.id}":`, result.error.errors)
+      console.warn(
+        `⚠️ Template validation failed for "${config.id}":`,
+        result.error.errors
+      )
       console.warn('Registering template anyway with original config')
       // Register anyway - useful for HTML templates with flexible properties
       this.templates.set(config.id, config)
@@ -158,7 +182,9 @@ export class TemplateRegistry {
       if (error instanceof z.ZodError) {
         return {
           valid: false,
-          errors: error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
+          errors: error.errors.map(
+            err => `${err.path.join('.')}: ${err.message}`
+          ),
         }
       }
       return { valid: false, errors: ['Unknown validation error'] }
@@ -188,15 +214,22 @@ export function getTemplateById(id: string): TemplateConfig | undefined {
   return templateRegistry.getTemplate(id)
 }
 
-export function getTemplateComponent(id: string): TemplateComponent | undefined {
+export function getTemplateComponent(
+  id: string
+): TemplateComponent | undefined {
   return templateRegistry.getTemplateComponent(id)
 }
 
-export function isTemplateCompatible(templateId: string, themeId: string): boolean {
+export function isTemplateCompatible(
+  templateId: string,
+  themeId: string
+): boolean {
   return templateRegistry.isTemplateThemeCompatible(templateId, themeId)
 }
 
-export function getCompatibleTemplatesForTheme(themeId: string): TemplateConfig[] {
+export function getCompatibleTemplatesForTheme(
+  themeId: string
+): TemplateConfig[] {
   return templateRegistry.getCompatibleTemplates(themeId)
 }
 

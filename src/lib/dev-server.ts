@@ -15,7 +15,7 @@ export interface DevServerEvents {
   'template:removed': (templateId: string) => void
   'compatibility:updated': () => void
   'registry:reloaded': () => void
-  'error': (error: Error) => void
+  error: (error: Error) => void
 }
 
 // Development server configuration
@@ -39,12 +39,12 @@ const DEFAULT_CONFIG: DevServerConfig = {
     '**/template.config.ts',
     '**/template.config.js',
     '**/*.tsx',
-    '**/*.ts'
+    '**/*.ts',
   ],
   debounceMs: 300,
   enableHotReload: true,
   enableCompatibilityCheck: true,
-  logLevel: 'info'
+  logLevel: 'info',
 }
 
 // Development server class
@@ -74,29 +74,31 @@ export class DevServer extends EventEmitter {
 
     try {
       this.log('info', 'Starting Catfy development server...')
-      
+
       // Load initial registries
       await this.loadRegistries()
-      
+
       // Setup file watchers
       if (this.config.enableHotReload) {
         this.setupWatchers()
       }
-      
+
       // Setup compatibility checking
       if (this.config.enableCompatibilityCheck) {
         this.setupCompatibilityChecking()
       }
-      
+
       this.isRunning = true
       this.log('info', '✅ Development server started successfully')
       this.log('info', `🔍 Watching: ${this.config.watchPatterns.join(', ')}`)
       this.log('info', `🎨 Themes directory: ${this.config.themesDir}`)
       this.log('info', `📄 Templates directory: ${this.config.templatesDir}`)
-      
     } catch (error) {
       this.log('error', `Failed to start development server: ${error}`)
-      this.emit('error', error instanceof Error ? error : new Error(String(error)))
+      this.emit(
+        'error',
+        error instanceof Error ? error : new Error(String(error))
+      )
       throw error
     }
   }
@@ -108,15 +110,15 @@ export class DevServer extends EventEmitter {
     }
 
     this.log('info', 'Stopping development server...')
-    
+
     // Close all watchers
     await Promise.all(this.watchers.map(watcher => watcher.close()))
     this.watchers = []
-    
+
     // Clear debounce timers
     this.debounceTimers.forEach(timer => clearTimeout(timer))
     this.debounceTimers.clear()
-    
+
     this.isRunning = false
     this.log('info', '✅ Development server stopped')
   }
@@ -125,10 +127,16 @@ export class DevServer extends EventEmitter {
   private async loadRegistries(): Promise<void> {
     try {
       // Themes and templates are now registered statically, no loading needed
-      
-      this.log('info', `📦 Loaded ${this.themeRegistry.getAllThemes().length} themes`)
-      this.log('info', `📋 Loaded ${this.templateRegistry.getAllTemplates().length} templates`)
-      
+
+      this.log(
+        'info',
+        `📦 Loaded ${this.themeRegistry.getAllThemes().length} themes`
+      )
+      this.log(
+        'info',
+        `📋 Loaded ${this.templateRegistry.getAllTemplates().length} templates`
+      )
+
       this.emit('registry:reloaded')
     } catch (error) {
       this.log('error', `Failed to load registries: ${error}`)
@@ -140,21 +148,21 @@ export class DevServer extends EventEmitter {
   private setupWatchers(): void {
     const watchPaths = [
       path.join(process.cwd(), this.config.themesDir),
-      path.join(process.cwd(), this.config.templatesDir)
+      path.join(process.cwd(), this.config.templatesDir),
     ]
 
     watchPaths.forEach(watchPath => {
       const watcher = watch(watchPath, {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
-        ignoreInitial: true
+        ignoreInitial: true,
       })
 
       watcher
-        .on('add', (filePath) => this.handleFileChange('add', filePath))
-        .on('change', (filePath) => this.handleFileChange('change', filePath))
-        .on('unlink', (filePath) => this.handleFileChange('unlink', filePath))
-        .on('error', (error) => {
+        .on('add', filePath => this.handleFileChange('add', filePath))
+        .on('change', filePath => this.handleFileChange('change', filePath))
+        .on('unlink', filePath => this.handleFileChange('unlink', filePath))
+        .on('error', error => {
           this.log('error', `Watcher error: ${error}`)
           this.emit('error', error)
         })
@@ -166,12 +174,17 @@ export class DevServer extends EventEmitter {
   }
 
   // Handle file changes with debouncing
-  private handleFileChange(event: 'add' | 'change' | 'unlink', filePath: string): void {
+  private handleFileChange(
+    event: 'add' | 'change' | 'unlink',
+    filePath: string
+  ): void {
     const relativePath = path.relative(process.cwd(), filePath)
-    
+
     // Check if file matches watch patterns
     const shouldWatch = this.config.watchPatterns.some(pattern => {
-      const regex = new RegExp(pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*'))
+      const regex = new RegExp(
+        pattern.replace(/\*\*/g, '.*').replace(/\*/g, '[^/]*')
+      )
       return regex.test(relativePath)
     })
 
@@ -182,7 +195,7 @@ export class DevServer extends EventEmitter {
     // Debounce file changes
     const debounceKey = `${event}:${filePath}`
     const existingTimer = this.debounceTimers.get(debounceKey)
-    
+
     if (existingTimer) {
       clearTimeout(existingTimer)
     }
@@ -196,13 +209,21 @@ export class DevServer extends EventEmitter {
   }
 
   // Process file changes
-  private async processFileChange(event: 'add' | 'change' | 'unlink', filePath: string, relativePath: string): Promise<void> {
+  private async processFileChange(
+    event: 'add' | 'change' | 'unlink',
+    filePath: string,
+    relativePath: string
+  ): Promise<void> {
     try {
       this.log('debug', `File ${event}: ${relativePath}`)
 
       // Determine if it's a theme or template file
-      const isThemeFile = relativePath.includes(this.config.themesDir) || filePath.includes('.theme.')
-      const isTemplateFile = relativePath.includes(this.config.templatesDir) || filePath.includes('template.config.')
+      const isThemeFile =
+        relativePath.includes(this.config.themesDir) ||
+        filePath.includes('.theme.')
+      const isTemplateFile =
+        relativePath.includes(this.config.templatesDir) ||
+        filePath.includes('template.config.')
 
       if (isThemeFile) {
         await this.handleThemeChange(event, filePath, relativePath)
@@ -212,21 +233,27 @@ export class DevServer extends EventEmitter {
 
       // Reload registries and update compatibility
       await this.loadRegistries()
-      
+
       if (this.config.enableCompatibilityCheck) {
         this.updateCompatibilityMatrix()
       }
-
     } catch (error) {
       this.log('error', `Error processing file change: ${error}`)
-      this.emit('error', error instanceof Error ? error : new Error(String(error)))
+      this.emit(
+        'error',
+        error instanceof Error ? error : new Error(String(error))
+      )
     }
   }
 
   // Handle theme file changes
-  private async handleThemeChange(event: 'add' | 'change' | 'unlink', filePath: string, relativePath: string): Promise<void> {
+  private async handleThemeChange(
+    event: 'add' | 'change' | 'unlink',
+    filePath: string,
+    relativePath: string
+  ): Promise<void> {
     const themeId = this.extractThemeId(filePath)
-    
+
     if (!themeId) {
       this.log('warn', `Could not extract theme ID from: ${relativePath}`)
       return
@@ -249,9 +276,13 @@ export class DevServer extends EventEmitter {
   }
 
   // Handle template file changes
-  private async handleTemplateChange(event: 'add' | 'change' | 'unlink', filePath: string, relativePath: string): Promise<void> {
+  private async handleTemplateChange(
+    event: 'add' | 'change' | 'unlink',
+    filePath: string,
+    relativePath: string
+  ): Promise<void> {
     const templateId = this.extractTemplateId(filePath)
-    
+
     if (!templateId) {
       this.log('warn', `Could not extract template ID from: ${relativePath}`)
       return
@@ -288,10 +319,10 @@ export class DevServer extends EventEmitter {
     try {
       // Rebuild compatibility matrix
       this.compatibilityMatrix = new CompatibilityMatrix()
-      
+
       const themes = this.themeRegistry.getAllThemes()
       const templates = this.templateRegistry.getAllTemplates()
-      
+
       // Add compatibility rules based on theme and template configurations
       themes.forEach(theme => {
         templates.forEach(template => {
@@ -299,58 +330,66 @@ export class DevServer extends EventEmitter {
             this.compatibilityMatrix.addRule({
               themeId: theme.id,
               templateId: template.id,
-              compatible: true
+              compatible: true,
             })
           }
         })
       })
-      
+
       this.emit('compatibility:updated')
       this.log('debug', '🔗 Compatibility matrix updated')
-      
     } catch (error) {
       this.log('error', `Failed to update compatibility matrix: ${error}`)
     }
   }
 
   // Check if theme and template are compatible
-  private isThemeTemplateCompatible(themeId: string, templateId: string): boolean {
+  private isThemeTemplateCompatible(
+    themeId: string,
+    templateId: string
+  ): boolean {
     const theme = this.themeRegistry.getTheme(themeId)
     const template = this.templateRegistry.getTemplate(templateId)
-    
+
     if (!theme || !template) {
       return false
     }
-    
+
     // Check if template supports all themes or specifically supports this theme
-    if (template.compatibleThemes.includes('*') || template.compatibleThemes.includes(themeId)) {
+    if (
+      template.compatibleThemes.includes('*') ||
+      template.compatibleThemes.includes(themeId)
+    ) {
       return true
     }
-    
+
     // Check if theme supports all templates or specifically supports this template
-    if (theme.compatibleTemplates.includes('*') || theme.compatibleTemplates.includes(templateId)) {
+    if (
+      theme.compatibleTemplates.includes('*') ||
+      theme.compatibleTemplates.includes(templateId)
+    ) {
       return true
     }
-    
+
     return false
   }
 
   // Extract theme ID from file path
   private extractThemeId(filePath: string): string | null {
     const fileName = path.basename(filePath)
-    
+
     // For .theme.ts files
     if (fileName.endsWith('.theme.ts') || fileName.endsWith('.theme.js')) {
       return fileName.replace(/\.(theme\.(ts|js))$/, '')
     }
-    
+
     // For theme directories
     const parts = filePath.split(path.sep)
     const themesDirIndex = parts.findIndex(part => part === 'themes')
     if (themesDirIndex !== -1 && parts[themesDirIndex + 1]) {
       return parts[themesDirIndex + 1]
     }
-    
+
     return null
   }
 
@@ -358,11 +397,11 @@ export class DevServer extends EventEmitter {
   private extractTemplateId(filePath: string): string | null {
     const parts = filePath.split(path.sep)
     const templatesIndex = parts.findIndex(part => part === 'templates')
-    
+
     if (templatesIndex !== -1 && parts[templatesIndex + 1]) {
       return parts[templatesIndex + 1]
     }
-    
+
     return null
   }
 
@@ -371,10 +410,17 @@ export class DevServer extends EventEmitter {
     const levels = ['silent', 'error', 'warn', 'info', 'debug']
     const currentLevelIndex = levels.indexOf(this.config.logLevel)
     const messageLevelIndex = levels.indexOf(level)
-    
+
     if (messageLevelIndex <= currentLevelIndex) {
       const timestamp = new Date().toISOString().split('T')[1].split('.')[0]
-      const prefix = level === 'error' ? '❌' : level === 'warn' ? '⚠️' : level === 'info' ? 'ℹ️' : '🐛'
+      const prefix =
+        level === 'error'
+          ? '❌'
+          : level === 'warn'
+            ? '⚠️'
+            : level === 'info'
+              ? 'ℹ️'
+              : '🐛'
       console.log(`[${timestamp}] ${prefix} ${message}`)
     }
   }
@@ -392,7 +438,7 @@ export class DevServer extends EventEmitter {
       themesCount: this.themeRegistry.getAllThemes().length,
       templatesCount: this.templateRegistry.getAllTemplates().length,
       watchersCount: this.watchers.length,
-      config: this.config
+      config: this.config,
     }
   }
 
@@ -408,7 +454,7 @@ export class DevServer extends EventEmitter {
   } {
     return {
       themeRegistry: this.themeRegistry,
-      templateRegistry: this.templateRegistry
+      templateRegistry: this.templateRegistry,
     }
   }
 }
@@ -425,7 +471,9 @@ export function getDevServer(config?: Partial<DevServerConfig>): DevServer {
 }
 
 // Start development server
-export async function startDevServer(config?: Partial<DevServerConfig>): Promise<DevServer> {
+export async function startDevServer(
+  config?: Partial<DevServerConfig>
+): Promise<DevServer> {
   const server = getDevServer(config)
   await server.start()
   return server

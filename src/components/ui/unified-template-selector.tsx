@@ -1,14 +1,38 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { Search, Grid, List, Filter, X, Eye, Sparkles, Crown } from 'lucide-react'
+import {
+  Search,
+  Grid,
+  List,
+  Filter,
+  X,
+  Eye,
+  Sparkles,
+  Crown,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { TemplateEditorPreview } from './template-editor-preview'
-import { templateManager, TemplateSelectionContext } from '@/lib/template-manager'
+import {
+  templateManager,
+  TemplateSelectionContext,
+} from '@/lib/template-manager'
 import { loadDbTemplatesIntoRegistry } from '@/templates'
 import { TemplateConfig } from '@/lib/template-registry'
 import { cn } from '@/lib/utils'
@@ -42,14 +66,18 @@ export function UnifiedTemplateSelector({
   className,
   viewMode: initialViewMode = 'grid',
   showSearch = true,
-  showFilters = true
+  showFilters = true,
 }: UnifiedTemplateSelectorProps) {
   const [templates, setTemplates] = useState<TemplateConfig[]>([])
-  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>([])
+  const [filteredTemplates, setFilteredTemplates] = useState<TemplateConfig[]>(
+    []
+  )
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(initialViewMode)
-  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null)
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(
+    null
+  )
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -63,7 +91,8 @@ export function UnifiedTemplateSelector({
       setIsLoading(true)
       try {
         await loadDbTemplatesIntoRegistry()
-        const availableTemplates = templateManager.getAvailableTemplates(userPlan)
+        const availableTemplates =
+          templateManager.getAvailableTemplates(userPlan)
         if (!mounted) return
         setTemplates(availableTemplates)
         setFilteredTemplates(availableTemplates)
@@ -75,7 +104,9 @@ export function UnifiedTemplateSelector({
       }
     }
     load()
-    return () => { mounted = false }
+    return () => {
+      mounted = false
+    }
   }, [userPlan, context])
 
   // Get categories for filtering
@@ -90,13 +121,16 @@ export function UnifiedTemplateSelector({
 
     // Apply search filter
     if (searchQuery.trim()) {
-      filtered = templateManager.searchTemplates(searchQuery.trim())
+      filtered = templateManager
+        .searchTemplates(searchQuery.trim())
         .filter(template => templates.includes(template)) // Ensure it's in available templates
     }
 
     // Apply category filter
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(template => template.category === selectedCategory)
+      filtered = filtered.filter(
+        template => template.category === selectedCategory
+      )
     }
 
     setFilteredTemplates(filtered)
@@ -108,7 +142,10 @@ export function UnifiedTemplateSelector({
       if (context.type === 'wizard') {
         await templateManager.handleWizardTemplateSelection(templateId, context)
       } else {
-        await templateManager.handleEditPageTemplateSelection(templateId, context)
+        await templateManager.handleEditPageTemplateSelection(
+          templateId,
+          context
+        )
       }
 
       onTemplateSelect(templateId)
@@ -141,39 +178,46 @@ export function UnifiedTemplateSelector({
         aria-pressed={isSelected}
         aria-label={`${template.name}${isSelected ? ' (selected)' : ''}`}
         className={cn(
-          'group relative overflow-hidden rounded-lg cursor-pointer transition-transform transform hover:-translate-y-1 hover:shadow-2xl',
+          'group relative transform cursor-pointer overflow-hidden rounded-lg transition-transform hover:-translate-y-1 hover:shadow-2xl',
           isSelected && 'ring-2 ring-blue-500',
-          !canAccess && 'opacity-60 pointer-events-none',
+          !canAccess && 'pointer-events-none opacity-60',
           viewMode === 'list' && 'flex flex-row'
         )}
       >
-        <div className={cn(
-          'relative bg-gray-100',
-          viewMode === 'grid' ? 'aspect-video' : 'w-48 flex-shrink-0'
-        )}>
+        <div
+          className={cn(
+            'relative bg-gray-100',
+            viewMode === 'grid' ? 'aspect-video' : 'w-48 flex-shrink-0'
+          )}
+        >
           {template.previewImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={template.previewImage}
               alt={template.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                ; (e.target as HTMLImageElement).src = '/templates/default-preview.svg'
+              className="h-full w-full object-cover"
+              onError={e => {
+                ;(e.target as HTMLImageElement).src =
+                  '/templates/default-preview.svg'
               }}
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-              <Sparkles className="w-10 h-10 text-blue-500" />
+            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+              <Sparkles className="h-10 w-10 text-blue-500" />
             </div>
           )}
 
           {/* Overlay header */}
-          <div className="absolute left-0 right-0 top-0 px-3 py-2 bg-gradient-to-b from-black/50 to-transparent text-white flex items-center justify-between z-10">
+          <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between bg-gradient-to-b from-black/50 to-transparent px-3 py-2 text-white">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold truncate max-w-xs">{template.name}</span>
+              <span className="max-w-xs truncate text-sm font-semibold">
+                {template.name}
+              </span>
             </div>
             {isPremium && (
-              <Badge className="bg-yellow-500 text-white text-xs">Premium</Badge>
+              <Badge className="bg-yellow-500 text-xs text-white">
+                Premium
+              </Badge>
             )}
           </div>
 
@@ -181,19 +225,24 @@ export function UnifiedTemplateSelector({
           {showPreview && (
             <button
               aria-label={`Preview ${template.name}`}
-              onClick={(e) => { e.stopPropagation(); handlePreview(template.id) }}
-              className="absolute bottom-3 right-3 bg-white/90 text-gray-800 rounded-md p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-20"
+              onClick={e => {
+                e.stopPropagation()
+                handlePreview(template.id)
+              }}
+              className="absolute bottom-3 right-3 z-20 rounded-md bg-white/90 p-2 text-gray-800 opacity-0 shadow-md transition-opacity group-hover:opacity-100"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="h-4 w-4" />
             </button>
           )}
         </div>
 
         <CardHeader className={cn('p-4', viewMode === 'list' && 'flex-1')}>
-          <CardTitle className="text-base truncate">{template.name}</CardTitle>
-          <CardDescription className="text-sm text-gray-600 line-clamp-2">{template.description}</CardDescription>
+          <CardTitle className="truncate text-base">{template.name}</CardTitle>
+          <CardDescription className="line-clamp-2 text-sm text-gray-600">
+            {template.description}
+          </CardDescription>
 
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="mt-3 flex flex-wrap gap-2">
             {template.category && (
               <Badge variant="outline" className="text-xs">
                 {template.category}
@@ -209,15 +258,17 @@ export function UnifiedTemplateSelector({
 
         {/* Selected indicator */}
         {isSelected && (
-          <div className="absolute top-2 right-3 z-30">
-            <Badge className="bg-gradient-to-r from-[#6366F1]  text-white">Selected</Badge>
+          <div className="absolute right-3 top-2 z-30">
+            <Badge className="bg-gradient-to-r from-[#6366F1]  text-white">
+              Selected
+            </Badge>
           </div>
         )}
 
         {!canAccess && (
-          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
             <Badge className="bg-yellow-500 text-white">
-              <Crown className="w-3 h-3 mr-1" />
+              <Crown className="mr-1 h-3 w-3" />
               Premium Required
             </Badge>
           </div>
@@ -230,7 +281,7 @@ export function UnifiedTemplateSelector({
     return (
       <div className={cn('w-full', className)}>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
           <span className="ml-2 text-gray-600">Loading templates...</span>
         </div>
       </div>
@@ -241,14 +292,14 @@ export function UnifiedTemplateSelector({
     <div className={cn('w-full space-y-6', className)}>
       {/* Search and Filters */}
       {(showSearch || showFilters) && (
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
           {showSearch && (
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <div className="relative max-w-md flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -256,9 +307,12 @@ export function UnifiedTemplateSelector({
 
           <div className="flex items-center gap-2">
             {showFilters && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger className="w-40">
-                  <Filter className="w-4 h-4 mr-2" />
+                  <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -271,20 +325,20 @@ export function UnifiedTemplateSelector({
               </Select>
             )}
 
-            <div className="flex border rounded-lg">
+            <div className="flex rounded-lg border">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
               >
-                <Grid className="w-4 h-4" />
+                <Grid className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
               >
-                <List className="w-4 h-4" />
+                <List className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -293,23 +347,26 @@ export function UnifiedTemplateSelector({
 
       {/* Templates Grid/List */}
       {filteredTemplates.length === 0 ? (
-        <div className="text-center py-12">
-          <Sparkles className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+        <div className="py-12 text-center">
+          <Sparkles className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            No templates found
+          </h3>
           <p className="text-gray-600">
             {searchQuery || selectedCategory !== 'all'
               ? 'Try adjusting your search or filters'
-              : 'No templates are available at the moment'
-            }
+              : 'No templates are available at the moment'}
           </p>
         </div>
       ) : (
-        <div className={cn(
-          'grid gap-6',
-          viewMode === 'grid'
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
-            : 'grid-cols-1'
-        )}>
+        <div
+          className={cn(
+            'grid gap-6',
+            viewMode === 'grid'
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3'
+              : 'grid-cols-1'
+          )}
+        >
           {filteredTemplates.map(renderTemplateCard)}
         </div>
       )}

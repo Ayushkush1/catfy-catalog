@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
         token,
         status: 'PENDING',
         expiresAt: {
-          gt: new Date()
-        }
+          gt: new Date(),
+        },
       },
       include: {
         catalogue: {
@@ -40,17 +40,17 @@ export async function POST(request: NextRequest) {
                 lastName: true,
                 subscriptions: {
                   where: {
-                    status: 'ACTIVE'
+                    status: 'ACTIVE',
                   },
                   orderBy: {
-                    createdAt: 'desc'
+                    createdAt: 'desc',
                   },
-                  take: 1
-                }
-              }
+                  take: 1,
+                },
+              },
             },
-            teamMembers: true
-          }
+            teamMembers: true,
+          },
         },
         sender: {
           select: {
@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
             email: true,
             fullName: true,
             firstName: true,
-            lastName: true
-          }
-        }
-      }
+            lastName: true,
+          },
+        },
+      },
     })
 
     if (!invitation) {
@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the invitation email matches the current user's email
-    if (invitation.email.toLowerCase() !== (user as User).email?.toLowerCase()) {
+    if (
+      invitation.email.toLowerCase() !== (user as User).email?.toLowerCase()
+    ) {
       return NextResponse.json(
         { error: 'This invitation was sent to a different email address' },
         { status: 403 }
@@ -83,15 +85,15 @@ export async function POST(request: NextRequest) {
     const existingMember = await prisma.teamMember.findFirst({
       where: {
         catalogueId: invitation.catalogueId,
-        profileId: user.id
-      }
+        profileId: user.id,
+      },
     })
 
     if (existingMember) {
       // Mark invitation as accepted even if already a member
       await prisma.invitation.update({
         where: { id: invitation.id },
-        data: { status: 'ACCEPTED' }
+        data: { status: 'ACCEPTED' },
       })
 
       return NextResponse.json(
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest) {
     if (invitation.catalogue.profileId === user.id) {
       await prisma.invitation.update({
         where: { id: invitation.id },
-        data: { status: 'ACCEPTED' }
+        data: { status: 'ACCEPTED' },
       })
 
       return NextResponse.json(
@@ -121,20 +123,22 @@ export async function POST(request: NextRequest) {
     if (!canAddTeamMember(plan, currentTeamCount)) {
       const maxMembers = getMaxTeamMembers(plan)
       return NextResponse.json(
-        { error: `This catalogue has reached the maximum team member limit (${maxMembers}) for the ${plan} plan.` },
+        {
+          error: `This catalogue has reached the maximum team member limit (${maxMembers}) for the ${plan} plan.`,
+        },
         { status: 403 }
       )
     }
 
     // Use transaction to ensure data consistency
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async tx => {
       // Create team member
       const teamMember = await tx.teamMember.create({
         data: {
           catalogueId: invitation.catalogueId,
           profileId: user.id,
           role: 'MEMBER',
-          joinedAt: new Date()
+          joinedAt: new Date(),
         },
         include: {
           profile: {
@@ -144,25 +148,25 @@ export async function POST(request: NextRequest) {
               fullName: true,
               firstName: true,
               lastName: true,
-              avatarUrl: true
-            }
+              avatarUrl: true,
+            },
           },
           catalogue: {
             select: {
               id: true,
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       })
 
       // Update invitation status
       await tx.invitation.update({
         where: { id: invitation.id },
-        data: { 
+        data: {
           status: 'ACCEPTED',
-          acceptedAt: new Date()
-        }
+          acceptedAt: new Date(),
+        },
       })
 
       return teamMember
@@ -171,11 +175,14 @@ export async function POST(request: NextRequest) {
     // Send notification to catalogue owner
     try {
       await sendInvitationAcceptedNotification({
-        ownerName: invitation.catalogue.profile.fullName || invitation.catalogue.profile.firstName || 'Catalogue Owner',
+        ownerName:
+          invitation.catalogue.profile.fullName ||
+          invitation.catalogue.profile.firstName ||
+          'Catalogue Owner',
         ownerEmail: invitation.catalogue.profile.email,
         memberName: (user as User).email || 'Team Member',
         memberEmail: (user as User).email || '',
-        catalogueName: invitation.catalogue.name
+        catalogueName: invitation.catalogue.name,
       })
     } catch (emailError) {
       // Log error but don't fail the request
@@ -192,12 +199,12 @@ export async function POST(request: NextRequest) {
         lastName: result.profile.lastName,
         avatarUrl: result.profile.avatarUrl,
         role: result.role,
-        joinedAt: result.joinedAt
+        joinedAt: result.joinedAt,
       },
       catalogue: {
         id: result.catalogue.id,
-        name: result.catalogue.name
-      }
+        name: result.catalogue.name,
+      },
     })
   } catch (error) {
     console.error('Error accepting invitation:', error)

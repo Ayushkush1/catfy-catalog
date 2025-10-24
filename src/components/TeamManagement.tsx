@@ -4,7 +4,13 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -24,25 +30,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { 
-  Users, 
-  UserPlus, 
-  Mail, 
-  MoreVertical, 
-  Trash2, 
-  Crown, 
+import {
+  Users,
+  UserPlus,
+  Mail,
+  MoreVertical,
+  Trash2,
+  Crown,
   Clock,
   CheckCircle,
   XCircle,
   AlertTriangle,
   Copy,
   Send,
-  Loader2
+  Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
-import { canInviteTeamMembers, getMaxTeamMembers, canAddTeamMember, getTeamMemberUpgradeMessage } from '@/lib/subscription'
+import {
+  canInviteTeamMembers,
+  getMaxTeamMembers,
+  canAddTeamMember,
+  getTeamMemberUpgradeMessage,
+} from '@/lib/subscription'
 
 interface TeamMember {
   id: string
@@ -71,7 +82,9 @@ interface TeamManagementProps {
 
 export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [team, setTeam] = useState<TeamMember[]>([])
-  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<
+    PendingInvitation[]
+  >([])
   const [isLoading, setIsLoading] = useState(true)
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
@@ -80,7 +93,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [emailError, setEmailError] = useState('')
   const { currentPlan } = useSubscription()
   const maxTeamMembers = getMaxTeamMembers(currentPlan)
-  const currentTeamCount = team.filter(member => member.role === 'MEMBER').length
+  const currentTeamCount = team.filter(
+    member => member.role === 'MEMBER'
+  ).length
   const canInvite = true // All plans now support team collaboration
   const canAddMore = canAddTeamMember(currentPlan, currentTeamCount)
 
@@ -111,7 +126,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   // Send invitation
   const sendInvitation = async () => {
     const email = inviteEmail.trim()
-    
+
     if (!email) {
       setEmailError('Please enter an email address')
       return
@@ -123,21 +138,27 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     }
 
     // Check if email is already a team member
-    const existingMember = team.find(member => member.email.toLowerCase() === email.toLowerCase())
+    const existingMember = team.find(
+      member => member.email.toLowerCase() === email.toLowerCase()
+    )
     if (existingMember) {
       setEmailError('This email is already a team member')
       return
     }
 
     // Check if email already has a pending invitation
-    const existingInvitation = pendingInvitations.find(inv => inv.email.toLowerCase() === email.toLowerCase())
+    const existingInvitation = pendingInvitations.find(
+      inv => inv.email.toLowerCase() === email.toLowerCase()
+    )
     if (existingInvitation) {
       setEmailError('An invitation has already been sent to this email')
       return
     }
 
     if (!canAddMore) {
-      setEmailError(`You have reached the maximum team member limit (${maxTeamMembers}) for your ${currentPlan} plan.`)
+      setEmailError(
+        `You have reached the maximum team member limit (${maxTeamMembers}) for your ${currentPlan} plan.`
+      )
       return
     }
 
@@ -174,9 +195,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   // Remove team member
   const removeMember = async (memberId: string) => {
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/team?memberId=${memberId}`, {
-        method: 'DELETE',
-      })
+      const response = await fetch(
+        `/api/catalogues/${catalogueId}/team?memberId=${memberId}`,
+        {
+          method: 'DELETE',
+        }
+      )
 
       if (!response.ok) {
         const data = await response.json()
@@ -263,7 +287,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   // Get member display name
   const getMemberDisplayName = (member: TeamMember) => {
     if (member.fullName) return member.fullName
-    if (member.firstName && member.lastName) return `${member.firstName} ${member.lastName}`
+    if (member.firstName && member.lastName)
+      return `${member.firstName} ${member.lastName}`
     if (member.firstName) return member.firstName
     return member.email
   }
@@ -275,7 +300,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     }
     if (member.fullName) {
       const names = member.fullName.split(' ')
-      return names.length > 1 
+      return names.length > 1
         ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
         : names[0][0].toUpperCase()
     }
@@ -298,12 +323,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center space-x-3 animate-pulse">
-                <div className="w-10 h-10 bg-gray-200 rounded-full" />
+            {[1, 2, 3].map(i => (
+              <div
+                key={i}
+                className="flex animate-pulse items-center space-x-3"
+              >
+                <div className="h-10 w-10 rounded-full bg-gray-200" />
                 <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2" />
-                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                  <div className="mb-2 h-4 w-1/3 rounded bg-gray-200" />
+                  <div className="h-3 w-1/2 rounded bg-gray-200" />
                 </div>
               </div>
             ))}
@@ -326,8 +354,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               <CardDescription>
                 Collaborate with your team members on this catalogue
                 {canInvite && (
-                  <span className="block mt-1 text-sm">
-                    {currentTeamCount} of {maxTeamMembers === -1 ? '∞' : maxTeamMembers} team members
+                  <span className="mt-1 block text-sm">
+                    {currentTeamCount} of{' '}
+                    {maxTeamMembers === -1 ? '∞' : maxTeamMembers} team members
                   </span>
                 )}
               </CardDescription>
@@ -349,27 +378,40 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You have reached the maximum team member limit ({maxTeamMembers}) for your {currentPlan} plan.
+                You have reached the maximum team member limit ({maxTeamMembers}
+                ) for your {currentPlan} plan.
               </AlertDescription>
             </Alert>
           )}
 
           {/* Team Members */}
           <div>
-            <h3 className="text-lg font-medium mb-4">Team Members ({team.length})</h3>
+            <h3 className="mb-4 text-lg font-medium">
+              Team Members ({team.length})
+            </h3>
             <div className="space-y-3">
-              {team.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+              {team.map(member => (
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
                   <div className="flex items-center space-x-3">
                     <Avatar>
                       <AvatarImage src={member.avatarUrl || undefined} />
-                      <AvatarFallback>{getMemberInitials(member)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getMemberInitials(member)}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
-                        <p className="font-medium">{getMemberDisplayName(member)}</p>
+                        <p className="font-medium">
+                          {getMemberDisplayName(member)}
+                        </p>
                         {member.role === 'OWNER' && (
-                          <Badge variant="secondary" className="flex items-center gap-1">
+                          <Badge
+                            variant="secondary"
+                            className="flex items-center gap-1"
+                          >
                             <Crown className="h-3 w-3" />
                             Owner
                           </Badge>
@@ -393,7 +435,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                           onClick={() => removeMember(member.id)}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Remove from team
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -409,21 +451,36 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             <>
               <Separator />
               <div>
-                <h3 className="text-lg font-medium mb-4">Pending Invitations ({pendingInvitations.length})</h3>
+                <h3 className="mb-4 text-lg font-medium">
+                  Pending Invitations ({pendingInvitations.length})
+                </h3>
                 <div className="space-y-3">
-                  {pendingInvitations.map((invitation) => (
-                    <div key={invitation.id} className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50">
+                  {pendingInvitations.map(invitation => (
+                    <div
+                      key={invitation.id}
+                      className="flex items-center justify-between rounded-lg border bg-yellow-50 p-3"
+                    >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100">
                           <Mail className="h-5 w-5 text-yellow-600" />
                         </div>
                         <div>
                           <p className="font-medium">{invitation.email}</p>
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Clock className="h-3 w-3" />
-                            <span>Invited {new Date(invitation.createdAt).toLocaleDateString()}</span>
+                            <span>
+                              Invited{' '}
+                              {new Date(
+                                invitation.createdAt
+                              ).toLocaleDateString()}
+                            </span>
                             <span>•</span>
-                            <span>Expires {new Date(invitation.expiresAt).toLocaleDateString()}</span>
+                            <span>
+                              Expires{' '}
+                              {new Date(
+                                invitation.expiresAt
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -435,7 +492,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                             onClick={() => copyInvitationLink(invitation)}
                             className="text-blue-600 hover:text-blue-700"
                           >
-                            <Copy className="h-4 w-4 mr-2" />
+                            <Copy className="mr-2 h-4 w-4" />
                             Copy Link
                           </Button>
                           <DropdownMenu>
@@ -446,17 +503,19 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => resendInvitation(invitation.email)}
+                                onClick={() =>
+                                  resendInvitation(invitation.email)
+                                }
                                 disabled={isInviting}
                               >
-                                <Send className="h-4 w-4 mr-2" />
+                                <Send className="mr-2 h-4 w-4" />
                                 Resend Invitation
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => cancelInvitation(invitation.id)}
                                 className="text-red-600 focus:text-red-600"
                               >
-                                <XCircle className="h-4 w-4 mr-2" />
+                                <XCircle className="mr-2 h-4 w-4" />
                                 Cancel Invitation
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -478,7 +537,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           <DialogHeader>
             <DialogTitle>Invite Team Member</DialogTitle>
             <DialogDescription>
-              Send an invitation to collaborate on this catalogue. They will receive an email with instructions to join.
+              Send an invitation to collaborate on this catalogue. They will
+              receive an email with instructions to join.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -488,13 +548,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 id="inviteEmail"
                 type="email"
                 value={inviteEmail}
-                onChange={(e) => {
+                onChange={e => {
                   setInviteEmail(e.target.value)
                   if (emailError) setEmailError('')
                 }}
                 placeholder="colleague@company.com"
-                className={emailError ? 'border-red-500 focus:border-red-500' : ''}
-                onKeyDown={(e) => {
+                className={
+                  emailError ? 'border-red-500 focus:border-red-500' : ''
+                }
+                onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault()
                     sendInvitation()
@@ -502,24 +564,28 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 }}
               />
               {emailError && (
-                <p className="text-sm text-red-600 mt-1">{emailError}</p>
+                <p className="mt-1 text-sm text-red-600">{emailError}</p>
               )}
             </div>
             {!canAddMore && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  You have reached the maximum team member limit ({maxTeamMembers}) for your {currentPlan} plan.
+                  You have reached the maximum team member limit (
+                  {maxTeamMembers}) for your {currentPlan} plan.
                 </AlertDescription>
               </Alert>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowInviteDialog(false)}
+            >
               Cancel
             </Button>
-            <Button 
-              onClick={sendInvitation} 
+            <Button
+              onClick={sendInvitation}
               disabled={isInviting || !canAddMore || !inviteEmail.trim()}
               className="flex items-center gap-2"
             >

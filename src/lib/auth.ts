@@ -8,32 +8,35 @@ import type { User } from '@supabase/supabase-js'
 
 export async function getUser() {
   const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
   if (error || !user) {
     return null
   }
-  
+
   return user
 }
 
 export async function requireAuth() {
   const user = await getUser()
-  
+
   if (!user) {
     redirect('/auth')
   }
-  
+
   return user
 }
 
 export async function getUserProfile(userId?: string) {
   const user = userId ? { id: userId } : await getUser()
-  
+
   if (!user) {
     return null
   }
-  
+
   // Handle admin profile - create in database if it doesn't exist
   const userEmail = (user as User).email || ''
   if (ADMIN_EMAILS.includes(userEmail)) {
@@ -51,7 +54,7 @@ export async function getUserProfile(userId?: string) {
         },
       },
     })
-    
+
     if (!adminProfile) {
       adminProfile = await prisma.profile.create({
         data: {
@@ -78,12 +81,12 @@ export async function getUserProfile(userId?: string) {
         },
       })
     }
-    
+
     return adminProfile
   }
-  
+
   // Removed hardcoded test user profile logic
-  
+
   // Try to find existing profile
   let profile = await prisma.profile.findUnique({
     where: { id: user.id },
@@ -99,9 +102,9 @@ export async function getUserProfile(userId?: string) {
       },
     },
   })
-  
+
   // Profile creation is now handled in the API route to prevent race conditions
-  
+
   return profile
 }
 
@@ -119,13 +122,13 @@ export async function createOrUpdateProfile({
   companyName?: string
 }) {
   const user = await getUser()
-  
+
   if (!user) {
     throw new Error('User not authenticated')
   }
-  
+
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || null
-  
+
   const profile = await prisma.profile.upsert({
     where: { id: user.id },
     update: {
@@ -146,7 +149,7 @@ export async function createOrUpdateProfile({
       companyName,
     },
   })
-  
+
   return profile
 }
 
@@ -157,24 +160,31 @@ export async function signOut() {
 
 export async function isAdmin(userId?: string) {
   console.log('🔍 [AUTH] isAdmin called with userId:', userId)
-  
+
   // Always get the current authenticated user from the session
   const user = await getUser()
-  console.log('🔍 [AUTH] Retrieved user:', user ? { id: user.id, email: user.email } : 'null')
-  
+  console.log(
+    '🔍 [AUTH] Retrieved user:',
+    user ? { id: user.id, email: user.email } : 'null'
+  )
+
   if (!user) {
     console.log('❌ [AUTH] No user found, returning false')
     return false
   }
-  
+
   // Check if user is admin using the admin configuration
   const userEmail = user.email || ''
   console.log('🔍 [AUTH] User email:', userEmail)
   console.log('🔍 [AUTH] ADMIN_EMAILS:', ADMIN_EMAILS)
   console.log('🔍 [AUTH] Email includes admin:', userEmail.includes('admin'))
-  console.log('🔍 [AUTH] Email in ADMIN_EMAILS:', ADMIN_EMAILS.includes(userEmail))
-  
-  const isAdminResult = ADMIN_EMAILS.includes(userEmail) || userEmail.includes('admin') || false
+  console.log(
+    '🔍 [AUTH] Email in ADMIN_EMAILS:',
+    ADMIN_EMAILS.includes(userEmail)
+  )
+
+  const isAdminResult =
+    ADMIN_EMAILS.includes(userEmail) || userEmail.includes('admin') || false
   console.log('🔍 [AUTH] Final isAdmin result:', isAdminResult)
   return isAdminResult
 }
@@ -182,10 +192,10 @@ export async function isAdmin(userId?: string) {
 export async function requireAdmin() {
   const user = await requireAuth()
   const admin = await isAdmin()
-  
+
   if (!admin) {
     redirect('/dashboard')
   }
-  
+
   return user
 }

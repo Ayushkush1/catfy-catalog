@@ -11,15 +11,21 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user via Supabase
     const supabase = createRouteHandlerClient({ cookies })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user is admin - only admin@catfy.com is allowed
     if (user.email !== 'admin@catfy.com') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
     }
 
     // Fetch all subscriptions with user data
@@ -43,8 +49,8 @@ export async function GET(request: NextRequest) {
             email: true,
             firstName: true,
             lastName: true,
-            createdAt: true
-          }
+            createdAt: true,
+          },
         },
         couponUsages: {
           select: {
@@ -55,15 +61,15 @@ export async function GET(request: NextRequest) {
                 code: true,
                 name: true,
                 type: true,
-                value: true
-              }
-            }
-          }
-        }
+                value: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     })
 
     // Calculate subscription statistics
@@ -81,30 +87,35 @@ export async function GET(request: NextRequest) {
         .reduce((sum, s) => sum + (s.amount ? Number(s.amount) : 0), 0),
       yearlyRevenue: subscriptions
         .filter(s => s.status === 'ACTIVE' && s.billingCycle === 'YEARLY')
-        .reduce((sum, s) => sum + (s.amount ? Number(s.amount) : 0), 0)
+        .reduce((sum, s) => sum + (s.amount ? Number(s.amount) : 0), 0),
     }
 
     // Transform the data for admin dashboard
     const transformedSubscriptions = subscriptions.map(subscription => ({
       id: subscription.id,
       plan: subscription.billingCycle === 'MONTHLY' ? 'monthly' : 'yearly',
-      status: subscription.status === 'ACTIVE' ? 'active' : 
-               subscription.status === 'CANCELED' ? 'cancelled' : 'inactive',
+      status:
+        subscription.status === 'ACTIVE'
+          ? 'active'
+          : subscription.status === 'CANCELED'
+            ? 'cancelled'
+            : 'inactive',
       amount: subscription.amount ? Number(subscription.amount) : 0,
       createdAt: subscription.createdAt.toISOString(),
       cancelledAt: subscription.canceledAt?.toISOString() || null,
       user: {
-        fullName: `${subscription.profile.firstName || ''} ${subscription.profile.lastName || ''}`.trim() || 'N/A',
-        email: subscription.profile.email
-      }
+        fullName:
+          `${subscription.profile.firstName || ''} ${subscription.profile.lastName || ''}`.trim() ||
+          'N/A',
+        email: subscription.profile.email,
+      },
     }))
 
     return NextResponse.json({
       subscriptions: transformedSubscriptions,
       stats,
-      total: transformedSubscriptions.length
+      total: transformedSubscriptions.length,
     })
-
   } catch (error) {
     console.error('Admin subscriptions fetch error:', error)
     return NextResponse.json(

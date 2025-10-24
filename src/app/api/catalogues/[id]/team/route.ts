@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendTeamInvitation } from '@/lib/email'
-import { canInviteTeamMembers, canAddTeamMember, getMaxTeamMembers, getTeamMemberUpgradeMessage } from '@/lib/subscription'
+import {
+  canInviteTeamMembers,
+  canAddTeamMember,
+  getMaxTeamMembers,
+  getTeamMemberUpgradeMessage,
+} from '@/lib/subscription'
 import { SubscriptionPlan } from '@prisma/client'
 import crypto from 'crypto'
 import type { User } from '@supabase/supabase-js'
@@ -25,11 +30,11 @@ export async function GET(
           {
             teamMembers: {
               some: {
-                profileId: user.id
-              }
-            }
-          }
-        ]
+                profileId: user.id,
+              },
+            },
+          },
+        ],
       },
       include: {
         profile: {
@@ -39,8 +44,8 @@ export async function GET(
             fullName: true,
             firstName: true,
             lastName: true,
-            avatarUrl: true
-          }
+            avatarUrl: true,
+          },
         },
         teamMembers: {
           include: {
@@ -51,26 +56,26 @@ export async function GET(
                 fullName: true,
                 firstName: true,
                 lastName: true,
-                avatarUrl: true
-              }
-            }
+                avatarUrl: true,
+              },
+            },
           },
           orderBy: {
-            joinedAt: 'asc'
-          }
+            joinedAt: 'asc',
+          },
         },
         invitations: {
           where: {
             status: 'PENDING',
             expiresAt: {
-              gt: new Date()
-            }
+              gt: new Date(),
+            },
           },
           orderBy: {
-            createdAt: 'desc'
-          }
-        }
-      }
+            createdAt: 'desc',
+          },
+        },
+      },
     })
 
     if (!catalogue) {
@@ -89,7 +94,7 @@ export async function GET(
       lastName: catalogue.profile.lastName,
       avatarUrl: catalogue.profile.avatarUrl,
       role: 'OWNER' as const,
-      joinedAt: catalogue.createdAt
+      joinedAt: catalogue.createdAt,
     }
 
     const members = catalogue.teamMembers.map(member => ({
@@ -100,7 +105,7 @@ export async function GET(
       lastName: member.profile.lastName,
       avatarUrl: member.profile.avatarUrl,
       role: member.role,
-      joinedAt: member.joinedAt
+      joinedAt: member.joinedAt,
     }))
 
     const team = [owner, ...members]
@@ -109,7 +114,7 @@ export async function GET(
     return NextResponse.json({
       team,
       pendingInvitations,
-      isOwner: catalogue.profileId === user.id
+      isOwner: catalogue.profileId === user.id,
     })
   } catch (error) {
     console.error('Error fetching team:', error)
@@ -131,10 +136,7 @@ export async function POST(
     const { email } = await request.json()
 
     if (!email || typeof email !== 'string') {
-      return NextResponse.json(
-        { error: 'Email is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
     // Validate email format
@@ -150,7 +152,7 @@ export async function POST(
     const catalogue = await prisma.catalogue.findFirst({
       where: {
         id: catalogueId,
-        profileId: user.id
+        profileId: user.id,
       },
       include: {
         profile: {
@@ -161,25 +163,25 @@ export async function POST(
             email: true,
             subscriptions: {
               where: {
-                status: 'ACTIVE'
+                status: 'ACTIVE',
               },
               orderBy: {
-                createdAt: 'desc'
+                createdAt: 'desc',
               },
-              take: 1
-            }
-          }
+              take: 1,
+            },
+          },
         },
         teamMembers: true,
         invitations: {
           where: {
             status: 'PENDING',
             expiresAt: {
-              gt: new Date()
-            }
-          }
-        }
-      }
+              gt: new Date(),
+            },
+          },
+        },
+      },
     })
 
     if (!catalogue) {
@@ -205,7 +207,9 @@ export async function POST(
     if (!canAddTeamMember(plan, currentTeamCount)) {
       const maxMembers = getMaxTeamMembers(plan)
       return NextResponse.json(
-        { error: `You have reached the maximum team member limit (${maxMembers}) for your ${plan} plan.` },
+        {
+          error: `You have reached the maximum team member limit (${maxMembers}) for your ${plan} plan.`,
+        },
         { status: 403 }
       )
     }
@@ -225,10 +229,10 @@ export async function POST(
         profile: {
           email: {
             equals: email,
-            mode: 'insensitive'
-          }
-        }
-      }
+            mode: 'insensitive',
+          },
+        },
+      },
     })
 
     if (existingMember) {
@@ -262,25 +266,28 @@ export async function POST(
         catalogueId,
         senderId: user.id,
         expiresAt,
-        status: 'PENDING'
-      }
+        status: 'PENDING',
+      },
     })
 
     // Send invitation email
     try {
       await sendTeamInvitation({
-        inviterName: catalogue.profile.fullName || catalogue.profile.firstName || 'Team Owner',
+        inviterName:
+          catalogue.profile.fullName ||
+          catalogue.profile.firstName ||
+          'Team Owner',
         inviterEmail: catalogue.profile.email,
         catalogueName: catalogue.name,
         invitationToken: token,
-        recipientEmail: email
+        recipientEmail: email,
       })
     } catch (emailError) {
       // If email fails, delete the invitation
       await prisma.invitation.delete({
-        where: { id: invitation.id }
+        where: { id: invitation.id },
       })
-      
+
       console.error('Failed to send invitation email:', emailError)
       return NextResponse.json(
         { error: 'Failed to send invitation email. Please try again.' },
@@ -295,8 +302,8 @@ export async function POST(
         email: invitation.email,
         status: invitation.status,
         createdAt: invitation.createdAt,
-        expiresAt: invitation.expiresAt
-      }
+        expiresAt: invitation.expiresAt,
+      },
     })
   } catch (error) {
     console.error('Error inviting team member:', error)
@@ -329,8 +336,8 @@ export async function DELETE(
     const catalogue = await prisma.catalogue.findFirst({
       where: {
         id: catalogueId,
-        profileId: user.id
-      }
+        profileId: user.id,
+      },
     })
 
     if (!catalogue) {
@@ -344,8 +351,8 @@ export async function DELETE(
     const deletedMember = await prisma.teamMember.deleteMany({
       where: {
         catalogueId,
-        profileId: memberId
-      }
+        profileId: memberId,
+      },
     })
 
     if (deletedMember.count === 0) {
@@ -356,7 +363,7 @@ export async function DELETE(
     }
 
     return NextResponse.json({
-      message: 'Team member removed successfully'
+      message: 'Team member removed successfully',
     })
   } catch (error) {
     console.error('Error removing team member:', error)

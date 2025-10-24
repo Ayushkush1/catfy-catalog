@@ -31,7 +31,7 @@ export function UpgradePrompt({
   currentPlan,
   feature,
   title,
-  description
+  description,
 }: UpgradePromptProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -70,29 +70,59 @@ export function UpgradePrompt({
     const features = [
       {
         name: 'Catalogues',
-        current: currentPlanFeatures.maxCatalogues === -1 ? 'Unlimited' : currentPlanFeatures.maxCatalogues,
-        next: nextPlanFeatures.maxCatalogues === -1 ? 'Unlimited' : nextPlanFeatures.maxCatalogues
+        current:
+          currentPlanFeatures.maxCatalogues === -1
+            ? 'Unlimited'
+            : currentPlanFeatures.maxCatalogues,
+        next:
+          nextPlanFeatures.maxCatalogues === -1
+            ? 'Unlimited'
+            : nextPlanFeatures.maxCatalogues,
       },
       {
         name: 'Categories per catalogue',
-        current: currentPlanFeatures.maxCategories === -1 ? 'Unlimited' : currentPlanFeatures.maxCategories,
-        next: nextPlanFeatures.maxCategories === -1 ? 'Unlimited' : nextPlanFeatures.maxCategories
+        current:
+          currentPlanFeatures.maxCategories === -1
+            ? 'Unlimited'
+            : currentPlanFeatures.maxCategories,
+        next:
+          nextPlanFeatures.maxCategories === -1
+            ? 'Unlimited'
+            : nextPlanFeatures.maxCategories,
       },
       {
         name: 'Products per catalogue',
-        current: currentPlanFeatures.maxProductsPerCatalogue === -1 ? 'Unlimited' : currentPlanFeatures.maxProductsPerCatalogue,
-        next: nextPlanFeatures.maxProductsPerCatalogue === -1 ? 'Unlimited' : nextPlanFeatures.maxProductsPerCatalogue
+        current:
+          currentPlanFeatures.maxProductsPerCatalogue === -1
+            ? 'Unlimited'
+            : currentPlanFeatures.maxProductsPerCatalogue,
+        next:
+          nextPlanFeatures.maxProductsPerCatalogue === -1
+            ? 'Unlimited'
+            : nextPlanFeatures.maxProductsPerCatalogue,
       },
       {
         name: 'Monthly exports',
-        current: currentPlanFeatures.maxExportsPerMonth === -1 ? 'Unlimited' : currentPlanFeatures.maxExportsPerMonth,
-        next: nextPlanFeatures.maxExportsPerMonth === -1 ? 'Unlimited' : nextPlanFeatures.maxExportsPerMonth
+        current:
+          currentPlanFeatures.maxExportsPerMonth === -1
+            ? 'Unlimited'
+            : currentPlanFeatures.maxExportsPerMonth,
+        next:
+          nextPlanFeatures.maxExportsPerMonth === -1
+            ? 'Unlimited'
+            : nextPlanFeatures.maxExportsPerMonth,
       },
       {
         name: 'Storage',
-        current: currentPlanFeatures.maxStorageGB === -1 ? 'Unlimited' : `${currentPlanFeatures.maxStorageGB}GB`,
-        next: nextPlanFeatures.maxStorageGB === -1 ? 'Unlimited' : `${nextPlanFeatures.maxStorageGB}GB`
-      }
+        current:
+          currentPlanFeatures.maxStorageGB === -1
+            ? 'Unlimited'
+            : `${currentPlanFeatures.maxStorageGB}GB`,
+        next:
+          nextPlanFeatures.maxStorageGB === -1
+            ? 'Unlimited'
+            : `${nextPlanFeatures.maxStorageGB}GB`,
+      },
     ]
 
     return features
@@ -109,7 +139,8 @@ export function UpgradePrompt({
             </DialogTitle>
           </div>
           <DialogDescription>
-            {description || `You've reached the limit for ${feature}. Upgrade to ${nextPlanFeatures.name} to continue.`}
+            {description ||
+              `You've reached the limit for ${feature}. Upgrade to ${nextPlanFeatures.name} to continue.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,7 +149,9 @@ export function UpgradePrompt({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="text-center">
-                <h3 className="font-medium text-gray-900">{currentPlanFeatures.name}</h3>
+                <h3 className="font-medium text-gray-900">
+                  {currentPlanFeatures.name}
+                </h3>
                 <p className="text-sm text-gray-500">Current Plan</p>
                 <div className="mt-2">
                   <span className="text-2xl font-bold">
@@ -132,7 +165,9 @@ export function UpgradePrompt({
             <div className="space-y-3">
               <div className="text-center">
                 <div className="flex items-center justify-center space-x-2">
-                  <h3 className="font-medium text-blue-900">{nextPlanFeatures.name}</h3>
+                  <h3 className="font-medium text-blue-900">
+                    {nextPlanFeatures.name}
+                  </h3>
                   <Badge className="bg-blue-500">Recommended</Badge>
                 </div>
                 <p className="text-sm text-blue-600">Upgrade to</p>
@@ -148,15 +183,20 @@ export function UpgradePrompt({
 
           {/* Feature Comparison */}
           <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">What you'll get:</h4>
+            <h4 className="font-medium text-gray-900">What you&apos;ll get:</h4>
             <div className="space-y-2">
               {getComparisonFeatures().map((feature, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="text-gray-600">{feature.name}</span>
                   <div className="flex items-center space-x-2">
                     <span className="text-gray-500">{feature.current}</span>
                     <span className="text-gray-400">→</span>
-                    <span className="font-medium text-blue-600">{feature.next}</span>
+                    <span className="font-medium text-blue-600">
+                      {feature.next}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -168,8 +208,11 @@ export function UpgradePrompt({
             <h4 className="font-medium text-gray-900">Additional benefits:</h4>
             <div className="space-y-2">
               {nextPlanFeatures.included.slice(1, 4).map((benefit, index) => (
-                <div key={index} className="flex items-center space-x-2 text-sm">
-                  <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <div
+                  key={index}
+                  className="flex items-center space-x-2 text-sm"
+                >
+                  <Check className="h-4 w-4 flex-shrink-0 text-green-500" />
                   <span className="text-gray-600">{benefit}</span>
                 </div>
               ))}
@@ -199,7 +242,11 @@ export function useUpgradePrompt() {
     description?: string
   }>({ feature: '' })
 
-  const showUpgradePrompt = (feature: string, title?: string, description?: string) => {
+  const showUpgradePrompt = (
+    feature: string,
+    title?: string,
+    description?: string
+  ) => {
     setPromptData({ feature, title, description })
     setIsOpen(true)
   }
@@ -212,6 +259,6 @@ export function useUpgradePrompt() {
     isOpen,
     promptData,
     showUpgradePrompt,
-    hideUpgradePrompt
+    hideUpgradePrompt,
   }
 }

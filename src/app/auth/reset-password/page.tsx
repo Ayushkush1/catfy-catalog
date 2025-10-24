@@ -7,7 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react'
 
@@ -19,7 +25,7 @@ export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -27,19 +33,26 @@ export default function ResetPasswordPage() {
   useEffect(() => {
     // Check for auth session on component mount
     const checkSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
+
       if (error) {
         console.error('Session error:', error)
-        setError('Invalid or expired reset link. Please request a new password reset.')
+        setError(
+          'Invalid or expired reset link. Please request a new password reset.'
+        )
         return
       }
-      
+
       if (!session) {
-        setError('Invalid or expired reset link. Please request a new password reset.')
+        setError(
+          'Invalid or expired reset link. Please request a new password reset.'
+        )
       }
     }
-    
+
     checkSession()
   }, [supabase.auth])
 
@@ -62,16 +75,20 @@ export default function ResetPasswordPage() {
 
     try {
       // Check if user has a valid session
-      const { data: { session } } = await supabase.auth.getSession()
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
       if (!session) {
-        setError('Invalid or expired reset link. Please request a new password reset.')
+        setError(
+          'Invalid or expired reset link. Please request a new password reset.'
+        )
         setIsLoading(false)
         return
       }
 
       const { error } = await supabase.auth.updateUser({
-        password: password
+        password: password,
       })
 
       if (error) {
@@ -92,15 +109,16 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-8">
           <Card>
             <CardHeader>
               <CardTitle className="text-center text-green-600">
                 Password Updated!
               </CardTitle>
               <CardDescription className="text-center">
-                Your password has been successfully updated. Redirecting to login...
+                Your password has been successfully updated. Redirecting to
+                login...
               </CardDescription>
             </CardHeader>
           </Card>
@@ -110,8 +128,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
             Set new password
@@ -120,7 +138,7 @@ export default function ResetPasswordPage() {
             Enter your new password below
           </p>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -142,14 +160,14 @@ export default function ResetPasswordPage() {
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={e => setPassword(e.target.value)}
                     placeholder="Enter new password"
                     disabled={isLoading}
                     className="pr-10"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -170,14 +188,14 @@ export default function ResetPasswordPage() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={e => setConfirmPassword(e.target.value)}
                     placeholder="Confirm new password"
                     disabled={isLoading}
                     className="pr-10"
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
@@ -207,7 +225,7 @@ export default function ResetPasswordPage() {
             <div className="mt-6">
               <Link
                 href="/auth/login"
-                className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center justify-center gap-2 text-sm text-gray-600 transition-colors hover:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login

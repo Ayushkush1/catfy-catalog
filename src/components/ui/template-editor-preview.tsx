@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { X, Maximize2, Minimize2, Eye, EyeOff } from 'lucide-react'
@@ -25,7 +30,7 @@ export function TemplateEditorPreview({
   themeId,
   isOpen,
   onClose,
-  className
+  className,
 }: TemplateEditorPreviewProps) {
   const [template, setTemplate] = useState<TemplateConfig | null>(null)
   const [theme, setTheme] = useState<ThemeConfig | null>(null)
@@ -39,7 +44,7 @@ export function TemplateEditorPreview({
       try {
         const templateData = getTemplateById(templateId)
         setTemplate(templateData || null)
-        
+
         if (themeId) {
           const themeData = getThemeById(themeId)
           setTheme(themeData || null)
@@ -61,14 +66,14 @@ export function TemplateEditorPreview({
           className: 'min-h-screen bg-white',
           style: {
             backgroundColor: theme?.colors.background || '#ffffff',
-            color: theme?.colors.text || '#000000'
-          }
+            color: theme?.colors.text || '#000000',
+          },
         },
         displayName: 'Container',
         custom: {},
         hidden: false,
         nodes: ['header', 'content', 'footer'],
-        linkedNodes: {}
+        linkedNodes: {},
       },
       header: {
         type: { resolvedName: 'ContainerBlock' },
@@ -77,15 +82,15 @@ export function TemplateEditorPreview({
           className: 'w-full p-8 text-center',
           style: {
             backgroundColor: theme?.colors.primary || '#3b82f6',
-            color: '#ffffff'
-          }
+            color: '#ffffff',
+          },
         },
         displayName: 'Header',
         custom: {},
         hidden: false,
         nodes: ['headerTitle'],
         linkedNodes: {},
-        parent: 'ROOT'
+        parent: 'ROOT',
       },
       headerTitle: {
         type: { resolvedName: 'HeadingBlock' },
@@ -95,46 +100,48 @@ export function TemplateEditorPreview({
           level: 1,
           className: 'text-4xl font-bold mb-2',
           style: {
-            color: '#ffffff'
-          }
+            color: '#ffffff',
+          },
         },
         displayName: 'Heading',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'header'
+        parent: 'header',
       },
       content: {
         type: { resolvedName: 'ContainerBlock' },
         isCanvas: true,
         props: {
           className: 'w-full p-8',
-          style: {}
+          style: {},
         },
         displayName: 'Content',
         custom: {},
         hidden: false,
         nodes: ['contentText', 'sampleGrid'],
         linkedNodes: {},
-        parent: 'ROOT'
+        parent: 'ROOT',
       },
       contentText: {
         type: { resolvedName: 'TextBlock' },
         isCanvas: false,
         props: {
-          text: template?.description || 'This is a preview of the selected template with the chosen theme.',
+          text:
+            template?.description ||
+            'This is a preview of the selected template with the chosen theme.',
           className: 'text-lg mb-6',
           style: {
-            color: theme?.colors.text || '#000000'
-          }
+            color: theme?.colors.text || '#000000',
+          },
         },
         displayName: 'Text',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'content'
+        parent: 'content',
       },
       sampleGrid: {
         type: { resolvedName: 'GridBlock' },
@@ -143,14 +150,14 @@ export function TemplateEditorPreview({
           columns: 3,
           gap: 4,
           className: 'w-full',
-          style: {}
+          style: {},
         },
         displayName: 'Grid',
         custom: {},
         hidden: false,
         nodes: ['gridItem1', 'gridItem2', 'gridItem3'],
         linkedNodes: {},
-        parent: 'content'
+        parent: 'content',
       },
       gridItem1: {
         type: { resolvedName: 'ContainerBlock' },
@@ -159,15 +166,15 @@ export function TemplateEditorPreview({
           className: 'p-4 rounded-lg border',
           style: {
             borderColor: theme?.colors.secondary || '#e5e7eb',
-            backgroundColor: theme?.colors.background || '#ffffff'
-          }
+            backgroundColor: theme?.colors.background || '#ffffff',
+          },
         },
         displayName: 'Grid Item',
         custom: {},
         hidden: false,
         nodes: ['item1Title'],
         linkedNodes: {},
-        parent: 'sampleGrid'
+        parent: 'sampleGrid',
       },
       item1Title: {
         type: { resolvedName: 'HeadingBlock' },
@@ -177,15 +184,15 @@ export function TemplateEditorPreview({
           level: 3,
           className: 'font-semibold',
           style: {
-            color: theme?.colors.primary || '#3b82f6'
-          }
+            color: theme?.colors.primary || '#3b82f6',
+          },
         },
         displayName: 'Heading',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'gridItem1'
+        parent: 'gridItem1',
       },
       gridItem2: {
         type: { resolvedName: 'ContainerBlock' },
@@ -194,15 +201,15 @@ export function TemplateEditorPreview({
           className: 'p-4 rounded-lg border',
           style: {
             borderColor: theme?.colors.secondary || '#e5e7eb',
-            backgroundColor: theme?.colors.background || '#ffffff'
-          }
+            backgroundColor: theme?.colors.background || '#ffffff',
+          },
         },
         displayName: 'Grid Item',
         custom: {},
         hidden: false,
         nodes: ['item2Title'],
         linkedNodes: {},
-        parent: 'sampleGrid'
+        parent: 'sampleGrid',
       },
       item2Title: {
         type: { resolvedName: 'HeadingBlock' },
@@ -212,15 +219,15 @@ export function TemplateEditorPreview({
           level: 3,
           className: 'font-semibold',
           style: {
-            color: theme?.colors.primary || '#3b82f6'
-          }
+            color: theme?.colors.primary || '#3b82f6',
+          },
         },
         displayName: 'Heading',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'gridItem2'
+        parent: 'gridItem2',
       },
       gridItem3: {
         type: { resolvedName: 'ContainerBlock' },
@@ -229,15 +236,15 @@ export function TemplateEditorPreview({
           className: 'p-4 rounded-lg border',
           style: {
             borderColor: theme?.colors.secondary || '#e5e7eb',
-            backgroundColor: theme?.colors.background || '#ffffff'
-          }
+            backgroundColor: theme?.colors.background || '#ffffff',
+          },
         },
         displayName: 'Grid Item',
         custom: {},
         hidden: false,
         nodes: ['item3Title'],
         linkedNodes: {},
-        parent: 'sampleGrid'
+        parent: 'sampleGrid',
       },
       item3Title: {
         type: { resolvedName: 'HeadingBlock' },
@@ -247,15 +254,15 @@ export function TemplateEditorPreview({
           level: 3,
           className: 'font-semibold',
           style: {
-            color: theme?.colors.primary || '#3b82f6'
-          }
+            color: theme?.colors.primary || '#3b82f6',
+          },
         },
         displayName: 'Heading',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'gridItem3'
+        parent: 'gridItem3',
       },
       footer: {
         type: { resolvedName: 'ContainerBlock' },
@@ -264,15 +271,15 @@ export function TemplateEditorPreview({
           className: 'w-full p-6 text-center',
           style: {
             backgroundColor: theme?.colors.secondary || '#f3f4f6',
-            color: theme?.colors.text || '#000000'
-          }
+            color: theme?.colors.text || '#000000',
+          },
         },
         displayName: 'Footer',
         custom: {},
         hidden: false,
         nodes: ['footerText'],
         linkedNodes: {},
-        parent: 'ROOT'
+        parent: 'ROOT',
       },
       footerText: {
         type: { resolvedName: 'TextBlock' },
@@ -281,16 +288,16 @@ export function TemplateEditorPreview({
           text: 'This is a sample footer showing how the template looks with your selected theme.',
           className: 'text-sm',
           style: {
-            color: theme?.colors.text || '#000000'
-          }
+            color: theme?.colors.text || '#000000',
+          },
         },
         displayName: 'Text',
         custom: {},
         hidden: false,
         nodes: [],
         linkedNodes: {},
-        parent: 'footer'
-      }
+        parent: 'footer',
+      },
     })
   }
 
@@ -300,14 +307,14 @@ export function TemplateEditorPreview({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
+      <DialogContent
         className={cn(
-          'max-w-7xl h-[90vh] p-0 gap-0',
-          isFullscreen && 'max-w-none w-screen h-screen',
+          'h-[90vh] max-w-7xl gap-0 p-0',
+          isFullscreen && 'h-screen w-screen max-w-none',
           className
         )}
       >
-        <DialogHeader className="p-4 border-b bg-gray-50 flex-shrink-0">
+        <DialogHeader className="flex-shrink-0 border-b bg-gray-50 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <DialogTitle className="text-lg font-semibold">
@@ -316,13 +323,11 @@ export function TemplateEditorPreview({
               {template && (
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{template.name}</Badge>
-                  {theme && (
-                    <Badge variant="secondary">{theme.name}</Badge>
-                  )}
+                  {theme && <Badge variant="secondary">{theme.name}</Badge>}
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -332,45 +337,41 @@ export function TemplateEditorPreview({
               >
                 {isPreviewMode ? (
                   <>
-                    <EyeOff className="w-4 h-4" />
+                    <EyeOff className="h-4 w-4" />
                     Edit Mode
                   </>
                 ) : (
                   <>
-                    <Eye className="w-4 h-4" />
+                    <Eye className="h-4 w-4" />
                     Preview Mode
                   </>
                 )}
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFullscreen(!isFullscreen)}
               >
                 {isFullscreen ? (
-                  <Minimize2 className="w-4 h-4" />
+                  <Minimize2 className="h-4 w-4" />
                 ) : (
-                  <Maximize2 className="w-4 h-4" />
+                  <Maximize2 className="h-4 w-4" />
                 )}
               </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-              >
-                <X className="w-4 h-4" />
+
+              <Button variant="outline" size="sm" onClick={onClose}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </DialogHeader>
-        
+
         <div className="flex-1 overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500"></div>
                 <p className="text-gray-600">Loading template preview...</p>
               </div>
             </div>
@@ -381,7 +382,7 @@ export function TemplateEditorPreview({
               className="h-full"
             />
           ) : (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex h-full items-center justify-center">
               <div className="text-center">
                 <p className="text-gray-600">Template not found</p>
               </div>

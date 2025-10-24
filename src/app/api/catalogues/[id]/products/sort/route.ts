@@ -9,7 +9,10 @@ export async function PATCH(
 ) {
   try {
     const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -27,21 +30,27 @@ export async function PATCH(
     const catalogue = await prisma.catalogue.findFirst({
       where: {
         id: catalogueId,
-        profileId: profile.id
-      }
+        profileId: profile.id,
+      },
     })
 
     if (!catalogue) {
-      return NextResponse.json({ error: 'Catalogue not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Catalogue not found' },
+        { status: 404 }
+      )
     }
 
     // Validate productUpdates format
     if (!Array.isArray(productUpdates)) {
-      return NextResponse.json({ error: 'Invalid product updates format' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Invalid product updates format' },
+        { status: 400 }
+      )
     }
 
     // Update product sort orders in a transaction
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async tx => {
       for (const update of productUpdates) {
         if (!update.id || typeof update.sortOrder !== 'number') {
           throw new Error('Invalid product update format')
@@ -50,11 +59,11 @@ export async function PATCH(
         await tx.product.update({
           where: {
             id: update.id,
-            catalogueId: catalogueId
+            catalogueId: catalogueId,
           },
           data: {
-            sortOrder: update.sortOrder
-          }
+            sortOrder: update.sortOrder,
+          },
         })
       }
     })

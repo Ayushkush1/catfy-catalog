@@ -1,26 +1,28 @@
-'use client';
+'use client'
 
-import React, { useEffect, useState } from 'react';
-import { CraftJSEditor } from '@/components/editor/CraftJSEditor';
-import { toast } from 'sonner';
+import React, { useEffect, useState } from 'react'
+import { CraftJSEditor } from '@/components/editor/CraftJSEditor'
+import { toast } from 'sonner'
 
-const EDITOR_CATALOGUE_NAME = 'Standalone Editor';
+const EDITOR_CATALOGUE_NAME = 'Standalone Editor'
 
 export default function EditorPage() {
-  const [catalogueId, setCatalogueId] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(true);
+  const [catalogueId, setCatalogueId] = useState<string | null>(null)
+  const [initialData, setInitialData] = useState<string | undefined>(undefined)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Initialize or find the editor catalogue
   useEffect(() => {
     const initializeEditorCatalogue = async () => {
       try {
         // First, try to find existing editor catalogue
-        const response = await fetch('/api/catalogues');
-        const catalogues = await response.json();
-        
-        let editorCatalogue = catalogues.find((cat: any) => cat.name === EDITOR_CATALOGUE_NAME);
-        
+        const response = await fetch('/api/catalogues')
+        const catalogues = await response.json()
+
+        let editorCatalogue = catalogues.find(
+          (cat: any) => cat.name === EDITOR_CATALOGUE_NAME
+        )
+
         if (!editorCatalogue) {
           // Create a new catalogue for the standalone editor
           const createResponse = await fetch('/api/catalogues', {
@@ -34,58 +36,62 @@ export default function EditorPage() {
               theme: 'modern',
               isPublic: false,
               settings: {
-                editorData: undefined
-              }
-            })
-          });
-          
+                editorData: undefined,
+              },
+            }),
+          })
+
           if (!createResponse.ok) {
-            throw new Error('Failed to create editor catalogue');
+            throw new Error('Failed to create editor catalogue')
           }
-          
-          editorCatalogue = await createResponse.json();
+
+          editorCatalogue = await createResponse.json()
         }
-        
-        setCatalogueId(editorCatalogue.id);
-        
+
+        setCatalogueId(editorCatalogue.id)
+
         // Load existing editor data if available
         if (editorCatalogue.settings?.editorData) {
-          setInitialData(editorCatalogue.settings.editorData);
+          setInitialData(editorCatalogue.settings.editorData)
         } else {
           // Fallback to localStorage for migration
           if (typeof window !== 'undefined') {
-            const localData = localStorage.getItem('craft-editor-data');
+            const localData = localStorage.getItem('craft-editor-data')
             if (localData) {
-              setInitialData(localData);
+              setInitialData(localData)
               // Save to backend and clear localStorage
-              await handleSave(localData);
-              localStorage.removeItem('craft-editor-data');
+              await handleSave(localData)
+              localStorage.removeItem('craft-editor-data')
             }
           }
         }
       } catch (error) {
-        console.error('Error initializing editor catalogue:', error);
-        toast.error('Failed to initialize editor. Using local storage as fallback.');
+        console.error('Error initializing editor catalogue:', error)
+        toast.error(
+          'Failed to initialize editor. Using local storage as fallback.'
+        )
         // Fallback to localStorage
         if (typeof window !== 'undefined') {
-          setInitialData(localStorage.getItem('craft-editor-data') || undefined);
+          setInitialData(localStorage.getItem('craft-editor-data') || undefined)
         }
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    initializeEditorCatalogue();
-  }, []);
+    initializeEditorCatalogue()
+  }, [])
 
   const handleSave = async (data: string) => {
-    console.log('Saving editor data:', data);
-    
+    console.log('Saving editor data:', data)
+
     if (!catalogueId) {
-      console.warn('No catalogue ID available, saving to localStorage as fallback');
-      localStorage.setItem('craft-editor-data', data);
-      toast.error('Save failed. Data saved locally as backup.');
-      return;
+      console.warn(
+        'No catalogue ID available, saving to localStorage as fallback'
+      )
+      localStorage.setItem('craft-editor-data', data)
+      toast.error('Save failed. Data saved locally as backup.')
+      return
     }
 
     try {
@@ -96,42 +102,42 @@ export default function EditorPage() {
         },
         body: JSON.stringify({
           settings: {
-            editorData: data
-          }
-        })
-      });
+            editorData: data,
+          },
+        }),
+      })
 
       if (!response.ok) {
-        throw new Error('Failed to save editor data');
+        throw new Error('Failed to save editor data')
       }
 
-      toast.success('Editor data saved successfully!');
+      toast.success('Editor data saved successfully!')
     } catch (error) {
-      console.error('Error saving editor data:', error);
-      toast.error('Failed to save editor data. Saving locally as backup.');
+      console.error('Error saving editor data:', error)
+      toast.error('Failed to save editor data. Saving locally as backup.')
       // Fallback to localStorage
-      localStorage.setItem('craft-editor-data', data);
+      localStorage.setItem('craft-editor-data', data)
     }
-  };
+  }
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
+      <div className="flex h-screen w-full items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="text-gray-600">Loading editor...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="w-full h-screen">
+    <div className="h-screen w-full">
       <CraftJSEditor
         initialData={initialData}
         onSave={handleSave}
-        className="w-full h-full"
+        className="h-full w-full"
       />
     </div>
-  );
+  )
 }

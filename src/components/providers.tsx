@@ -46,7 +46,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </SubscriptionProvider>
         </AuthProvider>
       </ThemeProvider>
-
     </QueryClientProvider>
   )
 }

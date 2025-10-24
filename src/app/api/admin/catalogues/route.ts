@@ -11,15 +11,21 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user via Supabase
     const supabase = createRouteHandlerClient({ cookies })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user is admin - only admin@catfy.com is allowed
     if (user.email !== 'admin@catfy.com') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
     }
 
     // Fetch all catalogues with their related data
@@ -37,43 +43,43 @@ export async function GET(request: NextRequest) {
             id: true,
             email: true,
             firstName: true,
-            lastName: true
-          }
+            lastName: true,
+          },
         },
         _count: {
           select: {
             products: true,
             categories: true,
-            analytics: true
-          }
+            analytics: true,
+          },
         },
         products: {
           select: {
             id: true,
             name: true,
             price: true,
-            createdAt: true
+            createdAt: true,
           },
           take: 5, // Show only first 5 products
           orderBy: {
-            createdAt: 'desc'
-          }
+            createdAt: 'desc',
+          },
         },
         categories: {
           select: {
             id: true,
             name: true,
-            color: true
+            color: true,
           },
           take: 3, // Show only first 3 categories
           orderBy: {
-            sortOrder: 'asc'
-          }
-        }
+            sortOrder: 'asc',
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: 'desc',
+      },
     })
 
     // Transform the data for admin dashboard
@@ -88,16 +94,17 @@ export async function GET(request: NextRequest) {
       createdAt: catalogue.createdAt.toISOString(),
       updatedAt: catalogue.updatedAt.toISOString(),
       user: {
-        fullName: `${catalogue.profile.firstName || ''} ${catalogue.profile.lastName || ''}`.trim() || 'N/A',
-        email: catalogue.profile.email
-      }
+        fullName:
+          `${catalogue.profile.firstName || ''} ${catalogue.profile.lastName || ''}`.trim() ||
+          'N/A',
+        email: catalogue.profile.email,
+      },
     }))
 
     return NextResponse.json({
       catalogues: transformedCatalogues,
-      total: transformedCatalogues.length
+      total: transformedCatalogues.length,
     })
-
   } catch (error) {
     console.error('Admin catalogues fetch error:', error)
     return NextResponse.json(

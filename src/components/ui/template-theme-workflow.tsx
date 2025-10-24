@@ -31,9 +31,11 @@ export function TemplateThemeWorkflow({
   showPreview = true,
   className,
   context = 'wizard',
-  catalogueId
+  catalogueId,
 }: TemplateThemeWorkflowProps) {
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(initialTemplateId)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<
+    string | undefined
+  >(initialTemplateId)
 
   // Keep internal selection in sync with initialTemplateId prop when it changes
   useEffect(() => {
@@ -58,17 +60,17 @@ export function TemplateThemeWorkflow({
     onError: (error: string) => {
       console.error(`❌ Template selection error in ${context} context:`, error)
       // You could add toast notification here
-    }
+    },
   }
 
   return (
-    <div className={cn('w-full max-w-6xl mx-auto', className)}>
+    <div className={cn('mx-auto w-full max-w-6xl', className)}>
       <div className="space-y-6">
         <div className="text-start">
           <h2 className="text-xl font-bold text-gray-900">
             Choose Your Template
           </h2>
-          <p className="text-gray-600 text-sm">
+          <p className="text-sm text-gray-600">
             Select a template that best fits your catalog needs
           </p>
         </div>

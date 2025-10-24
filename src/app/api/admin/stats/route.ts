@@ -11,15 +11,21 @@ export async function GET(request: NextRequest) {
   try {
     // Authenticate user via Supabase
     const supabase = createRouteHandlerClient({ cookies })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Check if user is admin - only admin@catfy.com is allowed
     if (user.email !== 'admin@catfy.com') {
-      return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden - Admin access required' },
+        { status: 403 }
+      )
     }
 
     // Get current date for monthly calculations
@@ -29,49 +35,62 @@ export async function GET(request: NextRequest) {
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
 
     // Fetch all statistics in parallel
-    const [totalUsers, totalCatalogues, activeSubscriptions, totalExports, monthlyUsers, lastMonthUsers] = await Promise.all([
+    const [
+      totalUsers,
+      totalCatalogues,
+      activeSubscriptions,
+      totalExports,
+      monthlyUsers,
+      lastMonthUsers,
+    ] = await Promise.all([
       // Total users
       prisma.profile.count(),
-      
+
       // Total catalogues
       prisma.catalogue.count(),
-      
+
       // Active subscriptions with revenue
       prisma.subscription.findMany({
         where: { status: 'ACTIVE' },
-        select: { amount: true, billingCycle: true }
+        select: { amount: true, billingCycle: true },
       }),
-      
+
       // Total exports
       prisma.export.count(),
-      
+
       // Users created this month
       prisma.profile.count({
         where: {
           createdAt: {
-            gte: startOfMonth
-          }
-        }
+            gte: startOfMonth,
+          },
+        },
       }),
-      
+
       // Users created last month
       prisma.profile.count({
         where: {
           createdAt: {
             gte: startOfLastMonth,
-            lte: endOfLastMonth
-          }
-        }
-      })
+            lte: endOfLastMonth,
+          },
+        },
+      }),
     ])
 
     // Calculate revenue
-    const totalRevenue = activeSubscriptions.reduce((sum, sub) => sum + (sub.amount ? Number(sub.amount) : 0), 0)
-    
+    const totalRevenue = activeSubscriptions.reduce(
+      (sum, sub) => sum + (sub.amount ? Number(sub.amount) : 0),
+      0
+    )
+
     // Calculate monthly growth
-    const monthlyGrowth = lastMonthUsers > 0 
-      ? ((monthlyUsers - lastMonthUsers) / lastMonthUsers) * 100 
-      : monthlyUsers > 0 ? 100 : 0
+    const monthlyGrowth =
+      lastMonthUsers > 0
+        ? ((monthlyUsers - lastMonthUsers) / lastMonthUsers) * 100
+        : monthlyUsers > 0
+          ? 100
+          : 0
 
     // Count subscription types
     const freeUsers = totalUsers - activeSubscriptions.length
@@ -85,11 +104,10 @@ export async function GET(request: NextRequest) {
       activeSubscriptions: activeSubscriptions.length,
       freeUsers,
       paidUsers,
-      totalExports
+      totalExports,
     }
 
     return NextResponse.json({ stats })
-
   } catch (error) {
     console.error('Admin stats fetch error:', error)
     return NextResponse.json(

@@ -8,14 +8,19 @@ import { Template as EditorTemplate } from '@/components/editor/templates/types'
 import { TemplateConfig } from '@/lib/template-registry'
 
 // Import HTML templates from iframe-templates
-import { HtmlTemplates, PrebuiltTemplate } from '@/components/editor/iframe-templates'
+import {
+  HtmlTemplates,
+  PrebuiltTemplate,
+} from '@/components/editor/iframe-templates'
 
 // Template registry instance
 let templateRegistry: TemplateRegistry | null = null
 let dbTemplatesLoaded = false
 
 // Convert HTML template to registry template config
-function convertHtmlTemplateToConfig(htmlTemplate: PrebuiltTemplate): TemplateConfig {
+function convertHtmlTemplateToConfig(
+  htmlTemplate: PrebuiltTemplate
+): TemplateConfig {
   return {
     id: htmlTemplate.id,
     name: htmlTemplate.name,
@@ -27,16 +32,22 @@ function convertHtmlTemplateToConfig(htmlTemplate: PrebuiltTemplate): TemplateCo
     // public filename (eg. furniture-catalog -> furniture-catalogue-preview.png).
     // Map known special cases here; default to svg preview naming.
     previewImage:
-      htmlTemplate.id === 'furniture-catalog' ? '/templates/furniture-catalogue-preview.png'
-        : htmlTemplate.id === 'fashion-catalogue' ? '/templates/fashion-catalogue-preview.png'
+      htmlTemplate.id === 'furniture-catalog'
+        ? '/templates/furniture-catalogue-preview.png'
+        : htmlTemplate.id === 'fashion-catalogue'
+          ? '/templates/fashion-catalogue-preview.png'
           : `/templates/${htmlTemplate.id}-preview.svg`,
-    features: ['HTML', htmlTemplate.engine, `${htmlTemplate.pages.length} page(s)`],
+    features: [
+      'HTML',
+      htmlTemplate.engine,
+      `${htmlTemplate.pages.length} page(s)`,
+    ],
     tags: ['html', htmlTemplate.engine, 'iframe'],
     pageCount: htmlTemplate.pages.length,
     supportedFields: {
       products: ['name', 'description', 'price', 'images'],
       categories: ['name', 'description'],
-      profile: ['companyName', 'logo', 'email', 'phone', 'website']
+      profile: ['companyName', 'logo', 'email', 'phone', 'website'],
     },
     compatibleThemes: ['modern-blue', 'classic-warm', 'minimal-mono'],
     requiredThemeFeatures: [],
@@ -45,23 +56,25 @@ function convertHtmlTemplateToConfig(htmlTemplate: PrebuiltTemplate): TemplateCo
       engine: htmlTemplate.engine,
       htmlTemplateData: htmlTemplate,
       pages: htmlTemplate.pages,
-      sharedCss: htmlTemplate.sharedCss
+      sharedCss: htmlTemplate.sharedCss,
     },
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   }
 }
 
 // Convert editor template to registry template config
-function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): TemplateConfig {
+function convertEditorTemplateToConfig(
+  editorTemplate: EditorTemplate
+): TemplateConfig {
   // Map editor categories to template registry categories
   const categoryMap: Record<string, TemplateConfig['category']> = {
-    'test': 'minimal',
-    'landing': 'modern',
-    'content': 'modern',
-    'business': 'classic',
-    'catalog': 'product',
-    'fashion': 'product'
+    test: 'minimal',
+    landing: 'modern',
+    content: 'modern',
+    business: 'classic',
+    catalog: 'product',
+    fashion: 'product',
   }
 
   // Detect multi-page editor templates
@@ -75,15 +88,37 @@ function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): Template
     category: categoryMap[editorTemplate.category] || 'modern',
     isPremium: false, // Editor templates are free by default
     version: '1.0.0',
-    previewImage: editorTemplate.thumbnail || `/templates/${editorTemplate.id}-preview.svg`,
+    previewImage:
+      editorTemplate.thumbnail || `/templates/${editorTemplate.id}-preview.svg`,
     features: editorTemplate.tags,
     tags: editorTemplate.tags || [],
     // Prefer explicit pageCount; fall back to multiPageData length; default to 1
-    pageCount: editorTemplate.pageCount ?? (Array.isArray(multiPageData) ? multiPageData.length : 1),
+    pageCount:
+      editorTemplate.pageCount ??
+      (Array.isArray(multiPageData) ? multiPageData.length : 1),
     supportedFields: {
-      products: ['name', 'description', 'price', 'images', 'sku', 'tags', 'currency', 'priceDisplay'],
+      products: [
+        'name',
+        'description',
+        'price',
+        'images',
+        'sku',
+        'tags',
+        'currency',
+        'priceDisplay',
+      ],
       categories: ['name', 'description', 'color'],
-      profile: ['companyName', 'logo', 'email', 'phone', 'website', 'address', 'description', 'tagline', 'socialLinks']
+      profile: [
+        'companyName',
+        'logo',
+        'email',
+        'phone',
+        'website',
+        'address',
+        'description',
+        'tagline',
+        'socialLinks',
+      ],
     },
     compatibleThemes: ['modern-blue', 'classic-warm', 'minimal-mono'],
     requiredThemeFeatures: [],
@@ -93,11 +128,10 @@ function convertEditorTemplateToConfig(editorTemplate: EditorTemplate): Template
       // Map single-page and multi-page data appropriately for the editor
       ...(isMultiPage
         ? { isMultiPageTemplate: true, multiPageData }
-        : { editorData: editorTemplate.data }
-      )
+        : { editorData: editorTemplate.data }),
     },
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   }
 }
 
@@ -118,7 +152,7 @@ function registerAllTemplates() {
   if (!templateRegistry) return
 
   // Register HTML templates (from iframe-templates) - PRIORITY
-  console.log('📝 Registering HTML templates:', HtmlTemplates.length);
+  console.log('📝 Registering HTML templates:', HtmlTemplates.length)
   HtmlTemplates.forEach(htmlTemplate => {
     const config = convertHtmlTemplateToConfig(htmlTemplate)
     console.log('📝 Registering HTML template:', {
@@ -126,8 +160,8 @@ function registerAllTemplates() {
       name: htmlTemplate.name,
       engine: htmlTemplate.engine,
       pageCount: htmlTemplate.pages.length,
-      configId: config.id
-    });
+      configId: config.id,
+    })
     const HtmlTemplateWrapper = () => {
       return null // HTML templates are handled by IframeEditor
     }
@@ -168,20 +202,33 @@ export function getTemplateById(templateId: string) {
     templateFound: !!template,
     allTemplateIds: registry.getAllTemplates().map(t => t.id),
     totalTemplates: registry.getAllTemplates().length,
-    templateData: template ? {
-      id: template.id,
-      name: template.name,
-      hasCustomProperties: !!template.customProperties,
-      hasEditorData: !!template.customProperties?.editorData,
-      editorDataType: typeof template.customProperties?.editorData,
-      editorDataKeys: template.customProperties?.editorData ? Object.keys(template.customProperties.editorData) : []
-    } : null
-  });
+    templateData: template
+      ? {
+          id: template.id,
+          name: template.name,
+          hasCustomProperties: !!template.customProperties,
+          hasEditorData: !!template.customProperties?.editorData,
+          editorDataType: typeof template.customProperties?.editorData,
+          editorDataKeys: template.customProperties?.editorData
+            ? Object.keys(template.customProperties.editorData)
+            : [],
+        }
+      : null,
+  })
 
   return template
 }
 
-export function getTemplatesByCategory(category: 'modern' | 'classic' | 'minimal' | 'creative' | 'industry' | 'specialized' | 'product') {
+export function getTemplatesByCategory(
+  category:
+    | 'modern'
+    | 'classic'
+    | 'minimal'
+    | 'creative'
+    | 'industry'
+    | 'specialized'
+    | 'product'
+) {
   const registry = getTemplateRegistry()
   return registry.getTemplatesByCategory(category)
 }
@@ -196,7 +243,10 @@ export function getPremiumTemplates() {
   return registry.getPremiumTemplates()
 }
 
-export function validateTemplateThemeCompatibility(templateId: string, themeId: string): boolean {
+export function validateTemplateThemeCompatibility(
+  templateId: string,
+  themeId: string
+): boolean {
   const registry = getTemplateRegistry()
   return registry.isTemplateThemeCompatible(templateId, themeId)
 }
@@ -266,11 +316,13 @@ export function getTemplateFeatures(templateId: string): string[] {
 
 export function getTemplateSupportedFields(templateId: string) {
   const template = getTemplateById(templateId)
-  return template?.supportedFields || {
-    products: [],
-    categories: [],
-    profile: []
-  }
+  return (
+    template?.supportedFields || {
+      products: [],
+      categories: [],
+      profile: [],
+    }
+  )
 }
 
 // Template configurations are now handled through the registry

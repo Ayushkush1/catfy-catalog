@@ -18,28 +18,32 @@ export default function TestTemplatesPage() {
   useEffect(() => {
     try {
       addLog('🔍 Testing template loading...')
-      
+
       // Test getAllTemplates
       const allTemplates = getAllTemplates()
       addLog(`📊 Found ${allTemplates.length} templates`)
       setTemplates(allTemplates)
-      
+
       // Test template manager
       const availableTemplates = templateManager.getAvailableTemplates('free')
-      addLog(`🎯 Template manager found ${availableTemplates.length} available templates`)
-      
+      addLog(
+        `🎯 Template manager found ${availableTemplates.length} available templates`
+      )
+
       // Test individual template loading
       if (allTemplates.length > 0) {
         const firstTemplate = allTemplates[0]
         addLog(`🔍 Testing first template: ${firstTemplate.id}`)
-        
+
         const templateById = getTemplateById(firstTemplate.id)
         if (templateById) {
           addLog(`✅ Successfully loaded template by ID: ${templateById.name}`)
           setSelectedTemplate(templateById)
-          
+
           // Test template data preparation
-          const preparedData = templateManager.prepareTemplateData(firstTemplate.id)
+          const preparedData = templateManager.prepareTemplateData(
+            firstTemplate.id
+          )
           if (preparedData.success) {
             addLog(`✅ Template data prepared successfully`)
           } else {
@@ -49,7 +53,6 @@ export default function TestTemplatesPage() {
           addLog(`❌ Failed to load template by ID`)
         }
       }
-      
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       addLog(`❌ Error during template testing: ${errorMessage}`)
@@ -58,52 +61,59 @@ export default function TestTemplatesPage() {
   }, [])
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Template Loading Test</h1>
-      
+    <div className="mx-auto max-w-4xl p-8">
+      <h1 className="mb-6 text-2xl font-bold">Template Loading Test</h1>
+
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="mb-4 rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
           <strong>Error:</strong> {error}
         </div>
       )}
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Logs */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">Debug Logs</h2>
-          <div className="bg-gray-100 p-4 rounded-lg h-64 overflow-y-auto">
+          <h2 className="mb-3 text-lg font-semibold">Debug Logs</h2>
+          <div className="h-64 overflow-y-auto rounded-lg bg-gray-100 p-4">
             {logs.map((log, index) => (
-              <div key={index} className="text-sm font-mono mb-1">
+              <div key={index} className="mb-1 font-mono text-sm">
                 {log}
               </div>
             ))}
           </div>
         </div>
-        
+
         {/* Templates List */}
         <div>
-          <h2 className="text-lg font-semibold mb-3">Available Templates ({templates.length})</h2>
-          <div className="bg-gray-100 p-4 rounded-lg h-64 overflow-y-auto">
+          <h2 className="mb-3 text-lg font-semibold">
+            Available Templates ({templates.length})
+          </h2>
+          <div className="h-64 overflow-y-auto rounded-lg bg-gray-100 p-4">
             {templates.map((template, index) => (
-              <div key={index} className="mb-2 p-2 bg-white rounded border">
+              <div key={index} className="mb-2 rounded border bg-white p-2">
                 <div className="font-medium">{template.name}</div>
                 <div className="text-sm text-gray-600">ID: {template.id}</div>
-                <div className="text-sm text-gray-600">Category: {template.category}</div>
                 <div className="text-sm text-gray-600">
-                  Editor Template: {template.customProperties?.isEditorTemplate ? 'Yes' : 'No'}
+                  Category: {template.category}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Editor Template:{' '}
+                  {template.customProperties?.isEditorTemplate ? 'Yes' : 'No'}
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
-      
+
       {/* Selected Template Details */}
       {selectedTemplate && (
         <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-3">Selected Template Details</h2>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <pre className="text-sm overflow-x-auto">
+          <h2 className="mb-3 text-lg font-semibold">
+            Selected Template Details
+          </h2>
+          <div className="rounded-lg bg-gray-100 p-4">
+            <pre className="overflow-x-auto text-sm">
               {JSON.stringify(selectedTemplate, null, 2)}
             </pre>
           </div>
