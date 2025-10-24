@@ -129,12 +129,13 @@ const Canvas: React.FC<{
     <div className="flex h-full w-full items-start justify-center overflow-auto p-8">
       <div
         ref={zoom.canvasRef}
-        className={`bg-white shadow-lg transition-all duration-200 ${deviceMode.currentMode === 'mobile'
+        className={`bg-white shadow-lg transition-all duration-200 ${
+          deviceMode.currentMode === 'mobile'
             ? 'h-[667px] w-[375px]'
             : deviceMode.currentMode === 'tablet'
               ? 'h-[1024px] w-[768px]'
               : 'min-h-[800px] w-full max-w-[1200px]'
-          }`}
+        }`}
         style={{
           ...zoom.getCanvasStyle(),
           transformOrigin: 'top center',
