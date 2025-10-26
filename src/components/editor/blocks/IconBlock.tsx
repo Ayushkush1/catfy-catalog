@@ -1,20 +1,20 @@
 'use client'
 
-import React from 'react'
-import { useNode, UserComponent } from '@craftjs/core'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Button } from '@/components/ui/button'
-import { BlockWrapper } from '../components/BlockWrapper'
+import { useNode, UserComponent } from '@craftjs/core'
 import * as LucideIcons from 'lucide-react'
+import React from 'react'
+import { BlockWrapper } from '../components/BlockWrapper'
 
 export interface IconBlockProps {
   icon?: string
@@ -157,7 +157,8 @@ export const IconBlock: UserComponent<IconBlockProps> = ({
   const IconComponent = (LucideIcons as any)[icon] || LucideIcons.Star
 
   const containerStyle: React.CSSProperties = {
-    display: 'flex',
+    display: 'inline-flex',
+    alignItems: 'center',
     justifyContent:
       alignment === 'left'
         ? 'flex-start'
@@ -165,22 +166,37 @@ export const IconBlock: UserComponent<IconBlockProps> = ({
           ? 'flex-end'
           : 'center',
     margin: `${marginTop}px ${marginRight}px ${marginBottom}px ${marginLeft}px`,
+    width: '100%',
   }
 
-  const iconStyle: React.CSSProperties = {
-    width: size,
-    height: size,
-    color,
-    backgroundColor,
+  // Wrapper style for background, padding, and border radius
+  const iconWrapperStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: backgroundColor === 'transparent' ? 'transparent' : backgroundColor,
     borderRadius: `${borderRadius}px`,
     padding: `${padding}px`,
     transform: `rotate(${rotation}deg)`,
-    opacity,
+    opacity: opacity || 1,
     cursor: href ? 'pointer' : 'default',
     transition: 'all 0.2s ease',
+    lineHeight: 0,
   }
 
-  const renderIcon = () => <IconComponent style={iconStyle} />
+  // Icon style - only color and size
+  const iconStyle: React.CSSProperties = {
+    color: color || '#000000',
+    width: `${size}px`,
+    height: `${size}px`,
+    strokeWidth: 2,
+  }
+
+  const renderIcon = () => (
+    <div style={iconWrapperStyle}>
+      <IconComponent style={iconStyle} size={size} />
+    </div>
+  )
 
   const content = href ? (
     <a
@@ -249,26 +265,14 @@ export const IconBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="icon-size">Size: {props.size}px</Label>
-        <Slider
-          value={[props.size || 24]}
-          onValueChange={([value]) =>
-            setProp((props: IconBlockProps) => (props.size = value))
-          }
-          max={200}
-          min={8}
-          step={1}
-          className="mt-2"
-        />
-      </div>
-
-      <div>
         <Label htmlFor="icon-color">Color</Label>
         <Input
           type="color"
-          value={props.color}
+          value={props.color || '#000000'}
           onChange={e =>
-            setProp((props: IconBlockProps) => (props.color = e.target.value))
+            setProp((props: IconBlockProps) => {
+              props.color = e.target.value
+            })
           }
           className="mt-1"
         />
@@ -276,33 +280,39 @@ export const IconBlockSettings: React.FC = () => {
 
       <div>
         <Label htmlFor="icon-background">Background Color</Label>
-        <Input
-          type="color"
-          value={
-            props.backgroundColor === 'transparent'
-              ? '#ffffff'
-              : props.backgroundColor
-          }
-          onChange={e =>
-            setProp(
-              (props: IconBlockProps) =>
-                (props.backgroundColor = e.target.value)
-            )
-          }
-          className="mt-1"
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            setProp(
-              (props: IconBlockProps) => (props.backgroundColor = 'transparent')
-            )
-          }
-          className="mt-2 w-full"
-        >
-          Make Transparent
-        </Button>
+        <div className="space-y-2">
+          <Input
+            type="color"
+            value={
+              !props.backgroundColor || props.backgroundColor === 'transparent'
+                ? '#ffffff'
+                : props.backgroundColor
+            }
+            onChange={e =>
+              setProp(
+                (props: IconBlockProps) => {
+                  props.backgroundColor = e.target.value
+                }
+              )
+            }
+            className="mt-1"
+            disabled={props.backgroundColor === 'transparent'}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setProp(
+                (props: IconBlockProps) => {
+                  props.backgroundColor = 'transparent'
+                }
+              )
+            }
+            className="w-full"
+          >
+            {props.backgroundColor === 'transparent' ? 'Transparent (Active)' : 'Make Transparent'}
+          </Button>
+        </div>
       </div>
 
       <div>
@@ -329,12 +339,14 @@ export const IconBlockSettings: React.FC = () => {
 
       <div>
         <Label htmlFor="border-radius">
-          Border Radius: {props.borderRadius}px
+          Border Radius: {props.borderRadius || 0}px
         </Label>
         <Slider
           value={[props.borderRadius || 0]}
           onValueChange={([value]) =>
-            setProp((props: IconBlockProps) => (props.borderRadius = value))
+            setProp((props: IconBlockProps) => {
+              props.borderRadius = value
+            })
           }
           max={50}
           min={0}
@@ -344,11 +356,13 @@ export const IconBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="icon-padding">Padding: {props.padding}px</Label>
+        <Label htmlFor="icon-padding">Padding: {props.padding || 0}px</Label>
         <Slider
           value={[props.padding || 0]}
           onValueChange={([value]) =>
-            setProp((props: IconBlockProps) => (props.padding = value))
+            setProp((props: IconBlockProps) => {
+              props.padding = value
+            })
           }
           max={50}
           min={0}
@@ -358,11 +372,13 @@ export const IconBlockSettings: React.FC = () => {
       </div>
 
       <div>
-        <Label htmlFor="icon-rotation">Rotation: {props.rotation}°</Label>
+        <Label htmlFor="icon-rotation">Rotation: {props.rotation || 0}°</Label>
         <Slider
           value={[props.rotation || 0]}
           onValueChange={([value]) =>
-            setProp((props: IconBlockProps) => (props.rotation = value))
+            setProp((props: IconBlockProps) => {
+              props.rotation = value
+            })
           }
           max={360}
           min={0}
@@ -378,7 +394,9 @@ export const IconBlockSettings: React.FC = () => {
         <Slider
           value={[(props.opacity || 1) * 100]}
           onValueChange={([value]) =>
-            setProp((props: IconBlockProps) => (props.opacity = value / 100))
+            setProp((props: IconBlockProps) => {
+              props.opacity = value / 100
+            })
           }
           max={100}
           min={0}
@@ -424,11 +442,13 @@ export const IconBlockSettings: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label htmlFor="margin-top">Margin Top: {props.marginTop}px</Label>
+          <Label htmlFor="margin-top">Margin Top: {props.marginTop || 0}px</Label>
           <Slider
             value={[props.marginTop || 0]}
             onValueChange={([value]) =>
-              setProp((props: IconBlockProps) => (props.marginTop = value))
+              setProp((props: IconBlockProps) => {
+                props.marginTop = value
+              })
             }
             max={100}
             min={0}
@@ -438,12 +458,14 @@ export const IconBlockSettings: React.FC = () => {
         </div>
         <div>
           <Label htmlFor="margin-bottom">
-            Margin Bottom: {props.marginBottom}px
+            Margin Bottom: {props.marginBottom || 0}px
           </Label>
           <Slider
             value={[props.marginBottom || 0]}
             onValueChange={([value]) =>
-              setProp((props: IconBlockProps) => (props.marginBottom = value))
+              setProp((props: IconBlockProps) => {
+                props.marginBottom = value
+              })
             }
             max={100}
             min={0}

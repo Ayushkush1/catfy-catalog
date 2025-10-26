@@ -1,31 +1,31 @@
-import React from 'react'
-import { useNode } from '@craftjs/core'
-import { InlineQuickActions } from './InlineQuickActions'
+import React from 'react';
+import { useNode } from '@craftjs/core';
+import { InlineQuickActions } from './InlineQuickActions';
 
 interface BlockWrapperProps {
-  children: React.ReactNode
-  className?: string
-  style?: React.CSSProperties
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export const BlockWrapper: React.FC<BlockWrapperProps> = ({
-  children,
-  className = '',
-  style = {},
+export const BlockWrapper: React.FC<BlockWrapperProps> = ({ 
+  children, 
+  className = '', 
+  style = {} 
 }) => {
   const {
     connectors: { connect, drag },
     selected,
-    id,
-  } = useNode(state => ({
-    selected: state.events.selected,
-  }))
+    id
+  } = useNode((state) => ({
+    selected: state.events.selected
+  }));
 
   return (
     <div
-      ref={ref => {
+      ref={(ref) => {
         if (ref) {
-          connect(drag(ref))
+          connect(drag(ref));
         }
       }}
       className={className}
@@ -35,11 +35,11 @@ export const BlockWrapper: React.FC<BlockWrapperProps> = ({
         outlineOffset: '2px',
         position: 'relative',
         display: 'inline-block',
-        minWidth: 'fit-content',
+        minWidth: 'fit-content'
       }}
     >
       {children}
       {selected && <InlineQuickActions nodeId={id} />}
     </div>
-  )
-}
+  );
+};

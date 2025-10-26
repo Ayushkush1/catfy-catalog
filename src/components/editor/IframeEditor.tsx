@@ -229,6 +229,21 @@ export default function IframeEditor({
   // Resize functionality
   const addResizeHandles = useCallback(
     (element: HTMLElement, doc: Document) => {
+      // Skip resize handles for icons and assets/images
+      const isIcon = element.classList.contains('icon-block') || 
+                     element.querySelector('svg[class*="lucide"]') ||
+                     element.dataset.elementType === 'icon'
+      const isAsset = element.classList.contains('image-element') ||
+                     element.classList.contains('asset-element') ||
+                     element.dataset.elementType === 'image-container' ||
+                     element.dataset.elementType === 'asset' ||
+                     element.tagName === 'IMG'
+      
+      if (isIcon || isAsset) {
+        console.log('🚫 Skipping resize handles for icon/asset element')
+        return
+      }
+      
       // Check if element already has resize handles
       if (element.querySelector('.resize-handle')) return
 
@@ -3548,8 +3563,7 @@ export default function IframeEditor({
           startDrag(imgContainer, e.clientX, e.clientY)
         })
 
-        // Add resize handles
-        addResizeHandles(imgContainer, doc)
+        // Resize handles removed for assets/images
 
         doc.body.appendChild(imgContainer)
       } else {
@@ -3588,8 +3602,7 @@ export default function IframeEditor({
           startDrag(el, e.clientX, e.clientY)
         })
 
-        // Add resize handles
-        addResizeHandles(el, doc)
+        // Resize handles removed for icons
 
         // Add to body for absolute positioning context
         doc.body.appendChild(el)
@@ -3657,8 +3670,7 @@ export default function IframeEditor({
       startDrag(iconDiv, e.clientX, e.clientY)
     })
 
-    // Add resize handles
-    addResizeHandles(iconDiv, doc)
+    // Resize handles removed for icons
 
     doc.body.appendChild(iconDiv)
   }
@@ -3729,8 +3741,7 @@ export default function IframeEditor({
       startDrag(containerElement, e.clientX, e.clientY)
     })
 
-    // Add resize handles
-    addResizeHandles(container, doc)
+    // Resize handles removed for images
   }
 
   // Handle asset upload
