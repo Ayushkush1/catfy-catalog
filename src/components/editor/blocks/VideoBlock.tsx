@@ -1,7 +1,5 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useNode, UserComponent } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -12,8 +10,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Button } from '@/components/ui/button'
+import { useNode, UserComponent } from '@craftjs/core'
 import { Play, Upload } from 'lucide-react'
+import React, { useState } from 'react'
 
 export interface VideoBlockProps {
   src?: string
@@ -113,6 +112,7 @@ export const VideoBlock: UserComponent<VideoBlockProps> = ({
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          title="Video player"
         />
       )
     }
@@ -192,7 +192,7 @@ export const VideoBlockSettings: React.FC = () => {
             )
           }
         >
-          <SelectTrigger>
+          <SelectTrigger id="video-type">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -208,16 +208,19 @@ export const VideoBlockSettings: React.FC = () => {
         <div>
           <Label htmlFor="video-upload">Upload Video</Label>
           <input
+            id="video-upload"
             type="file"
             accept="video/*"
             onChange={handleFileUpload}
             className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+            aria-label="Upload video file"
           />
         </div>
       ) : (
         <div>
           <Label htmlFor="video-src">Video URL</Label>
           <Input
+            id="video-src"
             value={props.src}
             onChange={e =>
               setProp((props: VideoBlockProps) => (props.src = e.target.value))
@@ -237,6 +240,7 @@ export const VideoBlockSettings: React.FC = () => {
       <div>
         <Label htmlFor="video-poster">Poster Image URL (optional)</Label>
         <Input
+          id="video-poster"
           value={props.poster}
           onChange={e =>
             setProp((props: VideoBlockProps) => (props.poster = e.target.value))
@@ -250,6 +254,7 @@ export const VideoBlockSettings: React.FC = () => {
         <div>
           <Label htmlFor="video-width">Width</Label>
           <Input
+            id="video-width"
             value={props.width}
             onChange={e =>
               setProp(
@@ -263,6 +268,7 @@ export const VideoBlockSettings: React.FC = () => {
         <div>
           <Label htmlFor="video-height">Height</Label>
           <Input
+            id="video-height"
             value={props.height}
             onChange={e =>
               setProp(
@@ -280,6 +286,7 @@ export const VideoBlockSettings: React.FC = () => {
           Border Radius: {props.borderRadius}px
         </Label>
         <Slider
+          id="border-radius"
           value={[props.borderRadius || 0]}
           onValueChange={([value]) =>
             setProp((props: VideoBlockProps) => (props.borderRadius = value))
@@ -357,6 +364,7 @@ export const VideoBlockSettings: React.FC = () => {
         <div>
           <Label htmlFor="margin-top">Margin Top: {props.marginTop}px</Label>
           <Slider
+            id="margin-top"
             value={[props.marginTop || 0]}
             onValueChange={([value]) =>
               setProp((props: VideoBlockProps) => (props.marginTop = value))
@@ -372,6 +380,7 @@ export const VideoBlockSettings: React.FC = () => {
             Margin Bottom: {props.marginBottom}px
           </Label>
           <Slider
+            id="margin-bottom"
             value={[props.marginBottom || 0]}
             onValueChange={([value]) =>
               setProp((props: VideoBlockProps) => (props.marginBottom = value))

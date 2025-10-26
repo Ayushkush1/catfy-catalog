@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
 import { useNode } from '@craftjs/core'
+import React, { useRef, useState } from 'react'
 import { BlockWrapper } from '../components/BlockWrapper'
 
 export interface ImageBlockProps {
@@ -254,7 +254,7 @@ export const ImageBlock: React.FC<Partial<ImageBlockProps>> = props => {
         )}
       </div>
 
-      {caption.enabled && caption.position === 'bottom' && (
+      {caption.enabled && caption.text && (
         <div style={captionStyle}>{caption.text}</div>
       )}
 
@@ -264,6 +264,7 @@ export const ImageBlock: React.FC<Partial<ImageBlockProps>> = props => {
         accept="image/*"
         onChange={handleFileChange}
         style={{ display: 'none' }}
+        aria-label="Upload image file"
       />
     </div>
   )
@@ -276,6 +277,7 @@ export const ImageBlock: React.FC<Partial<ImageBlockProps>> = props => {
             href={link.href}
             target={link.target}
             style={{ textDecoration: 'none' }}
+            aria-label={alt || 'Image link'}
           >
             <ImageComponent />
           </a>
@@ -300,10 +302,11 @@ export const ImageBlockSettings: React.FC = () => {
     <div className="space-y-4">
       {/* Image Source */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label htmlFor="image-url" className="mb-2 block text-sm font-medium text-gray-700">
           Image URL
         </label>
         <input
+          id="image-url"
           type="url"
           value={props.src}
           onChange={e =>
@@ -318,10 +321,11 @@ export const ImageBlockSettings: React.FC = () => {
 
       {/* Alt Text */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label htmlFor="image-alt" className="mb-2 block text-sm font-medium text-gray-700">
           Alt Text
         </label>
         <input
+          id="image-alt"
           type="text"
           value={props.alt}
           onChange={e =>
@@ -339,8 +343,9 @@ export const ImageBlockSettings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Width</label>
+            <label htmlFor="image-width" className="mb-1 block text-xs text-gray-600">Width</label>
             <input
+              id="image-width"
               type="number"
               value={typeof props.width === 'number' ? props.width : 400}
               onChange={e =>
@@ -353,8 +358,9 @@ export const ImageBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Height</label>
+            <label htmlFor="image-height" className="mb-1 block text-xs text-gray-600">Height</label>
             <input
+              id="image-height"
               type="number"
               value={typeof props.height === 'number' ? props.height : 300}
               onChange={e =>
@@ -368,8 +374,9 @@ export const ImageBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Object Fit</label>
+          <label htmlFor="image-object-fit" className="mb-1 block text-xs text-gray-600">Object Fit</label>
           <select
+            id="image-object-fit"
             value={props.objectFit}
             onChange={e =>
               setProp((props: ImageBlockProps) => {
@@ -392,10 +399,11 @@ export const ImageBlockSettings: React.FC = () => {
         <h4 className="text-sm font-medium text-gray-900">Style</h4>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">
+          <label htmlFor="image-border-radius" className="mb-1 block text-xs text-gray-600">
             Border Radius
           </label>
           <input
+            id="image-border-radius"
             type="number"
             value={props.borderRadius}
             onChange={e =>
@@ -408,8 +416,9 @@ export const ImageBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Opacity</label>
+          <label htmlFor="image-opacity" className="mb-1 block text-xs text-gray-600">Opacity</label>
           <input
+            id="image-opacity"
             type="range"
             min="0"
             max="1"
@@ -434,8 +443,9 @@ export const ImageBlockSettings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Blur</label>
+            <label htmlFor="image-blur" className="mb-1 block text-xs text-gray-600">Blur</label>
             <input
+              id="image-blur"
               type="range"
               min="0"
               max="10"
@@ -451,10 +461,11 @@ export const ImageBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="image-brightness" className="mb-1 block text-xs text-gray-600">
               Brightness
             </label>
             <input
+              id="image-brightness"
               type="range"
               min="0"
               max="200"
@@ -472,8 +483,9 @@ export const ImageBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Contrast</label>
+            <label htmlFor="image-contrast" className="mb-1 block text-xs text-gray-600">Contrast</label>
             <input
+              id="image-contrast"
               type="range"
               min="0"
               max="200"
@@ -491,10 +503,11 @@ export const ImageBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="image-grayscale" className="mb-1 block text-xs text-gray-600">
               Grayscale
             </label>
             <input
+              id="image-grayscale"
               type="range"
               min="0"
               max="100"
@@ -519,6 +532,7 @@ export const ImageBlockSettings: React.FC = () => {
 
         <div className="flex items-center space-x-2">
           <input
+            id="caption-enabled"
             type="checkbox"
             checked={props.caption.enabled}
             onChange={e =>
@@ -528,12 +542,15 @@ export const ImageBlockSettings: React.FC = () => {
             }
             className="rounded"
           />
-          <label className="text-xs text-gray-600">Show caption</label>
+          <label htmlFor="caption-enabled" className="text-xs text-gray-600">
+            Show caption
+          </label>
         </div>
 
         {props.caption.enabled && (
           <div className="space-y-2">
             <input
+              aria-label="Caption text"
               type="text"
               value={props.caption.text}
               onChange={e =>
@@ -547,6 +564,7 @@ export const ImageBlockSettings: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2">
               <select
+                aria-label="Caption position"
                 value={props.caption.position}
                 onChange={e =>
                   setProp((props: ImageBlockProps) => {
@@ -560,6 +578,7 @@ export const ImageBlockSettings: React.FC = () => {
               </select>
 
               <select
+                aria-label="Caption alignment"
                 value={props.caption.align}
                 onChange={e =>
                   setProp((props: ImageBlockProps) => {
@@ -583,6 +602,7 @@ export const ImageBlockSettings: React.FC = () => {
 
         <div className="flex items-center space-x-2">
           <input
+            id="link-enabled"
             type="checkbox"
             checked={props.link.enabled}
             onChange={e =>
@@ -592,12 +612,15 @@ export const ImageBlockSettings: React.FC = () => {
             }
             className="rounded"
           />
-          <label className="text-xs text-gray-600">Make image clickable</label>
+          <label htmlFor="link-enabled" className="text-xs text-gray-600">
+            Make image clickable
+          </label>
         </div>
 
         {props.link.enabled && (
           <div className="space-y-2">
             <input
+              aria-label="Link URL"
               type="url"
               value={props.link.href}
               onChange={e =>
@@ -610,6 +633,7 @@ export const ImageBlockSettings: React.FC = () => {
             />
 
             <select
+              aria-label="Link target"
               value={props.link.target}
               onChange={e =>
                 setProp((props: ImageBlockProps) => {

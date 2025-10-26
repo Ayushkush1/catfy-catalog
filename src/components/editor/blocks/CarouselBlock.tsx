@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { useNode } from '@craftjs/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -245,10 +246,11 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
           <div key={slide.id} style={slideStyles}>
             {slide.type === 'image' ? (
               <div className="relative h-full w-full">
-                <img
-                  src={slide.src}
+                <Image
+                  src={slide.src || ''}
                   alt={slide.alt || `Slide ${index + 1}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
                   style={{ borderRadius: `${borderRadius}px` }}
                 />
                 {slide.title && (
@@ -285,6 +287,7 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
             style={{ ...arrowStyles, left: '16px' }}
             onClick={prevSlide}
             className="hover:opacity-80"
+            aria-label="Previous slide"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -292,6 +295,7 @@ export const CarouselBlock: React.FC<CarouselBlockProps> = ({
             style={{ ...arrowStyles, right: '16px' }}
             onClick={nextSlide}
             className="hover:opacity-80"
+            aria-label="Next slide"
           >
             <ChevronRight className="h-5 w-5" />
           </button>

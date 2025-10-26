@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { useNode, UserComponent, Element } from '@craftjs/core'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -12,8 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Element, useNode, UserComponent } from '@craftjs/core'
+import React from 'react'
 import { ContainerBlock } from './ContainerBlock'
 
 export interface GridBlockProps {
@@ -317,7 +317,7 @@ export const GridBlockSettings: React.FC = () => {
               )
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="justify-items" aria-label="Justify Items">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -339,7 +339,7 @@ export const GridBlockSettings: React.FC = () => {
               )
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="align-items" aria-label="Align Items">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -365,7 +365,7 @@ export const GridBlockSettings: React.FC = () => {
               )
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="justify-content" aria-label="Justify Content">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -390,7 +390,7 @@ export const GridBlockSettings: React.FC = () => {
               )
             }
           >
-            <SelectTrigger>
+            <SelectTrigger id="align-content" aria-label="Align Content">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

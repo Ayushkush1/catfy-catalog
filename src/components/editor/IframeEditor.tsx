@@ -1,34 +1,33 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useSimpleDrag } from '@/hooks/useSimpleDrag'
+import html2canvas from 'html2canvas'
 import {
-  FileText,
-  Layers as LayersIcon,
-  Shapes,
-  Type,
-  Upload,
-  Palette,
-  Star,
-  ChevronRight,
   ChevronDown,
   ChevronLeft,
-  Trash2,
-  Copy,
+  ChevronRight,
   ChevronUp,
-  Edit3,
-  Settings,
-  Sparkles,
-  Image,
-  Move3D,
   Circle,
-  Tag,
-  LayoutGrid,
+  Copy,
+  Edit3,
+  FileText,
   GripVertical,
+  Image,
+  Layers as LayersIcon,
+  LayoutGrid,
+  Move3D,
+  Palette,
+  Settings,
+  Shapes,
+  Sparkles,
+  Star,
+  Tag,
+  Trash2,
+  Type,
+  Upload,
 } from 'lucide-react'
-import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
-import html2canvas from 'html2canvas'
-import { useSimpleDrag } from '@/hooks/useSimpleDrag'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 export type IframePage = {
   id: string
@@ -226,6 +225,177 @@ export default function IframeEditor({
       console.log(`Element ${id} moved to: ${x}, ${y}`)
     },
   })
+
+  // Resize functionality
+  const addResizeHandles = useCallback(
+    (element: HTMLElement, doc: Document) => {
+      // Check if element already has resize handles
+      if (element.querySelector('.resize-handle')) return
+
+      // Create wrapper if element is an image or icon
+      const isImage = element.tagName === 'IMG'
+      const targetElement = isImage ? element.parentElement || element : element
+
+      // Create resize handles (8 points: corners + midpoints)
+      const positions = [
+        { name: 'nw', cursor: 'nw-resize', top: '-4px', left: '-4px' },
+        {
+          name: 'n',
+          cursor: 'n-resize',
+          top: '-4px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        },
+        { name: 'ne', cursor: 'ne-resize', top: '-4px', right: '-4px' },
+        {
+          name: 'e',
+          cursor: 'e-resize',
+          top: '50%',
+          right: '-4px',
+          transform: 'translateY(-50%)',
+        },
+        { name: 'se', cursor: 'se-resize', bottom: '-4px', right: '-4px' },
+        {
+          name: 's',
+          cursor: 's-resize',
+          bottom: '-4px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+        },
+        { name: 'sw', cursor: 'sw-resize', bottom: '-4px', left: '-4px' },
+        {
+          name: 'w',
+          cursor: 'w-resize',
+          top: '50%',
+          left: '-4px',
+          transform: 'translateY(-50%)',
+        },
+      ]
+
+      positions.forEach(pos => {
+        const handle = doc.createElement('div')
+        handle.className = `resize-handle resize-handle-${pos.name}`
+        handle.style.cssText = `
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #3b82f6;
+        border: 2px solid white;
+        border-radius: 50%;
+        cursor: ${pos.cursor};
+        z-index: 1000;
+        ${pos.top ? `top: ${pos.top};` : ''}
+        ${pos.bottom ? `bottom: ${pos.bottom};` : ''}
+        ${pos.left ? `left: ${pos.left};` : ''}
+        ${pos.right ? `right: ${pos.right};` : ''}
+        ${pos.transform ? `transform: ${pos.transform};` : ''}
+        pointer-events: auto;
+      `
+
+        // Add resize logic
+        handle.addEventListener('mousedown', (e: MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+
+          const startX = e.clientX
+          const startY = e.clientY
+          const startWidth = targetElement.offsetWidth
+          const startHeight = targetElement.offsetHeight
+          const startLeft = parseFloat(targetElement.style.left || '0')
+          const startTop = parseFloat(targetElement.style.top || '0')
+
+          const onMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX
+            const deltaY = moveEvent.clientY - startY
+
+            let newWidth = startWidth
+            let newHeight = startHeight
+            let newLeft = startLeft
+            let newTop = startTop
+
+            // Calculate new dimensions based on handle position
+            if (pos.name.includes('e')) {
+              newWidth = Math.max(50, startWidth + deltaX)
+            }
+            if (pos.name.includes('w')) {
+              newWidth = Math.max(50, startWidth - deltaX)
+              newLeft = startLeft + deltaX
+            }
+            if (pos.name.includes('s')) {
+              newHeight = Math.max(50, startHeight + deltaY)
+            }
+            if (pos.name.includes('n')) {
+              newHeight = Math.max(50, startHeight - deltaY)
+              newTop = startTop + deltaY
+            }
+
+            // Update element dimensions
+            targetElement.style.width = `${newWidth}px`
+            targetElement.style.height = `${newHeight}px`
+            targetElement.style.left = `${newLeft}px`
+            targetElement.style.top = `${newTop}px`
+
+            // Update data attributes
+            if (targetElement.dataset.x)
+              targetElement.dataset.x = newLeft.toString()
+            if (targetElement.dataset.y)
+              targetElement.dataset.y = newTop.toString()
+
+            // If it's an image container, update the image inside
+            if (
+              isImage ||
+              targetElement.dataset.elementType === 'image-container'
+            ) {
+              const img = targetElement.querySelector('img')
+              if (img) {
+                img.style.maxWidth = `${newWidth - 16}px`
+                img.style.maxHeight = `${newHeight - 16}px`
+                img.style.width = '100%'
+                img.style.height = '100%'
+                img.style.objectFit = 'contain'
+              }
+            }
+          }
+
+          const onMouseUp = () => {
+            doc.removeEventListener('mousemove', onMouseMove)
+            doc.removeEventListener('mouseup', onMouseUp)
+            targetElement.style.cursor = 'grab'
+          }
+
+          targetElement.style.cursor = pos.cursor
+          doc.addEventListener('mousemove', onMouseMove)
+          doc.addEventListener('mouseup', onMouseUp)
+        })
+
+        targetElement.appendChild(handle)
+      })
+
+      // Make sure element has position relative to position handles
+      if (
+        !targetElement.style.position ||
+        targetElement.style.position === 'static'
+      ) {
+        targetElement.style.position = 'absolute'
+      }
+    },
+    []
+  )
+
+  // Show/hide resize handles on element selection
+  const showResizeHandles = useCallback((element: HTMLElement) => {
+    const handles = element.querySelectorAll('.resize-handle')
+    handles.forEach(handle => {
+      ;(handle as HTMLElement).style.display = 'block'
+    })
+  }, [])
+
+  const hideResizeHandles = useCallback((element: HTMLElement) => {
+    const handles = element.querySelectorAll('.resize-handle')
+    handles.forEach(handle => {
+      ;(handle as HTMLElement).style.display = 'none'
+    })
+  }, [])
 
   // Element UI Configuration for smart sidebar
   const ELEMENT_UI_CONFIG = {
@@ -755,6 +925,7 @@ export default function IframeEditor({
             <div className="flex items-center gap-2">
               <input
                 type="range"
+                aria-label="Font size slider"
                 min="8"
                 max="72"
                 value={
@@ -767,6 +938,7 @@ export default function IframeEditor({
               />
               <input
                 type="number"
+                aria-label="Font size number"
                 min="8"
                 max="72"
                 value={
@@ -790,12 +962,14 @@ export default function IframeEditor({
             <div className="flex items-center gap-2">
               <input
                 type="color"
+                aria-label="Text color"
                 value={currentStyles.color || '#000000'}
                 className="h-8 w-10 cursor-pointer rounded border border-gray-300"
                 onChange={e => updateSelectedStyles({ color: e.target.value })}
               />
               <input
                 type="text"
+                aria-label="Text color hex value"
                 value={currentStyles.color || '#000000'}
                 className="h-8 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-xs"
                 onChange={e => updateSelectedStyles({ color: e.target.value })}
@@ -813,6 +987,7 @@ export default function IframeEditor({
             <div className="flex items-center gap-2">
               <input
                 type="color"
+                aria-label="Background color"
                 value={currentStyles.backgroundColor || '#ffffff'}
                 className="h-8 w-10 cursor-pointer rounded border border-gray-300"
                 onChange={e =>
@@ -821,6 +996,7 @@ export default function IframeEditor({
               />
               <input
                 type="text"
+                aria-label="Background color hex value"
                 value={currentStyles.backgroundColor || '#ffffff'}
                 className="h-8 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-xs"
                 onChange={e =>
@@ -838,6 +1014,7 @@ export default function IframeEditor({
               Font Weight
             </label>
             <select
+              aria-label="Font weight"
               value={currentStyles.fontWeight || '400'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -884,6 +1061,7 @@ export default function IframeEditor({
             </label>
             <input
               type="number"
+              aria-label="Padding"
               min="0"
               max="100"
               value={
@@ -905,6 +1083,7 @@ export default function IframeEditor({
             </label>
             <input
               type="number"
+              aria-label="Margin"
               min="0"
               max="100"
               value={currentStyles.margin ? parseInt(currentStyles.margin) : 0}
@@ -924,6 +1103,7 @@ export default function IframeEditor({
             </label>
             <input
               type="number"
+              aria-label="Line height"
               min="1"
               max="3"
               step="0.1"
@@ -948,6 +1128,7 @@ export default function IframeEditor({
             </label>
             <input
               type="number"
+              aria-label="Letter spacing"
               min="-2"
               max="10"
               step="0.1"
@@ -973,6 +1154,7 @@ export default function IframeEditor({
             <div className="flex gap-2">
               <input
                 type="file"
+                aria-label="Upload image"
                 accept="image/*"
                 className="hidden"
                 id="image-upload"
@@ -1011,6 +1193,7 @@ export default function IframeEditor({
             </label>
             <input
               type="url"
+              aria-label="Image URL"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               placeholder="https://example.com/image.jpg"
               onChange={e => {
@@ -1033,6 +1216,7 @@ export default function IframeEditor({
             </label>
             <input
               type="text"
+              aria-label="Alt text"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               placeholder="Describe the image..."
               onChange={e => {
@@ -1054,6 +1238,7 @@ export default function IframeEditor({
               Image Fit
             </label>
             <select
+              aria-label="Image fit"
               value={currentStyles.objectFit || 'cover'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -1077,6 +1262,7 @@ export default function IframeEditor({
             </label>
             <input
               type="range"
+              aria-label="Corner radius"
               min="0"
               max="50"
               value={
@@ -1102,6 +1288,7 @@ export default function IframeEditor({
               Shadow
             </label>
             <select
+              aria-label="Shadow"
               value={
                 currentStyles.boxShadow && currentStyles.boxShadow !== 'none'
                   ? 'custom'
@@ -1143,6 +1330,7 @@ export default function IframeEditor({
             <div className="grid grid-cols-3 gap-2">
               <input
                 type="number"
+                aria-label="Border width"
                 min="0"
                 max="10"
                 placeholder="Width"
@@ -1157,6 +1345,7 @@ export default function IframeEditor({
                 }
               />
               <select
+                aria-label="Border style"
                 value={currentStyles.borderStyle || 'solid'}
                 className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs"
                 onChange={e =>
@@ -1169,6 +1358,7 @@ export default function IframeEditor({
               </select>
               <input
                 type="color"
+                aria-label="Border color"
                 value={currentStyles.borderColor || '#000000'}
                 className="h-8 cursor-pointer rounded border border-gray-300"
                 onChange={e =>
@@ -1187,6 +1377,7 @@ export default function IframeEditor({
             </label>
             <input
               type="range"
+              aria-label="Width"
               min="50"
               max="800"
               value={currentStyles.width ? parseInt(currentStyles.width) : 200}
@@ -1209,6 +1400,7 @@ export default function IframeEditor({
             </label>
             <input
               type="range"
+              aria-label="Height"
               min="50"
               max="600"
               value={
@@ -1233,6 +1425,7 @@ export default function IframeEditor({
             </label>
             <input
               type="text"
+              aria-label="Section label"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               placeholder="Section name..."
               onChange={e => {
@@ -1255,6 +1448,7 @@ export default function IframeEditor({
             </label>
             <input
               type="text"
+              aria-label="Element id"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               placeholder="unique-id"
               onChange={e => {
@@ -1277,6 +1471,7 @@ export default function IframeEditor({
             </label>
             <input
               type="url"
+              aria-label="Background image URL"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               placeholder="https://example.com/bg.jpg"
               onChange={e => {
@@ -1326,6 +1521,7 @@ export default function IframeEditor({
               Horizontal Alignment
             </label>
             <select
+              aria-label="Horizontal alignment"
               value={currentStyles.justifyContent || 'flex-start'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -1348,6 +1544,7 @@ export default function IframeEditor({
               Vertical Alignment
             </label>
             <select
+              aria-label="Vertical alignment"
               value={currentStyles.alignItems || 'flex-start'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -1370,6 +1567,7 @@ export default function IframeEditor({
             </label>
             <input
               type="range"
+              aria-label="Gap"
               min="0"
               max="50"
               value={currentStyles.gap ? parseInt(currentStyles.gap) : 0}
@@ -1392,6 +1590,7 @@ export default function IframeEditor({
             </label>
             <input
               type="range"
+              aria-label="Opacity"
               min="0"
               max="1"
               step="0.1"
@@ -1420,6 +1619,7 @@ export default function IframeEditor({
                 </label>
                 <input
                   type="range"
+                  aria-label="Rotate"
                   min="-180"
                   max="180"
                   value={0}
@@ -1437,6 +1637,7 @@ export default function IframeEditor({
                 </label>
                 <input
                   type="range"
+                  aria-label="Scale"
                   min="0.5"
                   max="2"
                   step="0.1"
@@ -1460,6 +1661,7 @@ export default function IframeEditor({
               Image Filter
             </label>
             <select
+              aria-label="Image filter"
               value="none"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e => {
@@ -1492,6 +1694,7 @@ export default function IframeEditor({
                 </label>
                 <input
                   type="color"
+                  aria-label="Hover background color"
                   className="h-6 w-full cursor-pointer rounded border border-gray-300"
                   onChange={e =>
                     updateHoverStyles({ backgroundColor: e.target.value })
@@ -1504,6 +1707,7 @@ export default function IframeEditor({
                 </label>
                 <input
                   type="color"
+                  aria-label="Hover text color"
                   className="h-6 w-full cursor-pointer rounded border border-gray-300"
                   onChange={e => updateHoverStyles({ color: e.target.value })}
                 />
@@ -1519,6 +1723,7 @@ export default function IframeEditor({
               Transition Duration
             </label>
             <select
+              aria-label="Transition duration"
               value={currentStyles.transitionDuration || '300ms'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -1544,6 +1749,7 @@ export default function IframeEditor({
               Backdrop Filter
             </label>
             <select
+              aria-label="Backdrop filter"
               value="none"
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e => {
@@ -1568,6 +1774,7 @@ export default function IframeEditor({
               Content Overflow
             </label>
             <select
+              aria-label="Content overflow"
               value={currentStyles.overflow || 'visible'}
               className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
               onChange={e =>
@@ -3133,10 +3340,13 @@ export default function IframeEditor({
         el.style.display = 'inline-flex'
         el.style.alignItems = 'center'
         el.style.justifyContent = 'center'
-        el.style.width = '24px'
-        el.style.height = '24px'
+        el.style.width = '48px'
+        el.style.height = '48px'
+        el.style.fontSize = '24px'
         el.style.border = '1px solid #d1d5db'
         el.style.borderRadius = '12px'
+        el.style.cursor = 'grab'
+        el.style.userSelect = 'none'
         break
       }
       case 'divider': {
@@ -3272,48 +3482,255 @@ export default function IframeEditor({
       (selectedPath ? resolvePathToElement(doc, selectedPath) : doc.body)
     const container = (target as HTMLElement) || doc.body
     const el = createPaletteElement(doc, type)
-    container.appendChild(el)
+
+    // For icon and image elements, center them in the viewport and make them absolutely positioned
+    if (type === 'icon' || type === 'image') {
+      // Get viewport dimensions
+      const viewportWidth = doc.defaultView?.innerWidth || 800
+      const viewportHeight = doc.defaultView?.innerHeight || 600
+
+      // Calculate element size for centering
+      const elementWidth = type === 'icon' ? 48 : 200 // icon is 48px, image is max 200px
+      const elementHeight = type === 'icon' ? 48 : 200
+
+      // Calculate center position
+      const centerX = viewportWidth / 2 - elementWidth / 2
+      const centerY = viewportHeight / 2 - elementHeight / 2
+
+      // For images, wrap in a container
+      if (type === 'image') {
+        const imgContainer = doc.createElement('div')
+        imgContainer.setAttribute('data-element-type', 'image-container')
+        imgContainer.setAttribute('data-id', `img-${Date.now()}`)
+        imgContainer.setAttribute('data-x', centerX.toString())
+        imgContainer.setAttribute('data-y', centerY.toString())
+        imgContainer.style.cssText = `
+          position: absolute;
+          left: ${centerX}px;
+          top: ${centerY}px;
+          width: ${elementWidth}px;
+          height: ${elementHeight}px;
+          display: inline-block;
+          padding: 8px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          cursor: grab;
+          user-select: none;
+        `
+        imgContainer.className = 'image-element'
+
+        // Style the image inside
+        el.style.maxWidth = '200px'
+        el.style.maxHeight = '200px'
+        el.style.display = 'block'
+        el.style.borderRadius = '8px'
+
+        imgContainer.appendChild(el)
+
+        // Add mousedown event listener for dragging
+        imgContainer.addEventListener('mousedown', (e: MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+
+          // Ensure element has required data attributes
+          if (!imgContainer.dataset.id) {
+            imgContainer.dataset.id = `img-${Date.now()}`
+          }
+          if (!imgContainer.dataset.x) {
+            imgContainer.dataset.x = centerX.toString()
+          }
+          if (!imgContainer.dataset.y) {
+            imgContainer.dataset.y = centerY.toString()
+          }
+
+          // Start dragging using the hook
+          startDrag(imgContainer, e.clientX, e.clientY)
+        })
+
+        // Add resize handles
+        addResizeHandles(imgContainer, doc)
+
+        doc.body.appendChild(imgContainer)
+      } else {
+        // For icons, apply positioning directly
+        el.style.position = 'absolute'
+        el.style.left = `${centerX}px`
+        el.style.top = `${centerY}px`
+        el.style.margin = '0'
+
+        // Add data attributes for tracking
+        el.dataset.id = `icon-${Date.now()}`
+        el.dataset.x = centerX.toString()
+        el.dataset.y = centerY.toString()
+        el.dataset.elementType = 'icon'
+
+        // Make the element draggable
+        el.style.cursor = 'grab'
+
+        // Add mousedown event listener for dragging
+        el.addEventListener('mousedown', (e: MouseEvent) => {
+          e.preventDefault()
+          e.stopPropagation()
+
+          // Ensure element has required data attributes
+          if (!el.dataset.id) {
+            el.dataset.id = `icon-${Date.now()}`
+          }
+          if (!el.dataset.x) {
+            el.dataset.x = '0'
+          }
+          if (!el.dataset.y) {
+            el.dataset.y = '0'
+          }
+
+          // Start dragging using the hook
+          startDrag(el, e.clientX, e.clientY)
+        })
+
+        // Add resize handles
+        addResizeHandles(el, doc)
+
+        // Add to body for absolute positioning context
+        doc.body.appendChild(el)
+      }
+    } else {
+      container.appendChild(el)
+    }
   }
 
   // Add icon to canvas
   const addIconToCanvas = (iconSvg: string, iconName: string) => {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    const target = selectedPath
-      ? resolvePathToElement(doc, selectedPath)
-      : doc.body
-    const container = (target as HTMLElement) || doc.body
+
+    // Get viewport dimensions
+    const viewportWidth = doc.defaultView?.innerWidth || 800
+    const viewportHeight = doc.defaultView?.innerHeight || 600
+
+    // Calculate center position
+    const centerX = viewportWidth / 2 - 24 // 24 is half of icon width (48px)
+    const centerY = viewportHeight / 2 - 24 // 24 is half of icon height (48px)
 
     const iconDiv = doc.createElement('div')
     iconDiv.innerHTML = iconSvg
     iconDiv.setAttribute('data-element-type', 'icon')
     iconDiv.setAttribute('data-icon-name', iconName)
-    iconDiv.style.cssText =
-      'display: inline-block; width: 32px; height: 32px; margin: 8px; cursor: pointer;'
+    iconDiv.setAttribute('data-id', `icon-${Date.now()}`)
+    iconDiv.dataset.x = centerX.toString()
+    iconDiv.dataset.y = centerY.toString()
+    iconDiv.style.cssText = `
+      position: absolute;
+      left: ${centerX}px;
+      top: ${centerY}px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      padding: 8px;
+      cursor: grab;
+      user-select: none;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: white;
+    `
     iconDiv.className = 'icon-element'
 
-    container.appendChild(iconDiv)
+    // Add mousedown event listener for dragging
+    iconDiv.addEventListener('mousedown', (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+
+      // Ensure element has required data attributes
+      if (!iconDiv.dataset.id) {
+        iconDiv.dataset.id = `icon-${Date.now()}`
+      }
+      if (!iconDiv.dataset.x) {
+        iconDiv.dataset.x = '0'
+      }
+      if (!iconDiv.dataset.y) {
+        iconDiv.dataset.y = '0'
+      }
+
+      // Start dragging using the hook
+      startDrag(iconDiv, e.clientX, e.clientY)
+    })
+
+    // Add resize handles
+    addResizeHandles(iconDiv, doc)
+
+    doc.body.appendChild(iconDiv)
   }
 
   // Add image to canvas
   const addImageToCanvas = (imageSrc: string, imageName: string) => {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    const target = selectedPath
-      ? resolvePathToElement(doc, selectedPath)
-      : doc.body
-    const container = (target as HTMLElement) || doc.body
 
+    // Calculate center position
+    const viewportWidth = doc.documentElement.clientWidth
+    const viewportHeight = doc.documentElement.clientHeight
+    const imageSize = 200 // max-width of image
+    const centerX = Math.max(0, (viewportWidth - imageSize) / 2)
+    const centerY = Math.max(0, (viewportHeight - imageSize) / 2)
+
+    // Create container div for the image
+    const container = doc.createElement('div')
+    container.setAttribute('data-element-type', 'image-container')
+    container.setAttribute('data-id', `img-${Date.now()}`)
+    container.setAttribute('data-x', centerX.toString())
+    container.setAttribute('data-y', centerY.toString())
+    container.style.cssText = `
+      position: absolute;
+      left: ${centerX}px;
+      top: ${centerY}px;
+      display: inline-block;
+      padding: 8px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: grab;
+      transition: box-shadow 0.2s ease;
+      z-index: auto;
+    `
+    container.className = 'image-container draggable-element'
+
+    // Create the image element
     const img = doc.createElement('img')
     img.src = imageSrc
     img.alt = imageName
-    img.setAttribute('data-element-type', 'image')
     img.setAttribute('data-image-name', imageName)
-    img.style.cssText =
-      'max-width: 200px; height: auto; margin: 8px; border-radius: 8px; cursor: pointer;'
+    img.style.cssText = `
+      max-width: 200px;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+      pointer-events: none;
+    `
     img.className = 'image-element'
 
     container.appendChild(img)
+    doc.body.appendChild(container)
+
+    // Add hover effect
+    container.addEventListener('mouseenter', () => {
+      container.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)'
+    })
+    container.addEventListener('mouseleave', () => {
+      container.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+    })
+
+    // Enable drag functionality
+    container.addEventListener('mousedown', (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const containerElement = e.currentTarget as HTMLElement
+      startDrag(containerElement, e.clientX, e.clientY)
+    })
+
+    // Add resize handles
+    addResizeHandles(container, doc)
   }
 
   // Handle asset upload
@@ -4328,6 +4745,7 @@ function LayersPanel({
                   e.stopPropagation()
                   toggleCollapse(node.path)
                 }}
+                aria-label={isCollapsed ? 'Expand' : 'Collapse'}
                 className={`rounded p-0.5 transition-transform hover:bg-gray-200 ${isCollapsed ? '' : 'rotate-0'}`}
               >
                 <ChevronRight
@@ -4376,10 +4794,12 @@ function LayersPanel({
         {/* Render children */}
         {!isCollapsed && hasChildren && (
           <ul className="relative mt-0.5">
-            <div
-              className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-gray-200 to-transparent"
-              style={{ marginLeft: `${depth * 12 + 16}px` }}
-            />
+            <li aria-hidden="true">
+              <div
+                className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-gray-200 to-transparent"
+                style={{ marginLeft: `${depth * 12 + 16}px` }}
+              />
+            </li>
             {node.children.map(child => renderNode(child, depth + 1))}
           </ul>
         )}
@@ -5615,6 +6035,7 @@ function AssetsPanel({
           <input
             ref={fileInputRef}
             type="file"
+            aria-label="Upload files"
             accept="image/*"
             multiple
             className="hidden"

@@ -194,10 +194,11 @@ export const HeadingBlockSettings: React.FC = () => {
     <div className="space-y-4">
       {/* Text Content */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label htmlFor="heading-text" className="mb-2 block text-sm font-medium text-gray-700">
           Heading Text
         </label>
         <input
+          id="heading-text"
           type="text"
           value={props.text}
           onChange={e =>
@@ -211,10 +212,11 @@ export const HeadingBlockSettings: React.FC = () => {
 
       {/* Heading Level */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label htmlFor="heading-level" className="mb-2 block text-sm font-medium text-gray-700">
           Heading Level
         </label>
         <select
+          id="heading-level"
           value={props.level}
           onChange={e =>
             setProp((props: HeadingBlockProps) => {
@@ -241,10 +243,11 @@ export const HeadingBlockSettings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="heading-font-size" className="mb-1 block text-xs text-gray-600">
               Font Size
             </label>
             <input
+              id="heading-font-size"
               type="number"
               value={props.fontSize}
               onChange={e =>
@@ -257,10 +260,11 @@ export const HeadingBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="heading-font-weight" className="mb-1 block text-xs text-gray-600">
               Font Weight
             </label>
             <select
+              id="heading-font-weight"
               value={props.fontWeight}
               onChange={e =>
                 setProp((props: HeadingBlockProps) => {
@@ -285,8 +289,9 @@ export const HeadingBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Color</label>
+          <label htmlFor="heading-color" className="mb-1 block text-xs text-gray-600">Color</label>
           <input
+            id="heading-color"
             type="color"
             value={props.color}
             onChange={e =>
@@ -299,8 +304,9 @@ export const HeadingBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Text Align</label>
+          <label htmlFor="heading-text-align" className="mb-1 block text-xs text-gray-600">Text Align</label>
           <select
+            id="heading-text-align"
             value={props.textAlign}
             onChange={e =>
               setProp((props: HeadingBlockProps) => {
@@ -326,6 +332,7 @@ export const HeadingBlockSettings: React.FC = () => {
             <label className="mb-1 block text-xs text-gray-600">Margin</label>
             <div className="grid grid-cols-2 gap-1">
               <input
+                aria-label="Margin top"
                 type="number"
                 placeholder="Top"
                 value={props.margin.top}
@@ -337,6 +344,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin right"
                 type="number"
                 placeholder="Right"
                 value={props.margin.right}
@@ -348,6 +356,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin bottom"
                 type="number"
                 placeholder="Bottom"
                 value={props.margin.bottom}
@@ -359,6 +368,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin left"
                 type="number"
                 placeholder="Left"
                 value={props.margin.left}
@@ -376,6 +386,7 @@ export const HeadingBlockSettings: React.FC = () => {
             <label className="mb-1 block text-xs text-gray-600">Padding</label>
             <div className="grid grid-cols-2 gap-1">
               <input
+                aria-label="Padding top"
                 type="number"
                 placeholder="Top"
                 value={props.padding.top}
@@ -387,6 +398,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding right"
                 type="number"
                 placeholder="Right"
                 value={props.padding.right}
@@ -398,6 +410,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding bottom"
                 type="number"
                 placeholder="Bottom"
                 value={props.padding.bottom}
@@ -409,6 +422,7 @@ export const HeadingBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding left"
                 type="number"
                 placeholder="Left"
                 value={props.padding.left}

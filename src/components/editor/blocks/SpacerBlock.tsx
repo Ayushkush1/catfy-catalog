@@ -1,9 +1,6 @@
 'use client'
 
-import React from 'react'
-import { useNode, UserComponent } from '@craftjs/core'
 import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
 import {
   Select,
   SelectContent,
@@ -11,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
+import { useNode, UserComponent } from '@craftjs/core'
+import React from 'react'
 
 export interface SpacerBlockProps {
   height?: number
@@ -85,6 +85,7 @@ export const SpacerBlockSettings: React.FC = () => {
           {props.unit}
         </Label>
         <Slider
+          id="spacer-height"
           value={[props.height || 40]}
           onValueChange={([value]) =>
             setProp((props: SpacerBlockProps) => (props.height = value))
@@ -102,6 +103,7 @@ export const SpacerBlockSettings: React.FC = () => {
           {props.unit}
         </Label>
         <Slider
+          id="spacer-width"
           value={[props.width || 100]}
           onValueChange={([value]) =>
             setProp((props: SpacerBlockProps) => (props.width = value))
@@ -142,6 +144,8 @@ export const SpacerBlockSettings: React.FC = () => {
         <input
           type="checkbox"
           id="show-background"
+          title="Show Background"
+          aria-label="Show Background"
           checked={props.showBackground}
           onChange={e =>
             setProp(
@@ -158,7 +162,10 @@ export const SpacerBlockSettings: React.FC = () => {
         <div>
           <Label htmlFor="spacer-background">Background Color</Label>
           <input
+            id="spacer-background"
             type="color"
+            title="Background Color"
+            aria-label="Background Color"
             value={props.backgroundColor}
             onChange={e =>
               setProp(

@@ -1,7 +1,7 @@
 'use client'
 
+import { useNode } from '@craftjs/core'
 import React from 'react'
-import { useNode, Element } from '@craftjs/core'
 
 export interface ContainerBlockProps {
   flexDirection: 'row' | 'column' | 'row-reverse' | 'column-reverse'
@@ -259,13 +259,15 @@ export const ContainerBlockSettings: React.FC = () => {
       {/* Layout */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-gray-900">Layout</h4>
-
+ 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label className="mb-1 block text-xs text-gray-600" htmlFor="flex-direction">
               Direction
             </label>
             <select
+              id="flex-direction"
+              aria-label="Flex Direction"
               value={props.flexDirection}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {
@@ -282,8 +284,10 @@ export const ContainerBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">Wrap</label>
+            <label className="mb-1 block text-xs text-gray-600" htmlFor="flex-wrap">Wrap</label>
             <select
+              id="flex-wrap"
+              aria-label="Flex Wrap"
               value={props.flexWrap}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {
@@ -300,10 +304,12 @@ export const ContainerBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">
+          <label className="mb-1 block text-xs text-gray-600" htmlFor="justify-content">
             Justify Content
           </label>
           <select
+            id="justify-content"
+            aria-label="Justify Content"
             value={props.justifyContent}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -322,10 +328,12 @@ export const ContainerBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">
+          <label className="mb-1 block text-xs text-gray-600" htmlFor="align-items">
             Align Items
           </label>
           <select
+            id="align-items"
+            aria-label="Align Items"
             value={props.alignItems}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -346,6 +354,7 @@ export const ContainerBlockSettings: React.FC = () => {
           <label className="mb-1 block text-xs text-gray-600">Gap</label>
           <input
             type="number"
+            aria-label="Gap"
             value={props.gap}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -397,6 +406,7 @@ export const ContainerBlockSettings: React.FC = () => {
           <label className="mb-1 block text-xs text-gray-600">Min Height</label>
           <input
             type="number"
+            aria-label="Min Height"
             value={props.minHeight}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -520,11 +530,10 @@ export const ContainerBlockSettings: React.FC = () => {
         <h4 className="text-sm font-medium text-gray-900">Background</h4>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">
-            Background Color
-          </label>
+          <label className="mb-1 block text-xs text-gray-600">Background Color</label>
           <input
             type="color"
+            aria-label="Background Color"
             value={
               props.backgroundColor === 'transparent'
                 ? '#ffffff'
@@ -559,10 +568,15 @@ export const ContainerBlockSettings: React.FC = () => {
         {props.backgroundImage && (
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs text-gray-600">
+              <label
+                className="mb-1 block text-xs text-gray-600"
+                htmlFor="background-size"
+              >
                 Background Size
               </label>
               <select
+                id="background-size"
+                aria-label="Background Size"
                 value={props.backgroundSize}
                 onChange={e =>
                   setProp((props: ContainerBlockProps) => {
@@ -578,10 +592,15 @@ export const ContainerBlockSettings: React.FC = () => {
             </div>
 
             <div>
-              <label className="mb-1 block text-xs text-gray-600">
+              <label
+                className="mb-1 block text-xs text-gray-600"
+                htmlFor="background-repeat"
+              >
                 Background Repeat
               </label>
               <select
+                id="background-repeat"
+                aria-label="Background Repeat"
                 value={props.backgroundRepeat}
                 onChange={e =>
                   setProp((props: ContainerBlockProps) => {
@@ -611,6 +630,7 @@ export const ContainerBlockSettings: React.FC = () => {
             </label>
             <input
               type="number"
+              aria-label="Border Width"
               value={props.border.width}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {
@@ -622,10 +642,15 @@ export const ContainerBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label
+              className="mb-1 block text-xs text-gray-600"
+              htmlFor="border-style"
+            >
               Border Style
             </label>
             <select
+              id="border-style"
+              aria-label="Border Style"
               value={props.border.style}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {
@@ -642,11 +667,14 @@ export const ContainerBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label
+              className="mb-1 block text-xs text-gray-600"
+            >
               Border Color
             </label>
             <input
               type="color"
+              aria-label="Border Color"
               value={props.border.color}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {
@@ -664,6 +692,7 @@ export const ContainerBlockSettings: React.FC = () => {
           </label>
           <input
             type="number"
+            aria-label="Border Radius"
             value={props.borderRadius}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -677,6 +706,7 @@ export const ContainerBlockSettings: React.FC = () => {
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
+            aria-label="Enable shadow"
             checked={props.shadow.enabled}
             onChange={e =>
               setProp((props: ContainerBlockProps) => {
@@ -725,6 +755,7 @@ export const ContainerBlockSettings: React.FC = () => {
             />
             <input
               type="color"
+              aria-label="Shadow Color"
               value={props.shadow.color}
               onChange={e =>
                 setProp((props: ContainerBlockProps) => {

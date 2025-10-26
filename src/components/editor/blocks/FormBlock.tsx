@@ -1,5 +1,3 @@
-import React, { useState } from 'react'
-import { useNode } from '@craftjs/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,9 +9,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import { Plus, X, ChevronUp, ChevronDown } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { useNode } from '@craftjs/core'
+import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
+import React, { useState } from 'react'
 
 export interface FormField {
   id: string
@@ -207,6 +207,8 @@ export const FormBlock: React.FC<FormBlockProps> = ({
         return (
           <select
             style={selectStyles}
+            aria-label={field.label || field.placeholder || 'Select an option'}
+            title={field.label || field.placeholder || 'Select an option'}
             value={fieldValue as string}
             onChange={e => handleInputChange(field.id, e.target.value)}
             required={field.required}
@@ -594,7 +596,7 @@ export const FormBlockSettings: React.FC = () => {
             setProp((props: FormBlockProps) => (props.method = value as any))
           }
         >
-          <SelectTrigger>
+          <SelectTrigger id="form-method" aria-label="Select form method">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

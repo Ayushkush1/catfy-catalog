@@ -1,7 +1,7 @@
 'use client'
 
-import React from 'react'
 import { useNode } from '@craftjs/core'
+import React from 'react'
 import ContentEditable from 'react-contenteditable'
 import { BlockWrapper } from '../components/BlockWrapper'
 
@@ -187,10 +187,11 @@ export const TextBlockSettings: React.FC = () => {
     <div className="space-y-4">
       {/* Text Content */}
       <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
+        <label htmlFor="text-content" className="mb-2 block text-sm font-medium text-gray-700">
           Text Content
         </label>
         <textarea
+          id="text-content"
           value={props.text}
           onChange={e =>
             setProp((props: TextBlockProps) => {
@@ -208,10 +209,11 @@ export const TextBlockSettings: React.FC = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="text-font-size" className="mb-1 block text-xs text-gray-600">
               Font Size
             </label>
             <input
+              id="text-font-size"
               type="number"
               value={props.fontSize}
               onChange={e =>
@@ -224,10 +226,11 @@ export const TextBlockSettings: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-600">
+            <label htmlFor="text-font-weight" className="mb-1 block text-xs text-gray-600">
               Font Weight
             </label>
             <select
+              id="text-font-weight"
               value={props.fontWeight}
               onChange={e =>
                 setProp((props: TextBlockProps) => {
@@ -252,8 +255,9 @@ export const TextBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Color</label>
+          <label htmlFor="text-color" className="mb-1 block text-xs text-gray-600">Color</label>
           <input
+            id="text-color"
             type="color"
             value={props.color}
             onChange={e =>
@@ -266,8 +270,9 @@ export const TextBlockSettings: React.FC = () => {
         </div>
 
         <div>
-          <label className="mb-1 block text-xs text-gray-600">Text Align</label>
+          <label htmlFor="text-align" className="mb-1 block text-xs text-gray-600">Text Align</label>
           <select
+            id="text-align"
             value={props.textAlign}
             onChange={e =>
               setProp((props: TextBlockProps) => {
@@ -293,6 +298,7 @@ export const TextBlockSettings: React.FC = () => {
             <label className="mb-1 block text-xs text-gray-600">Margin</label>
             <div className="grid grid-cols-2 gap-1">
               <input
+                aria-label="Margin top"
                 type="number"
                 placeholder="Top"
                 value={props.margin.top}
@@ -304,6 +310,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin right"
                 type="number"
                 placeholder="Right"
                 value={props.margin.right}
@@ -315,6 +322,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin bottom"
                 type="number"
                 placeholder="Bottom"
                 value={props.margin.bottom}
@@ -326,6 +334,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Margin left"
                 type="number"
                 placeholder="Left"
                 value={props.margin.left}
@@ -343,6 +352,7 @@ export const TextBlockSettings: React.FC = () => {
             <label className="mb-1 block text-xs text-gray-600">Padding</label>
             <div className="grid grid-cols-2 gap-1">
               <input
+                aria-label="Padding top"
                 type="number"
                 placeholder="Top"
                 value={props.padding.top}
@@ -354,6 +364,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding right"
                 type="number"
                 placeholder="Right"
                 value={props.padding.right}
@@ -365,6 +376,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding bottom"
                 type="number"
                 placeholder="Bottom"
                 value={props.padding.bottom}
@@ -376,6 +388,7 @@ export const TextBlockSettings: React.FC = () => {
                 className="rounded border border-gray-300 px-1 py-1 text-xs"
               />
               <input
+                aria-label="Padding left"
                 type="number"
                 placeholder="Left"
                 value={props.padding.left}

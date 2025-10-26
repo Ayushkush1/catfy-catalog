@@ -1,23 +1,15 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useEditor, useNode } from '@craftjs/core'
+import { useEditor } from '@craftjs/core'
 import {
-  Settings,
-  Palette,
-  Type,
-  Layout,
-  Image as ImageIcon,
-  Link,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Trash2,
-  Move,
   ChevronLeft,
   ChevronRight,
+  Palette,
+  Settings,
+  Trash2,
+  Type
 } from 'lucide-react'
+import React, { useState } from 'react'
 import { NumberInput } from './NumberInput'
 
 // Import property panels - simplified for now
@@ -294,10 +286,14 @@ const ContentPanel: React.FC<{
         return (
           <div className="space-y-3 rounded bg-gray-100 p-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="heading-text"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Heading Text
               </label>
               <input
+                id="heading-text"
                 type="text"
                 value={props.text || 'Heading Text'}
                 onChange={e =>
@@ -310,10 +306,14 @@ const ContentPanel: React.FC<{
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="heading-level"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Heading Level
               </label>
               <select
+                id="heading-level"
                 value={props.level || 1}
                 onChange={e =>
                   setProp((props: any) => {
@@ -338,10 +338,14 @@ const ContentPanel: React.FC<{
         return (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="image-url"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Image URL
               </label>
               <input
+                id="image-url"
                 type="url"
                 value={props.src || ''}
                 onChange={e =>
@@ -354,10 +358,14 @@ const ContentPanel: React.FC<{
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="image-alt"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Alt Text
               </label>
               <input
+                id="image-alt"
                 type="text"
                 value={props.alt || ''}
                 onChange={e =>
@@ -411,10 +419,14 @@ const ContentPanel: React.FC<{
         return (
           <div className="space-y-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="button-text"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Button Text
               </label>
               <input
+                id="button-text"
                 type="text"
                 value={props.text || 'Click me'}
                 onChange={e =>
@@ -427,10 +439,14 @@ const ContentPanel: React.FC<{
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="button-href"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Link URL
               </label>
               <input
+                id="button-href"
                 type="url"
                 value={props.href || ''}
                 onChange={e =>
@@ -443,10 +459,14 @@ const ContentPanel: React.FC<{
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-gray-700">
+              <label
+                htmlFor="button-variant"
+                className="mb-1 block text-xs font-medium text-gray-700"
+              >
                 Button Type
               </label>
               <select
+                id="button-variant"
                 value={props.variant || 'primary'}
                 onChange={e =>
                   setProp((props: any) => {
@@ -511,10 +531,14 @@ const StylePanel: React.FC<{
 
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-[10px] text-gray-600">
+              <label
+                htmlFor="style-font-size"
+                className="mb-1 block text-[10px] text-gray-600"
+              >
                 Font Size
               </label>
               <NumberInput
+                id="style-font-size"
                 value={props.fontSize || 16}
                 onChange={value =>
                   setProp((props: any) => {
@@ -529,10 +553,14 @@ const StylePanel: React.FC<{
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] text-gray-600">
+              <label
+                htmlFor="style-font-weight"
+                className="mb-1 block text-[10px] text-gray-600"
+              >
                 Font Weight
               </label>
               <select
+                id="style-font-weight"
                 value={props.fontWeight || 'normal'}
                 onChange={e =>
                   setProp((props: any) => {
@@ -557,10 +585,14 @@ const StylePanel: React.FC<{
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] text-gray-600">
+            <label
+              htmlFor="style-text-color"
+              className="mb-1 block text-[10px] text-gray-600"
+            >
               Text Color
             </label>
             <input
+              id="style-text-color"
               type="color"
               value={props.color || '#000000'}
               onChange={e =>
@@ -573,10 +605,14 @@ const StylePanel: React.FC<{
           </div>
 
           <div>
-            <label className="mb-1 block text-[10px] text-gray-600">
+            <label
+              htmlFor="style-text-align"
+              className="mb-1 block text-[10px] text-gray-600"
+            >
               Text Align
             </label>
             <select
+              id="style-text-align"
               value={props.textAlign || 'left'}
               onChange={e =>
                 setProp((props: any) => {
@@ -709,10 +745,14 @@ const StylePanel: React.FC<{
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] text-gray-600">
+          <label
+            htmlFor="style-display"
+            className="mb-1 block text-[10px] text-gray-600"
+          >
             Display
           </label>
           <select
+            id="style-display"
             value={props.display || 'block'}
             onChange={e =>
               setProp((props: any) => {
@@ -733,10 +773,14 @@ const StylePanel: React.FC<{
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] text-gray-600">
+          <label
+            htmlFor="style-position"
+            className="mb-1 block text-[10px] text-gray-600"
+          >
             Position
           </label>
           <select
+            id="style-position"
             value={props.position || 'static'}
             onChange={e =>
               setProp((props: any) => {
@@ -846,10 +890,14 @@ const StylePanel: React.FC<{
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] text-gray-600">
+          <label
+            htmlFor="style-overflow"
+            className="mb-1 block text-[10px] text-gray-600"
+          >
             Overflow
           </label>
           <select
+            id="style-overflow"
             value={props.overflow || 'visible'}
             onChange={e =>
               setProp((props: any) => {
@@ -949,10 +997,14 @@ const StylePanel: React.FC<{
         </div>
 
         <div>
-          <label className="mb-1 block text-[10px] text-gray-600">
+          <label
+            htmlFor="style-border-style"
+            className="mb-1 block text-[10px] text-gray-600"
+          >
             Border Style
           </label>
           <select
+            id="style-border-style"
             value={border.style}
             onChange={e =>
               setProp((props: any) => {

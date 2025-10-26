@@ -1,31 +1,29 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import {
-  Save,
-  Download,
-  Upload,
-  Undo,
-  Redo,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  Monitor,
-  Tablet,
-  Smartphone,
-  Share2,
-  FileText,
-  Settings,
-  ArrowLeft,
-  ChevronDown,
-} from 'lucide-react'
-import { ProfileDropdown } from './ProfileDropdown'
-import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { isClientAdmin } from '@/lib/client-auth'
+import {
+  ArrowLeft,
+  ChevronDown,
+  Download,
+  Eye,
+  EyeOff,
+  FileText,
+  Maximize,
+  Monitor,
+  Redo,
+  Save,
+  Share2,
+  Smartphone,
+  Tablet,
+  Undo,
+  Upload,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react'
+import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
+import { ProfileDropdown } from './ProfileDropdown'
 
 interface CanvaToolbarProps {
   onSave: () => void

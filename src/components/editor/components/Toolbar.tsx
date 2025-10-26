@@ -1,33 +1,33 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import {
-  Save,
-  Download,
-  Upload,
-  Undo,
-  Redo,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  Monitor,
-  Tablet,
-  Smartphone,
-  Layers,
-  FileText,
-  Image,
-  FileDown,
-  Code,
-  ArrowLeft,
-  Share2,
-  ChevronDown,
-} from 'lucide-react'
-import Link from 'next/link'
 import { useAuth } from '@/components/auth-provider'
 import { isClientAdmin } from '@/lib/client-auth'
+import {
+  ArrowLeft,
+  ChevronDown,
+  Code,
+  Download,
+  Eye,
+  EyeOff,
+  FileDown,
+  FileText,
+  Image as ImageIcon,
+  Layers,
+  Maximize,
+  Monitor,
+  Redo,
+  RotateCcw,
+  Save,
+  Share2,
+  Smartphone,
+  Tablet,
+  Undo,
+  Upload,
+  ZoomIn,
+  ZoomOut,
+} from 'lucide-react'
+import Link from 'next/link'
+import React, { useEffect, useState } from 'react'
 
 interface ToolbarProps {
   onSave: () => void
@@ -114,7 +114,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     {
       type: 'png' as const,
       label: 'Export as PNG',
-      icon: <Image className="h-4 w-4" />,
+      icon: (
+        <ImageIcon className="h-4 w-4" aria-hidden="true" focusable={false} />
+      ),
     },
     {
       type: 'json' as const,
@@ -127,6 +129,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       icon: <Code className="h-4 w-4" />,
     },
   ]
+
+  // aria-expanded value for export menu (use boolean; React will render "true"/"false")
+  const exportAriaExpanded = showExportMenu
 
   const deviceModes = [
     {

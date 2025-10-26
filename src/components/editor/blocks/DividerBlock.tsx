@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react'
-import { useNode, UserComponent } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -12,6 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
+import { useNode, UserComponent } from '@craftjs/core'
+import React from 'react'
 
 export interface DividerBlockProps {
   style?:
@@ -116,7 +116,7 @@ export const DividerBlockSettings: React.FC = () => {
             )
           }
         >
-          <SelectTrigger>
+          <SelectTrigger id="divider-style" aria-label="Select divider style">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -187,7 +187,7 @@ export const DividerBlockSettings: React.FC = () => {
             )
           }
         >
-          <SelectTrigger>
+          <SelectTrigger id="divider-alignment" aria-label="Select divider alignment">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

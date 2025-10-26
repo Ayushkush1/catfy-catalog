@@ -1,87 +1,87 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import { useEditor } from '@craftjs/core'
 import {
-  Type,
-  Image,
-  Upload,
-  Layers,
-  Settings,
-  FileText,
-  Palette,
-  Shapes,
-  Grid3X3,
-  Star,
-  Video,
-  MessageSquare,
-  ChevronRight,
-  Search,
-  X,
-  // Standard UI Icons - Arrows
-  ArrowUp,
+  // Standard UI Icons - Status
+  AlertCircle,
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  ChevronUp,
+  // Standard UI Icons - Arrows
+  ArrowUp,
+  Calendar,
+  Check,
+  CheckCircle,
   ChevronDown,
   ChevronLeft,
-  // Standard UI Icons - Actions
-  Plus,
-  Minus,
-  Check,
-  Edit,
-  Trash2,
+  ChevronRight,
+  ChevronUp,
+  Clock,
   Copy,
   Download,
-  Share2,
-  // Standard UI Icons - Navigation
-  Home,
-  Menu,
-  MoreHorizontal,
-  MoreVertical,
-  // Standard UI Icons - Status
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  Info,
-  HelpCircle,
-  // Standard UI Icons - Common
-  Heart,
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Clock,
+  Edit,
   Eye,
   EyeOff,
+  FileText,
+  Grid3X3,
+  // Standard UI Icons - Common
+  Heart,
+  HelpCircle,
+  // Standard UI Icons - Navigation
+  Home,
+  Image,
+  Info,
+  Layers,
   Lock,
-  Unlock,
+  Mail,
+  MapPin,
+  Menu,
+  MessageSquare,
+  Minus,
+  MoreHorizontal,
+  MoreVertical,
+  Palette,
+  Phone,
+  // Standard UI Icons - Actions
+  Plus,
+  Search,
+  Settings,
+  Shapes,
+  Share2,
   Shield,
+  Star,
+  Trash2,
+  Type,
+  Unlock,
+  Upload,
+  User,
+  Video,
+  X,
+  XCircle,
 } from 'lucide-react'
-import { useEditor, Element } from '@craftjs/core'
+import React, { useEffect, useRef, useState } from 'react'
 
 // Import blocks
 import {
-  TextBlock,
-  HeadingBlock,
+  AccordionBlock,
   ButtonBlock,
-  ImageBlock,
+  CarouselBlock,
   ContainerBlock,
   DividerBlock,
-  SpacerBlock,
-  VideoBlock,
-  IconBlock,
-  GridBlock,
   FlexboxBlock,
-  TabsBlock,
-  AccordionBlock,
-  CarouselBlock,
   FormBlock,
+  GridBlock,
+  HeadingBlock,
+  IconBlock,
+  ImageBlock,
+  SpacerBlock,
+  TabsBlock,
+  TextBlock,
+  VideoBlock,
 } from '../blocks'
-import { LayersPanel } from './LayersPanel'
-import { PageNavigator } from '../ui/PageNavigator'
 import type { UseMultiPageReturn } from '../hooks'
+import { PageNavigator } from '../ui/PageNavigator'
+import { LayersPanel } from './LayersPanel'
 
 interface CanvaSidebarProps {
   onShowAssetManager: () => void
@@ -1026,6 +1026,7 @@ export const CanvaSidebar: React.FC<CanvaSidebarProps> = ({
             onClick={() => handleTabClick(tab.id)}
             className={`group relative flex h-16 w-16 flex-col items-center justify-center rounded-lg transition-all duration-200 `}
             title={tab.tooltip}
+            aria-label={`${tab.name} tab`}
           >
             <div
               className={`rounded-xl p-2 ${
@@ -1054,6 +1055,7 @@ export const CanvaSidebar: React.FC<CanvaSidebarProps> = ({
             <button
               onClick={() => setActiveTab(null)}
               className="p-1 text-gray-400 transition-colors hover:text-gray-600"
+              aria-label="Close panel"
             >
               <X className="h-5 w-5" />
             </button>

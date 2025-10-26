@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 
 interface SimpleElement {
   id: string
@@ -58,7 +58,10 @@ export function useSimpleDrag({
 
       // Set element as dragging
       element.classList.add('dragging')
-      element.style.position = 'relative'
+      // Preserve absolute positioning if already set
+      if (element.style.position !== 'absolute') {
+        element.style.position = 'relative'
+      }
       element.style.zIndex = '9999'
       element.style.opacity = '0.8'
       element.style.cursor = 'grabbing'
@@ -99,7 +102,13 @@ export function useSimpleDrag({
       const newY = Math.round((state.offsetY + deltaY) / 5) * 5
 
       // Update element position
-      state.element.element.style.transform = `translate(${newX}px, ${newY}px)`
+      // For absolute positioned elements, update left/top; for others use transform
+      if (state.element.element.style.position === 'absolute') {
+        state.element.element.style.left = `${newX}px`
+        state.element.element.style.top = `${newY}px`
+      } else {
+        state.element.element.style.transform = `translate(${newX}px, ${newY}px)`
+      }
       state.element.element.dataset.x = newX.toString()
       state.element.element.dataset.y = newY.toString()
 
