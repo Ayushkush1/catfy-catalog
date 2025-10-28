@@ -13,6 +13,8 @@ export type PrebuiltHtmlTemplate = {
   engine: 'mustache' | 'handlebars'
   pages: IframePage[]
   sharedCss?: string
+  dataTransform?: (data: any) => any
+  pageGenerator?: (data: any, basePages: IframePage[]) => IframePage[]
 }
 
 // ---------- Shared CSS ----------
@@ -394,6 +396,7 @@ html, body {
     display: flex;
     flex-direction: column;
     background: var(--aurum-bg);
+    overflow: hidden;
   }
 
   /* Header */
@@ -429,6 +432,7 @@ html, body {
   .aurum-content {
     flex: 1;
     padding: 48px 64px;
+    overflow: hidden;
   }
 
   .aurum-grid {
@@ -436,70 +440,158 @@ html, body {
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
     height: 100%;
+    align-content: start;
   }
 
   .aurum-card {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    background: #ffffff;
+    border-radius: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid rgba(0,0,0,0.08);
+    position: relative;
+  }
+
+  .aurum-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--aurum-accent), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .aurum-card:hover::before {
+    transform: scaleX(1);
   }
 
   .aurum-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(217,119,6,0.1);
+    border-color: rgba(217,119,6,0.15);
   }
 
   .aurum-card-image {
-    height: 250px;
+    height: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .aurum-card-image img {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.5s ease;
+    filter: grayscale(0%);
+  }
+
+  .aurum-card:hover .aurum-card-image img {
+    transform: scale(1.1);
+    filter: grayscale(0%) brightness(1.02);
   }
 
   .aurum-card-icon {
-    font-size: 48px;
-    color: rgba(255,255,255,0.9);
+    font-size: 80px;
+    color: rgba(217,119,6,0.15);
+    opacity: 0.6;
   }
 
   .aurum-card-body {
-    padding: 24px;
+    padding: 32px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    position: relative;
   }
 
   .aurum-card-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 8px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: #111;
+    line-height: 1.3;
+    letter-spacing: 0.005em;
+    transition: color 0.3s ease;
+  }
+
+  .aurum-card:hover .aurum-card-title {
+    color: var(--aurum-accent);
   }
 
   .aurum-card-price {
-    font-size: 20px;
-    font-weight: bold;
+    font-size: 1.5rem;
+    font-weight: 600;
     color: var(--aurum-accent);
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
+    font-family: 'Georgia', serif;
+  }
     margin-bottom: 12px;
   }
 
   .aurum-specs {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0,0,0,0.05);
   }
 
   .aurum-spec {
     display: flex;
     justify-content: space-between;
-    font-size: 14px;
-    color: #555;
+    align-items: baseline;
+    font-size: 0.8125rem;
+    color: #666;
+    padding: 0;
+    border-bottom: none;
+    gap: 12px;
+  }
+
+  .aurum-spec:last-child {
+    border-bottom: none;
+  }
+
+  .aurum-spec-label {
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .aurum-spec-value {
+    font-weight: 400;
+    color: #444;
+    text-align: right;
+    line-height: 1.5;
+    font-size: 0.875rem;
+  }
+    border-bottom: none;
   }
 
   .aurum-spec-label {
     color: var(--aurum-muted);
+    font-weight: 500;
   }
 
   .aurum-spec-value {
     font-weight: 600;
+    color: #333;
+    text-align: right;
+    flex: 1;
+    margin-left: 12px;
   }
 
   /* Footer */
@@ -664,7 +756,7 @@ const pages: IframePage[] = [
 
             <div class="catalogue-hero-right">
               <div class="catalogue-hero-product">
-                <img src="{{#catalogue.settings.mediaAssets.coverImageUrl}}{{catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}{{^catalogue.settings.mediaAssets.coverImageUrl}}{{#product.image}}{{product.image}}{{/product.image}}{{^product.image}}https://images.unsplash.com/photo-1567016432779-094069958ea5?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=880{{/product.image}}{{/catalogue.settings.mediaAssets.coverImageUrl}}" alt="Product">
+                <img src="{{#catalogue.settings.mediaAssets.coverImageUrl}}{{catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}{{^catalogue.settings.mediaAssets.coverImageUrl}}{{#catalogue.products.0.imageUrl}}{{catalogue.products.0.imageUrl}}{{/catalogue.products.0.imageUrl}}{{^catalogue.products.0.imageUrl}}{{#product.image}}{{product.image}}{{/product.image}}{{^product.image}}https://images.unsplash.com/photo-1567016432779-094069958ea5?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=880{{/product.image}}{{/catalogue.products.0.imageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}" alt="Product">
               </div>
               <div class="catalogue-hero-badge">NEW ARRIVALS</div>
             </div>
@@ -718,36 +810,79 @@ const pages: IframePage[] = [
               <header class="aurum-header">
                 <div class="aurum-header-left">
                   <h1>{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}AURUM{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</h1>
-                  <p>{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}LUXURY FURNITURE CATALOGUE{{/catalogue.name}} – PAGE {{#page.number}}{{page.number}}{{/page.number}}{{^page.number}}1{{/page.number}}</p>
+                  <p>{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}LUXURY FURNITURE CATALOGUE{{/catalogue.name}}</p>
                 </div>
                 <div class="aurum-header-right">
-                  <span>{{#page.number}}{{page.number}}{{/page.number}}{{^page.number}}1{{/page.number}} / {{#page.total}}{{page.total}}{{/page.total}}{{^page.total}}1{{/page.total}}</span>
+                  <span>{{pageNumber}} / {{totalProductPages}}</span>
                 </div>
               </header>
 
               <!-- Content -->
               <main class="aurum-content">
                 <div class="aurum-grid">
-                  {{#productsPreview}}
+                  {{#pageProducts}}
                   <div class="aurum-card">
                     <div class="aurum-card-image" style="background-color:#f3f4f6;">
-                      {{#image}}<img src="{{image}}" alt="{{title}}" style="width:100%;height:100%;object-fit:cover" />{{/image}}{{^image}}<div class="aurum-card-icon">�</div>{{/image}}
+                      {{#imageUrl}}<img src="{{imageUrl}}" alt="{{name}}" style="width:100%;height:100%;object-fit:cover" />{{/imageUrl}}{{^imageUrl}}<div class="aurum-card-icon">🪑</div>{{/imageUrl}}
                     </div>
                     <div class="aurum-card-body">
-                      <h3 class="aurum-card-title">{{title}}</h3>
-                      <p class="aurum-card-price">{{price}}</p>
+                      <h3 class="aurum-card-title">{{name}}</h3>
+                      {{#price}}<p class="aurum-card-price">₹{{price}}</p>{{/price}}
                       <div class="aurum-specs">
-                        <div class="aurum-spec"><span class="aurum-spec-label">Details:</span><span class="aurum-spec-value">{{description}}</span></div>
+                        {{#description}}<div class="aurum-spec"><span class="aurum-spec-label">Details</span><span class="aurum-spec-value">{{description}}</span></div>{{/description}}
+                        {{#category}}<div class="aurum-spec"><span class="aurum-spec-label">Category</span><span class="aurum-spec-value">{{category.name}}</span></div>{{/category}}
                       </div>
                     </div>
                   </div>
-                  {{/productsPreview}}
+                  {{/pageProducts}}
+                  {{^pageProducts}}
+                  <!-- Fallback products if no products available -->
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#f3f4f6;">
+                      <div class="aurum-card-icon">🪑</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Premium Sofa</h3>
+                      <p class="aurum-card-price">₹45,999</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Details</span><span class="aurum-spec-value">Luxury comfort seating</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Category</span><span class="aurum-spec-value">Living Room</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#f3f4f6;">
+                      <div class="aurum-card-icon">🪑</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Dining Table</h3>
+                      <p class="aurum-card-price">₹32,500</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Details</span><span class="aurum-spec-value">Solid wood construction</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Category</span><span class="aurum-spec-value">Dining</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="aurum-card">
+                    <div class="aurum-card-image" style="background-color:#f3f4f6;">
+                      <div class="aurum-card-icon">🪑</div>
+                    </div>
+                    <div class="aurum-card-body">
+                      <h3 class="aurum-card-title">Office Chair</h3>
+                      <p class="aurum-card-price">₹18,999</p>
+                      <div class="aurum-specs">
+                        <div class="aurum-spec"><span class="aurum-spec-label">Details</span><span class="aurum-spec-value">Ergonomic design</span></div>
+                        <div class="aurum-spec"><span class="aurum-spec-label">Category</span><span class="aurum-spec-value">Office</span></div>
+                      </div>
+                    </div>
+                  </div>
+                  {{/pageProducts}}
                 </div>
               </main>
 
               <!-- Footer -->
               <footer class="aurum-footer">
-                <span>AURUM</span>
+                <span>{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}AURUM{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</span>
                 <span>© 2025 All rights reserved</span>
               </footer>
             </div>
@@ -762,13 +897,13 @@ const pages: IframePage[] = [
     html: `
            <section class="aurum-contact-page" data-editor-path="contact-page">
               <!-- Left section with image & quote -->
-              <div class="aurum-contact-left" data-editor-path="left-section">
+              <div class="aurum-contact-left" data-editor-path="left-section" style="background-image: url('{{#catalogue.settings.contactDetails.contactImage}}{{catalogue.settings.contactDetails.contactImage}}{{/catalogue.settings.contactDetails.contactImage}}{{^catalogue.settings.contactDetails.contactImage}}https://images.unsplash.com/photo-1600585154340-be6161a56a0c{{/catalogue.settings.contactDetails.contactImage}}');">
                 <div class="aurum-contact-overlay" data-editor-path="overlay"></div>
                 <div class="aurum-contact-quote" data-editor-path="quote">
                   <p class="aurum-contact-quote-text">
-                    “Design is the silent ambassador of your brand.”
+                    "{{#catalogue.settings.contactDetails.contactQuote}}{{catalogue.settings.contactDetails.contactQuote}}{{/catalogue.settings.contactDetails.contactQuote}}{{^catalogue.settings.contactDetails.contactQuote}}Design is the silent ambassador of your brand.{{/catalogue.settings.contactDetails.contactQuote}}"
                   </p>
-                  <p class="aurum-contact-quote-author">— Paul Rand</p>
+                  <p class="aurum-contact-quote-author">— {{#catalogue.settings.contactDetails.contactQuoteBy}}{{catalogue.settings.contactDetails.contactQuoteBy}}{{/catalogue.settings.contactDetails.contactQuoteBy}}{{^catalogue.settings.contactDetails.contactQuoteBy}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}Company Name{{/profile.companyName}}{{/catalogue.settings.contactDetails.contactQuoteBy}}</p>
                 </div>
               </div>
 
@@ -777,20 +912,53 @@ const pages: IframePage[] = [
                 <h1 class="aurum-contact-title" data-editor-path="title">Contact Us</h1>
 
                 <div class="aurum-contact-details" data-editor-path="details">
-                  <p class="aurum-contact-info">Aurum Interiors Studio</p>
-                  <p class="aurum-contact-info">123 Serenity Lane, Bangalore, India</p>
-                  <p class="aurum-contact-info">+91 98765 43210</p>
-                  <p class="aurum-contact-info">hello@aurumstudio.com</p>
+                  <p class="aurum-contact-info">{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}{{#profile.fullName}}{{profile.fullName}}{{/profile.fullName}}{{^profile.fullName}}Your Company{{/profile.fullName}}{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</p>
+                  
+                  {{#catalogue.settings.contactDetails.address}}
+                  <p class="aurum-contact-info">{{catalogue.settings.contactDetails.address}}{{#catalogue.settings.contactDetails.city}}, {{catalogue.settings.contactDetails.city}}{{/catalogue.settings.contactDetails.city}}{{#catalogue.settings.contactDetails.state}}, {{catalogue.settings.contactDetails.state}}{{/catalogue.settings.contactDetails.state}}</p>
+                  {{/catalogue.settings.contactDetails.address}}
+                  {{^catalogue.settings.contactDetails.address}}
+                  {{#profile.address}}
+                  <p class="aurum-contact-info">{{profile.address}}{{#profile.city}}, {{profile.city}}{{/profile.city}}{{#profile.state}}, {{profile.state}}{{/profile.state}}</p>
+                  {{/profile.address}}
+                  {{/catalogue.settings.contactDetails.address}}
+                  
+                  {{#catalogue.settings.contactDetails.phone}}
+                  <p class="aurum-contact-info">{{catalogue.settings.contactDetails.phone}}</p>
+                  {{/catalogue.settings.contactDetails.phone}}
+                  {{^catalogue.settings.contactDetails.phone}}
+                  {{#profile.phone}}
+                  <p class="aurum-contact-info">{{profile.phone}}</p>
+                  {{/profile.phone}}
+                  {{/catalogue.settings.contactDetails.phone}}
+                  
+                  {{#catalogue.settings.contactDetails.email}}
+                  <p class="aurum-contact-info">{{catalogue.settings.contactDetails.email}}</p>
+                  {{/catalogue.settings.contactDetails.email}}
+                  {{^catalogue.settings.contactDetails.email}}
+                  {{#profile.email}}
+                  <p class="aurum-contact-info">{{profile.email}}</p>
+                  {{/profile.email}}
+                  {{/catalogue.settings.contactDetails.email}}
                 </div>
 
                 <div class="aurum-contact-socials" data-editor-path="socials">
-                  <a href="#" class="aurum-social-link">Instagram</a>
-                  <a href="#" class="aurum-social-link">LinkedIn</a>
-                  <a href="#" class="aurum-social-link">Behance</a>
+                  {{#catalogue.settings.socialMedia.instagram}}
+                  <a href="{{catalogue.settings.socialMedia.instagram}}" target="_blank" class="aurum-social-link">Instagram</a>
+                  {{/catalogue.settings.socialMedia.instagram}}
+                  {{#catalogue.settings.socialMedia.linkedin}}
+                  <a href="{{catalogue.settings.socialMedia.linkedin}}" target="_blank" class="aurum-social-link">LinkedIn</a>
+                  {{/catalogue.settings.socialMedia.linkedin}}
+                  {{#catalogue.settings.socialMedia.facebook}}
+                  <a href="{{catalogue.settings.socialMedia.facebook}}" target="_blank" class="aurum-social-link">Facebook</a>
+                  {{/catalogue.settings.socialMedia.facebook}}
+                  {{#catalogue.settings.socialMedia.twitter}}
+                  <a href="{{catalogue.settings.socialMedia.twitter}}" target="_blank" class="aurum-social-link">Twitter</a>
+                  {{/catalogue.settings.socialMedia.twitter}}
                 </div>
 
                 <footer class="aurum-contact-footer" data-editor-path="footer">
-                  <p>© 2025 Aurum Studio. All rights reserved.</p>
+                  <p>© {{#catalogue.year}}{{catalogue.year}}{{/catalogue.year}}{{^catalogue.year}}2025{{/catalogue.year}} {{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}Your Company{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}. All rights reserved.</p>
                 </footer>
               </div>
             </section>
@@ -806,6 +974,49 @@ export const SmellAddaCatalogTemplate: PrebuiltHtmlTemplate = {
   engine: 'mustache',
   sharedCss,
   pages,
+  pageGenerator: (data: any, basePages: IframePage[]) => {
+    // Generate dynamic product pages based on products count
+    const products = data?.catalogue?.products || []
+
+    if (products.length === 0) {
+      // Return base pages if no products
+      return basePages
+    }
+
+    // Get non-product pages
+    const coverPage = basePages.find(p => p.id === 'cover')
+    const storyPage = basePages.find(p => p.id === 'story')
+    const productPageTemplate = basePages.find(p => p.id === 'products')
+    const contactPage = basePages.find(p => p.id === 'contact')
+
+    const result: IframePage[] = []
+
+    // Add cover and story pages
+    if (coverPage) result.push(coverPage)
+    if (storyPage) result.push(storyPage)
+
+    // Generate product pages (3 products per page)
+    if (productPageTemplate) {
+      const productsPerPage = 3
+      const totalPages = Math.ceil(products.length / productsPerPage)
+
+      for (let i = 0; i < totalPages; i++) {
+        result.push({
+          ...productPageTemplate,
+          id: `products-${i + 1}`,
+          name: `Products ${i + 1}`,
+        })
+      }
+    }
+
+    // Add contact page
+    if (contactPage) result.push(contactPage)
+
+    return result
+  },
+  dataTransform: (data: any) => {
+    return data
+  }
 }
 
 export default SmellAddaCatalogTemplate

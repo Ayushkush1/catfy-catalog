@@ -45,6 +45,8 @@ export type PrebuiltTemplate = {
   engine: 'mustache' | 'handlebars'
   pages: IframePage[]
   sharedCss?: string
+  dataTransform?: (data: any) => any
+  pageGenerator?: (data: any, basePages: IframePage[]) => IframePage[]
 }
 
 type LiveData = Record<string, any>
@@ -683,7 +685,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'a') {
-                  ;(el as HTMLAnchorElement).href = e.target.value
+                  ; (el as HTMLAnchorElement).href = e.target.value
                 }
               }}
             />
@@ -727,11 +729,10 @@ export default function IframeEditor({
                         updateSelectedStyles({ fontFamily: font.value })
                         setFontDropdownOpen(false)
                       }}
-                      className={`w-full border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                        getSelectedFont().value === font.value
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700'
-                      }`}
+                      className={`w-full border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${getSelectedFont().value === font.value
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700'
+                        }`}
                     >
                       <div
                         style={{ fontFamily: font.family, fontSize: '13px' }}
@@ -863,11 +864,10 @@ export default function IframeEditor({
                 <button
                   key={align}
                   onClick={() => updateSelectedStyles({ textAlign: align })}
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs capitalize ${
-                    currentStyles.textAlign === align
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white hover:bg-gray-50'
-                  }`}
+                  className={`h-8 flex-1 rounded border border-gray-300 text-xs capitalize ${currentStyles.textAlign === align
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white hover:bg-gray-50'
+                    }`}
                 >
                   {align}
                 </button>
@@ -985,7 +985,7 @@ export default function IframeEditor({
                       if (!doc || !selectedPath) return
                       const el = resolvePathToElement(doc, selectedPath)
                       if (el && selectedTag === 'img') {
-                        ;(el as HTMLImageElement).src = event.target
+                        ; (el as HTMLImageElement).src = event.target
                           ?.result as string
                       }
                     }
@@ -1018,7 +1018,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'img') {
-                  ;(el as HTMLImageElement).src = e.target.value
+                  ; (el as HTMLImageElement).src = e.target.value
                 }
               }}
             />
@@ -1040,7 +1040,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'img') {
-                  ;(el as HTMLImageElement).alt = e.target.value
+                  ; (el as HTMLImageElement).alt = e.target.value
                 }
               }}
             />
@@ -1262,7 +1262,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el) {
-                  ;(el as HTMLElement).id = e.target.value
+                  ; (el as HTMLElement).id = e.target.value
                 }
               }}
             />
@@ -1306,11 +1306,10 @@ export default function IframeEditor({
                   onClick={() =>
                     updateSelectedStyles({ display: layout.value })
                   }
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs ${
-                    currentStyles.display === layout.value
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white hover:bg-gray-50'
-                  }`}
+                  className={`h-8 flex-1 rounded border border-gray-300 text-xs ${currentStyles.display === layout.value
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white hover:bg-gray-50'
+                    }`}
                 >
                   {layout.label}
                 </button>
@@ -1657,7 +1656,10 @@ export default function IframeEditor({
       }
 
       // For non-current pages, create a temporary iframe with the compiled HTML
-      const compiledHtml = Mustache.render(pageHtml, liveData)
+      const transformedData = template.dataTransform
+        ? template.dataTransform(liveData)
+        : liveData
+      const compiledHtml = Mustache.render(pageHtml, transformedData)
 
       const tempIframe = document.createElement('iframe')
       // set the iframe large enough to render the full layout
@@ -1860,6 +1862,16 @@ export default function IframeEditor({
   useEffect(() => {
     pagesRef.current = pages
   }, [pages])
+
+  // Generate dynamic pages using pageGenerator if available
+  useEffect(() => {
+    if (template.pageGenerator) {
+      const generatedPages = template.pageGenerator(liveData, template.pages)
+      setPages(generatedPages)
+    } else {
+      setPages(template.pages)
+    }
+  }, [template.id, template.pageGenerator, liveData.catalogue?.products?.length])
 
   // Auto-collapse left tab when element is selected (except for layers tab)
   useEffect(() => {
@@ -2256,16 +2268,36 @@ export default function IframeEditor({
     const cssBlock = `<style>${template?.sharedCss || ''}\n${currentPage?.css || ''}</style>`
     if (!currentPage) return cssBlock
 
+    // Apply data transformation if template provides one
+    let transformedData = template.dataTransform
+      ? template.dataTransform(liveData)
+      : liveData
+
+    // For product pages, add page-specific products and pagination info
+    if (currentPage.id.startsWith('products-')) {
+      const pageNumber = parseInt(currentPage.id.split('-')[1]) || 1
+      const products = liveData?.catalogue?.products || []
+      const productsPerPage = 3
+      const startIdx = (pageNumber - 1) * productsPerPage
+      const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
+      const totalProductPages = Math.ceil(products.length / productsPerPage)
+
+      transformedData = {
+        ...transformedData,
+        pageProducts,
+        pageNumber,
+        totalProductPages
+      }
+    }
+
     if (template.engine === 'mustache') {
-      const rendered = Mustache.render(currentPage.html, liveData)
+      const rendered = Mustache.render(currentPage.html, transformedData)
       return `${cssBlock}\n${rendered}`
     }
     // For now, default to Mustache until Handlebars adapter lands
-    const rendered = Mustache.render(currentPage.html, liveData)
+    const rendered = Mustache.render(currentPage.html, transformedData)
     return `${cssBlock}\n${rendered}`
-  }, [template, currentPage, liveData])
-
-  // Track the last rendered HTML to prevent unnecessary iframe reloads
+  }, [template, currentPage, liveData])  // Track the last rendered HTML to prevent unnecessary iframe reloads
   const lastRenderedHtmlRef = useRef<string>('')
 
   useEffect(() => {
@@ -2489,7 +2521,7 @@ export default function IframeEditor({
       print: () => {
         try {
           iframeRef.current?.contentWindow?.print?.()
-        } catch {}
+        } catch { }
       },
       exportHTML: () => exportCurrentPageAsHTML(),
       exportJSON: () => exportEditorStateAsJSON(),
@@ -2733,7 +2765,7 @@ export default function IframeEditor({
     lastAppliedPathsRef.current.forEach(path => {
       const el = resolvePathToElement(doc, path)
       if (el && (el as HTMLElement).style) {
-        ;(el as HTMLElement).removeAttribute('style')
+        ; (el as HTMLElement).removeAttribute('style')
       }
     })
     // Apply new mutations
@@ -3110,8 +3142,8 @@ export default function IframeEditor({
       }
       case 'input': {
         el = doc.createElement('input') as HTMLInputElement
-        ;(el as HTMLInputElement).type = 'text'
-        ;(el as HTMLInputElement).placeholder = 'Enter text'
+          ; (el as HTMLInputElement).type = 'text'
+          ; (el as HTMLInputElement).placeholder = 'Enter text'
         el.style.padding = '6px 8px'
         el.style.border = '1px solid #d1d5db'
         el.style.borderRadius = '6px'
@@ -3120,11 +3152,11 @@ export default function IframeEditor({
       }
       case 'image': {
         el = doc.createElement('img') as HTMLImageElement
-        ;(el as HTMLImageElement).src =
-          liveData.product?.image || 'https://via.placeholder.com/150'
+          ; (el as HTMLImageElement).src =
+            liveData.product?.image || 'https://via.placeholder.com/150'
         el.style.maxWidth = '100%'
         el.style.display = 'block'
-        ;(el as HTMLImageElement).alt = 'Image'
+          ; (el as HTMLImageElement).alt = 'Image'
         break
       }
       case 'icon': {
@@ -3153,12 +3185,12 @@ export default function IframeEditor({
         el.style.alignItems = 'stretch'
         const col1 = doc.createElement('div')
         const col2 = doc.createElement('div')
-        ;[col1, col2].forEach((c, i) => {
-          c.style.flex = '1'
-          c.style.border = '1px dashed #d1d5db'
-          c.style.padding = '12px'
-          c.textContent = `Column ${i + 1}`
-        })
+          ;[col1, col2].forEach((c, i) => {
+            c.style.flex = '1'
+            c.style.border = '1px dashed #d1d5db'
+            c.style.padding = '12px'
+            c.textContent = `Column ${i + 1}`
+          })
         el.appendChild(col1)
         el.appendChild(col2)
         break
@@ -3470,11 +3502,10 @@ export default function IframeEditor({
                 title={tab.name}
               >
                 <div
-                  className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${
-                    activeLeftTab === (tab.id as any)
-                      ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
-                  }`}
+                  className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${activeLeftTab === (tab.id as any)
+                    ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
+                    }`}
                 >
                   {tab.icon}
                 </div>
@@ -3710,10 +3741,10 @@ export default function IframeEditor({
         const containerStyle =
           sidebarsCollapsed && !previewMode
             ? {
-                marginRight: '80px',
-                padding: '2rem 1rem',
-                transition: 'all 0.5s ease-in-out',
-              }
+              marginRight: '80px',
+              padding: '2rem 1rem',
+              transition: 'all 0.5s ease-in-out',
+            }
             : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
         return (
           <div
@@ -4291,11 +4322,10 @@ function LayersPanel({
         {/* Background layer with dynamic width */}
         {(isSelected || isHovered) && (
           <div
-            className={`pointer-events-none absolute left-0 rounded-lg transition-all ${
-              isSelected
-                ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 shadow-sm'
-                : 'bg-gray-50'
-            }`}
+            className={`pointer-events-none absolute left-0 rounded-lg transition-all ${isSelected
+              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 shadow-sm'
+              : 'bg-gray-50'
+              }`}
             style={{
               top: 0,
               height: isHovered && !isSelected ? 'calc(100% - 4px)' : '100%',
@@ -4313,9 +4343,8 @@ function LayersPanel({
           onDrop={() => handleDrop(node.path)}
           onMouseEnter={() => onHoverPath?.(node.path)}
           onMouseLeave={() => onHoverPath?.(null)}
-          className={`group relative flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all ${
-            isSelected ? 'text-[#2D1B69]' : ''
-          } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+          className={`group relative flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all ${isSelected ? 'text-[#2D1B69]' : ''
+            } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
           onClick={() => onSelectPath(node.path)}
           title={node.path}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
@@ -4362,11 +4391,10 @@ function LayersPanel({
           {/* Children count badge */}
           {hasChildren && (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                isSelected
-                  ? 'bg-[#6366F1]/20 text-[#6366F1]'
-                  : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-              }`}
+              className={`rounded-full px-1.5 py-0.5 text-[10px] ${isSelected
+                ? 'bg-[#6366F1]/20 text-[#6366F1]'
+                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                }`}
             >
               {node.children.length}
             </span>
@@ -5473,11 +5501,10 @@ function IconsPanel({
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                selectedCategory === category.id
-                  ? 'bg-blue-100 font-medium text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-200 ${selectedCategory === category.id
+                ? 'bg-blue-100 font-medium text-blue-700'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
             >
               <div className="flex items-center justify-between">
                 <span className="truncate">{category.name}</span>
@@ -5592,11 +5619,10 @@ function AssetsPanel({
       <div className="mb-4">
         {/* Upload Area */}
         <div
-          className={`mb-4 rounded-lg border-2 border-dashed p-3 text-center transition-colors duration-200 ${
-            dragOver
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
-          }`}
+          className={`mb-4 rounded-lg border-2 border-dashed p-3 text-center transition-colors duration-200 ${dragOver
+            ? 'border-blue-400 bg-blue-50'
+            : 'border-gray-300 hover:border-gray-400'
+            }`}
           onDrop={handleDrop}
           onDragOver={e => {
             e.preventDefault()

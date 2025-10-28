@@ -558,22 +558,22 @@ const pages: IframePage[] = [
     html: `
 <section class="fashion-cover">
   <div class="fashion-cover__background">
-    <img src="https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80" alt="Catalogue Cover">
+    <img src="{{#catalogue.settings.mediaAssets.coverImageUrl}}{{catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}{{^catalogue.settings.mediaAssets.coverImageUrl}}{{#catalogue.products.0.imageUrl}}{{catalogue.products.0.imageUrl}}{{/catalogue.products.0.imageUrl}}{{^catalogue.products.0.imageUrl}}https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?auto=format&fit=crop&w=1200&q=80{{/catalogue.products.0.imageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}" alt="Catalogue Cover">
   </div>
 
   <div class="fashion-cover__overlay"></div>
 
   <div class="fashion-cover__content">
-    <h1 class="fashion-cover__title" data-editor-path="catalogue.name">VERITE</h1>
+    <h1 class="fashion-cover__title" data-editor-path="catalogue.name">{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}VERITE{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{/catalogue.name}}</h1>
     <div class="fashion-cover__divider">
       <div class="fashion-cover__line"></div>
-      <p class="fashion-cover__subtitle" data-editor-path="catalogue.description">FASHION COLLECTION</p>
+      <p class="fashion-cover__subtitle" data-editor-path="catalogue.description">{{#catalogue.description}}{{catalogue.description}}{{/catalogue.description}}{{^catalogue.description}}{{#catalogue.tagline}}{{catalogue.tagline}}{{/catalogue.tagline}}{{^catalogue.tagline}}FASHION COLLECTION{{/catalogue.tagline}}{{/catalogue.description}}</p>
       <div class="fashion-cover__line"></div>
     </div>
   </div>
 
   <div class="fashion-cover__footer">
-    <span class="fashion-cover__year" data-editor-path="catalogue.year">Catalogue 2025</span>
+    <span class="fashion-cover__year" data-editor-path="catalogue.year">{{#catalogue.year}}Catalogue {{catalogue.year}}{{/catalogue.year}}{{^catalogue.year}}Catalogue 2025{{/catalogue.year}}</span>
   </div>
 </section>
     `,
@@ -587,7 +587,7 @@ const pages: IframePage[] = [
   <!-- Left: Image -->
   <div class="fashion-intro-left">
     <div class="fashion-intro-img-wrap">
-      <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Fashion Intro" class="fashion-intro-img" />
+      <img src="{{#catalogue.introImage}}{{catalogue.introImage}}{{/catalogue.introImage}}{{^catalogue.introImage}}{{#catalogue.settings.mediaAssets.coverImageUrl}}{{catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.settings.mediaAssets.coverImageUrl}}{{^catalogue.settings.mediaAssets.coverImageUrl}}https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f{{/catalogue.settings.mediaAssets.coverImageUrl}}{{/catalogue.introImage}}" alt="Fashion Intro" class="fashion-intro-img" />
     </div>
     <div class="fashion-intro-overlay"></div>
   </div>
@@ -595,24 +595,24 @@ const pages: IframePage[] = [
   <!-- Right: Text -->
   <div class="fashion-intro-right">
     <div class="fashion-intro-content">
-      <h1 class="fashion-intro-title">VERITE</h1>
-      <h2 class="fashion-intro-subtitle">FASHION IS FREEDOM</h2>
+      <h1 class="fashion-intro-title">{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}{{#catalogue.name}}{{catalogue.name}}{{/catalogue.name}}{{^catalogue.name}}VERITE{{/catalogue.name}}{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</h1>
+      <h2 class="fashion-intro-subtitle">{{#catalogue.tagline}}{{catalogue.tagline}}{{/catalogue.tagline}}{{^catalogue.tagline}}{{#profile.tagline}}{{profile.tagline}}{{/profile.tagline}}{{^profile.tagline}}FASHION IS FREEDOM{{/profile.tagline}}{{/catalogue.tagline}}</h2>
 
       <div class="fashion-intro-quote-wrap">
         <div class="fashion-intro-quote-line"></div>
         <div class="fashion-intro-quote-box">
           <p class="fashion-intro-quote">
-            "The best way to predict the future is to invent it. Distinguishes between a leader and a follower."
+            "{{#catalogue.quote}}{{catalogue.quote}}{{/catalogue.quote}}{{^catalogue.quote}}The best way to predict the future is to invent it. Distinguishes between a leader and a follower.{{/catalogue.quote}}"
           </p>
         </div>
       </div>
 
       <div class="fashion-intro-company">
-        <span class="fashion-intro-company-name">VERITE HOUSE</span>
+        <span class="fashion-intro-company-name">{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}VERITE HOUSE{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}</span>
         <p class="fashion-intro-company-desc">
-          We blend timeless design with contemporary fashion, empowering individuals to express their unique style through elegance and simplicity.
+          {{#catalogue.settings.companyInfo.companyDescription}}{{catalogue.settings.companyInfo.companyDescription}}{{/catalogue.settings.companyInfo.companyDescription}}{{^catalogue.settings.companyInfo.companyDescription}}{{#catalogue.description}}{{catalogue.description}}{{/catalogue.description}}{{^catalogue.description}}We blend timeless design with contemporary fashion, empowering individuals to express their unique style through elegance and simplicity.{{/catalogue.description}}{{/catalogue.settings.companyInfo.companyDescription}}
         </p>
-        <p class="fashion-intro-year">Catalogue 2025</p>
+        <p class="fashion-intro-year">{{#catalogue.year}}Catalogue {{catalogue.year}}{{/catalogue.year}}{{^catalogue.year}}Catalogue 2025{{/catalogue.year}}</p>
       </div>
     </div>
   </div>
@@ -624,65 +624,49 @@ const pages: IframePage[] = [
     id: 'products',
     name: 'Products',
     html: `
-<!-- Product 1 -->
+{{#catalogue.products}}
+<!-- Product (alternating layout) -->
+<div class="fashion-product-section{{#even}} reverse{{/even}}">
+  <div class="fashion-product-image">
+    <img src="{{#imageUrl}}{{imageUrl}}{{/imageUrl}}{{^imageUrl}}https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f{{/imageUrl}}" alt="{{name}}">
+  </div>
+  <div class="fashion-product-details">
+    <h1>{{name}}</h1>
+    <p class="fashion-product-category">{{#category}}{{category.name}}{{/category}}{{^category}}Premium Collection{{/category}}</p>
+    <div class="fashion-divider"></div>
+    <p class="fashion-product-description">
+      {{#description}}{{description}}{{/description}}{{^description}}Discover timeless elegance with this exclusive piece from our collection.{{/description}}
+    </p>
+    <div class="fashion-bottom-line"></div>
+    <div class="fashion-footer-row">
+      <p>Exclusive Collection</p>
+      {{#price}}<span class="fashion-price">₹{{price}}</span>{{/price}}{{^price}}<span class="fashion-price">Contact for Price</span>{{/price}}
+    </div>
+  </div>
+</div>
+{{/catalogue.products}}
+
+{{^catalogue.products}}
+<!-- Fallback: Sample Products when no products available -->
 <div class="fashion-product-section">
   <div class="fashion-product-image">
-    <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Langley Armchair">
+    <img src="https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f" alt="Sample Product">
   </div>
   <div class="fashion-product-details">
-    <h1>Langley Armchair</h1>
-    <p class="fashion-product-category">Modern Comfort</p>
+    <h1>Sample Product</h1>
+    <p class="fashion-product-category">Add Products</p>
     <div class="fashion-divider"></div>
     <p class="fashion-product-description">
-      A modern interpretation of timeless elegance. The Langley Armchair combines minimalist structure with plush upholstery, perfect for creating a relaxing corner in your space.
+      Add your products to the catalogue to display them here. Each product will be beautifully showcased with images and details.
     </p>
     <div class="fashion-bottom-line"></div>
     <div class="fashion-footer-row">
       <p>Exclusive Collection</p>
-      <span class="fashion-price">₹12,499</span>
+      <span class="fashion-price">₹0</span>
     </div>
   </div>
 </div>
-
-<!-- Product 2 -->
-<div class="fashion-product-section reverse">
-  <div class="fashion-product-image">
-    <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d" alt="Elegant Fashion">
-  </div>
-  <div class="fashion-product-details">
-    <h1>Vienna Dining Table</h1>
-    <p class="fashion-product-category">Luxury Craft</p>
-    <div class="fashion-divider"></div>
-    <p class="fashion-product-description">
-      Designed for gatherings and crafted with precision, the Vienna Table brings character and warmth to every meal. Its natural oak finish highlights fine craftsmanship.
-    </p>
-    <div class="fashion-bottom-line"></div>
-    <div class="fashion-footer-row">
-      <p>Exclusive Collection</p>
-      <span class="fashion-price">₹24,999</span>
-    </div>
-  </div>
-</div>
-
-<!-- Product 3 -->
-<div class="fashion-product-section">
-  <div class="fashion-product-image">
-    <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b" alt="Fashion Collection">
-  </div>
-  <div class="fashion-product-details">
-    <h1>Noir Sofa</h1>
-    <p class="fashion-product-category">Urban Classic</p>
-    <div class="fashion-divider"></div>
-    <p class="fashion-product-description">
-      With bold lines and deep tones, the Noir Sofa is an urban centerpiece designed for contemporary homes. A perfect balance of comfort and sophistication.
-    </p>
-    <div class="fashion-bottom-line"></div>
-    <div class="fashion-footer-row">
-      <p>Exclusive Collection</p>
-      <span class="fashion-price">₹18,999</span>
-    </div>
-  </div>
-</div>
+{{/catalogue.products}}
     `,
   },
 
@@ -693,8 +677,8 @@ const pages: IframePage[] = [
 <div class="cp-container">
   <!-- Left Side -->
   <div class="cp-left">
-    <!-- Replace this src with your image URL -->
-    <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1" alt="Contact" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <!-- Dynamic contact image -->
+    <img src="{{#catalogue.settings.contactDetails.contactImage}}{{catalogue.settings.contactDetails.contactImage}}{{/catalogue.settings.contactDetails.contactImage}}{{^catalogue.settings.contactDetails.contactImage}}https://images.unsplash.com/photo-1524504388940-b1c1722653e1{{/catalogue.settings.contactDetails.contactImage}}" alt="Contact" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
     <div class="cp-left-placeholder" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -704,8 +688,8 @@ const pages: IframePage[] = [
     <div class="cp-left-overlay"></div>
     <div class="cp-quote-box">
       <div class="cp-quote-inner">
-        <blockquote class="cp-quote-text">"Where creativity meets craftsmanship"</blockquote>
-        <cite class="cp-quote-author">VERITE ATELIER</cite>
+        <blockquote class="cp-quote-text">"{{#catalogue.settings.contactDetails.contactQuote}}{{catalogue.settings.contactDetails.contactQuote}}{{/catalogue.settings.contactDetails.contactQuote}}{{^catalogue.settings.contactDetails.contactQuote}}Where creativity meets craftsmanship{{/catalogue.settings.contactDetails.contactQuote}}"</blockquote>
+        <cite class="cp-quote-author">{{#catalogue.settings.contactDetails.contactQuoteBy}}{{catalogue.settings.contactDetails.contactQuoteBy}}{{/catalogue.settings.contactDetails.contactQuoteBy}}{{^catalogue.settings.contactDetails.contactQuoteBy}}{{#catalogue.settings.companyInfo.companyName}}{{catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{^catalogue.settings.companyInfo.companyName}}{{#profile.companyName}}{{profile.companyName}}{{/profile.companyName}}{{^profile.companyName}}VERITE ATELIER{{/profile.companyName}}{{/catalogue.settings.companyInfo.companyName}}{{/catalogue.settings.contactDetails.contactQuoteBy}}</cite>
       </div>
     </div>
   </div>
@@ -715,29 +699,80 @@ const pages: IframePage[] = [
     <h1 class="cp-contact-title">CONTACT</h1>
 
     <div class="cp-contact-details">
+      {{#catalogue.settings.contactDetails.address}}
       <div class="cp-contact-item">
         <h3>ADDRESS</h3>
-        <p>123 Fashion District<br>Paris, France 75001</p>
+        <p>{{catalogue.settings.contactDetails.address}}{{#catalogue.settings.contactDetails.city}}<br>{{catalogue.settings.contactDetails.city}}{{#catalogue.settings.contactDetails.state}}, {{catalogue.settings.contactDetails.state}}{{/catalogue.settings.contactDetails.state}} {{#catalogue.settings.contactDetails.country}}{{catalogue.settings.contactDetails.country}}{{/catalogue.settings.contactDetails.country}}{{/catalogue.settings.contactDetails.city}}</p>
       </div>
+      {{/catalogue.settings.contactDetails.address}}
+      {{^catalogue.settings.contactDetails.address}}
+      {{#profile.address}}
+      <div class="cp-contact-item">
+        <h3>ADDRESS</h3>
+        <p>{{profile.address}}{{#profile.city}}<br>{{profile.city}}{{#profile.state}}, {{profile.state}}{{/profile.state}}{{/profile.city}}</p>
+      </div>
+      {{/profile.address}}
+      {{/catalogue.settings.contactDetails.address}}
+      
+      {{#catalogue.settings.contactDetails.phone}}
       <div class="cp-contact-item">
         <h3>TELEPHONE</h3>
-        <p>+33 1 42 86 87 88</p>
+        <p>{{catalogue.settings.contactDetails.phone}}</p>
       </div>
+      {{/catalogue.settings.contactDetails.phone}}
+      {{^catalogue.settings.contactDetails.phone}}
+      {{#profile.phone}}
       <div class="cp-contact-item">
-        <h3>Email</h3>
-        <p>contact@verite.fr</p>
+        <h3>TELEPHONE</h3>
+        <p>{{profile.phone}}</p>
       </div>
+      {{/profile.phone}}
+      {{/catalogue.settings.contactDetails.phone}}
+      
+      {{#catalogue.settings.contactDetails.email}}
       <div class="cp-contact-item">
-        <h3>Website</h3>
-        <p>www.verite.fr</p>
+        <h3>EMAIL</h3>
+        <p>{{catalogue.settings.contactDetails.email}}</p>
       </div>
+      {{/catalogue.settings.contactDetails.email}}
+      {{^catalogue.settings.contactDetails.email}}
+      {{#profile.email}}
+      <div class="cp-contact-item">
+        <h3>EMAIL</h3>
+        <p>{{profile.email}}</p>
+      </div>
+      {{/profile.email}}
+      {{/catalogue.settings.contactDetails.email}}
+      
+      {{#catalogue.settings.contactDetails.website}}
+      <div class="cp-contact-item">
+        <h3>WEBSITE</h3>
+        <p>{{catalogue.settings.contactDetails.website}}</p>
+      </div>
+      {{/catalogue.settings.contactDetails.website}}
+      {{^catalogue.settings.contactDetails.website}}
+      {{#profile.website}}
+      <div class="cp-contact-item">
+        <h3>WEBSITE</h3>
+        <p>{{profile.website}}</p>
+      </div>
+      {{/profile.website}}
+      {{/catalogue.settings.contactDetails.website}}
     </div>
 
     <div class="cp-socials">
-      <!-- Replace # with your social links -->
-      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
-      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
-      <a href="#"><svg viewBox="0 0 24 24"><path d="..."/></svg></a>
+      {{#catalogue.settings.socialMedia.instagram}}
+      <a href="{{catalogue.settings.socialMedia.instagram}}" target="_blank" title="Instagram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+      {{/catalogue.settings.socialMedia.instagram}}
+      {{#catalogue.settings.socialMedia.facebook}}
+      <a href="{{catalogue.settings.socialMedia.facebook}}" target="_blank" title="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+      {{/catalogue.settings.socialMedia.facebook}}
+      {{#catalogue.settings.socialMedia.twitter}}
+      <a href="{{catalogue.settings.socialMedia.twitter}}" target="_blank" title="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+      {{/catalogue.settings.socialMedia.twitter}}
+      {{#catalogue.settings.socialMedia.linkedin}}
+      <a href="{{catalogue.settings.socialMedia.linkedin}}" target="_blank" title="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+      {{/catalogue.settings.socialMedia.linkedin}}
     </div>
 
     <div class="cp-qr">

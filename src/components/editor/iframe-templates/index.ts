@@ -1,5 +1,7 @@
 import SmellAddaCatalogTemplate from './FurnitureCatalogueTemplate'
 import FashionCatalogueTemplate from './FashionCatalogueTemplate'
+import SkinCareCatalogueTemplate from './SkinCareCatalogueTemplate'
+import FMCGCatalogueTemplate from './FMCGCatalogueTemplate'
 // Local template types to avoid importing editor internals
 type IframePage = {
   id: string
@@ -14,11 +16,14 @@ export type PrebuiltTemplate = {
   engine: 'mustache' | 'handlebars'
   pages: IframePage[]
   sharedCss?: string
+  dataTransform?: (data: any) => any
 }
 
 export const HtmlTemplates: PrebuiltTemplate[] = [
   SmellAddaCatalogTemplate as unknown as PrebuiltTemplate,
   FashionCatalogueTemplate as unknown as PrebuiltTemplate,
+  SkinCareCatalogueTemplate as unknown as PrebuiltTemplate,
+  FMCGCatalogueTemplate as unknown as PrebuiltTemplate,
 ].filter(Boolean)
 
 export const getTemplateById = (id: string): PrebuiltTemplate | undefined => {

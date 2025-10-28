@@ -217,6 +217,10 @@ export default function CataloguePreviewPage() {
               const parts = String(n).trim().split(/\s+/, 2)
               return parts[1] ? String(parts[1]).toUpperCase() : undefined
             })(),
+            // Products array for templates to loop through
+            products: data.catalogue.products || [],
+            // Categories
+            categories: data.catalogue.categories || [],
             // Expose selected media assets to templates (cover image)
             settings: {
               mediaAssets: {
@@ -234,6 +238,79 @@ export default function CataloguePreviewPage() {
                   (data.catalogue.mediaAssets &&
                     data.catalogue.mediaAssets.introImage) ||
                   undefined,
+              },
+              companyInfo: {
+                companyName:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.companyInfo &&
+                    data.catalogue.settings.companyInfo.companyName) ||
+                  (data.catalogue.profile && data.catalogue.profile.companyName) ||
+                  '',
+                companyDescription:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.companyInfo &&
+                    data.catalogue.settings.companyInfo.companyDescription) ||
+                  data.catalogue.description ||
+                  '',
+              },
+              contactDetails: {
+                email:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.email) ||
+                  (data.catalogue.profile && data.catalogue.profile.email) ||
+                  '',
+                phone:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.phone) ||
+                  (data.catalogue.profile && data.catalogue.profile.phone) ||
+                  '',
+                address:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.address) ||
+                  (data.catalogue.profile && data.catalogue.profile.address) ||
+                  '',
+                website:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.website) ||
+                  (data.catalogue.profile && data.catalogue.profile.website) ||
+                  '',
+                contactImage:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.contactImage) ||
+                  undefined,
+                contactQuote:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.contactDetails &&
+                    data.catalogue.settings.contactDetails.contactQuote) ||
+                  data.catalogue.quote ||
+                  '',
+              },
+              socialMedia: {
+                instagram:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.socialMedia &&
+                    data.catalogue.settings.socialMedia.instagram) ||
+                  '',
+                facebook:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.socialMedia &&
+                    data.catalogue.settings.socialMedia.facebook) ||
+                  '',
+                twitter:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.socialMedia &&
+                    data.catalogue.settings.socialMedia.twitter) ||
+                  '',
+                linkedin:
+                  (data.catalogue.settings &&
+                    data.catalogue.settings.socialMedia &&
+                    data.catalogue.settings.socialMedia.linkedin) ||
+                  '',
               },
             },
           },
@@ -476,11 +553,10 @@ export default function CataloguePreviewPage() {
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
               <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  !isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${!isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
                 onClick={() => setIsPreviewMode(false)}
                 aria-label="Switch to edit mode"
               >
@@ -488,11 +564,10 @@ export default function CataloguePreviewPage() {
                 <span className="leading-none">Edit</span>
               </button>
               <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
                 onClick={() => setIsPreviewMode(true)}
                 aria-label="Switch to preview mode"
               >
@@ -729,18 +804,18 @@ export default function CataloguePreviewPage() {
                 setLiveData({
                   catalogue: catalogue
                     ? {
-                        id: catalogue.id,
-                        name: catalogue.name,
-                      }
+                      id: catalogue.id,
+                      name: catalogue.name,
+                    }
                     : {},
                   profile: catalogue?.profile || {},
                   product: catalogue?.products?.[0]
                     ? {
-                        title: catalogue.products[0].name || '',
-                        price: catalogue.products[0].priceDisplay || '',
-                        image: catalogue.products[0].imageUrl || '',
-                        description: catalogue.products[0].description || '',
-                      }
+                      title: catalogue.products[0].name || '',
+                      price: catalogue.products[0].priceDisplay || '',
+                      image: catalogue.products[0].imageUrl || '',
+                      description: catalogue.products[0].description || '',
+                    }
                     : {},
                   products: catalogue?.products || [],
                   categories: catalogue?.categories || [],
