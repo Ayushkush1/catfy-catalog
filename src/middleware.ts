@@ -69,7 +69,23 @@ export async function middleware(request: NextRequest) {
       '/themes',
       '/catalogues',
       '/billing',
+      '/catalogue', // Protect catalogue edit routes
     ]
+
+    // Public routes that don't require authentication
+    const publicPaths = [
+      '/view', // Public catalogue viewing
+      '/api/catalogues/public', // Public API for fetching catalogues
+    ]
+
+    const isPublicPath = publicPaths.some(path =>
+      request.nextUrl.pathname.startsWith(path)
+    )
+
+    // Skip authentication for public paths
+    if (isPublicPath) {
+      return response
+    }
 
     const isProtectedPath =
       protectedPaths.some(path => request.nextUrl.pathname.startsWith(path)) ||

@@ -2,6 +2,7 @@ import SmellAddaCatalogTemplate from './FurnitureCatalogueTemplate'
 import FashionCatalogueTemplate from './FashionCatalogueTemplate'
 import SkinCareCatalogueTemplate from './SkinCareCatalogueTemplate'
 import FMCGCatalogueTemplate from './FMCGCatalogueTemplate'
+import HomeDecorCatalogueTemplate from './HomeDecorCatalogueTemplate'
 // Local template types to avoid importing editor internals
 type IframePage = {
   id: string
@@ -24,6 +25,7 @@ export const HtmlTemplates: PrebuiltTemplate[] = [
   FashionCatalogueTemplate as unknown as PrebuiltTemplate,
   SkinCareCatalogueTemplate as unknown as PrebuiltTemplate,
   FMCGCatalogueTemplate as unknown as PrebuiltTemplate,
+  HomeDecorCatalogueTemplate as unknown as PrebuiltTemplate,
 ].filter(Boolean)
 
 export const getTemplateById = (id: string): PrebuiltTemplate | undefined => {

@@ -248,12 +248,6 @@ html, body {
     margin: 0 auto;
   }
 
-  @media (max-width: 900px) {
-    .intro-page { flex-direction: column; }
-    .intro-left, .intro-right { width: 100%; height: auto; }
-    .intro-right { padding: 40px 20px; }
-  }
-
   .catalogue-hero-header {
     position: absolute;
     top: 40px;
@@ -701,30 +695,6 @@ html, body {
 .aurum-contact-footer {
   font-size: 0.85rem;
   color: #666;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 900px) {
-  .aurum-contact-page {
-    flex-direction: column;
-  }
-
-  .aurum-contact-left,
-  .aurum-contact-right {
-    flex: unset;
-    height: 50vh;
-  }
-
-  .aurum-contact-quote {
-    bottom: 30px;
-    left: 20px;
-  }
-
-  .aurum-contact-right {
-    padding: 40px 20px;
-    align-items: center;
-    text-align: center;
-  }
 }
 
 

@@ -133,20 +133,6 @@ const sharedCss = `
       text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
     }
 
-    @media (max-width: 768px) {
-      .catalogue-cover__description-card,
-      .catalogue-cover__main-heading {
-        position: static;
-        transform: none;
-        text-align: center;
-        margin: 2rem auto;
-      }
-      .catalogue-cover {
-        height: auto;
-        padding: 4rem 2rem;
-      }
-    }
-
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400&family=Inter:wght@300;400&display=swap');
 
     .brand-promise {
@@ -244,20 +230,6 @@ const sharedCss = `
       margin-bottom: 4rem;
       font-family: 'Inter', sans-serif;
       font-weight: 300;
-    }
-
-    @media (max-width: 900px) {
-      .brand-promise {
-        flex-direction: column;
-      }
-      .brand-promise__left,
-      .brand-promise__right {
-        width: 100%;
-        height: 50vh;
-      }
-      .brand-promise__right {
-        padding: 2rem;
-      }
     }
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400&family=Inter:wght@300;400&display=swap');
@@ -583,31 +555,6 @@ const sharedCss = `
 }
 
 /* Print Styles */
-@media print {
-  body, html {
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .catalogue-cover,
-  .brand-promise,
-  .daily-routine,
-  .contactpage-container {
-    page-break-after: always;
-    page-break-inside: avoid;
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-  }
-  
-  @page {
-    size: A4;
-    margin: 0;
-  }
-}
 
 .dailyRoutineSection {
   position: relative;

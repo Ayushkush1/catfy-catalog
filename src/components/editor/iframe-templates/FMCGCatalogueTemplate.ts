@@ -1,20 +1,20 @@
 // src/components/editor/iframe-templates/FMCGCatalogueTemplate.ts
 
 type IframePage = {
-    id: string
-    name: string
-    html: string
-    css?: string
+  id: string
+  name: string
+  html: string
+  css?: string
 }
 
 export type PrebuiltHtmlTemplate = {
-    id: string
-    name: string
-    engine: 'mustache' | 'handlebars'
-    pages: IframePage[]
-    sharedCss?: string
-    dataTransform?: (data: any) => any
-    pageGenerator?: (data: any, basePages: IframePage[]) => IframePage[]
+  id: string
+  name: string
+  engine: 'mustache' | 'handlebars'
+  pages: IframePage[]
+  sharedCss?: string
+  dataTransform?: (data: any) => any
+  pageGenerator?: (data: any, basePages: IframePage[]) => IframePage[]
 }
 
 const sharedCss = `
@@ -284,27 +284,6 @@ body, html {
   object-position: center;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .crafted-page {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .crafted-right {
-    width: 100%;
-    height: 40vh;
-  }
-
-  .crafted-left {
-    padding: 3rem 2rem;
-  }
-
-  .crafted-title {
-    font-size: 1.6rem;
-  }
-}
-
 /* ==================== PRODUCTS PAGE ==================== */
 .fmcg-products-page {
   width: 100%;
@@ -447,13 +426,6 @@ body, html {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-@media print {
-  .fmcg-products-page {
-    page-break-after: always;
-    break-after: page;
-  }
 }
 
 /* ==================== CONTACT PAGE ==================== */
@@ -645,57 +617,15 @@ body, html {
   color: #999;
 }
 
-@media (max-width: 900px) {
-  .fmcg-contact-wrapper {
-    flex-direction: column;
-  }
-  
-  .fmcg-contact-left,
-  .fmcg-contact-right {
-    width: 100%;
-    height: auto;
-    min-height: 50vh;
-  }
-  
-  .fmcg-products-grid {
-    grid-template-columns: 1fr;
-    padding: 0 1rem;
-  }
-}
-
 /* ==================== PRINT STYLES ==================== */
-@media print {
-  body, html {
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .cover-page,
-  .crafted-page,
-  .fmcg-products-page,
-  .fmcg-contact-wrapper {
-    page-break-after: always;
-    page-break-inside: avoid;
-    width: 100%;
-    height: 100vh;
-    margin: 0;
-    padding: 0;
-  }
-  
-  @page {
-    size: A4;
-    margin: 0;
-  }
-}
+
 `
 
 const pages: IframePage[] = [
-    {
-        id: 'cover',
-        name: 'Cover',
-        html: `
+  {
+    id: 'cover',
+    name: 'Cover',
+    html: `
 <div class="cover-page">
   <div class="cover-bg">
     <div class="cover-bg-gradient"></div>
@@ -726,12 +656,12 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    },
+  },
 
-    {
-        id: 'intro',
-        name: 'About',
-        html: `
+  {
+    id: 'intro',
+    name: 'About',
+    html: `
 <div class="crafted-page">
   <!-- Left Content -->
   <div class="crafted-left">
@@ -774,12 +704,12 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    },
+  },
 
-    {
-        id: 'products',
-        name: 'Products',
-        html: `
+  {
+    id: 'products',
+    name: 'Products',
+    html: `
 <!-- Products Page (shows 3 products per page) -->
 <div class="fmcg-products-page">
   <div class="fmcg-products-header">
@@ -869,10 +799,10 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    }, {
-        id: 'contact',
-        name: 'Contact',
-        html: `
+  }, {
+    id: 'contact',
+    name: 'Contact',
+    html: `
 <div class="fmcg-contact-wrapper">
   <div class="fmcg-contact-left">
     <img 
@@ -1007,64 +937,64 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-    },
+  },
 ]
 
 export const FMCGCatalogueTemplate: PrebuiltHtmlTemplate = {
-    id: 'fmcg-catalogue',
-    name: 'FMCG Catalogue',
-    engine: 'mustache',
-    sharedCss,
-    pages,
-    pageGenerator: (data: any, basePages: IframePage[]) => {
-        // Generate dynamic product pages based on products count
-        const products = data?.catalogue?.products || []
+  id: 'fmcg-catalogue',
+  name: 'FMCG Catalogue',
+  engine: 'mustache',
+  sharedCss,
+  pages,
+  pageGenerator: (data: any, basePages: IframePage[]) => {
+    // Generate dynamic product pages based on products count
+    const products = data?.catalogue?.products || []
 
-        if (products.length === 0) {
-            // Return base pages if no products
-            return basePages
-        }
-
-        // Get non-product pages (cover, intro, contact)
-        const coverPage = basePages.find(p => p.id === 'cover')
-        const introPage = basePages.find(p => p.id === 'intro')
-        const productPageTemplate = basePages.find(p => p.id === 'products')
-        const contactPage = basePages.find(p => p.id === 'contact')
-
-        const result: IframePage[] = []
-
-        // Add cover and intro pages
-        if (coverPage) result.push(coverPage)
-        if (introPage) result.push(introPage)
-
-        // Generate product pages (3 products per page)
-        if (productPageTemplate) {
-            const productsPerPage = 3
-            const totalPages = Math.ceil(products.length / productsPerPage)
-
-            for (let i = 0; i < totalPages; i++) {
-                const startIdx = i * productsPerPage
-                const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
-
-                result.push({
-                    ...productPageTemplate,
-                    id: `products-${i + 1}`,
-                    name: `Products ${i + 1}`,
-                })
-            }
-        }
-
-        // Add contact page
-        if (contactPage) result.push(contactPage)
-
-        return result
-    },
-    dataTransform: (data: any) => {
-        // This transform is called per-page during rendering
-        // We don't need to modify the global data structure anymore
-        // The pageGenerator handles page creation
-        return data
+    if (products.length === 0) {
+      // Return base pages if no products
+      return basePages
     }
+
+    // Get non-product pages (cover, intro, contact)
+    const coverPage = basePages.find(p => p.id === 'cover')
+    const introPage = basePages.find(p => p.id === 'intro')
+    const productPageTemplate = basePages.find(p => p.id === 'products')
+    const contactPage = basePages.find(p => p.id === 'contact')
+
+    const result: IframePage[] = []
+
+    // Add cover and intro pages
+    if (coverPage) result.push(coverPage)
+    if (introPage) result.push(introPage)
+
+    // Generate product pages (3 products per page)
+    if (productPageTemplate) {
+      const productsPerPage = 3
+      const totalPages = Math.ceil(products.length / productsPerPage)
+
+      for (let i = 0; i < totalPages; i++) {
+        const startIdx = i * productsPerPage
+        const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
+
+        result.push({
+          ...productPageTemplate,
+          id: `products-${i + 1}`,
+          name: `Products ${i + 1}`,
+        })
+      }
+    }
+
+    // Add contact page
+    if (contactPage) result.push(contactPage)
+
+    return result
+  },
+  dataTransform: (data: any) => {
+    // This transform is called per-page during rendering
+    // We don't need to modify the global data structure anymore
+    // The pageGenerator handles page creation
+    return data
+  }
 }
 
 export default FMCGCatalogueTemplate

@@ -368,23 +368,6 @@ body, html {
       flex-direction: row-reverse;
     }
 
-    @media (max-width: 900px) {
-      .fashion-product-section {
-        flex-direction: column;
-        height: auto;
-      }
-
-      .fashion-product-image,
-      .fashion-product-details {
-        width: 100%;
-        height: auto;
-      }
-
-      .fashion-product-details {
-        padding: 40px;
-      }
-    }
-
     /* Unique class prefixes: cp- for Contact Page */
     .cp-container {
       width: 100%;

@@ -25,8 +25,6 @@ import {
   Share,
   Share2,
   Link as LinkIcon,
-  FileJson,
-  FileType,
   Printer,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -94,6 +92,21 @@ export default function CataloguePreviewPage() {
   const [isEditorReady, setIsEditorReady] = useState(false) // NEW: Prevent flash on initial load
   const [isExportingPDF, setIsExportingPDF] = useState(false) // Loading state for PDF export
   const iframeGetterRef = useRef<() => HTMLIFrameElement | null>(() => null)
+
+  // Helper function to get public share URL
+  const getPublicShareUrl = () => {
+    if (typeof window === 'undefined' || !catalogue) return ''
+
+    // If catalogue has a slug, use the public view URL
+    if (catalogue.slug) {
+      const baseUrl = window.location.origin
+      return `${baseUrl}/view/${catalogue.slug}`
+    }
+
+    // Fallback to current URL
+    return window.location.href
+  }
+
   const editorControlsRef = useRef<{
     undo: () => void
     redo: () => void
@@ -554,8 +567,8 @@ export default function CataloguePreviewPage() {
             <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
               <button
                 className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${!isPreviewMode
-                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 onClick={() => setIsPreviewMode(false)}
                 aria-label="Switch to edit mode"
@@ -565,8 +578,8 @@ export default function CataloguePreviewPage() {
               </button>
               <button
                 className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${isPreviewMode
-                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 onClick={() => setIsPreviewMode(true)}
                 aria-label="Switch to preview mode"
@@ -580,25 +593,29 @@ export default function CataloguePreviewPage() {
 
         {/* Center Zoom/Grid controls */}
         <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
-          {/* Undo/Redo icons */}
-          <button
-            className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            disabled={!editorControlsRef.current?.hasUndo?.()}
-            onClick={() => editorControlsRef.current?.undo?.()}
-            aria-label="Undo"
-          >
-            <Undo className="h-4 w-4" />
-          </button>
-          <button
-            className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-            disabled={!editorControlsRef.current?.hasRedo?.()}
-            onClick={() => editorControlsRef.current?.redo?.()}
-            aria-label="Redo"
-          >
-            <Redo className="h-4 w-4" />
-          </button>
+          {/* Undo/Redo icons - Hidden in preview mode */}
+          {!isPreviewMode && (
+            <>
+              <button
+                className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                disabled={!editorControlsRef.current?.hasUndo?.()}
+                onClick={() => editorControlsRef.current?.undo?.()}
+                aria-label="Undo"
+              >
+                <Undo className="h-4 w-4" />
+              </button>
+              <button
+                className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                disabled={!editorControlsRef.current?.hasRedo?.()}
+                onClick={() => editorControlsRef.current?.redo?.()}
+                aria-label="Redo"
+              >
+                <Redo className="h-4 w-4" />
+              </button>
 
-          <hr className="h-6 w-[1px] bg-gray-300"></hr>
+              <hr className="h-6 w-[1px] bg-gray-300"></hr>
+            </>
+          )}
           <button
             className="pl-2 text-gray-700"
             onClick={() => {
@@ -632,48 +649,50 @@ export default function CataloguePreviewPage() {
           >
             <ZoomIn className="h-4 w-4" />
           </button>
-          {/* Page navigator: Page X of Y with prev/next chevrons */}
-          <div className="ml-3 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1">
-            <span className="text-xs text-gray-700">
-              Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}
-            </span>
-            <button
-              className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-              onClick={() => {
-                editorControlsRef.current?.goPrev?.()
-                setTimeout(() => {
-                  setPageIndex(
-                    editorControlsRef.current?.getCurrentPageIndex?.() || 0
-                  )
-                  setPageCount(
-                    editorControlsRef.current?.getPages?.()?.length || pageCount
-                  )
-                }, 0)
-              }}
-              disabled={pageIndex <= 0}
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-              onClick={() => {
-                editorControlsRef.current?.goNext?.()
-                setTimeout(() => {
-                  setPageIndex(
-                    editorControlsRef.current?.getCurrentPageIndex?.() || 0
-                  )
-                  setPageCount(
-                    editorControlsRef.current?.getPages?.()?.length || pageCount
-                  )
-                }, 0)
-              }}
-              disabled={pageIndex >= pageCount - 1}
-              aria-label="Next page"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          {/* Page navigator: Page X of Y with prev/next chevrons - Hidden in preview mode */}
+          {!isPreviewMode && (
+            <div className="ml-3 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1">
+              <span className="text-xs text-gray-700">
+                Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}
+              </span>
+              <button
+                className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                onClick={() => {
+                  editorControlsRef.current?.goPrev?.()
+                  setTimeout(() => {
+                    setPageIndex(
+                      editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                    )
+                    setPageCount(
+                      editorControlsRef.current?.getPages?.()?.length || pageCount
+                    )
+                  }, 0)
+                }}
+                disabled={pageIndex <= 0}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                onClick={() => {
+                  editorControlsRef.current?.goNext?.()
+                  setTimeout(() => {
+                    setPageIndex(
+                      editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                    )
+                    setPageCount(
+                      editorControlsRef.current?.getPages?.()?.length || pageCount
+                    )
+                  }, 0)
+                }}
+                disabled={pageIndex >= pageCount - 1}
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-4">
@@ -940,25 +959,12 @@ export default function CataloguePreviewPage() {
           <DialogHeader>
             <DialogTitle>Share & Export</DialogTitle>
             <DialogDescription>
-              Select an option to share or export your catalogue.
+              Share your catalogue with others or export it as PDF/PNG.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Export Options */}
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={() => editorControlsRef.current?.exportHTML?.()}
-              >
-                <FileType className="h-4 w-4" /> Export HTML
-              </Button>
-              <Button
-                variant="outline"
-                className="flex  items-center gap-2"
-                onClick={() => editorControlsRef.current?.exportJSON?.()}
-              >
-                <FileJson className="h-4 w-4" /> Export JSON
-              </Button>
               <Button
                 variant="outline"
                 className="flex items-center gap-2"
@@ -966,7 +972,7 @@ export default function CataloguePreviewPage() {
                 onClick={async () => {
                   try {
                     setIsExportingPDF(true)
-                    toast.loading('Generating PDF with Playwright...', {
+                    toast.loading('Generating PDF...', {
                       id: 'pdf-export',
                     })
                     await editorControlsRef.current?.exportPDF?.()
@@ -998,65 +1004,88 @@ export default function CataloguePreviewPage() {
                 <Share className="h-4 w-4" /> Export PNG
               </Button>
             </div>
+
+            {/* Share Link Section */}
             <div className="space-y-2">
-              <div className="text-sm font-medium">Share link</div>
-              <div className="flex gap-2">
-                <input
-                  className="flex-1 rounded border px-2 py-1 text-sm"
-                  value={
-                    typeof window !== 'undefined' ? window.location.href : ''
-                  }
-                  readOnly
-                />
-                <Button
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href)
-                    toast.success('Link copied')
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <LinkIcon className="h-4 w-4" /> Copy
-                </Button>
-              </div>
+              <div className="text-sm font-medium">Public Share Link</div>
+              {catalogue?.isPublic && catalogue?.slug ? (
+                <>
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded border px-2 py-1 text-sm bg-green-50 border-green-200"
+                      value={getPublicShareUrl()}
+                      readOnly
+                    />
+                    <Button
+                      onClick={() => {
+                        const shareUrl = getPublicShareUrl()
+                        navigator.clipboard.writeText(shareUrl)
+                        toast.success('Public link copied to clipboard!')
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <LinkIcon className="h-4 w-4" /> Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    ✓ Anyone with this link can view your catalogue
+                  </p>
+                </>
+              ) : catalogue?.isPublic && !catalogue?.slug ? (
+                <div className="rounded-md bg-orange-50 border border-orange-200 p-3">
+                  <p className="text-sm text-orange-800 mb-2">
+                    ⚠️ Your catalogue is public but needs a unique URL slug to be shareable.
+                  </p>
+                  <p className="text-xs text-orange-700">
+                    Go to <strong>Edit → Overview → Quick Actions</strong> to add a slug and generate your public share link.
+                  </p>
+                </div>
+              ) : !catalogue?.isPublic ? (
+                <div className="rounded-md bg-orange-50 border border-orange-200 p-3">
+                  <p className="text-sm text-orange-800 mb-2">
+                    🔒 This catalogue is currently private.
+                  </p>
+                  <p className="text-xs text-orange-700">
+                    Go to <strong>Edit → Overview → Quick Actions</strong> to make it public and add a share link.
+                  </p>
+                </div>
+              ) : null}
             </div>
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Share to</div>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    window.open(
-                      `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
-                      '_blank'
-                    )
-                  }
-                >
-                  Twitter
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    window.open(
-                      `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}`,
-                      '_blank'
-                    )
-                  }
-                >
-                  LinkedIn
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    window.open(
-                      `https://wa.me/?text=${encodeURIComponent(window.location.href)}`,
-                      '_blank'
-                    )
-                  }
-                >
-                  WhatsApp
-                </Button>
+
+            {/* Share to Social Media - Only show if public and has slug */}
+            {catalogue?.isPublic && catalogue?.slug && (
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Share via</div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => {
+                      const shareUrl = getPublicShareUrl()
+                      const text = `Check out my catalogue: ${catalogue?.name}`
+                      window.open(
+                        `https://wa.me/?text=${encodeURIComponent(`${text}\n${shareUrl}`)}`,
+                        '_blank'
+                      )
+                    }}
+                  >
+                    WhatsApp
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => {
+                      const shareUrl = getPublicShareUrl()
+                      const subject = encodeURIComponent(`Check out: ${catalogue?.name}`)
+                      const body = encodeURIComponent(`I wanted to share this catalogue with you:\n\n${catalogue?.name}\n\nView it here: ${shareUrl}`)
+                      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
+                    }}
+                  >
+                    Email
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

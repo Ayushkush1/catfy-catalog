@@ -28,15 +28,20 @@ function convertHtmlTemplateToConfig(
     category: 'modern', // All HTML templates use modern category
     isPremium: false,
     version: '1.0.0',
-    // Use specific preview assets from public/templates. Some template ids differ from the
-    // public filename (eg. furniture-catalog -> furniture-catalogue-preview.png).
-    // Map known special cases here; default to svg preview naming.
+    // Use specific preview assets from public/templates. All templates have PNG previews.
+    // Map template IDs to their corresponding preview image files.
     previewImage:
       htmlTemplate.id === 'furniture-catalog'
         ? '/templates/furniture-catalogue-preview.png'
         : htmlTemplate.id === 'fashion-catalogue'
           ? '/templates/fashion-catalogue-preview.png'
-          : `/templates/${htmlTemplate.id}-preview.svg`,
+          : htmlTemplate.id === 'skincare-catalogue'
+            ? '/templates/skincare-catalogue-preview.png'
+            : htmlTemplate.id === 'fmcg-catalogue'
+              ? '/templates/fmcg-catalogue-preview.png'
+              : htmlTemplate.id === 'home-decor-catalogue'
+                ? '/templates/home-decor-catalogue-preview.png'
+                : `/templates/${htmlTemplate.id}-preview.svg`,
     features: [
       'HTML',
       htmlTemplate.engine,
@@ -204,15 +209,15 @@ export function getTemplateById(templateId: string) {
     totalTemplates: registry.getAllTemplates().length,
     templateData: template
       ? {
-          id: template.id,
-          name: template.name,
-          hasCustomProperties: !!template.customProperties,
-          hasEditorData: !!template.customProperties?.editorData,
-          editorDataType: typeof template.customProperties?.editorData,
-          editorDataKeys: template.customProperties?.editorData
-            ? Object.keys(template.customProperties.editorData)
-            : [],
-        }
+        id: template.id,
+        name: template.name,
+        hasCustomProperties: !!template.customProperties,
+        hasEditorData: !!template.customProperties?.editorData,
+        editorDataType: typeof template.customProperties?.editorData,
+        editorDataKeys: template.customProperties?.editorData
+          ? Object.keys(template.customProperties.editorData)
+          : [],
+      }
       : null,
   })
 

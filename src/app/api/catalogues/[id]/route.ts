@@ -16,6 +16,7 @@ const updateCatalogueSchema = z.object({
   introImage: z.string().optional(),
   theme: z.string().optional(),
   isPublic: z.boolean().optional(),
+  slug: z.string().optional(),
 
   // Company/Profile information (flattened)
   companyName: z.string().optional(),
@@ -294,9 +295,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         description: catalogue.description,
         quote: catalogue.quote,
         tagline: catalogue.tagline,
+        year: catalogue.year,
         introImage: catalogue.introImage,
         theme: catalogue.theme,
+        template: catalogue.template,
         isPublic: catalogue.isPublic,
+        slug: catalogue.slug,
         settings: (catalogue.settings as Record<string, any>) || {},
         products: catalogue.products.map(product => ({
           id: product.id,
@@ -316,10 +320,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           sortOrder: product.sortOrder,
           category: product.category
             ? {
-                id: product.category.id,
-                name: product.category.name,
-                color: product.category.color,
-              }
+              id: product.category.id,
+              name: product.category.name,
+              color: product.category.color,
+            }
             : null,
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
@@ -429,6 +433,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       introImage,
       theme,
       isPublic,
+      slug,
       // Extract flattened fields
       companyName,
       companyDescription,
@@ -554,6 +559,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       ...(introImage !== undefined && { introImage }),
       ...(theme !== undefined && { theme }),
       ...(isPublic !== undefined && { isPublic }),
+      ...(slug !== undefined && { slug }),
       ...(template !== undefined && { template }), // 🔥 ADD: Update catalogue.template field
     }
 

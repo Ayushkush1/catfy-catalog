@@ -37,9 +37,11 @@ export function useSimpleDrag({
       const doc = iframeRef.current?.contentDocument
       if (!doc || !element) return
 
-      // Get current position
-      const currentX = parseInt(element.dataset.x || '0')
-      const currentY = parseInt(element.dataset.y || '0')
+      // Get current transform values
+      const transform = element.style.transform || ''
+      const match = transform.match(/translate\((-?\d+)px,\s*(-?\d+)px\)/)
+      const currentX = match ? parseInt(match[1]) : 0
+      const currentY = match ? parseInt(match[2]) : 0
 
       // Store drag state
       dragStateRef.current = {
@@ -56,9 +58,13 @@ export function useSimpleDrag({
         offsetY: currentY,
       }
 
+      // Ensure element can be positioned
+      if (!element.style.position || element.style.position === 'static') {
+        element.style.position = 'relative'
+      }
+
       // Set element as dragging
       element.classList.add('dragging')
-      element.style.position = 'relative'
       element.style.zIndex = '9999'
       element.style.opacity = '0.8'
       element.style.cursor = 'grabbing'

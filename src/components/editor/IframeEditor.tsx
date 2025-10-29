@@ -164,6 +164,7 @@ export default function IframeEditor({
   )
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([])
   const stageContainerRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
   const leftSidebarRef = useRef<HTMLDivElement>(null)
@@ -2297,7 +2298,44 @@ export default function IframeEditor({
     // For now, default to Mustache until Handlebars adapter lands
     const rendered = Mustache.render(currentPage.html, transformedData)
     return `${cssBlock}\n${rendered}`
-  }, [template, currentPage, liveData])  // Track the last rendered HTML to prevent unnecessary iframe reloads
+  }, [template, currentPage, liveData])
+
+  // Compile HTML for all pages (used in preview mode)
+  const allPagesCompiledHtml = useMemo(() => {
+    return pages.map((page) => {
+      const cssBlock = `<style>${template?.sharedCss || ''}\n${page?.css || ''}</style>`
+
+      // Apply data transformation if template provides one
+      let transformedData = template.dataTransform
+        ? template.dataTransform(liveData)
+        : liveData
+
+      // For product pages, add page-specific products and pagination info
+      if (page.id.startsWith('products-')) {
+        const pageNumber = parseInt(page.id.split('-')[1]) || 1
+        const products = liveData?.catalogue?.products || []
+        const productsPerPage = 3
+        const startIdx = (pageNumber - 1) * productsPerPage
+        const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
+        const totalProductPages = Math.ceil(products.length / productsPerPage)
+
+        transformedData = {
+          ...transformedData,
+          pageProducts,
+          pageNumber,
+          totalProductPages
+        }
+      }
+
+      if (template.engine === 'mustache') {
+        const rendered = Mustache.render(page.html, transformedData)
+        return `${cssBlock}\n${rendered}`
+      }
+      // For now, default to Mustache until Handlebars adapter lands
+      const rendered = Mustache.render(page.html, transformedData)
+      return `${cssBlock}\n${rendered}`
+    })
+  }, [template, pages, liveData])  // Track the last rendered HTML to prevent unnecessary iframe reloads
   const lastRenderedHtmlRef = useRef<string>('')
 
   useEffect(() => {
@@ -2387,6 +2425,41 @@ export default function IframeEditor({
     }, 50)
     return () => clearTimeout(timeoutId)
   }, [compiledHtml, styleMutations, onIframeReady])
+
+  // Render all pages in preview mode
+  useEffect(() => {
+    if (!previewMode) return
+
+    allPagesCompiledHtml.forEach((pageHtml, index) => {
+      const iframe = iframeRefs.current[index]
+      if (!iframe) return
+
+      // Write to iframe via srcdoc for sandboxed DOM
+      iframe.srcdoc = pageHtml
+
+      // Wait for iframe to load, then apply any necessary setup
+      const applySetup = () => {
+        const doc = iframe.contentDocument
+        if (!doc || !doc.body) return
+
+        // Mark ready for PDF if needed
+        if (doc.body) {
+          doc.body.setAttribute('data-pdf-ready', 'true')
+        }
+
+        // Apply style mutations if any exist for this page
+        Object.entries(styleMutations).forEach(([path, styles]) => {
+          const el = resolvePathToElement(doc, path)
+          if (el) Object.assign((el as HTMLElement).style, styles)
+        })
+      }
+
+      // Wait a tick for DOM to be ready
+      setTimeout(() => {
+        applySetup()
+      }, 50)
+    })
+  }, [allPagesCompiledHtml, previewMode, styleMutations])
 
   // Inject interaction styles (disable outlines; we render overlay rectangles)
   const ensureInteractionStyleTag = () => {
@@ -3752,86 +3825,127 @@ export default function IframeEditor({
             className={`flex flex-1 bg-gray-50 ${containerClasses} h-full justify-center transition-all duration-500 ease-in-out`}
             style={containerStyle}
           >
-            <div
-              ref={canvasWrapperRef}
-              style={{
-                width: BASE_W * scale,
-                height: BASE_H * scale,
-                position: 'relative',
-                overflow: 'visible',
-                transition: 'all 0.3s ease-in-out',
-              }}
-            >
-              {/* Simple drag status */}
-              {isDragging && (
-                <div className="absolute left-4 top-4 z-10 rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm">
-                  <div className="flex items-center gap-2 text-sm text-blue-700">
-                    <Move3D size={14} className="animate-pulse" />
-                    <span>Dragging element...</span>
+            {previewMode ? (
+              // Preview Mode: Show all pages stacked vertically
+              <div className="flex h-full w-full flex-col items-center gap-8 overflow-auto py-8">
+                {pages.map((page, index) => (
+                  <div
+                    key={page.id}
+                    className="flex flex-col items-center gap-2"
+                    style={{
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top center',
+                    }}
+                  >
+                    <div className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
+                      Page {index + 1}
+                    </div>
+                    <div
+                      className="border bg-white shadow transition-all duration-300 ease-in-out"
+                      style={{
+                        width: BASE_W,
+                        height: BASE_H,
+                      }}
+                    >
+                      <iframe
+                        ref={(el) => {
+                          iframeRefs.current[index] = el
+                        }}
+                        title={`Page ${index + 1}`}
+                        style={{
+                          width: BASE_W,
+                          height: BASE_H,
+                          border: 'none',
+                        }}
+                        sandbox="allow-same-origin allow-scripts"
+                      />
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs text-blue-500">
-                    Release to drop at new position
-                  </div>
-                </div>
-              )}
-
+                ))}
+              </div>
+            ) : (
+              // Edit Mode: Show single page with navigation
               <div
-                className="border bg-white shadow transition-all duration-300 ease-in-out"
+                ref={canvasWrapperRef}
                 style={{
-                  width: BASE_W,
-                  height: BASE_H,
-                  transform: `scale(${scale})`,
-                  transformOrigin: 'top left',
+                  width: BASE_W * scale,
+                  height: BASE_H * scale,
+                  position: 'relative',
+                  overflow: 'visible',
+                  transition: 'all 0.3s ease-in-out',
                 }}
               >
-                <iframe
-                  ref={iframeRef}
-                  title={`Page ${currentPageIndex + 1}`}
+                {/* Simple drag status */}
+                {isDragging && (
+                  <div className="absolute left-4 top-4 z-10 rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm">
+                    <div className="flex items-center gap-2 text-sm text-blue-700">
+                      <Move3D size={14} className="animate-pulse" />
+                      <span>Dragging element...</span>
+                    </div>
+                    <div className="mt-1 text-xs text-blue-500">
+                      Release to drop at new position
+                    </div>
+                  </div>
+                )}
+
+                <div
+                  className="border bg-white shadow transition-all duration-300 ease-in-out"
                   style={{
                     width: BASE_W,
                     height: BASE_H,
-                    border: 'none',
-                    opacity: isPageTransitioning ? 0 : 1,
-                    transform: isPageTransitioning
-                      ? 'translateX(20px) scale(0.98)'
-                      : 'translateX(0) scale(1)',
-                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
                   }}
-                  sandbox="allow-same-origin allow-scripts"
-                />
+                >
+                  <iframe
+                    ref={iframeRef}
+                    title={`Page ${currentPageIndex + 1}`}
+                    style={{
+                      width: BASE_W,
+                      height: BASE_H,
+                      border: 'none',
+                      opacity: isPageTransitioning ? 0 : 1,
+                      transform: isPageTransitioning
+                        ? 'translateX(20px) scale(0.98)'
+                        : 'translateX(0) scale(1)',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                    sandbox="allow-same-origin allow-scripts"
+                  />
+                </div>
+                {showGrid && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      pointerEvents: 'none',
+                      backgroundImage:
+                        'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
+                      backgroundSize: `${20 * scale}px ${20 * scale}px`,
+                    }}
+                  />
+                )}
+                {/* Show hover border when hovering any element, even if something is selected */}
+                {hoveredPath && (
+                  <HoverRectOverlay
+                    iframeRef={iframeRef}
+                    hoveredPath={hoveredPath}
+                    selectedPath={selectedPath}
+                    scale={scale}
+                  />
+                )}
+                {selectedPath && (
+                  <SelectionActionsOverlay
+                    iframeRef={iframeRef}
+                    selectedPath={selectedPath}
+                    scale={scale}
+                    onChangeSelectedPath={p => setSelectedPath(p)}
+                    onStartDrag={handleStartDrag}
+                  />
+                )}
+                {/* Canvas Toolbar removed; controls now live in the top navbar */}
               </div>
-              {showGrid && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    pointerEvents: 'none',
-                    backgroundImage:
-                      'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
-                    backgroundSize: `${20 * scale}px ${20 * scale}px`,
-                  }}
-                />
-              )}
-              {/* Show hover border when hovering any element, even if something is selected */}
-              {hoveredPath && (
-                <HoverRectOverlay
-                  iframeRef={iframeRef}
-                  hoveredPath={hoveredPath}
-                  selectedPath={selectedPath}
-                  scale={scale}
-                />
-              )}
-              {selectedPath && (
-                <SelectionActionsOverlay
-                  iframeRef={iframeRef}
-                  selectedPath={selectedPath}
-                  scale={scale}
-                  onChangeSelectedPath={p => setSelectedPath(p)}
-                  onStartDrag={handleStartDrag}
-                />
-              )}
-              {/* Canvas Toolbar removed; controls now live in the top navbar */}
-            </div>
+            )}
           </div>
         )
       })()}
@@ -4969,25 +5083,20 @@ function SelectionActionsOverlay({
       setRect(null)
       return
     }
-    // Compute position relative to the iframe body using offsets, then scale
-    const getOffsets = (node: HTMLElement) => {
-      let top = 0,
-        left = 0
-      let cur: HTMLElement | null = node
-      while (cur && cur !== doc.body) {
-        top += cur.offsetTop
-        left += cur.offsetLeft
-        cur = cur.offsetParent as HTMLElement | null
-      }
-      return { top, left }
-    }
-    const offsets = getOffsets(el)
-    const r = el.getBoundingClientRect()
+
+    // Get the actual visual position using getBoundingClientRect
+    const elRect = el.getBoundingClientRect()
+    const bodyRect = doc.body.getBoundingClientRect()
+
+    // Calculate position relative to body
+    const top = elRect.top - bodyRect.top
+    const left = elRect.left - bodyRect.left
+
     setRect({
-      top: offsets.top * scale,
-      left: offsets.left * scale,
-      width: r.width * scale,
-      height: r.height * scale,
+      top: top * scale,
+      left: left * scale,
+      width: elRect.width * scale,
+      height: elRect.height * scale,
     })
   }, [selectedPath, scale])
 
@@ -5184,6 +5293,13 @@ function SelectionActionsOverlay({
           el.dataset.x,
           el.dataset.y
         )
+
+        // Force overlay to update by temporarily clearing and restoring selection
+        const currentPath = selectedPath
+        onChangeSelectedPath(null)
+        requestAnimationFrame(() => {
+          onChangeSelectedPath(currentPath)
+        })
       }
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
@@ -5352,24 +5468,20 @@ function HoverRectOverlay({
       setRect(null)
       return
     }
-    const getOffsets = (node: HTMLElement) => {
-      let top = 0,
-        left = 0
-      let cur: HTMLElement | null = node
-      while (cur && cur !== doc.body) {
-        top += cur.offsetTop
-        left += cur.offsetLeft
-        cur = cur.offsetParent as HTMLElement | null
-      }
-      return { top, left }
-    }
-    const offsets = getOffsets(el)
-    const r = el.getBoundingClientRect()
+
+    // Get the actual visual position using getBoundingClientRect
+    const elRect = el.getBoundingClientRect()
+    const bodyRect = doc.body.getBoundingClientRect()
+
+    // Calculate position relative to body
+    const top = elRect.top - bodyRect.top
+    const left = elRect.left - bodyRect.left
+
     setRect({
-      top: offsets.top * scale,
-      left: offsets.left * scale,
-      width: r.width * scale,
-      height: r.height * scale,
+      top: top * scale,
+      left: left * scale,
+      width: elRect.width * scale,
+      height: elRect.height * scale,
     })
   }, [hoveredPath, selectedPath, scale])
   if (!rect) return null
