@@ -294,7 +294,7 @@ export default function DashboardPage() {
 
         // Get recent items (last 6 updated catalogues)
         const recent = cataloguesData.catalogues
-          .sort((a: Catalogue, b: Catalogue) => 
+          .sort((a: Catalogue, b: Catalogue) =>
             new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
           )
           .slice(0, 6)
@@ -666,7 +666,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-         
+
 
           {/* Tools Selection Section - Compact */}
           <div className="mb-10">
@@ -744,8 +744,8 @@ export default function DashboardPage() {
                   <div className="flex gap-2 pt-1">
                     <Button
                       onClick={() => {
-                        document.getElementById('all-catalogues')?.scrollIntoView({ 
-                          behavior: 'smooth' 
+                        document.getElementById('all-catalogues')?.scrollIntoView({
+                          behavior: 'smooth'
                         })
                       }}
                       variant="outline"
@@ -845,7 +845,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-           {/* Recent Activity Section */}
+          {/* Recent Activity Section */}
           <div className="mb-10">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -859,8 +859,8 @@ export default function DashboardPage() {
                   variant="ghost"
                   className="text-sm text-[#6366F1] hover:text-[#4f46e5]"
                   onClick={() => {
-                    document.getElementById('all-catalogues')?.scrollIntoView({ 
-                      behavior: 'smooth' 
+                    document.getElementById('all-catalogues')?.scrollIntoView({
+                      behavior: 'smooth'
                     })
                   }}
                 >
@@ -869,7 +869,7 @@ export default function DashboardPage() {
                 </Button>
               )}
             </div>
-            
+
             {recentItems.length > 0 ? (
               <div className="overflow-x-auto pb-4">
                 <div className="flex gap-4">
@@ -894,7 +894,7 @@ export default function DashboardPage() {
                           {item.type === 'CATALOGUE' ? 'Catalogue' : 'PDF'}
                         </Badge>
                       </div>
-                      
+
                       <div className="p-4">
                         <h3 className="mb-1 font-semibold text-gray-900 line-clamp-1">
                           {item.name}
@@ -902,7 +902,7 @@ export default function DashboardPage() {
                         <p className="mb-3 text-xs text-gray-500 line-clamp-1">
                           {item.description || 'No description'}
                         </p>
-                        
+
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <div className="flex items-center gap-1">
                             <Package className="h-3 w-3" />
@@ -1046,8 +1046,8 @@ export default function DashboardPage() {
                         'Fashion Collection',
                         'Tech Gadgets',
                       ].includes(catalogue.name) && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B69] via-[#6366F1] to-[#8B5CF6]" />
-                      )}
+                          <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B69] via-[#6366F1] to-[#8B5CF6]" />
+                        )}
 
                       {/* Beautiful Pattern Overlay */}
                       <div className="absolute inset-0 opacity-30">
@@ -1086,11 +1086,10 @@ export default function DashboardPage() {
                       <div className="absolute left-4 top-4">
                         <Badge
                           variant={catalogue.isPublic ? 'default' : 'secondary'}
-                          className={`border px-3 py-1 text-xs font-medium backdrop-blur-sm ${
-                            catalogue.isPublic
+                          className={`border px-3 py-1 text-xs font-medium backdrop-blur-sm ${catalogue.isPublic
                               ? 'border-emerald-400 bg-emerald-500/90 text-white'
                               : 'border-red-400 bg-red-500/90 text-white'
-                          }`}
+                            }`}
                         >
                           {catalogue.isPublic ? 'Public' : 'Private'}
                         </Badge>
