@@ -142,6 +142,8 @@ export default function CataloguePreviewPage() {
   const [shareOpen, setShareOpen] = useState<boolean>(false)
   const [pageIndex, setPageIndex] = useState<number>(0)
   const [pageCount, setPageCount] = useState<number>(1)
+  const [canUndo, setCanUndo] = useState<boolean>(false)
+  const [canRedo, setCanRedo] = useState<boolean>(false)
 
   // Keep navbar page index/count in sync with iframe editor
   useEffect(() => {
@@ -156,9 +158,15 @@ export default function CataloguePreviewPage() {
       if (Array.isArray(pages) && pages.length !== pageCount) {
         setPageCount(pages.length)
       }
+
+      // Poll undo/redo state
+      const hasUndo = controls.hasUndo?.() || false
+      const hasRedo = controls.hasRedo?.() || false
+      if (hasUndo !== canUndo) setCanUndo(hasUndo)
+      if (hasRedo !== canRedo) setCanRedo(hasRedo)
     }, 250)
     return () => clearInterval(interval)
-  }, [pageIndex, pageCount])
+  }, [pageIndex, pageCount, canUndo, canRedo])
 
   // Poll save status from editor
   useEffect(() => {
@@ -598,7 +606,7 @@ export default function CataloguePreviewPage() {
             <>
               <button
                 className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                disabled={!editorControlsRef.current?.hasUndo?.()}
+                disabled={!canUndo}
                 onClick={() => editorControlsRef.current?.undo?.()}
                 aria-label="Undo"
               >
@@ -606,7 +614,7 @@ export default function CataloguePreviewPage() {
               </button>
               <button
                 className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                disabled={!editorControlsRef.current?.hasRedo?.()}
+                disabled={!canRedo}
                 onClick={() => editorControlsRef.current?.redo?.()}
                 aria-label="Redo"
               >

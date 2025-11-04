@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { createRoot } from 'react-dom/client'
 import {
   FileText,
   Layers as LayersIcon,
@@ -25,6 +26,8 @@ import {
   LayoutGrid,
   GripVertical,
 } from 'lucide-react'
+import { IconContext } from '@phosphor-icons/react'
+import * as PhosphorIcons from '@phosphor-icons/react'
 import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
 import html2canvas from 'html2canvas'
@@ -201,6 +204,58 @@ export default function IframeEditor({
   const [futureMutations, setFutureMutations] = useState<
     Record<string, Partial<CSSStyleDeclaration>>[]
   >([])
+
+  // Comprehensive history system for all canvas changes
+  const [htmlHistory, setHtmlHistory] = useState<string[]>([])
+  const [htmlHistoryIndex, setHtmlHistoryIndex] = useState<number>(-1)
+  const htmlHistoryIndexRef = useRef<number>(-1)
+  const isRestoringHistory = useRef<boolean>(false)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    htmlHistoryIndexRef.current = htmlHistoryIndex
+  }, [htmlHistoryIndex])
+
+  // Save current HTML state to history BEFORE making changes
+  const saveToHistory = useCallback(() => {
+    if (isRestoringHistory.current) {
+      console.log('⏭️ Skipping history save - currently restoring')
+      return
+    }
+
+    const doc = iframeRef.current?.contentDocument
+    if (!doc || !doc.body) return
+
+    const currentHtml = doc.body.innerHTML
+    const currentIndex = htmlHistoryIndexRef.current
+
+    console.log('💾 Saving to history - current index:', currentIndex)
+
+    setHtmlHistory(prev => {
+      // Remove any future history if we're not at the end
+      const newHistory = prev.slice(0, currentIndex + 1)
+
+      // Don't add duplicate state
+      if (newHistory.length > 0 && newHistory[newHistory.length - 1] === currentHtml) {
+        console.log('⚠️ Duplicate state - not saving')
+        return prev
+      }
+
+      // Add current state
+      newHistory.push(currentHtml)
+
+      console.log('✅ History saved - new index:', currentIndex + 1, 'total states:', newHistory.length)
+
+      // Limit history to 50 states
+      if (newHistory.length > 50) {
+        return newHistory.slice(-50)
+      }
+      return newHistory
+    })
+
+    setHtmlHistoryIndex(currentIndex + 1)
+  }, [])
+
   const lastAppliedPathsRef = useRef<string[]>([])
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [selectedTag, setSelectedTag] = useState<string>('')
@@ -1866,13 +1921,27 @@ export default function IframeEditor({
 
   // Generate dynamic pages using pageGenerator if available
   useEffect(() => {
+    console.log('🔄 Page generation triggered with data:', {
+      hasPageGenerator: !!template.pageGenerator,
+      catalogueExists: !!liveData.catalogue,
+      productsCount: liveData.catalogue?.products?.length || 0,
+      templateId: template.id
+    });
+
     if (template.pageGenerator) {
       const generatedPages = template.pageGenerator(liveData, template.pages)
+      console.log('📄 Generated pages:', generatedPages.map(p => ({ id: p.id, name: p.name })));
       setPages(generatedPages)
     } else {
+      console.log('📄 Using base template pages');
       setPages(template.pages)
     }
-  }, [template.id, template.pageGenerator, liveData.catalogue?.products?.length])
+  }, [
+    template.id,
+    template.pageGenerator,
+    liveData, // Watch entire liveData object for changes
+    JSON.stringify(liveData.catalogue?.products) // Deep watch products array
+  ])
 
   // Auto-collapse left tab when element is selected (except for layers tab)
   useEffect(() => {
@@ -2544,6 +2613,17 @@ export default function IframeEditor({
     })
   }
 
+  // Update liveData when initialData prop changes
+  useEffect(() => {
+    if (initialData) {
+      console.log('📥 Updating liveData from initialData prop:', {
+        hasProducts: !!initialData.catalogue?.products,
+        productsCount: initialData.catalogue?.products?.length || 0
+      });
+      setLiveData(initialData);
+    }
+  }, [initialData]);
+
   // Propagate liveData changes to parent if requested
   useEffect(() => {
     if (onLiveDataChange) {
@@ -2568,18 +2648,50 @@ export default function IframeEditor({
     if (!registerEditorControls) return
     const controls = {
       undo: () => {
-        if (pastMutations.length === 0) return
-        const previous = pastMutations[pastMutations.length - 1]
-        setPastMutations(p => p.slice(0, p.length - 1))
-        setFutureMutations(f => [styleMutations, ...f])
-        setStyleMutations(previous)
+        console.log('🔄 UNDO called - historyIndex:', htmlHistoryIndex, 'historyLength:', htmlHistory.length)
+        if (htmlHistoryIndex <= 0) {
+          console.log('⚠️ Cannot undo - at start of history')
+          return
+        }
+
+        isRestoringHistory.current = true
+        const doc = iframeRef.current?.contentDocument
+        if (!doc || !doc.body) return
+
+        const previousHtml = htmlHistory[htmlHistoryIndex - 1]
+        console.log('✅ Restoring previous state from index:', htmlHistoryIndex - 1)
+        doc.body.innerHTML = previousHtml
+        setHtmlHistoryIndex(prev => prev - 1)
+
+        // Clear selection as paths may have changed
+        setSelectedPath(null)
+
+        setTimeout(() => {
+          isRestoringHistory.current = false
+        }, 100)
       },
       redo: () => {
-        if (futureMutations.length === 0) return
-        const next = futureMutations[0]
-        setFutureMutations(f => f.slice(1))
-        setPastMutations(p => [...p, styleMutations])
-        setStyleMutations(next)
+        console.log('🔄 REDO called - historyIndex:', htmlHistoryIndex, 'historyLength:', htmlHistory.length)
+        if (htmlHistoryIndex >= htmlHistory.length - 1) {
+          console.log('⚠️ Cannot redo - at end of history')
+          return
+        }
+
+        isRestoringHistory.current = true
+        const doc = iframeRef.current?.contentDocument
+        if (!doc || !doc.body) return
+
+        const nextHtml = htmlHistory[htmlHistoryIndex + 1]
+        console.log('✅ Restoring next state from index:', htmlHistoryIndex + 1)
+        doc.body.innerHTML = nextHtml
+        setHtmlHistoryIndex(prev => prev + 1)
+
+        // Clear selection as paths may have changed
+        setSelectedPath(null)
+
+        setTimeout(() => {
+          isRestoringHistory.current = false
+        }, 100)
       },
       zoomIn: () => setUserZoom(z => Math.min(2, Number((z + 0.1).toFixed(2)))),
       zoomOut: () =>
@@ -2589,8 +2701,14 @@ export default function IframeEditor({
       toggleGrid: () => setShowGrid(g => !g),
       setGrid: (v: boolean) => setShowGrid(Boolean(v)),
       getGrid: () => showGrid,
-      hasUndo: () => pastMutations.length > 0,
-      hasRedo: () => futureMutations.length > 0,
+      hasUndo: () => {
+        const canUndo = htmlHistoryIndex > 0
+        return canUndo
+      },
+      hasRedo: () => {
+        const canRedo = htmlHistoryIndex < htmlHistory.length - 1
+        return canRedo
+      },
       print: () => {
         try {
           iframeRef.current?.contentWindow?.print?.()
@@ -2617,9 +2735,6 @@ export default function IframeEditor({
   }, [
     registerEditorControls,
     userZoom,
-    styleMutations,
-    pastMutations,
-    futureMutations,
     showGrid,
     pages,
     currentPageIndex,
@@ -2627,7 +2742,35 @@ export default function IframeEditor({
     saveStatus,
     lastSaved,
     isDirty,
+    htmlHistory,
+    htmlHistoryIndex,
   ])
+
+  // Save initial HTML to history when iframe loads
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    const saveInitialState = () => {
+      const doc = iframe.contentDocument
+      if (!doc || !doc.body) return
+
+      // Only save if history is empty
+      if (htmlHistory.length === 0) {
+        const initialHtml = doc.body.innerHTML
+        console.log('📝 Saving initial HTML state')
+        setHtmlHistory([initialHtml])
+        setHtmlHistoryIndex(0)
+      }
+    }
+
+    iframe.addEventListener('load', saveInitialState)
+    setTimeout(saveInitialState, 150)
+
+    return () => {
+      iframe.removeEventListener('load', saveInitialState)
+    }
+  }, [compiledHtml, htmlHistory.length])
 
   // Selection handling inside iframe (disabled in preview mode)
   useEffect(() => {
@@ -2796,6 +2939,21 @@ export default function IframeEditor({
     }
     const onDrop = (ev: DragEvent) => {
       ev.preventDefault()
+
+      // Check for icon data first
+      const iconData = ev.dataTransfer?.getData('application/x-editor-icon')
+      if (iconData) {
+        try {
+          const { name, weight, svg } = JSON.parse(iconData)
+          const target = ev.target as HTMLElement | null
+          addIconToCanvas(svg, name, target || undefined)
+          return
+        } catch (e) {
+          console.error('Failed to parse icon data:', e)
+        }
+      }
+
+      // Check for element data
       let type = ev.dataTransfer?.getData('application/x-editor-element') as
         | PaletteElementType
         | ''
@@ -3370,6 +3528,9 @@ export default function IframeEditor({
   }
 
   const addElement = (type: PaletteElementType, containerEl?: HTMLElement) => {
+    // Save state BEFORE adding element
+    saveToHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
     const target =
@@ -3381,27 +3542,151 @@ export default function IframeEditor({
   }
 
   // Add icon to canvas
-  const addIconToCanvas = (iconSvg: string, iconName: string) => {
+  const addIconToCanvas = (
+    iconSvg: string,
+    iconName: string,
+    dropTarget?: HTMLElement
+  ) => {
+    // Save state BEFORE adding icon
+    saveToHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    const target = selectedPath
-      ? resolvePathToElement(doc, selectedPath)
-      : doc.body
+
+    // Determine target: use dropTarget if provided, otherwise selected element or body
+    let target: Element | null = null
+    if (dropTarget && dropTarget.ownerDocument === doc) {
+      target = dropTarget
+    } else if (selectedPath) {
+      target = resolvePathToElement(doc, selectedPath)
+    }
     const container = (target as HTMLElement) || doc.body
 
-    const iconDiv = doc.createElement('div')
-    iconDiv.innerHTML = iconSvg
-    iconDiv.setAttribute('data-element-type', 'icon')
-    iconDiv.setAttribute('data-icon-name', iconName)
-    iconDiv.style.cssText =
-      'display: inline-block; width: 32px; height: 32px; margin: 8px; cursor: pointer;'
-    iconDiv.className = 'icon-element'
+    // Create a wrapper span for the icon with better visibility
+    const iconWrapper = doc.createElement('span')
+    iconWrapper.setAttribute('data-element-type', 'icon')
+    iconWrapper.setAttribute('data-icon-name', iconName)
+    iconWrapper.style.cssText = `
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      margin: 4px 8px;
+      cursor: pointer;
+      color: #1f2937;
+      vertical-align: middle;
+    `
+    iconWrapper.className = 'icon-element'
+    iconWrapper.setAttribute('contenteditable', 'false')
 
-    container.appendChild(iconDiv)
+    // Try to parse the provided SVG string (expected from Phosphor) and import
+    // the actual SVG element into the iframe document so the real icon shows up.
+    // Fall back to a simple placeholder if parsing/import fails.
+    try {
+      const parsed = new DOMParser().parseFromString(iconSvg, 'image/svg+xml')
+      const svgEl = parsed.querySelector('svg') as SVGElement | null
+      if (svgEl) {
+        // Import the parsed SVG node into the iframe document so it's usable there
+        const imported = doc.importNode(svgEl, true) as SVGElement
+        // Ensure it scales to the wrapper and inherits color
+        try {
+          imported.setAttribute('width', '100%')
+          imported.setAttribute('height', '100%')
+          imported.style.display = 'block'
+          // Make the wrapper control the visible color via `currentColor`.
+          // Many Phosphor icons use `stroke` or `fill` on child paths — ensure
+          // child shapes inherit a visible color by setting missing attributes
+          // to `currentColor` so they pick up the wrapper's `color` style.
+          const shapeSelectors = ['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'g']
+          shapeSelectors.forEach(() => { })
+          const allChildren = Array.from(imported.querySelectorAll('*')) as Element[]
+          allChildren.forEach(ch => {
+            try {
+              const el = ch as Element
+              const tag = (el.tagName || '').toLowerCase()
+              // Only touch common SVG shape elements
+              if (['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'g', 'use'].includes(tag)) {
+                if (!el.getAttribute('fill')) el.setAttribute('fill', 'currentColor')
+                if (!el.getAttribute('stroke')) el.setAttribute('stroke', 'currentColor')
+              }
+            } catch (e) {
+              // ignore any DOM exceptions
+            }
+          })
+        } catch (e) {
+          // ignore setAttribute errors in some environments
+        }
+        // Add an accessible title if missing
+        if (!imported.querySelector('title')) {
+          const t = doc.createElement('title')
+          t.textContent = iconName
+          imported.insertBefore(t, imported.firstChild)
+        }
+        iconWrapper.appendChild(imported)
+      } else {
+        // If the string didn't contain an <svg>, try to build one around path content
+        const inner = extractSVGPath(iconSvg)
+        iconWrapper.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 256 256" fill="currentColor" style="display:block">
+            <title>${iconName}</title>
+            ${inner}
+          </svg>
+        `
+      }
+    } catch (err) {
+      console.error('Failed to parse icon SVG, falling back to placeholder:', err)
+      iconWrapper.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 256 256" fill="currentColor" style="display:block">
+          <title>${iconName}</title>
+          ${extractSVGPath(iconSvg)}
+        </svg>
+      `
+    }
+
+    container.appendChild(iconWrapper)
+
+    // Auto-select the newly added icon
+    setTimeout(() => {
+      const newPath = computeElementPath(doc, iconWrapper)
+      setSelectedPath(newPath)
+    }, 50)
+  }
+
+  // Helper to extract SVG path from icon SVG string
+  // Helper to extract inner SVG content (paths / groups) from a provided SVG string.
+  // Returns a string suitable for embedding inside an <svg> when parsing the full
+  // SVG element isn't possible. If nothing useful is found it returns a small
+  // circle placeholder so the inserted element remains visible.
+  const extractSVGPath = (svgString: string): string => {
+    if (!svgString) return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+    try {
+      const parsed = new DOMParser().parseFromString(svgString, 'image/svg+xml')
+      const svg = parsed.querySelector('svg')
+      if (!svg) {
+        // Maybe input was already just inner content
+        const trimmed = svgString.trim()
+        if (trimmed) return trimmed
+        return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+      }
+      // Collect child nodes (paths, rects, circles, groups, etc.)
+      const children = Array.from(svg.childNodes)
+        .map(n => (n as any).outerHTML || n.textContent)
+        .filter(Boolean)
+        .join('\n')
+      return children || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+    } catch (e) {
+      console.warn('extractSVGPath parse failed:', e)
+      const trimmed = svgString.trim()
+      return trimmed || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+    }
   }
 
   // Add image to canvas
   const addImageToCanvas = (imageSrc: string, imageName: string) => {
+    // Save state BEFORE adding image
+    saveToHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
     const target = selectedPath
@@ -3522,584 +3807,587 @@ export default function IframeEditor({
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
-      {/* Left Sidebar: Icon nav + panel */}
-      {!previewMode && (
-        <div
-          className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} flex-shrink-0 transition-all duration-500 ease-in-out`}
-        >
-          {/* Icon column */}
-          <div className="m-2 flex w-16 flex-shrink-0 flex-col items-center space-y-3 rounded-xl bg-white py-2 shadow-lg">
-            {(
-              [
-                {
-                  id: 'pages',
-                  name: 'Pages',
-                  icon: <FileText className="h-6 w-6" />,
-                },
-                {
-                  id: 'layers',
-                  name: 'Layers',
-                  icon: <LayersIcon className="h-6 w-6" />,
-                },
-                {
-                  id: 'elements',
-                  name: 'Elements',
-                  icon: <Shapes className="h-6 w-6" />,
-                },
-                {
-                  id: 'icons',
-                  name: 'Icons',
-                  icon: <Star className="h-6 w-6" />,
-                },
-                {
-                  id: 'text',
-                  name: 'Text',
-                  icon: <Type className="h-6 w-6" />,
-                },
-                {
-                  id: 'assets',
-                  name: 'Assets',
-                  icon: <Upload className="h-6 w-6" />,
-                },
-              ] as const
-            ).map(tab => (
-              <button
-                key={tab.id}
-                onClick={() =>
-                  setActiveLeftTab(prev =>
-                    prev === (tab.id as any) ? null : (tab.id as any)
-                  )
-                }
-                className={`group relative flex h-16 w-16 transform flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out `}
-                title={tab.name}
-              >
-                <div
-                  className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${activeLeftTab === (tab.id as any)
-                    ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
-                    }`}
+    <IconContext.Provider value={{ size: 20, weight: 'regular', color: 'currentColor' }}>
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
+        {/* Left Sidebar: Icon nav + panel */}
+        {!previewMode && (
+          <div
+            className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} flex-shrink-0 transition-all duration-500 ease-in-out`}
+          >
+            {/* Icon column */}
+            <div className="m-2 flex w-16 flex-shrink-0 flex-col items-center space-y-3 rounded-xl bg-white py-2 shadow-lg">
+              {(
+                [
+                  {
+                    id: 'pages',
+                    name: 'Pages',
+                    icon: <FileText className="h-6 w-6" />,
+                  },
+                  {
+                    id: 'layers',
+                    name: 'Layers',
+                    icon: <LayersIcon className="h-6 w-6" />,
+                  },
+                  {
+                    id: 'elements',
+                    name: 'Elements',
+                    icon: <Shapes className="h-6 w-6" />,
+                  },
+                  {
+                    id: 'icons',
+                    name: 'Icons',
+                    icon: <Star className="h-6 w-6" />,
+                  },
+                  {
+                    id: 'text',
+                    name: 'Text',
+                    icon: <Type className="h-6 w-6" />,
+                  },
+                  {
+                    id: 'assets',
+                    name: 'Assets',
+                    icon: <Upload className="h-6 w-6" />,
+                  },
+                ] as const
+              ).map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() =>
+                    setActiveLeftTab(prev =>
+                      prev === (tab.id as any) ? null : (tab.id as any)
+                    )
+                  }
+                  className={`group relative flex h-16 w-16 transform flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out `}
+                  title={tab.name}
                 >
-                  {tab.icon}
-                </div>
-                <span className="text-center text-[11px] font-medium leading-tight">
-                  {tab.name}
-                </span>
-              </button>
-            ))}
-          </div>
-          {/* Panel */}
-          {activeLeftTab && (activeLeftTab === 'layers' || !selectedPath) && (
-            <div
-              ref={leftSidebarRef}
-              className="my-2 mr-2 flex-1 transform rounded-xl bg-white shadow-lg transition-all duration-500 ease-in-out animate-in slide-in-from-left-5"
-            >
-              {activeLeftTab === 'pages' && (
-                <div className="flex h-full flex-col rounded-xl bg-white">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">
-                      Pages ({pages.length})
-                    </div>
-                    <button
-                      onClick={addBlankPage}
-                      className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-50"
-                      title="Add Page"
-                    >
-                      +
-                    </button>
+                  <div
+                    className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${activeLeftTab === (tab.id as any)
+                      ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
+                      }`}
+                  >
+                    {tab.icon}
                   </div>
-
-                  {/* Pages list */}
-                  <div className="flex-1 space-y-2 overflow-y-auto p-2">
-                    {pages.map((p, idx) => (
-                      <div
-                        key={p.id}
-                        className={`group transform cursor-pointer rounded-lg border-2 p-2 transition-all duration-300 ease-in-out ${idx === currentPageIndex ? 'scale-105 border-blue-500 bg-blue-50 shadow-lg' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'}`}
-                        onClick={() => setCurrentPageIndex(idx)}
+                  <span className="text-center text-[11px] font-medium leading-tight">
+                    {tab.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {/* Panel */}
+            {activeLeftTab && (activeLeftTab === 'layers' || !selectedPath) && (
+              <div
+                ref={leftSidebarRef}
+                className="my-2 mr-2 flex-1 transform rounded-xl bg-white shadow-lg transition-all duration-500 ease-in-out animate-in slide-in-from-left-5"
+              >
+                {activeLeftTab === 'pages' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">
+                        Pages ({pages.length})
+                      </div>
+                      <button
+                        onClick={addBlankPage}
+                        className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-50"
+                        title="Add Page"
                       >
-                        {/* Live Preview Thumbnail */}
-                        <div className="relative mb-2 flex w-full items-center justify-center overflow-hidden rounded bg-gray-100">
-                          {pagePreviews[p.id] ? (
-                            <img
-                              src={pagePreviews[p.id]}
-                              alt={`Preview of ${p.name}`}
-                              className="h-auto max-h-40 w-full object-contain transition-transform duration-200 group-hover:scale-110"
-                            />
-                          ) : (
-                            <div className="flex h-24 w-full animate-pulse items-center justify-center bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                              <div className="text-xs text-gray-500">
-                                Generating...
-                              </div>
-                            </div>
-                          )}
-                          {idx === currentPageIndex && (
-                            <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500 shadow-sm"></div>
-                          )}
-                        </div>
+                        +
+                      </button>
+                    </div>
 
-                        {/* Name and actions */}
-                        <div className="flex items-center justify-between">
-                          <div className="truncate text-xs font-medium text-gray-700">
-                            {p.name}
-                          </div>
-                          <div className="flex items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                            <button
-                              className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-100"
-                              onClick={e => {
-                                e.stopPropagation()
-                                duplicateCurrentPage()
-                              }}
-                            >
-                              Duplicate
-                            </button>
-                            {pages.length > 1 && (
-                              <button
-                                className="transform rounded border border-red-300 bg-white px-2 py-1 text-xs text-red-600 transition-all duration-200 hover:scale-105 hover:bg-red-50"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  deleteCurrentPage()
-                                }}
-                              >
-                                Delete
-                              </button>
+                    {/* Pages list */}
+                    <div className="flex-1 space-y-2 overflow-y-auto p-2">
+                      {pages.map((p, idx) => (
+                        <div
+                          key={p.id}
+                          className={`group transform cursor-pointer rounded-lg border-2 p-2 transition-all duration-300 ease-in-out ${idx === currentPageIndex ? 'scale-105 border-blue-500 bg-blue-50 shadow-lg' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'}`}
+                          onClick={() => setCurrentPageIndex(idx)}
+                        >
+                          {/* Live Preview Thumbnail */}
+                          <div className="relative mb-2 flex w-full items-center justify-center overflow-hidden rounded bg-gray-100">
+                            {pagePreviews[p.id] ? (
+                              <img
+                                src={pagePreviews[p.id]}
+                                alt={`Preview of ${p.name}`}
+                                className="h-auto max-h-40 w-full object-contain transition-transform duration-200 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="flex h-24 w-full animate-pulse items-center justify-center bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
+                                <div className="text-xs text-gray-500">
+                                  Generating...
+                                </div>
+                              </div>
+                            )}
+                            {idx === currentPageIndex && (
+                              <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500 shadow-sm"></div>
                             )}
                           </div>
-                        </div>
 
-                        {/* Updated info */}
-                        <div className="mt-1 text-xs text-gray-500">
-                          {idx === currentPageIndex && (
-                            <span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500" />
-                          )}
-                          Updated{' '}
-                          {(() => {
-                            const d =
-                              p.updatedAt instanceof Date
-                                ? p.updatedAt
-                                : p.updatedAt
-                                  ? new Date(p.updatedAt)
-                                  : new Date()
-                            return d.toISOString().split('T')[0]
-                          })()}
+                          {/* Name and actions */}
+                          <div className="flex items-center justify-between">
+                            <div className="truncate text-xs font-medium text-gray-700">
+                              {p.name}
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                              <button
+                                className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-100"
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  duplicateCurrentPage()
+                                }}
+                              >
+                                Duplicate
+                              </button>
+                              {pages.length > 1 && (
+                                <button
+                                  className="transform rounded border border-red-300 bg-white px-2 py-1 text-xs text-red-600 transition-all duration-200 hover:scale-105 hover:bg-red-50"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    deleteCurrentPage()
+                                  }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Updated info */}
+                          <div className="mt-1 text-xs text-gray-500">
+                            {idx === currentPageIndex && (
+                              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500" />
+                            )}
+                            Updated{' '}
+                            {(() => {
+                              const d =
+                                p.updatedAt instanceof Date
+                                  ? p.updatedAt
+                                  : p.updatedAt
+                                    ? new Date(p.updatedAt)
+                                    : new Date()
+                              return d.toISOString().split('T')[0]
+                            })()}
+                          </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Pager */}
+                    <div className="flex items-center justify-between border-t border-gray-200 p-3 text-xs">
+                      <span>
+                        Page {currentPageIndex + 1} of {pages.length}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === 0 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
+                          onClick={goPrev}
+                          disabled={currentPageIndex === 0}
+                          title="Previous"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
+                          onClick={goNext}
+                          disabled={currentPageIndex === pages.length - 1}
+                          title="Next"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Pager */}
-                  <div className="flex items-center justify-between border-t border-gray-200 p-3 text-xs">
-                    <span>
-                      Page {currentPageIndex + 1} of {pages.length}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === 0 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
-                        onClick={goPrev}
-                        disabled={currentPageIndex === 0}
-                        title="Previous"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button
-                        className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
-                        onClick={goNext}
-                        disabled={currentPageIndex === pages.length - 1}
-                        title="Next"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
                     </div>
                   </div>
-                </div>
-              )}
-              {activeLeftTab === 'layers' && (
-                <div className="flex h-full flex-col rounded-xl bg-white pb-2">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">Layers</div>
-                  </div>
-
-                  {/* Layers content - scrollable */}
-                  <div className="flex-1 overflow-y-auto">
-                    <LayersPanel
-                      iframeRef={iframeRef}
-                      selectedPath={selectedPath}
-                      hoveredPath={hoveredPath}
-                      onSelectPath={p => {
-                        setSelectedPath(p)
-                      }}
-                      onHoverPath={p => setHoveredPath(p)}
-                    />
-                  </div>
-                </div>
-              )}
-              {activeLeftTab === 'elements' && (
-                <div className="flex h-full flex-col rounded-xl bg-white">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">Elements</div>
-                  </div>
-
-                  {/* Elements content - scrollable */}
-                  <div className="flex-1 overflow-y-auto">
-                    <ElementsPanel onAdd={type => addElement(type)} />
-                  </div>
-                </div>
-              )}
-              {activeLeftTab === 'text' && (
-                <div className="flex h-full flex-col rounded-xl bg-white">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">Text Elements</div>
-                  </div>
-
-                  {/* Text content - scrollable */}
-                  <div className="flex-1 overflow-y-auto">
-                    <ElementsPanel onAdd={type => addElement(type)} onlyText />
-                  </div>
-                </div>
-              )}
-              {activeLeftTab === 'icons' && (
-                <div className="flex h-full flex-col rounded-xl bg-white">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">Icons</div>
-                  </div>
-
-                  {/* Icons content - scrollable */}
-                  <div className="flex-1 overflow-y-auto">
-                    <IconsPanel
-                      onAddIcon={(iconSvg, iconName) =>
-                        addIconToCanvas(iconSvg, iconName)
-                      }
-                    />
-                  </div>
-                </div>
-              )}
-
-              {activeLeftTab === 'assets' && (
-                <div className="flex h-full flex-col rounded-xl bg-white">
-                  {/* Header */}
-                  <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                    <div className="text-sm font-medium">Assets</div>
-                  </div>
-
-                  {/* Assets content - scrollable */}
-                  <div className="flex-1 overflow-y-auto">
-                    <AssetsPanel
-                      onAddImage={(imageSrc, imageName) =>
-                        addImageToCanvas(imageSrc, imageName)
-                      }
-                      onUploadAsset={file => handleAssetUpload(file)}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Center Canvas: Iframe (auto-fits to viewport) */}
-      {(() => {
-        const leftCollapsed = previewMode || !activeLeftTab
-        const rightCollapsed = !selectedPath
-        const sidebarsCollapsed = leftCollapsed && rightCollapsed
-        const containerClasses = sidebarsCollapsed
-          ? 'items-center overflow-hidden'
-          : 'items-start overflow-auto'
-        // Add margin-right to balance the left sidebar when both are collapsed
-        // Also add proper padding to prevent overlap and ensure equal spacing
-        const containerStyle =
-          sidebarsCollapsed && !previewMode
-            ? {
-              marginRight: '80px',
-              padding: '2rem 1rem',
-              transition: 'all 0.5s ease-in-out',
-            }
-            : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
-        return (
-          <div
-            ref={stageContainerRef}
-            className={`flex flex-1 bg-gray-50 ${containerClasses} h-full justify-center transition-all duration-500 ease-in-out`}
-            style={containerStyle}
-          >
-            {previewMode ? (
-              // Preview Mode: Show all pages stacked vertically
-              <div className="flex h-full w-full flex-col items-center gap-8 overflow-auto py-8">
-                {pages.map((page, index) => (
-                  <div
-                    key={page.id}
-                    className="flex flex-col items-center gap-2"
-                    style={{
-                      transform: `scale(${scale})`,
-                      transformOrigin: 'top center',
-                    }}
-                  >
-                    <div className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
-                      Page {index + 1}
+                )}
+                {activeLeftTab === 'layers' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white pb-2">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">Layers</div>
                     </div>
-                    <div
-                      className="border bg-white shadow transition-all duration-300 ease-in-out"
-                      style={{
-                        width: BASE_W,
-                        height: BASE_H,
-                      }}
-                    >
-                      <iframe
-                        ref={(el) => {
-                          iframeRefs.current[index] = el
+
+                    {/* Layers content - scrollable */}
+                    <div className="flex-1 overflow-y-auto">
+                      <LayersPanel
+                        iframeRef={iframeRef}
+                        selectedPath={selectedPath}
+                        hoveredPath={hoveredPath}
+                        onSelectPath={p => {
+                          setSelectedPath(p)
                         }}
-                        title={`Page ${index + 1}`}
-                        style={{
-                          width: BASE_W,
-                          height: BASE_H,
-                          border: 'none',
-                        }}
-                        sandbox="allow-same-origin allow-scripts"
+                        onHoverPath={p => setHoveredPath(p)}
                       />
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              // Edit Mode: Show single page with navigation
-              <div
-                ref={canvasWrapperRef}
-                style={{
-                  width: BASE_W * scale,
-                  height: BASE_H * scale,
-                  position: 'relative',
-                  overflow: 'visible',
-                  transition: 'all 0.3s ease-in-out',
-                }}
-              >
-                {/* Simple drag status */}
-                {isDragging && (
-                  <div className="absolute left-4 top-4 z-10 rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm">
-                    <div className="flex items-center gap-2 text-sm text-blue-700">
-                      <Move3D size={14} className="animate-pulse" />
-                      <span>Dragging element...</span>
+                )}
+                {activeLeftTab === 'elements' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">Elements</div>
                     </div>
-                    <div className="mt-1 text-xs text-blue-500">
-                      Release to drop at new position
+
+                    {/* Elements content - scrollable */}
+                    <div className="flex-1 overflow-y-auto">
+                      <ElementsPanel onAdd={type => addElement(type)} />
+                    </div>
+                  </div>
+                )}
+                {activeLeftTab === 'text' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">Text Elements</div>
+                    </div>
+
+                    {/* Text content - scrollable */}
+                    <div className="flex-1 overflow-y-auto">
+                      <ElementsPanel onAdd={type => addElement(type)} onlyText />
+                    </div>
+                  </div>
+                )}
+                {activeLeftTab === 'icons' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">Icons</div>
+                    </div>
+
+                    {/* Icons content - scrollable */}
+                    <div className="flex-1 overflow-y-auto">
+                      <IconsPanel
+                        onAddIcon={(iconSvg, iconName) =>
+                          addIconToCanvas(iconSvg, iconName)
+                        }
+                      />
                     </div>
                   </div>
                 )}
 
-                <div
-                  className="border bg-white shadow transition-all duration-300 ease-in-out"
-                  style={{
-                    width: BASE_W,
-                    height: BASE_H,
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'top left',
-                  }}
-                >
-                  <iframe
-                    ref={iframeRef}
-                    title={`Page ${currentPageIndex + 1}`}
-                    style={{
-                      width: BASE_W,
-                      height: BASE_H,
-                      border: 'none',
-                      opacity: isPageTransitioning ? 0 : 1,
-                      transform: isPageTransitioning
-                        ? 'translateX(20px) scale(0.98)'
-                        : 'translateX(0) scale(1)',
-                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                    }}
-                    sandbox="allow-same-origin allow-scripts"
-                  />
-                </div>
-                {showGrid && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      pointerEvents: 'none',
-                      backgroundImage:
-                        'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
-                      backgroundSize: `${20 * scale}px ${20 * scale}px`,
-                    }}
-                  />
+                {activeLeftTab === 'assets' && (
+                  <div className="flex h-full flex-col rounded-xl bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
+                      <div className="text-sm font-medium">Assets</div>
+                    </div>
+
+                    {/* Assets content - scrollable */}
+                    <div className="flex-1 overflow-y-auto">
+                      <AssetsPanel
+                        onAddImage={(imageSrc, imageName) =>
+                          addImageToCanvas(imageSrc, imageName)
+                        }
+                        onUploadAsset={file => handleAssetUpload(file)}
+                      />
+                    </div>
+                  </div>
                 )}
-                {/* Show hover border when hovering any element, even if something is selected */}
-                {hoveredPath && (
-                  <HoverRectOverlay
-                    iframeRef={iframeRef}
-                    hoveredPath={hoveredPath}
-                    selectedPath={selectedPath}
-                    scale={scale}
-                  />
-                )}
-                {selectedPath && (
-                  <SelectionActionsOverlay
-                    iframeRef={iframeRef}
-                    selectedPath={selectedPath}
-                    scale={scale}
-                    onChangeSelectedPath={p => setSelectedPath(p)}
-                    onStartDrag={handleStartDrag}
-                  />
-                )}
-                {/* Canvas Toolbar removed; controls now live in the top navbar */}
               </div>
             )}
           </div>
-        )
-      })()}
+        )}
 
-      {/* Right Sidebar: Style editing */}
-      <div
-        className={`my-2 rounded-l-xl shadow-lg transition-all duration-500 ease-in-out ${!previewMode && selectedPath ? 'w-72' : 'w-0'} overflow-hidden`}
-      >
-        {!previewMode && selectedPath && (
-          <div
-            ref={rightSidebarRef}
-            className="flex h-full w-72 transform flex-col space-y-3 rounded-l-xl bg-white p-3 transition-all duration-500 ease-in-out"
-          >
-            {/* Tabs */}
-            <div className="flex items-center justify-between">
-              <div className="flex w-full gap-1 rounded-xl border border-[#E5E1FF] bg-gradient-to-r from-[#E9E5FF] via-[#F3EFFF] to-[#E9E5FF] p-1 shadow-sm">
-                <button
-                  className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'content' ? 'bg-gradient-to-r from-white to-blue-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                  onClick={() => setRightTab('content')}
-                >
-                  <Edit3
-                    size={12}
-                    className={rightTab === 'content' ? 'text-blue-600' : ''}
-                  />
-                  Edit
-                </button>
-                <button
-                  className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'style' ? 'bg-gradient-to-r from-white to-pink-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                  onClick={() => setRightTab('style')}
-                >
-                  <Palette
-                    size={12}
-                    className={rightTab === 'style' ? 'text-pink-600' : ''}
-                  />
-                  Design
-                </button>
-                <button
-                  className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'effects' ? 'bg-gradient-to-r from-white to-yellow-50 text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                  onClick={() => setRightTab('effects')}
-                >
-                  <Sparkles
-                    size={12}
-                    className={rightTab === 'effects' ? 'text-yellow-600' : ''}
-                  />
-                  Effects
-                </button>
-              </div>
-            </div>
-
-            {/* Panel (scrollable) */}
+        {/* Center Canvas: Iframe (auto-fits to viewport) */}
+        {(() => {
+          const leftCollapsed = previewMode || !activeLeftTab
+          const rightCollapsed = !selectedPath
+          const sidebarsCollapsed = leftCollapsed && rightCollapsed
+          const containerClasses = sidebarsCollapsed
+            ? 'items-center overflow-hidden'
+            : 'items-start overflow-auto'
+          // Add margin-right to balance the left sidebar when both are collapsed
+          // Also add proper padding to prevent overlap and ensure equal spacing
+          const containerStyle =
+            sidebarsCollapsed && !previewMode
+              ? {
+                marginRight: '80px',
+                padding: '2rem 1rem',
+                transition: 'all 0.5s ease-in-out',
+              }
+              : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
+          return (
             <div
-              className="no-scrollbar flex-1 space-y-3 overflow-auto transition-all duration-300 ease-in-out"
-              style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+              ref={stageContainerRef}
+              className={`flex flex-1 bg-gray-50 ${containerClasses} h-full justify-center transition-all duration-500 ease-in-out`}
+              style={containerStyle}
             >
-              {selectedPath ? (
-                <>
-                  {rightTab === 'content' && (
-                    <div className="space-y-3 duration-300 animate-in fade-in slide-in-from-right-3">
-                      {/* Smart Content Sections */}
-                      <div className="mb-2">
-                        <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                          <span className="font-medium capitalize">
-                            {selectedElementType}
-                          </span>
-                          <span>Editing</span>
-                        </div>
+              {previewMode ? (
+                // Preview Mode: Show all pages stacked vertically
+                <div className="flex h-full w-full flex-col items-center gap-8 overflow-auto py-8">
+                  {pages.map((page, index) => (
+                    <div
+                      key={page.id}
+                      className="flex flex-col items-center gap-2"
+                      style={{
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top center',
+                      }}
+                    >
+                      <div className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
+                        Page {index + 1}
                       </div>
-
-                      {getCurrentElementConfig().content.map(section =>
-                        renderSmartSection(section, 'content')
-                      )}
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                          onClick={clearSelection}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {rightTab === 'style' && (
-                    <div className="duration-300 animate-in fade-in slide-in-from-right-3">
-                      {/* Smart Style Sections */}
-                      <div className="mb-2">
-                        <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                          <span className="font-medium capitalize">
-                            {selectedElementType}
-                          </span>
-                          <span>Design</span>
-                        </div>
-                      </div>
-
-                      {getCurrentElementConfig().style.map((section, index) =>
-                        renderSmartSection(section, 'style')
-                      )}
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                          onClick={clearSelection}
-                        >
-                          Clear
-                        </button>
+                      <div
+                        className="border bg-white shadow transition-all duration-300 ease-in-out"
+                        style={{
+                          width: BASE_W,
+                          height: BASE_H,
+                        }}
+                      >
+                        <iframe
+                          ref={(el) => {
+                            iframeRefs.current[index] = el
+                          }}
+                          title={`Page ${index + 1}`}
+                          style={{
+                            width: BASE_W,
+                            height: BASE_H,
+                            border: 'none',
+                          }}
+                          sandbox="allow-same-origin allow-scripts"
+                        />
                       </div>
                     </div>
-                  )}
-
-                  {rightTab === 'effects' && (
-                    <div className="duration-300 animate-in fade-in slide-in-from-right-3">
-                      {/* Smart Effects Sections */}
-                      <div className="mb-2">
-                        <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                          <span className="font-medium capitalize">
-                            {selectedElementType}
-                          </span>
-                          <span>Effects</span>
-                        </div>
-                      </div>
-
-                      {getCurrentElementConfig().effects?.map(
-                        (section, index) =>
-                          renderSmartSection(section, 'effects')
-                      )}
-
-                      <div className="mt-4 flex gap-2">
-                        <button
-                          className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                          onClick={clearSelection}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                  ))}
+                </div>
               ) : (
-                <div className="text-[11px] text-gray-500">
-                  Click an element in the preview to edit its{' '}
-                  {rightTab === 'content'
-                    ? 'content'
-                    : rightTab === 'style'
-                      ? 'design'
-                      : 'effects'}
-                  .
+                // Edit Mode: Show single page with navigation
+                <div
+                  ref={canvasWrapperRef}
+                  style={{
+                    width: BASE_W * scale,
+                    height: BASE_H * scale,
+                    position: 'relative',
+                    overflow: 'visible',
+                    transition: 'all 0.3s ease-in-out',
+                  }}
+                >
+                  {/* Simple drag status */}
+                  {isDragging && (
+                    <div className="absolute left-4 top-4 z-10 rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm text-blue-700">
+                        <Move3D size={14} className="animate-pulse" />
+                        <span>Dragging element...</span>
+                      </div>
+                      <div className="mt-1 text-xs text-blue-500">
+                        Release to drop at new position
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    className="border bg-white shadow transition-all duration-300 ease-in-out"
+                    style={{
+                      width: BASE_W,
+                      height: BASE_H,
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <iframe
+                      ref={iframeRef}
+                      title={`Page ${currentPageIndex + 1}`}
+                      style={{
+                        width: BASE_W,
+                        height: BASE_H,
+                        border: 'none',
+                        opacity: isPageTransitioning ? 0 : 1,
+                        transform: isPageTransitioning
+                          ? 'translateX(20px) scale(0.98)'
+                          : 'translateX(0) scale(1)',
+                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                      sandbox="allow-same-origin allow-scripts"
+                    />
+                  </div>
+                  {showGrid && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'none',
+                        backgroundImage:
+                          'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
+                        backgroundSize: `${20 * scale}px ${20 * scale}px`,
+                      }}
+                    />
+                  )}
+                  {/* Show hover border when hovering any element, even if something is selected */}
+                  {hoveredPath && (
+                    <HoverRectOverlay
+                      iframeRef={iframeRef}
+                      hoveredPath={hoveredPath}
+                      selectedPath={selectedPath}
+                      scale={scale}
+                    />
+                  )}
+                  {selectedPath && (
+                    <SelectionActionsOverlay
+                      iframeRef={iframeRef}
+                      selectedPath={selectedPath}
+                      scale={scale}
+                      onChangeSelectedPath={p => setSelectedPath(p)}
+                      onStartDrag={handleStartDrag}
+                      onSaveHistory={saveToHistory}
+                    />
+                  )}
+                  {/* Canvas Toolbar removed; controls now live in the top navbar */}
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )
+        })()}
+
+        {/* Right Sidebar: Style editing */}
+        <div
+          className={`my-2 rounded-l-xl shadow-lg transition-all duration-500 ease-in-out ${!previewMode && selectedPath ? 'w-72' : 'w-0'} overflow-hidden`}
+        >
+          {!previewMode && selectedPath && (
+            <div
+              ref={rightSidebarRef}
+              className="flex h-full w-72 transform flex-col space-y-3 rounded-l-xl bg-white p-3 transition-all duration-500 ease-in-out"
+            >
+              {/* Tabs */}
+              <div className="flex items-center justify-between">
+                <div className="flex w-full gap-1 rounded-xl border border-[#E5E1FF] bg-gradient-to-r from-[#E9E5FF] via-[#F3EFFF] to-[#E9E5FF] p-1 shadow-sm">
+                  <button
+                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'content' ? 'bg-gradient-to-r from-white to-blue-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
+                    onClick={() => setRightTab('content')}
+                  >
+                    <Edit3
+                      size={12}
+                      className={rightTab === 'content' ? 'text-blue-600' : ''}
+                    />
+                    Edit
+                  </button>
+                  <button
+                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'style' ? 'bg-gradient-to-r from-white to-pink-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
+                    onClick={() => setRightTab('style')}
+                  >
+                    <Palette
+                      size={12}
+                      className={rightTab === 'style' ? 'text-pink-600' : ''}
+                    />
+                    Design
+                  </button>
+                  <button
+                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'effects' ? 'bg-gradient-to-r from-white to-yellow-50 text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
+                    onClick={() => setRightTab('effects')}
+                  >
+                    <Sparkles
+                      size={12}
+                      className={rightTab === 'effects' ? 'text-yellow-600' : ''}
+                    />
+                    Effects
+                  </button>
+                </div>
+              </div>
+
+              {/* Panel (scrollable) */}
+              <div
+                className="no-scrollbar flex-1 space-y-3 overflow-auto transition-all duration-300 ease-in-out"
+                style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+              >
+                {selectedPath ? (
+                  <>
+                    {rightTab === 'content' && (
+                      <div className="space-y-3 duration-300 animate-in fade-in slide-in-from-right-3">
+                        {/* Smart Content Sections */}
+                        <div className="mb-2">
+                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
+                            <span className="font-medium capitalize">
+                              {selectedElementType}
+                            </span>
+                            <span>Editing</span>
+                          </div>
+                        </div>
+
+                        {getCurrentElementConfig().content.map(section =>
+                          renderSmartSection(section, 'content')
+                        )}
+
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
+                            onClick={clearSelection}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {rightTab === 'style' && (
+                      <div className="duration-300 animate-in fade-in slide-in-from-right-3">
+                        {/* Smart Style Sections */}
+                        <div className="mb-2">
+                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
+                            <span className="font-medium capitalize">
+                              {selectedElementType}
+                            </span>
+                            <span>Design</span>
+                          </div>
+                        </div>
+
+                        {getCurrentElementConfig().style.map((section, index) =>
+                          renderSmartSection(section, 'style')
+                        )}
+
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
+                            onClick={clearSelection}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {rightTab === 'effects' && (
+                      <div className="duration-300 animate-in fade-in slide-in-from-right-3">
+                        {/* Smart Effects Sections */}
+                        <div className="mb-2">
+                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
+                            <span className="font-medium capitalize">
+                              {selectedElementType}
+                            </span>
+                            <span>Effects</span>
+                          </div>
+                        </div>
+
+                        {getCurrentElementConfig().effects?.map(
+                          (section, index) =>
+                            renderSmartSection(section, 'effects')
+                        )}
+
+                        <div className="mt-4 flex gap-2">
+                          <button
+                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
+                            onClick={clearSelection}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-[11px] text-gray-500">
+                    Click an element in the preview to edit its{' '}
+                    {rightTab === 'content'
+                      ? 'content'
+                      : rightTab === 'style'
+                        ? 'design'
+                        : 'effects'}
+                    .
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </IconContext.Provider>
   )
 }
 
@@ -4187,10 +4475,10 @@ function LayersPanel({
     return el.children && el.children.length >= 0
   }
 
-  // Helper to get icon for element type
+  // Helper to get icon for element type using Phosphor Icons
   const getElementIcon = (tagName: string) => {
     const tag = tagName.toLowerCase()
-    const iconClass = 'w-4 h-4'
+    const iconProps = { size: 16, weight: 'regular' as const, className: 'text-current' }
 
     // Layout elements
     if (
@@ -4203,112 +4491,61 @@ function LayersPanel({
       tag === 'header' ||
       tag === 'footer'
     ) {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="none">
-          <rect
-            x="1"
-            y="1"
-            width="14"
-            height="14"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-        </svg>
-      )
+      return <PhosphorIcons.Square {...iconProps} />
     }
     // Text elements
     if (tag.match(/^h[1-6]$/)) {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <path d="M2 3h3v10H2V3zm9 0h3v10h-3V3zM6 7h4v2H6V7z" />
-        </svg>
-      )
+      return <PhosphorIcons.TextHOne {...iconProps} />
     }
     if (tag === 'p' || tag === 'span') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <rect x="2" y="3" width="12" height="2" rx="1" />
-          <rect x="2" y="7" width="10" height="2" rx="1" />
-          <rect x="2" y="11" width="8" height="2" rx="1" />
-        </svg>
-      )
+      return <PhosphorIcons.TextT {...iconProps} />
     }
     // Interactive elements
-    if (tag === 'button' || tag === 'a') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <rect x="2" y="5" width="12" height="6" rx="3" />
-        </svg>
-      )
+    if (tag === 'button') {
+      return <PhosphorIcons.SquaresFour {...iconProps} />
+    }
+    if (tag === 'a') {
+      return <PhosphorIcons.Link {...iconProps} />
     }
     if (tag === 'input' || tag === 'textarea') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="none">
-          <rect
-            x="1"
-            y="5"
-            width="14"
-            height="6"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-        </svg>
-      )
+      return <PhosphorIcons.Textbox {...iconProps} />
     }
     // Media
     if (tag === 'img') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="none">
-          <rect
-            x="1"
-            y="1"
-            width="14"
-            height="14"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <circle cx="5" cy="5" r="1.5" fill="currentColor" />
-          <path d="M1 12l4-4 3 3 5-5" stroke="currentColor" strokeWidth="1.5" />
-        </svg>
-      )
+      return <PhosphorIcons.Image {...iconProps} />
     }
     if (tag === 'svg') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <polygon points="8,2 11,8 8,14 5,8" />
-        </svg>
-      )
+      return <PhosphorIcons.Polygon {...iconProps} />
+    }
+    if (tag === 'video') {
+      return <PhosphorIcons.VideoCamera {...iconProps} />
     }
     // Lists
     if (tag === 'ul' || tag === 'ol') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="3" cy="4" r="1" />
-          <rect x="6" y="3" width="8" height="2" rx="1" />
-          <circle cx="3" cy="8" r="1" />
-          <rect x="6" y="7" width="8" height="2" rx="1" />
-          <circle cx="3" cy="12" r="1" />
-          <rect x="6" y="11" width="8" height="2" rx="1" />
-        </svg>
-      )
+      return <PhosphorIcons.ListBullets {...iconProps} />
     }
     if (tag === 'li') {
-      return (
-        <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-          <circle cx="3" cy="8" r="1.5" />
-          <rect x="6" y="7" width="8" height="2" rx="1" />
-        </svg>
-      )
+      return <PhosphorIcons.DotOutline {...iconProps} />
+    }
+    // Forms
+    if (tag === 'form') {
+      return <PhosphorIcons.Article {...iconProps} />
+    }
+    if (tag === 'label') {
+      return <PhosphorIcons.Tag {...iconProps} />
+    }
+    if (tag === 'select') {
+      return <PhosphorIcons.CaretCircleDown {...iconProps} />
+    }
+    // Table
+    if (tag === 'table') {
+      return <PhosphorIcons.Table {...iconProps} />
+    }
+    if (tag === 'tr' || tag === 'td' || tag === 'th') {
+      return <PhosphorIcons.Rows {...iconProps} />
     }
     // Default
-    return (
-      <svg className={iconClass} viewBox="0 0 16 16" fill="currentColor">
-        <rect x="3" y="3" width="10" height="10" rx="1" />
-      </svg>
-    )
+    return <PhosphorIcons.Rectangle {...iconProps} />
   }
 
   // Local utilities to resolve/compute element paths within iframe DOM
@@ -5028,12 +5265,14 @@ function SelectionActionsOverlay({
   scale,
   onChangeSelectedPath,
   onStartDrag,
+  onSaveHistory,
 }: {
   iframeRef: React.RefObject<HTMLIFrameElement>
   selectedPath: string
   scale: number
   onChangeSelectedPath: (p: string | null) => void
   onStartDrag: (e: React.MouseEvent) => void
+  onSaveHistory: () => void
 }) {
   const [rect, setRect] = useState<{
     top: number
@@ -5101,6 +5340,9 @@ function SelectionActionsOverlay({
   }, [selectedPath, scale])
 
   const actDelete = () => {
+    // Save state BEFORE deletion
+    onSaveHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5110,6 +5352,9 @@ function SelectionActionsOverlay({
   }
 
   const actDuplicate = () => {
+    // Save state BEFORE duplication
+    onSaveHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5121,6 +5366,9 @@ function SelectionActionsOverlay({
   }
 
   const actMoveUp = () => {
+    // Save state BEFORE move
+    onSaveHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5134,6 +5382,9 @@ function SelectionActionsOverlay({
   }
 
   const actMoveDown = () => {
+    // Save state BEFORE move
+    onSaveHistory()
+
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5300,6 +5551,9 @@ function SelectionActionsOverlay({
         requestAnimationFrame(() => {
           onChangeSelectedPath(currentPath)
         })
+
+        // Save to history after drag completes
+        onSaveHistory()
       }
       document.removeEventListener('mousemove', onMouseMove)
       document.removeEventListener('mouseup', onMouseUp)
@@ -5502,7 +5756,99 @@ function HoverRectOverlay({
   )
 }
 
-// Icons Panel Component
+// Icon Item Component with Drag & Drop (similar to PaletteItem)
+function IconItem({
+  icon,
+  iconWeight,
+  onAddIcon,
+}: {
+  icon: { name: string; component: any }
+  iconWeight: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
+  onAddIcon: (iconSvg: string, iconName: string) => void
+}) {
+  const IconComponent = icon.component
+  const iconRef = useRef<HTMLButtonElement>(null)
+
+  // Generate actual SVG from Phosphor icon
+  const generateIconSVG = () => {
+    // Render the Phosphor React icon into a temporary DOM node and read the SVG markup
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '-9999px'
+    document.body.appendChild(container)
+
+    // Create a root and render the icon component into it
+    let root: ReturnType<typeof createRoot> | null = null
+    try {
+      root = createRoot(container)
+      root.render(
+        React.createElement(IconComponent, { size: 48, weight: iconWeight })
+      )
+
+      // Give browser a tick to paint the SVG
+      // (render is synchronous for client components, but allow a microtask)
+      // Immediately read innerHTML — it should contain the <svg> element
+      const svgString = container.innerHTML || ''
+      return svgString
+    } catch (e) {
+      console.warn('generateIconSVG render failed, falling back to simple SVG:', e)
+      // Fallback simple SVG that uses icon name initial
+      const fallback = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 256 256" fill="currentColor" data-phosphor-icon="${icon.name}" data-weight="${iconWeight}"><title>${icon.name}</title><text x="128" y="140" text-anchor="middle" dominant-baseline="middle" font-size="120">${icon.name.charAt(0)}</text></svg>`
+      return fallback
+    } finally {
+      // Clean up the rendered root and container
+      try {
+        if (root) root.unmount()
+      } catch (e) { }
+      try {
+        if (container.parentNode) container.parentNode.removeChild(container)
+      } catch (e) { }
+    }
+  }
+
+  const onDragStart = (e: React.DragEvent) => {
+    const svgString = generateIconSVG()
+
+    e.dataTransfer.setData('application/x-editor-icon', JSON.stringify({
+      name: icon.name,
+      weight: iconWeight,
+      svg: svgString
+    }))
+    e.dataTransfer.setData('text/plain', icon.name)
+    e.dataTransfer.effectAllowed = 'copy'
+
+    // Create a drag image
+    if (iconRef.current) {
+      const rect = iconRef.current.getBoundingClientRect()
+      e.dataTransfer.setDragImage(iconRef.current, rect.width / 2, rect.height / 2)
+    }
+  }
+
+  const handleClick = () => {
+    const svgString = generateIconSVG()
+    onAddIcon(svgString, icon.name)
+  }
+
+  return (
+    <button
+      ref={iconRef}
+      onClick={handleClick}
+      draggable
+      onDragStart={onDragStart}
+      className="group flex aspect-square items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md cursor-move active:cursor-grabbing"
+      title={`${icon.name} (Drag to canvas or click)`}
+    >
+      <IconComponent
+        size={28}
+        weight={iconWeight}
+        className="text-gray-700 transition-all duration-200 group-hover:text-blue-600 group-hover:scale-110"
+      />
+    </button>
+  )
+}
+
+// Icons Panel Component with Phosphor Icons
 function IconsPanel({
   onAddIcon,
 }: {
@@ -5510,64 +5856,116 @@ function IconsPanel({
 }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [iconWeight, setIconWeight] = useState<'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'>('regular')
 
-  // Icon library with SVG data
+  // Helper to convert React component to SVG string
+  const iconToSvg = (IconComponent: any, iconName: string) => {
+    const div = document.createElement('div')
+    const root = (window as any).createRoot ? (window as any).createRoot(div) : null
+
+    // Simple SVG generation - we'll use a more direct approach
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><text x="128" y="128" text-anchor="middle" dominant-baseline="middle" font-size="200">${iconName.charAt(0)}</text></svg>`
+  }
+
+  // Icon library with Phosphor Icons organized by category
   const iconLibrary = {
     business: [
-      {
-        name: 'briefcase',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V5l-2-2h-4L8 5v2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 5h4v2h-4V5z"/></svg>',
-      },
-      {
-        name: 'chart',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>',
-      },
-      {
-        name: 'dollar',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>',
-      },
+      { name: 'Briefcase', component: PhosphorIcons.Briefcase },
+      { name: 'ChartBar', component: PhosphorIcons.ChartBar },
+      { name: 'CurrencyDollar', component: PhosphorIcons.CurrencyDollar },
+      { name: 'Bank', component: PhosphorIcons.Bank },
+      { name: 'ChartLine', component: PhosphorIcons.ChartLine },
+      { name: 'TrendUp', component: PhosphorIcons.TrendUp },
+      { name: 'Target', component: PhosphorIcons.Target },
+      { name: 'Handshake', component: PhosphorIcons.Handshake },
+      { name: 'Receipt', component: PhosphorIcons.Receipt },
+      { name: 'CreditCard', component: PhosphorIcons.CreditCard },
+      { name: 'Storefront', component: PhosphorIcons.Storefront },
+      { name: 'Package', component: PhosphorIcons.Package },
     ],
     social: [
-      {
-        name: 'heart',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>',
-      },
-      {
-        name: 'share',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.50-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>',
-      },
-      {
-        name: 'star',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>',
-      },
+      { name: 'Heart', component: PhosphorIcons.Heart },
+      { name: 'ShareNetwork', component: PhosphorIcons.ShareNetwork },
+      { name: 'Star', component: PhosphorIcons.Star },
+      { name: 'ChatCircle', component: PhosphorIcons.ChatCircle },
+      { name: 'ThumbsUp', component: PhosphorIcons.ThumbsUp },
+      { name: 'Users', component: PhosphorIcons.Users },
+      { name: 'At', component: PhosphorIcons.At },
+      { name: 'PaperPlaneTilt', component: PhosphorIcons.PaperPlaneTilt },
+      { name: 'EnvelopeSimple', component: PhosphorIcons.EnvelopeSimple },
+      { name: 'Bell', component: PhosphorIcons.Bell },
+      { name: 'Phone', component: PhosphorIcons.Phone },
+      { name: 'VideoCamera', component: PhosphorIcons.VideoCamera },
     ],
     arrows: [
-      {
-        name: 'arrow-right',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>',
-      },
-      {
-        name: 'arrow-down',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>',
-      },
-      {
-        name: 'arrow-up',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>',
-      },
+      { name: 'ArrowRight', component: PhosphorIcons.ArrowRight },
+      { name: 'ArrowLeft', component: PhosphorIcons.ArrowLeft },
+      { name: 'ArrowUp', component: PhosphorIcons.ArrowUp },
+      { name: 'ArrowDown', component: PhosphorIcons.ArrowDown },
+      { name: 'CaretRight', component: PhosphorIcons.CaretRight },
+      { name: 'CaretLeft', component: PhosphorIcons.CaretLeft },
+      { name: 'CaretUp', component: PhosphorIcons.CaretUp },
+      { name: 'CaretDown', component: PhosphorIcons.CaretDown },
+      { name: 'ArrowCircleRight', component: PhosphorIcons.ArrowCircleRight },
+      { name: 'ArrowCircleLeft', component: PhosphorIcons.ArrowCircleLeft },
+      { name: 'ArrowElbowDownRight', component: PhosphorIcons.ArrowElbowDownRight },
+      { name: 'TrendUp', component: PhosphorIcons.TrendUp },
     ],
     ui: [
-      {
-        name: 'menu',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>',
-      },
-      {
-        name: 'close',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>',
-      },
-      {
-        name: 'check',
-        svg: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
-      },
+      { name: 'List', component: PhosphorIcons.List },
+      { name: 'X', component: PhosphorIcons.X },
+      { name: 'Check', component: PhosphorIcons.Check },
+      { name: 'Gear', component: PhosphorIcons.Gear },
+      { name: 'MagnifyingGlass', component: PhosphorIcons.MagnifyingGlass },
+      { name: 'Plus', component: PhosphorIcons.Plus },
+      { name: 'Minus', component: PhosphorIcons.Minus },
+      { name: 'House', component: PhosphorIcons.House },
+      { name: 'Info', component: PhosphorIcons.Info },
+      { name: 'Warning', component: PhosphorIcons.Warning },
+      { name: 'Eye', component: PhosphorIcons.Eye },
+      { name: 'Lock', component: PhosphorIcons.Lock },
+    ],
+    design: [
+      { name: 'PencilLine', component: PhosphorIcons.PencilLine },
+      { name: 'Palette', component: PhosphorIcons.Palette },
+      { name: 'Image', component: PhosphorIcons.Image },
+      { name: 'SquaresFour', component: PhosphorIcons.SquaresFour },
+      { name: 'Circle', component: PhosphorIcons.Circle },
+      { name: 'Square', component: PhosphorIcons.Square },
+      { name: 'Triangle', component: PhosphorIcons.Triangle },
+      { name: 'Rectangle', component: PhosphorIcons.Rectangle },
+      { name: 'Polygon', component: PhosphorIcons.Polygon },
+      { name: 'PaintBrush', component: PhosphorIcons.PaintBrush },
+      { name: 'Eyedropper', component: PhosphorIcons.Eyedropper },
+      { name: 'Shapes', component: PhosphorIcons.Shapes },
+    ],
+    ecommerce: [
+      { name: 'ShoppingCart', component: PhosphorIcons.ShoppingCart },
+      { name: 'ShoppingBag', component: PhosphorIcons.ShoppingBag },
+      { name: 'Tag', component: PhosphorIcons.Tag },
+      { name: 'Barcode', component: PhosphorIcons.Barcode },
+      { name: 'Percent', component: PhosphorIcons.Percent },
+      { name: 'Gift', component: PhosphorIcons.Gift },
+      { name: 'Truck', component: PhosphorIcons.Truck },
+      { name: 'MapPin', component: PhosphorIcons.MapPin },
+      { name: 'Calendar', component: PhosphorIcons.Calendar },
+      { name: 'Clock', component: PhosphorIcons.Clock },
+      { name: 'Ticket', component: PhosphorIcons.Ticket },
+      { name: 'Coins', component: PhosphorIcons.Coins },
+    ],
+    media: [
+      { name: 'Play', component: PhosphorIcons.Play },
+      { name: 'Pause', component: PhosphorIcons.Pause },
+      { name: 'SkipForward', component: PhosphorIcons.SkipForward },
+      { name: 'SkipBack', component: PhosphorIcons.SkipBack },
+      { name: 'SpeakerHigh', component: PhosphorIcons.SpeakerHigh },
+      { name: 'SpeakerSlash', component: PhosphorIcons.SpeakerSlash },
+      { name: 'Camera', component: PhosphorIcons.Camera },
+      { name: 'FilmStrip', component: PhosphorIcons.FilmStrip },
+      { name: 'Microphone', component: PhosphorIcons.Microphone },
+      { name: 'MusicNote', component: PhosphorIcons.MusicNote },
+      { name: 'Headphones', component: PhosphorIcons.Headphones },
+      { name: 'Radio', component: PhosphorIcons.Radio },
     ],
   }
 
@@ -5581,6 +5979,9 @@ function IconsPanel({
     { id: 'social', name: 'Social', count: iconLibrary.social.length },
     { id: 'arrows', name: 'Arrows', count: iconLibrary.arrows.length },
     { id: 'ui', name: 'UI', count: iconLibrary.ui.length },
+    { id: 'design', name: 'Design', count: iconLibrary.design.length },
+    { id: 'ecommerce', name: 'E-commerce', count: iconLibrary.ecommerce.length },
+    { id: 'media', name: 'Media', count: iconLibrary.media.length },
   ]
 
   const filteredIcons =
@@ -5593,7 +5994,7 @@ function IconsPanel({
   )
 
   return (
-    <div className="h-full flex-1 overflow-y-auto  rounded-b-xl border-l bg-white p-3">
+    <div className="h-full flex-1 overflow-y-auto rounded-b-xl border-l bg-white p-3">
       <div className="mb-4">
         {/* Search */}
         <div className="relative mb-3">
@@ -5604,7 +6005,26 @@ function IconsPanel({
             onChange={e => setSearchTerm(e.target.value)}
             className="h-8 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <Star className="absolute left-2.5 top-2.5 h-3 w-3 text-gray-400" />
+          <PhosphorIcons.MagnifyingGlass className="absolute left-2.5 top-2.5 h-3 w-3 text-gray-400" />
+        </div>
+
+        {/* Weight Selector */}
+        <div className="mb-3">
+          <label className="mb-1.5 block text-xs font-medium text-gray-700">Icon Weight</label>
+          <div className="grid grid-cols-3 gap-1">
+            {(['regular', 'bold', 'fill'] as const).map(weight => (
+              <button
+                key={weight}
+                onClick={() => setIconWeight(weight)}
+                className={`rounded-md px-2 py-1 text-xs capitalize transition-colors ${iconWeight === weight
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+              >
+                {weight}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Categories */}
@@ -5630,25 +6050,20 @@ function IconsPanel({
       </div>
 
       {/* Icons Grid */}
-      <div className="grid grid-cols-6 gap-1.5">
+      <div className="grid grid-cols-4 gap-2 p-2">
         {searchedIcons.map((icon, index) => (
-          <button
+          <IconItem
             key={index}
-            onClick={() => onAddIcon(icon.svg, icon.name)}
-            className="group flex aspect-square items-center justify-center rounded-lg border border-gray-200 p-1 transition-all duration-200 hover:border-blue-300 hover:bg-blue-50"
-            title={icon.name}
-          >
-            <div
-              className="h-4 w-4 text-gray-600 transition-colors duration-200 group-hover:text-blue-600"
-              dangerouslySetInnerHTML={{ __html: icon.svg }}
-            />
-          </button>
+            icon={icon}
+            iconWeight={iconWeight}
+            onAddIcon={onAddIcon}
+          />
         ))}
       </div>
 
       {searchedIcons.length === 0 && (
         <div className="py-6 text-center text-gray-500">
-          <Star className="mx-auto mb-2 h-6 w-6 text-gray-300" />
+          <PhosphorIcons.MagnifyingGlass className="mx-auto mb-2 h-6 w-6 text-gray-300" />
           <p className="text-xs">No icons found</p>
         </div>
       )}
