@@ -18,6 +18,9 @@ import {
   Palette,
   Sparkles,
   Book,
+  Clock,
+  FileText,
+  ArrowRight,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -91,10 +94,21 @@ interface DashboardStats {
   totalExports: number
 }
 
+interface RecentItem {
+  id: string
+  type: 'CATALOGUE' | 'PDF'
+  name: string
+  description?: string
+  updatedAt: string
+  productCount?: number
+  theme?: string
+}
+
 export default function DashboardPage() {
   const [catalogues, setCatalogues] = useState<Catalogue[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [recentItems, setRecentItems] = useState<RecentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
@@ -277,6 +291,23 @@ export default function DashboardPage() {
           totalViews: 0, // Would come from analytics
           totalExports: 0, // Would come from exports table
         })
+
+        // Get recent items (last 6 updated catalogues)
+        const recent = cataloguesData.catalogues
+          .sort((a: Catalogue, b: Catalogue) => 
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          )
+          .slice(0, 6)
+          .map((cat: Catalogue) => ({
+            id: cat.id,
+            type: 'CATALOGUE' as const,
+            name: cat.name,
+            description: cat.description,
+            updatedAt: cat.updatedAt,
+            productCount: cat._count?.products || 0,
+            theme: cat.theme,
+          }))
+        setRecentItems(recent)
       }
     } catch (err) {
       setError('Failed to load dashboard data')
@@ -460,10 +491,9 @@ export default function DashboardPage() {
                         fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
                       }}
                     >
-                      Welcome back to your AI-powered catalogue studio.
-                      Effortlessly create, manage, and share beautiful product
-                      catalogues. Try out instant PDF export, pro themes, and
-                      more!
+                      Welcome back to your creative workspace. Choose your tool
+                      and start creating amazing content - from product
+                      catalogues to professional PDF documents!
                     </p>
 
                     {profile?.subscription?.plan === 'FREE' && (
@@ -514,7 +544,7 @@ export default function DashboardPage() {
                       </svg>
                     </div>
                     <span className="text-[11px] font-medium text-white">
-                      5 Pro Themes
+                      Multiple Tools
                     </span>
                   </div>
                   <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
@@ -536,20 +566,6 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-
-                <Button
-                  onClick={() => {
-                    if (canCreateCatalogue()) {
-                      router.push('/catalogue/new')
-                    } else {
-                      setShowUpgradePrompt(true)
-                    }
-                  }}
-                  className="flex items-center gap-2 rounded-lg bg-white px-4 py-3 font-semibold text-[#2D1B69] shadow-md transition-all duration-300 hover:scale-105 hover:bg-purple-50  hover:shadow-xl"
-                >
-                  <FolderOpen className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" />
-                  Create Catalogue
-                </Button>
               </div>
 
               {/* Enhanced Floating Catalogue Cards with Micro Animations */}
@@ -650,12 +666,296 @@ export default function DashboardPage() {
             </div>
           )}
 
+         
+
+          {/* Tools Selection Section - Compact */}
+          <div className="mb-10">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Choose Your Tool
+              </h2>
+              <p className="text-sm text-gray-600">
+                Select the tool you want to work with
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* Catalogue Tool Card - Compact */}
+              <Card className="group relative overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg">
+                <div className="absolute right-0 top-0 h-20 w-20 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
+                  <Book className="h-full w-full text-[#6366F1]" />
+                </div>
+
+                <CardHeader className="relative pb-3">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2D1B69] to-[#6366F1] shadow-md transition-transform duration-300 group-hover:scale-110">
+                      <Book className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-bold text-gray-900">
+                        Product Catalogues
+                      </CardTitle>
+                      <CardDescription className="text-xs text-gray-600">
+                        Create & manage catalogues with AI
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="relative space-y-3 pt-0">
+                  {/* Compact Features */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>AI-powered descriptions & themes</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>Share & export to PDF</span>
+                    </div>
+                  </div>
+
+                  {/* Compact Stats */}
+                  <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-2">
+                    <div className="flex-1 text-center">
+                      <div className="text-lg font-bold text-[#6366F1]">
+                        {stats?.totalCatalogues || 0}
+                      </div>
+                      <div className="text-[10px] text-gray-600">Catalogues</div>
+                    </div>
+                    <div className="h-8 w-px bg-gray-300"></div>
+                    <div className="flex-1 text-center">
+                      <div className="text-lg font-bold text-[#6366F1]">
+                        {stats?.totalProducts || 0}
+                      </div>
+                      <div className="text-[10px] text-gray-600">Products</div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      onClick={() => {
+                        document.getElementById('all-catalogues')?.scrollIntoView({ 
+                          behavior: 'smooth' 
+                        })
+                      }}
+                      variant="outline"
+                      className="flex-1 rounded-lg border-[#6366F1] py-2 text-xs font-semibold text-[#6366F1] transition-all hover:bg-[#6366F1] hover:text-white"
+                    >
+                      <Eye className="mr-1.5 h-3.5 w-3.5" />
+                      Browse
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (canCreateCatalogue()) {
+                          router.push('/catalogue/new')
+                        } else {
+                          setShowUpgradePrompt(true)
+                        }
+                      }}
+                      className="flex-1 rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] py-2 text-xs font-semibold text-white shadow-sm transition-all hover:shadow-md"
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      Create New
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* PDF Editor Tool Card - Compact */}
+              <Card className="group relative overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#10B981] hover:shadow-lg">
+                <div className="absolute right-0 top-0 h-20 w-20 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
+                  <FileText className="h-full w-full text-[#10B981]" />
+                </div>
+
+                <CardHeader className="relative pb-3">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#059669] to-[#10B981] shadow-md transition-transform duration-300 group-hover:scale-110">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-bold text-gray-900">
+                        PDF Editor
+                      </CardTitle>
+                      <CardDescription className="text-xs text-gray-600">
+                        Edit & annotate PDF documents
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="relative space-y-3 pt-0">
+                  {/* Compact Features */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>Edit text & images in PDFs</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>Annotations, merge & sign forms</span>
+                    </div>
+                  </div>
+
+                  {/* Coming Soon Badge */}
+                  <div className="flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 p-2">
+                    <Badge className="border-amber-200 bg-transparent px-3 py-1 text-xs font-semibold text-amber-700">
+                      <Sparkles className="mr-1 h-3 w-3" />
+                      Coming Soon
+                    </Badge>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-1">
+                    <Button
+                      disabled
+                      variant="outline"
+                      className="flex-1 cursor-not-allowed rounded-lg border-gray-300 py-2 text-xs font-semibold text-gray-400 opacity-50"
+                    >
+                      <Eye className="mr-1.5 h-3.5 w-3.5" />
+                      Browse
+                    </Button>
+                    <Button
+                      disabled
+                      className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 py-2 text-xs font-semibold text-gray-500 opacity-50"
+                    >
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
+                      Create New
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+           {/* Recent Activity Section */}
+          <div className="mb-10">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-gray-600" />
+                <h2 className="text-xl font-bold text-gray-900">
+                  Recent Activity
+                </h2>
+              </div>
+              {recentItems.length > 0 && (
+                <Button
+                  variant="ghost"
+                  className="text-sm text-[#6366F1] hover:text-[#4f46e5]"
+                  onClick={() => {
+                    document.getElementById('all-catalogues')?.scrollIntoView({ 
+                      behavior: 'smooth' 
+                    })
+                  }}
+                >
+                  View All
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            
+            {recentItems.length > 0 ? (
+              <div className="overflow-x-auto pb-4">
+                <div className="flex gap-4">
+                  {recentItems.map(item => (
+                    <Card
+                      key={item.id}
+                      onClick={() => router.push(`/catalogue/${item.id}/edit`)}
+                      className="group min-w-[280px] cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg"
+                    >
+                      <div className="relative h-24 overflow-hidden bg-gradient-to-br from-[#2D1B69] to-[#6366F1]">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="rounded-full bg-white/20 p-3 backdrop-blur-sm">
+                            {item.type === 'CATALOGUE' ? (
+                              <Book className="h-6 w-6 text-white" />
+                            ) : (
+                              <FileText className="h-6 w-6 text-white" />
+                            )}
+                          </div>
+                        </div>
+                        <Badge className="absolute left-3 top-3 border-white/30 bg-white/20 text-xs text-white backdrop-blur-sm">
+                          {item.type === 'CATALOGUE' ? 'Catalogue' : 'PDF'}
+                        </Badge>
+                      </div>
+                      
+                      <div className="p-4">
+                        <h3 className="mb-1 font-semibold text-gray-900 line-clamp-1">
+                          {item.name}
+                        </h3>
+                        <p className="mb-3 text-xs text-gray-500 line-clamp-1">
+                          {item.description || 'No description'}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            <span>{item.productCount || 0} items</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            <span>
+                              {formatDistanceToNow(new Date(item.updatedAt), {
+                                addSuffix: true,
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Card className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-8 text-center shadow-sm">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#2D1B69]/10 to-[#6366F1]/10">
+                  <Clock className="h-8 w-8 text-[#6366F1]" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                  No Recent Activity
+                </h3>
+                <p className="mb-4 text-sm text-gray-600">
+                  Start creating catalogues to see your recent work here
+                </p>
+                <Button
+                  onClick={() => {
+                    if (canCreateCatalogue()) {
+                      router.push('/catalogue/new')
+                    } else {
+                      setShowUpgradePrompt(true)
+                    }
+                  }}
+                  className="rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Catalogue
+                </Button>
+              </Card>
+            )}
+          </div>
+
           {/* Catalogues Section */}
-          <div className="space-y-6">
+          <div id="all-catalogues" className="space-y-6">
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Your Catalogues
+                  All Catalogues
                 </h2>
                 <p className="mt-1 text-gray-600">
                   Manage and organize your creative collections
