@@ -88,81 +88,89 @@ export function TemplateEditorPreview({
           settings: {
             companyInfo: {
               companyName: 'Premium Products Co.',
-              companyDescription: 'Quality products since 2020'
+              companyDescription: 'Quality products since 2020',
             },
             contactDetails: {
               email: 'contact@premiumproducts.com',
               phone: '+1 (555) 123-4567',
               website: 'www.premiumproducts.com',
-              address: '123 Business St, Suite 100, City, State 12345'
+              address: '123 Business St, Suite 100, City, State 12345',
             },
             socialMedia: {
               instagram: 'https://instagram.com/premiumproducts',
               facebook: 'https://facebook.com/premiumproducts',
-              linkedin: 'https://linkedin.com/company/premiumproducts'
+              linkedin: 'https://linkedin.com/company/premiumproducts',
             },
             mediaAssets: {
-              coverImageUrl: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800',
-              contactImage: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800'
-            }
+              coverImageUrl:
+                'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=800',
+              contactImage:
+                'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
+            },
           },
           products: [
             {
               name: 'Premium Product 1',
               description: 'High-quality product with exceptional features',
               price: '299.99',
-              imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
-              category: { name: 'Electronics' }
+              imageUrl:
+                'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500',
+              category: { name: 'Electronics' },
             },
             {
               name: 'Luxury Item 2',
               description: 'Elegant design meets functionality',
               price: '499.99',
-              imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
-              category: { name: 'Accessories' }
+              imageUrl:
+                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500',
+              category: { name: 'Accessories' },
             },
             {
               name: 'Premium Product 3',
               description: 'Excellence in every detail',
               price: '399.99',
-              imageUrl: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500',
-              category: { name: 'Fashion' }
+              imageUrl:
+                'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500',
+              category: { name: 'Fashion' },
             },
             {
               name: 'Designer Product 4',
               description: 'Sophisticated and modern',
               price: '599.99',
-              imageUrl: 'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500',
-              category: { name: 'Lifestyle' }
+              imageUrl:
+                'https://images.unsplash.com/photo-1560343090-f0409e92791a?w=500',
+              category: { name: 'Lifestyle' },
             },
             {
               name: 'Exclusive Product 5',
               description: 'Limited edition collection',
               price: '799.99',
-              imageUrl: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500',
-              category: { name: 'Premium' }
+              imageUrl:
+                'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=500',
+              category: { name: 'Premium' },
             },
             {
               name: 'Classic Product 6',
               description: 'Timeless quality and style',
               price: '349.99',
-              imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500',
-              category: { name: 'Classic' }
-            }
+              imageUrl:
+                'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500',
+              category: { name: 'Classic' },
+            },
           ],
           categories: [
             { name: 'Electronics', description: 'Latest tech products' },
             { name: 'Fashion', description: 'Trendy apparel' },
-            { name: 'Accessories', description: 'Premium accessories' }
-          ]
+            { name: 'Accessories', description: 'Premium accessories' },
+          ],
         },
         profile: {
           companyName: 'Premium Products Co.',
           email: 'contact@premiumproducts.com',
           phone: '+1 (555) 123-4567',
           website: 'www.premiumproducts.com',
-          address: '123 Business St, Suite 100, City, State 12345'
-        }
+          address: '123 Business St, Suite 100, City, State 12345',
+        },
       }
 
       // Transform data if needed
@@ -174,7 +182,10 @@ export function TemplateEditorPreview({
       let pagesToRender = htmlTemplate.pages
       const htmlTemplateAny = htmlTemplate as any
       if (htmlTemplateAny.pageGenerator) {
-        pagesToRender = htmlTemplateAny.pageGenerator(transformedData, htmlTemplate.pages)
+        pagesToRender = htmlTemplateAny.pageGenerator(
+          transformedData,
+          htmlTemplate.pages
+        )
       }
 
       // Render each page with Mustache
@@ -186,7 +197,10 @@ export function TemplateEditorPreview({
           const productsPerPage = 3
           const startIdx = (pageNum - 1) * productsPerPage
           const endIdx = startIdx + productsPerPage
-          pageData.pageProducts = transformedData.catalogue.products.slice(startIdx, endIdx)
+          pageData.pageProducts = transformedData.catalogue.products.slice(
+            startIdx,
+            endIdx
+          )
         }
 
         const renderedHtml = Mustache.render(page.html, pageData)
@@ -484,7 +498,7 @@ export function TemplateEditorPreview({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
         className={cn(
-          'h-[90vh] max-w-[95vw] gap-0 p-0 bg-transparent border-none shadow-none',
+          'h-[90vh] max-w-[95vw] gap-0 border-none bg-transparent p-0 shadow-none',
           isFullscreen && 'h-screen w-screen max-w-none',
           className
         )}
@@ -509,7 +523,7 @@ export function TemplateEditorPreview({
                   }}
                 >
                   {renderedPages.length > 0 ? (
-                    <div className="mx-auto flex flex-col items-center gap-8 justify-center">
+                    <div className="mx-auto flex flex-col items-center justify-center gap-8">
                       {renderedPages.map((_, index) => (
                         <div
                           key={index}
@@ -526,7 +540,7 @@ export function TemplateEditorPreview({
                             </span>
                           </div>
                           <iframe
-                            ref={(el) => {
+                            ref={el => {
                               iframeRefs.current[index] = el
                             }}
                             className="w-full rounded-lg border border-gray-300 bg-white shadow-lg"
@@ -543,7 +557,9 @@ export function TemplateEditorPreview({
                     <div className="flex h-full items-center justify-center">
                       <div className="text-center">
                         <FileText className="mx-auto mb-3 h-10 w-10 text-gray-400" />
-                        <p className="text-sm text-gray-600">Failed to load template preview</p>
+                        <p className="text-sm text-gray-600">
+                          Failed to load template preview
+                        </p>
                       </div>
                     </div>
                   )}

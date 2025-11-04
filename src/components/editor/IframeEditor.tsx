@@ -236,7 +236,10 @@ export default function IframeEditor({
       const newHistory = prev.slice(0, currentIndex + 1)
 
       // Don't add duplicate state
-      if (newHistory.length > 0 && newHistory[newHistory.length - 1] === currentHtml) {
+      if (
+        newHistory.length > 0 &&
+        newHistory[newHistory.length - 1] === currentHtml
+      ) {
         console.log('⚠️ Duplicate state - not saving')
         return prev
       }
@@ -244,7 +247,12 @@ export default function IframeEditor({
       // Add current state
       newHistory.push(currentHtml)
 
-      console.log('✅ History saved - new index:', currentIndex + 1, 'total states:', newHistory.length)
+      console.log(
+        '✅ History saved - new index:',
+        currentIndex + 1,
+        'total states:',
+        newHistory.length
+      )
 
       // Limit history to 50 states
       if (newHistory.length > 50) {
@@ -741,7 +749,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'a') {
-                  ; (el as HTMLAnchorElement).href = e.target.value
+                  ;(el as HTMLAnchorElement).href = e.target.value
                 }
               }}
             />
@@ -785,10 +793,11 @@ export default function IframeEditor({
                         updateSelectedStyles({ fontFamily: font.value })
                         setFontDropdownOpen(false)
                       }}
-                      className={`w-full border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${getSelectedFont().value === font.value
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'text-gray-700'
-                        }`}
+                      className={`w-full border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
+                        getSelectedFont().value === font.value
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-700'
+                      }`}
                     >
                       <div
                         style={{ fontFamily: font.family, fontSize: '13px' }}
@@ -920,10 +929,11 @@ export default function IframeEditor({
                 <button
                   key={align}
                   onClick={() => updateSelectedStyles({ textAlign: align })}
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs capitalize ${currentStyles.textAlign === align
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white hover:bg-gray-50'
-                    }`}
+                  className={`h-8 flex-1 rounded border border-gray-300 text-xs capitalize ${
+                    currentStyles.textAlign === align
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
                 >
                   {align}
                 </button>
@@ -1041,7 +1051,7 @@ export default function IframeEditor({
                       if (!doc || !selectedPath) return
                       const el = resolvePathToElement(doc, selectedPath)
                       if (el && selectedTag === 'img') {
-                        ; (el as HTMLImageElement).src = event.target
+                        ;(el as HTMLImageElement).src = event.target
                           ?.result as string
                       }
                     }
@@ -1074,7 +1084,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'img') {
-                  ; (el as HTMLImageElement).src = e.target.value
+                  ;(el as HTMLImageElement).src = e.target.value
                 }
               }}
             />
@@ -1096,7 +1106,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el && selectedTag === 'img') {
-                  ; (el as HTMLImageElement).alt = e.target.value
+                  ;(el as HTMLImageElement).alt = e.target.value
                 }
               }}
             />
@@ -1318,7 +1328,7 @@ export default function IframeEditor({
                 if (!doc || !selectedPath) return
                 const el = resolvePathToElement(doc, selectedPath)
                 if (el) {
-                  ; (el as HTMLElement).id = e.target.value
+                  ;(el as HTMLElement).id = e.target.value
                 }
               }}
             />
@@ -1362,10 +1372,11 @@ export default function IframeEditor({
                   onClick={() =>
                     updateSelectedStyles({ display: layout.value })
                   }
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs ${currentStyles.display === layout.value
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white hover:bg-gray-50'
-                    }`}
+                  className={`h-8 flex-1 rounded border border-gray-300 text-xs ${
+                    currentStyles.display === layout.value
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white hover:bg-gray-50'
+                  }`}
                 >
                   {layout.label}
                 </button>
@@ -1925,22 +1936,25 @@ export default function IframeEditor({
       hasPageGenerator: !!template.pageGenerator,
       catalogueExists: !!liveData.catalogue,
       productsCount: liveData.catalogue?.products?.length || 0,
-      templateId: template.id
-    });
+      templateId: template.id,
+    })
 
     if (template.pageGenerator) {
       const generatedPages = template.pageGenerator(liveData, template.pages)
-      console.log('📄 Generated pages:', generatedPages.map(p => ({ id: p.id, name: p.name })));
+      console.log(
+        '📄 Generated pages:',
+        generatedPages.map(p => ({ id: p.id, name: p.name }))
+      )
       setPages(generatedPages)
     } else {
-      console.log('📄 Using base template pages');
+      console.log('📄 Using base template pages')
       setPages(template.pages)
     }
   }, [
     template.id,
     template.pageGenerator,
     liveData, // Watch entire liveData object for changes
-    JSON.stringify(liveData.catalogue?.products) // Deep watch products array
+    JSON.stringify(liveData.catalogue?.products), // Deep watch products array
   ])
 
   // Auto-collapse left tab when element is selected (except for layers tab)
@@ -2356,7 +2370,7 @@ export default function IframeEditor({
         ...transformedData,
         pageProducts,
         pageNumber,
-        totalProductPages
+        totalProductPages,
       }
     }
 
@@ -2371,7 +2385,7 @@ export default function IframeEditor({
 
   // Compile HTML for all pages (used in preview mode)
   const allPagesCompiledHtml = useMemo(() => {
-    return pages.map((page) => {
+    return pages.map(page => {
       const cssBlock = `<style>${template?.sharedCss || ''}\n${page?.css || ''}</style>`
 
       // Apply data transformation if template provides one
@@ -2385,14 +2399,17 @@ export default function IframeEditor({
         const products = liveData?.catalogue?.products || []
         const productsPerPage = 3
         const startIdx = (pageNumber - 1) * productsPerPage
-        const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
+        const pageProducts = products.slice(
+          startIdx,
+          startIdx + productsPerPage
+        )
         const totalProductPages = Math.ceil(products.length / productsPerPage)
 
         transformedData = {
           ...transformedData,
           pageProducts,
           pageNumber,
-          totalProductPages
+          totalProductPages,
         }
       }
 
@@ -2404,7 +2421,7 @@ export default function IframeEditor({
       const rendered = Mustache.render(page.html, transformedData)
       return `${cssBlock}\n${rendered}`
     })
-  }, [template, pages, liveData])  // Track the last rendered HTML to prevent unnecessary iframe reloads
+  }, [template, pages, liveData]) // Track the last rendered HTML to prevent unnecessary iframe reloads
   const lastRenderedHtmlRef = useRef<string>('')
 
   useEffect(() => {
@@ -2618,11 +2635,11 @@ export default function IframeEditor({
     if (initialData) {
       console.log('📥 Updating liveData from initialData prop:', {
         hasProducts: !!initialData.catalogue?.products,
-        productsCount: initialData.catalogue?.products?.length || 0
-      });
-      setLiveData(initialData);
+        productsCount: initialData.catalogue?.products?.length || 0,
+      })
+      setLiveData(initialData)
     }
-  }, [initialData]);
+  }, [initialData])
 
   // Propagate liveData changes to parent if requested
   useEffect(() => {
@@ -2648,7 +2665,12 @@ export default function IframeEditor({
     if (!registerEditorControls) return
     const controls = {
       undo: () => {
-        console.log('🔄 UNDO called - historyIndex:', htmlHistoryIndex, 'historyLength:', htmlHistory.length)
+        console.log(
+          '🔄 UNDO called - historyIndex:',
+          htmlHistoryIndex,
+          'historyLength:',
+          htmlHistory.length
+        )
         if (htmlHistoryIndex <= 0) {
           console.log('⚠️ Cannot undo - at start of history')
           return
@@ -2659,7 +2681,10 @@ export default function IframeEditor({
         if (!doc || !doc.body) return
 
         const previousHtml = htmlHistory[htmlHistoryIndex - 1]
-        console.log('✅ Restoring previous state from index:', htmlHistoryIndex - 1)
+        console.log(
+          '✅ Restoring previous state from index:',
+          htmlHistoryIndex - 1
+        )
         doc.body.innerHTML = previousHtml
         setHtmlHistoryIndex(prev => prev - 1)
 
@@ -2671,7 +2696,12 @@ export default function IframeEditor({
         }, 100)
       },
       redo: () => {
-        console.log('🔄 REDO called - historyIndex:', htmlHistoryIndex, 'historyLength:', htmlHistory.length)
+        console.log(
+          '🔄 REDO called - historyIndex:',
+          htmlHistoryIndex,
+          'historyLength:',
+          htmlHistory.length
+        )
         if (htmlHistoryIndex >= htmlHistory.length - 1) {
           console.log('⚠️ Cannot redo - at end of history')
           return
@@ -2712,7 +2742,7 @@ export default function IframeEditor({
       print: () => {
         try {
           iframeRef.current?.contentWindow?.print?.()
-        } catch { }
+        } catch {}
       },
       exportHTML: () => exportCurrentPageAsHTML(),
       exportJSON: () => exportEditorStateAsJSON(),
@@ -2996,7 +3026,7 @@ export default function IframeEditor({
     lastAppliedPathsRef.current.forEach(path => {
       const el = resolvePathToElement(doc, path)
       if (el && (el as HTMLElement).style) {
-        ; (el as HTMLElement).removeAttribute('style')
+        ;(el as HTMLElement).removeAttribute('style')
       }
     })
     // Apply new mutations
@@ -3373,8 +3403,8 @@ export default function IframeEditor({
       }
       case 'input': {
         el = doc.createElement('input') as HTMLInputElement
-          ; (el as HTMLInputElement).type = 'text'
-          ; (el as HTMLInputElement).placeholder = 'Enter text'
+        ;(el as HTMLInputElement).type = 'text'
+        ;(el as HTMLInputElement).placeholder = 'Enter text'
         el.style.padding = '6px 8px'
         el.style.border = '1px solid #d1d5db'
         el.style.borderRadius = '6px'
@@ -3383,11 +3413,11 @@ export default function IframeEditor({
       }
       case 'image': {
         el = doc.createElement('img') as HTMLImageElement
-          ; (el as HTMLImageElement).src =
-            liveData.product?.image || 'https://via.placeholder.com/150'
+        ;(el as HTMLImageElement).src =
+          liveData.product?.image || 'https://via.placeholder.com/150'
         el.style.maxWidth = '100%'
         el.style.display = 'block'
-          ; (el as HTMLImageElement).alt = 'Image'
+        ;(el as HTMLImageElement).alt = 'Image'
         break
       }
       case 'icon': {
@@ -3416,12 +3446,12 @@ export default function IframeEditor({
         el.style.alignItems = 'stretch'
         const col1 = doc.createElement('div')
         const col2 = doc.createElement('div')
-          ;[col1, col2].forEach((c, i) => {
-            c.style.flex = '1'
-            c.style.border = '1px dashed #d1d5db'
-            c.style.padding = '12px'
-            c.textContent = `Column ${i + 1}`
-          })
+        ;[col1, col2].forEach((c, i) => {
+          c.style.flex = '1'
+          c.style.border = '1px dashed #d1d5db'
+          c.style.padding = '12px'
+          c.textContent = `Column ${i + 1}`
+        })
         el.appendChild(col1)
         el.appendChild(col2)
         break
@@ -3598,17 +3628,42 @@ export default function IframeEditor({
           // Many Phosphor icons use `stroke` or `fill` on child paths — ensure
           // child shapes inherit a visible color by setting missing attributes
           // to `currentColor` so they pick up the wrapper's `color` style.
-          const shapeSelectors = ['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'g']
-          shapeSelectors.forEach(() => { })
-          const allChildren = Array.from(imported.querySelectorAll('*')) as Element[]
+          const shapeSelectors = [
+            'path',
+            'rect',
+            'circle',
+            'ellipse',
+            'line',
+            'polyline',
+            'polygon',
+            'g',
+          ]
+          shapeSelectors.forEach(() => {})
+          const allChildren = Array.from(
+            imported.querySelectorAll('*')
+          ) as Element[]
           allChildren.forEach(ch => {
             try {
               const el = ch as Element
               const tag = (el.tagName || '').toLowerCase()
               // Only touch common SVG shape elements
-              if (['path', 'rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'g', 'use'].includes(tag)) {
-                if (!el.getAttribute('fill')) el.setAttribute('fill', 'currentColor')
-                if (!el.getAttribute('stroke')) el.setAttribute('stroke', 'currentColor')
+              if (
+                [
+                  'path',
+                  'rect',
+                  'circle',
+                  'ellipse',
+                  'line',
+                  'polyline',
+                  'polygon',
+                  'g',
+                  'use',
+                ].includes(tag)
+              ) {
+                if (!el.getAttribute('fill'))
+                  el.setAttribute('fill', 'currentColor')
+                if (!el.getAttribute('stroke'))
+                  el.setAttribute('stroke', 'currentColor')
               }
             } catch (e) {
               // ignore any DOM exceptions
@@ -3635,7 +3690,10 @@ export default function IframeEditor({
         `
       }
     } catch (err) {
-      console.error('Failed to parse icon SVG, falling back to placeholder:', err)
+      console.error(
+        'Failed to parse icon SVG, falling back to placeholder:',
+        err
+      )
       iconWrapper.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 256 256" fill="currentColor" style="display:block">
           <title>${iconName}</title>
@@ -3659,7 +3717,8 @@ export default function IframeEditor({
   // SVG element isn't possible. If nothing useful is found it returns a small
   // circle placeholder so the inserted element remains visible.
   const extractSVGPath = (svgString: string): string => {
-    if (!svgString) return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+    if (!svgString)
+      return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
     try {
       const parsed = new DOMParser().parseFromString(svgString, 'image/svg+xml')
       const svg = parsed.querySelector('svg')
@@ -3674,11 +3733,15 @@ export default function IframeEditor({
         .map(n => (n as any).outerHTML || n.textContent)
         .filter(Boolean)
         .join('\n')
-      return children || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+      return (
+        children || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+      )
     } catch (e) {
       console.warn('extractSVGPath parse failed:', e)
       const trimmed = svgString.trim()
-      return trimmed || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+      return (
+        trimmed || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
+      )
     }
   }
 
@@ -3807,7 +3870,9 @@ export default function IframeEditor({
   }
 
   return (
-    <IconContext.Provider value={{ size: 20, weight: 'regular', color: 'currentColor' }}>
+    <IconContext.Provider
+      value={{ size: 20, weight: 'regular', color: 'currentColor' }}
+    >
       <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
         {/* Left Sidebar: Icon nav + panel */}
         {!previewMode && (
@@ -3861,10 +3926,11 @@ export default function IframeEditor({
                   title={tab.name}
                 >
                   <div
-                    className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${activeLeftTab === (tab.id as any)
-                      ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
-                      }`}
+                    className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${
+                      activeLeftTab === (tab.id as any)
+                        ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
+                    }`}
                   >
                     {tab.icon}
                   </div>
@@ -4042,7 +4108,10 @@ export default function IframeEditor({
 
                     {/* Text content - scrollable */}
                     <div className="flex-1 overflow-y-auto">
-                      <ElementsPanel onAdd={type => addElement(type)} onlyText />
+                      <ElementsPanel
+                        onAdd={type => addElement(type)}
+                        onlyText
+                      />
                     </div>
                   </div>
                 )}
@@ -4100,10 +4169,10 @@ export default function IframeEditor({
           const containerStyle =
             sidebarsCollapsed && !previewMode
               ? {
-                marginRight: '80px',
-                padding: '2rem 1rem',
-                transition: 'all 0.5s ease-in-out',
-              }
+                  marginRight: '80px',
+                  padding: '2rem 1rem',
+                  transition: 'all 0.5s ease-in-out',
+                }
               : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
           return (
             <div
@@ -4134,7 +4203,7 @@ export default function IframeEditor({
                         }}
                       >
                         <iframe
-                          ref={(el) => {
+                          ref={el => {
                             iframeRefs.current[index] = el
                           }}
                           title={`Page ${index + 1}`}
@@ -4275,7 +4344,9 @@ export default function IframeEditor({
                   >
                     <Sparkles
                       size={12}
-                      className={rightTab === 'effects' ? 'text-yellow-600' : ''}
+                      className={
+                        rightTab === 'effects' ? 'text-yellow-600' : ''
+                      }
                     />
                     Effects
                   </button>
@@ -4478,7 +4549,11 @@ function LayersPanel({
   // Helper to get icon for element type using Phosphor Icons
   const getElementIcon = (tagName: string) => {
     const tag = tagName.toLowerCase()
-    const iconProps = { size: 16, weight: 'regular' as const, className: 'text-current' }
+    const iconProps = {
+      size: 16,
+      weight: 'regular' as const,
+      className: 'text-current',
+    }
 
     // Layout elements
     if (
@@ -4673,10 +4748,11 @@ function LayersPanel({
         {/* Background layer with dynamic width */}
         {(isSelected || isHovered) && (
           <div
-            className={`pointer-events-none absolute left-0 rounded-lg transition-all ${isSelected
-              ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 shadow-sm'
-              : 'bg-gray-50'
-              }`}
+            className={`pointer-events-none absolute left-0 rounded-lg transition-all ${
+              isSelected
+                ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 shadow-sm'
+                : 'bg-gray-50'
+            }`}
             style={{
               top: 0,
               height: isHovered && !isSelected ? 'calc(100% - 4px)' : '100%',
@@ -4694,8 +4770,9 @@ function LayersPanel({
           onDrop={() => handleDrop(node.path)}
           onMouseEnter={() => onHoverPath?.(node.path)}
           onMouseLeave={() => onHoverPath?.(null)}
-          className={`group relative flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all ${isSelected ? 'text-[#2D1B69]' : ''
-            } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+          className={`group relative flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all ${
+            isSelected ? 'text-[#2D1B69]' : ''
+          } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
           onClick={() => onSelectPath(node.path)}
           title={node.path}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
@@ -4742,10 +4819,11 @@ function LayersPanel({
           {/* Children count badge */}
           {hasChildren && (
             <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] ${isSelected
-                ? 'bg-[#6366F1]/20 text-[#6366F1]'
-                : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-                }`}
+              className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+                isSelected
+                  ? 'bg-[#6366F1]/20 text-[#6366F1]'
+                  : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+              }`}
             >
               {node.children.length}
             </span>
@@ -5792,7 +5870,10 @@ function IconItem({
       const svgString = container.innerHTML || ''
       return svgString
     } catch (e) {
-      console.warn('generateIconSVG render failed, falling back to simple SVG:', e)
+      console.warn(
+        'generateIconSVG render failed, falling back to simple SVG:',
+        e
+      )
       // Fallback simple SVG that uses icon name initial
       const fallback = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 256 256" fill="currentColor" data-phosphor-icon="${icon.name}" data-weight="${iconWeight}"><title>${icon.name}</title><text x="128" y="140" text-anchor="middle" dominant-baseline="middle" font-size="120">${icon.name.charAt(0)}</text></svg>`
       return fallback
@@ -5800,28 +5881,35 @@ function IconItem({
       // Clean up the rendered root and container
       try {
         if (root) root.unmount()
-      } catch (e) { }
+      } catch (e) {}
       try {
         if (container.parentNode) container.parentNode.removeChild(container)
-      } catch (e) { }
+      } catch (e) {}
     }
   }
 
   const onDragStart = (e: React.DragEvent) => {
     const svgString = generateIconSVG()
 
-    e.dataTransfer.setData('application/x-editor-icon', JSON.stringify({
-      name: icon.name,
-      weight: iconWeight,
-      svg: svgString
-    }))
+    e.dataTransfer.setData(
+      'application/x-editor-icon',
+      JSON.stringify({
+        name: icon.name,
+        weight: iconWeight,
+        svg: svgString,
+      })
+    )
     e.dataTransfer.setData('text/plain', icon.name)
     e.dataTransfer.effectAllowed = 'copy'
 
     // Create a drag image
     if (iconRef.current) {
       const rect = iconRef.current.getBoundingClientRect()
-      e.dataTransfer.setDragImage(iconRef.current, rect.width / 2, rect.height / 2)
+      e.dataTransfer.setDragImage(
+        iconRef.current,
+        rect.width / 2,
+        rect.height / 2
+      )
     }
   }
 
@@ -5836,13 +5924,13 @@ function IconItem({
       onClick={handleClick}
       draggable
       onDragStart={onDragStart}
-      className="group flex aspect-square items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md cursor-move active:cursor-grabbing"
+      className="group flex aspect-square cursor-move items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md active:cursor-grabbing"
       title={`${icon.name} (Drag to canvas or click)`}
     >
       <IconComponent
         size={28}
         weight={iconWeight}
-        className="text-gray-700 transition-all duration-200 group-hover:text-blue-600 group-hover:scale-110"
+        className="text-gray-700 transition-all duration-200 group-hover:scale-110 group-hover:text-blue-600"
       />
     </button>
   )
@@ -5856,12 +5944,16 @@ function IconsPanel({
 }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [iconWeight, setIconWeight] = useState<'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'>('regular')
+  const [iconWeight, setIconWeight] = useState<
+    'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
+  >('regular')
 
   // Helper to convert React component to SVG string
   const iconToSvg = (IconComponent: any, iconName: string) => {
     const div = document.createElement('div')
-    const root = (window as any).createRoot ? (window as any).createRoot(div) : null
+    const root = (window as any).createRoot
+      ? (window as any).createRoot(div)
+      : null
 
     // Simple SVG generation - we'll use a more direct approach
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><text x="128" y="128" text-anchor="middle" dominant-baseline="middle" font-size="200">${iconName.charAt(0)}</text></svg>`
@@ -5908,7 +6000,10 @@ function IconsPanel({
       { name: 'CaretDown', component: PhosphorIcons.CaretDown },
       { name: 'ArrowCircleRight', component: PhosphorIcons.ArrowCircleRight },
       { name: 'ArrowCircleLeft', component: PhosphorIcons.ArrowCircleLeft },
-      { name: 'ArrowElbowDownRight', component: PhosphorIcons.ArrowElbowDownRight },
+      {
+        name: 'ArrowElbowDownRight',
+        component: PhosphorIcons.ArrowElbowDownRight,
+      },
       { name: 'TrendUp', component: PhosphorIcons.TrendUp },
     ],
     ui: [
@@ -5980,7 +6075,11 @@ function IconsPanel({
     { id: 'arrows', name: 'Arrows', count: iconLibrary.arrows.length },
     { id: 'ui', name: 'UI', count: iconLibrary.ui.length },
     { id: 'design', name: 'Design', count: iconLibrary.design.length },
-    { id: 'ecommerce', name: 'E-commerce', count: iconLibrary.ecommerce.length },
+    {
+      id: 'ecommerce',
+      name: 'E-commerce',
+      count: iconLibrary.ecommerce.length,
+    },
     { id: 'media', name: 'Media', count: iconLibrary.media.length },
   ]
 
@@ -6010,16 +6109,19 @@ function IconsPanel({
 
         {/* Weight Selector */}
         <div className="mb-3">
-          <label className="mb-1.5 block text-xs font-medium text-gray-700">Icon Weight</label>
+          <label className="mb-1.5 block text-xs font-medium text-gray-700">
+            Icon Weight
+          </label>
           <div className="grid grid-cols-3 gap-1">
             {(['regular', 'bold', 'fill'] as const).map(weight => (
               <button
                 key={weight}
                 onClick={() => setIconWeight(weight)}
-                className={`rounded-md px-2 py-1 text-xs capitalize transition-colors ${iconWeight === weight
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                className={`rounded-md px-2 py-1 text-xs capitalize transition-colors ${
+                  iconWeight === weight
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
               >
                 {weight}
               </button>
@@ -6033,10 +6135,11 @@ function IconsPanel({
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-200 ${selectedCategory === category.id
-                ? 'bg-blue-100 font-medium text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100'
-                }`}
+              className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
+                selectedCategory === category.id
+                  ? 'bg-blue-100 font-medium text-blue-700'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <div className="flex items-center justify-between">
                 <span className="truncate">{category.name}</span>
@@ -6146,10 +6249,11 @@ function AssetsPanel({
       <div className="mb-4">
         {/* Upload Area */}
         <div
-          className={`mb-4 rounded-lg border-2 border-dashed p-3 text-center transition-colors duration-200 ${dragOver
-            ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
-            }`}
+          className={`mb-4 rounded-lg border-2 border-dashed p-3 text-center transition-colors duration-200 ${
+            dragOver
+              ? 'border-blue-400 bg-blue-50'
+              : 'border-gray-300 hover:border-gray-400'
+          }`}
           onDrop={handleDrop}
           onDragOver={e => {
             e.preventDefault()

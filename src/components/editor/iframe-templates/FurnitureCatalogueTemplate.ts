@@ -986,7 +986,7 @@ export const SmellAddaCatalogTemplate: PrebuiltHtmlTemplate = {
   },
   dataTransform: (data: any) => {
     return data
-  }
+  },
 }
 
 export default SmellAddaCatalogTemplate

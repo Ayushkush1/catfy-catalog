@@ -1,6 +1,6 @@
 /**
  * Phosphor Icons Example Component
- * 
+ *
  * This file demonstrates various ways to use Phosphor Icons
  * in your React components within the Catfy editor.
  */
@@ -98,10 +98,9 @@ export function InteractiveIconExample() {
         <Heart
           size={32}
           weight={isLiked ? 'fill' : 'regular'}
-          className={`transition-colors duration-200 ${isLiked
-              ? 'text-red-500'
-              : 'text-gray-400 group-hover:text-red-300'
-            }`}
+          className={`transition-colors duration-200 ${
+            isLiked ? 'text-red-500' : 'text-gray-400 group-hover:text-red-300'
+          }`}
         />
         <span className="text-xs">{isLiked ? 'Liked' : 'Like'}</span>
       </button>
@@ -114,12 +113,15 @@ export function InteractiveIconExample() {
         <Star
           size={32}
           weight={isFavorited ? 'fill' : 'regular'}
-          className={`transition-colors duration-200 ${isFavorited
+          className={`transition-colors duration-200 ${
+            isFavorited
               ? 'text-yellow-500'
               : 'text-gray-400 group-hover:text-yellow-300'
-            }`}
+          }`}
         />
-        <span className="text-xs">{isFavorited ? 'Favorited' : 'Favorite'}</span>
+        <span className="text-xs">
+          {isFavorited ? 'Favorited' : 'Favorite'}
+        </span>
       </button>
 
       {/* Cart Button */}

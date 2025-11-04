@@ -590,14 +590,14 @@ export const HomeDecorCatalogueTemplate: PrebuiltHtmlTemplate = {
     console.log('🔄 HomeDecor dataTransform called with:', {
       hasProducts: !!data?.catalogue?.products,
       productsCount: data?.catalogue?.products?.length || 0,
-      products: data?.catalogue?.products
-    });
+      products: data?.catalogue?.products,
+    })
 
     return {
       ...data,
       // Add any additional transformations here if needed
-    };
-  }
+    }
+  },
 }
 
 export default HomeDecorCatalogueTemplate

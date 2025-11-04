@@ -799,7 +799,8 @@ const pages: IframePage[] = [
   </div>
 </div>
     `,
-  }, {
+  },
+  {
     id: 'contact',
     name: 'Contact',
     html: `
@@ -974,7 +975,10 @@ export const FMCGCatalogueTemplate: PrebuiltHtmlTemplate = {
 
       for (let i = 0; i < totalPages; i++) {
         const startIdx = i * productsPerPage
-        const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
+        const pageProducts = products.slice(
+          startIdx,
+          startIdx + productsPerPage
+        )
 
         result.push({
           ...productPageTemplate,
@@ -994,7 +998,7 @@ export const FMCGCatalogueTemplate: PrebuiltHtmlTemplate = {
     // We don't need to modify the global data structure anymore
     // The pageGenerator handles page creation
     return data
-  }
+  },
 }
 
 export default FMCGCatalogueTemplate

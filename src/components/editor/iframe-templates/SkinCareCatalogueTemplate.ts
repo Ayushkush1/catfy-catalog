@@ -1192,7 +1192,7 @@ export const SkinCareCatalogueTemplate: PrebuiltHtmlTemplate = {
   dataTransform: (data: any) => {
     // No transformation needed, pageGenerator handles the pages
     return data
-  }
+  },
 }
 
 export default SkinCareCatalogueTemplate

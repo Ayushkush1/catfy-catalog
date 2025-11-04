@@ -320,10 +320,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           sortOrder: product.sortOrder,
           category: product.category
             ? {
-              id: product.category.id,
-              name: product.category.name,
-              color: product.category.color,
-            }
+                id: product.category.id,
+                name: product.category.name,
+                color: product.category.color,
+              }
             : null,
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,

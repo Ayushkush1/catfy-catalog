@@ -209,15 +209,15 @@ export function getTemplateById(templateId: string) {
     totalTemplates: registry.getAllTemplates().length,
     templateData: template
       ? {
-        id: template.id,
-        name: template.name,
-        hasCustomProperties: !!template.customProperties,
-        hasEditorData: !!template.customProperties?.editorData,
-        editorDataType: typeof template.customProperties?.editorData,
-        editorDataKeys: template.customProperties?.editorData
-          ? Object.keys(template.customProperties.editorData)
-          : [],
-      }
+          id: template.id,
+          name: template.name,
+          hasCustomProperties: !!template.customProperties,
+          hasEditorData: !!template.customProperties?.editorData,
+          editorDataType: typeof template.customProperties?.editorData,
+          editorDataKeys: template.customProperties?.editorData
+            ? Object.keys(template.customProperties.editorData)
+            : [],
+        }
       : null,
   })
 
