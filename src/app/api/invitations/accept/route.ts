@@ -72,13 +72,28 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the invitation email matches the current user's email
-    if (
-      invitation.email.toLowerCase() !== (user as User).email?.toLowerCase()
-    ) {
-      return NextResponse.json(
-        { error: 'This invitation was sent to a different email address' },
-        { status: 403 }
-      )
+    const userEmail = (user as User).email?.toLowerCase() || ''
+    const invitationEmail = invitation.email.toLowerCase()
+
+    if (userEmail !== invitationEmail) {
+      // Get user's profile to check all possible emails
+      const userProfile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { email: true }
+      })
+
+      const profileEmail = userProfile?.email.toLowerCase() || ''
+
+      // Check if either the auth email or profile email matches
+      if (profileEmail !== invitationEmail && userEmail !== invitationEmail) {
+        return NextResponse.json(
+          {
+            error: 'This invitation was sent to a different email address',
+            details: `Invitation sent to: ${invitation.email}. You are logged in as: ${userEmail || profileEmail}`
+          },
+          { status: 403 }
+        )
+      }
     }
 
     // Check if user is already a team member
