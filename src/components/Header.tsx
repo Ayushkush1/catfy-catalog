@@ -167,7 +167,7 @@ export function Header({
 
   return (
     <>
-      <header className="bg-white  shadow-sm">
+      <header className="bg-white  shadow-md  ">
         <div className="  px-8 py-5">
           <div className="flex items-center justify-between">
             {/* Left Section - Logo and Search */}
@@ -392,7 +392,7 @@ export function Header({
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
         <div className=" bg-gray-100 pt-4">
-          <div className="mx-8 h-40 rounded-t-3xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-8 text-white">
+          <div className="mx-8 h-40 rounded-t-[2.7rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-8 text-white">
             <div className="container mx-auto">
               <div className="flex items-center justify-between">
                 <div className="text-white">

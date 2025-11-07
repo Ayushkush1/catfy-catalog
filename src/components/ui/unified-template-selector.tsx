@@ -199,7 +199,7 @@ export function UnifiedTemplateSelector({
               alt={template.name}
               className="h-full w-full object-cover"
               onError={e => {
-                ;(e.target as HTMLImageElement).src =
+                ; (e.target as HTMLImageElement).src =
                   '/templates/default-preview.svg'
               }}
             />
@@ -314,7 +314,7 @@ export function UnifiedTemplateSelector({
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="pl-10 border-0 shadow-lg"
               />
             </div>
           )}
@@ -325,7 +325,7 @@ export function UnifiedTemplateSelector({
                 value={selectedCategory}
                 onValueChange={setSelectedCategory}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 border-0 shadow-md">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
@@ -339,7 +339,7 @@ export function UnifiedTemplateSelector({
               </Select>
             )}
 
-            <div className="flex rounded-lg border">
+            <div className="flex rounded-lg border-0 shadow-md">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"

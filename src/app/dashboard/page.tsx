@@ -469,9 +469,9 @@ export default function DashboardPage() {
   return (
     <>
       <Header title="Dashboard" />
-      <div className="min-h-screen bg-gray-50 pb-10">
+      <div className="min-h-screen bg-gray-50 pb-10 pt-2">
         {/* Purple Gradient Hero Section */}
-        <div className="mx-8 rounded-3xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-12 text-white">
+        <div className="mx-8 rounded-[3rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-16 text-white">
           <div className="container mx-auto">
             <div className="flex items-center justify-between">
               <div className="pb-6 text-white">
@@ -681,8 +681,8 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Catalogue Tool Card - Compact */}
-              <Card className="group relative overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg">
-                <div className="absolute right-0 top-0 h-20 w-20 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
+              <Card className="group relative overflow-hidden p-2 rounded-2xl border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg flex flex-col">
+                <div className="absolute -right-3 top-0 h-32 w-32 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
                   <Book className="h-full w-full text-[#6366F1]" />
                 </div>
 
@@ -702,9 +702,9 @@ export default function DashboardPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="relative space-y-3 pt-0">
+                <CardContent className="relative space-y-4 pt-0 flex-1 flex flex-col justify-between">
                   {/* Compact Features */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="flex items-center space-x-2 text-xs text-gray-700">
                       <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
                         <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
@@ -721,19 +721,27 @@ export default function DashboardPage() {
                       </div>
                       <span>Share & export to PDF</span>
                     </div>
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>Team collaboration & management</span>
+                    </div>
                   </div>
 
                   {/* Compact Stats */}
-                  <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-2">
+                  <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-3">
                     <div className="flex-1 text-center">
-                      <div className="text-lg font-bold text-[#6366F1]">
+                      <div className="text-xl font-bold text-[#6366F1]">
                         {stats?.totalCatalogues || 0}
                       </div>
                       <div className="text-[10px] text-gray-600">Catalogues</div>
                     </div>
-                    <div className="h-8 w-px bg-gray-300"></div>
+                    <div className="h-10 w-px bg-gray-300"></div>
                     <div className="flex-1 text-center">
-                      <div className="text-lg font-bold text-[#6366F1]">
+                      <div className="text-xl font-bold text-[#6366F1]">
                         {stats?.totalProducts || 0}
                       </div>
                       <div className="text-[10px] text-gray-600">Products</div>
@@ -741,7 +749,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2">
                     <Button
                       onClick={() => {
                         document.getElementById('all-catalogues')?.scrollIntoView({
@@ -749,7 +757,7 @@ export default function DashboardPage() {
                         })
                       }}
                       variant="outline"
-                      className="flex-1 rounded-lg border-[#6366F1] py-2 text-xs font-semibold text-[#6366F1] transition-all hover:bg-[#6366F1] hover:text-white"
+                      className="flex-1 rounded-lg border-[#6366F1] py-2.5 text-xs font-semibold text-[#6366F1] transition-all hover:bg-[#6366F1] hover:text-white"
                     >
                       <Eye className="mr-1.5 h-3.5 w-3.5" />
                       Browse
@@ -762,7 +770,7 @@ export default function DashboardPage() {
                           setShowUpgradePrompt(true)
                         }
                       }}
-                      className="flex-1 rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] py-2 text-xs font-semibold text-white shadow-sm transition-all hover:shadow-md"
+                      className="flex-1  rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:shadow-md"
                     >
                       <Plus className="mr-1.5 h-3.5 w-3.5" />
                       Create New
@@ -772,8 +780,8 @@ export default function DashboardPage() {
               </Card>
 
               {/* PDF Editor Tool Card - Compact */}
-              <Card className="group relative overflow-hidden rounded-xl border-2 border-transparent bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#10B981] hover:shadow-lg">
-                <div className="absolute right-0 top-0 h-20 w-20 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
+              <Card className="group relative overflow-hidden rounded-2xl p-2 border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#10B981] hover:shadow-lg flex flex-col">
+                <div className="absolute -right-3 top-0 h-32 w-32 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
                   <FileText className="h-full w-full text-[#10B981]" />
                 </div>
 
@@ -793,9 +801,9 @@ export default function DashboardPage() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="relative space-y-3 pt-0">
+                <CardContent className="relative space-y-4 pt-0 flex-1 flex flex-col justify-between">
                   {/* Compact Features */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="flex items-center space-x-2 text-xs text-gray-700">
                       <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
                         <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
@@ -812,29 +820,37 @@ export default function DashboardPage() {
                       </div>
                       <span>Annotations, merge & sign forms</span>
                     </div>
+                    <div className="flex items-center space-x-2 text-xs text-gray-700">
+                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
+                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span>Convert & compress documents</span>
+                    </div>
                   </div>
 
                   {/* Coming Soon Badge */}
-                  <div className="flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 p-2">
-                    <Badge className="border-amber-200 bg-transparent px-3 py-1 text-xs font-semibold text-amber-700">
+                  <div className="flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 p-3">
+                    <Badge className="border-amber-200 bg-transparent px-3 py-1.5 text-xs font-semibold text-amber-700">
                       <Sparkles className="mr-1 h-3 w-3" />
                       Coming Soon
                     </Badge>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2">
                     <Button
                       disabled
                       variant="outline"
-                      className="flex-1 cursor-not-allowed rounded-lg border-gray-300 py-2 text-xs font-semibold text-gray-400 opacity-50"
+                      className="flex-1 cursor-not-allowed rounded-lg border-gray-300 py-2.5 text-xs font-semibold text-gray-400 opacity-50"
                     >
                       <Eye className="mr-1.5 h-3.5 w-3.5" />
                       Browse
                     </Button>
                     <Button
                       disabled
-                      className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 py-2 text-xs font-semibold text-gray-500 opacity-50"
+                      className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 py-2.5 text-xs font-semibold text-gray-500 opacity-50"
                     >
                       <Plus className="mr-1.5 h-3.5 w-3.5" />
                       Create New
@@ -877,7 +893,7 @@ export default function DashboardPage() {
                     <Card
                       key={item.id}
                       onClick={() => router.push(`/catalogue/${item.id}/edit`)}
-                      className="group min-w-[280px] cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg"
+                      className="group min-w-[280px] cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300  hover:border-[#6366F1] hover:shadow-lg"
                     >
                       <div className="relative h-24 overflow-hidden bg-gradient-to-br from-[#2D1B69] to-[#6366F1]">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
@@ -954,10 +970,10 @@ export default function DashboardPage() {
           <div id="all-catalogues" className="space-y-6">
             <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-gray-900">
                   All Catalogues
                 </h2>
-                <p className="mt-1 text-gray-600">
+                <p className=" text-sm text-gray-600">
                   Manage and organize your creative collections
                 </p>
               </div>
@@ -1087,8 +1103,8 @@ export default function DashboardPage() {
                         <Badge
                           variant={catalogue.isPublic ? 'default' : 'secondary'}
                           className={`border px-3 py-1 text-xs font-medium backdrop-blur-sm ${catalogue.isPublic
-                              ? 'border-emerald-400 bg-emerald-500/90 text-white'
-                              : 'border-red-400 bg-red-500/90 text-white'
+                            ? 'border-emerald-400 bg-emerald-500/90 text-white'
+                            : 'border-red-400 bg-red-500/90 text-white'
                             }`}
                         >
                           {catalogue.isPublic ? 'Public' : 'Private'}
