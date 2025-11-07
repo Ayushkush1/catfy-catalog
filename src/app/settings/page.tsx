@@ -20,8 +20,10 @@ import {
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Header } from '@/components/Header'
-import { Bell, Globe, Shield, Eye, Trash2 } from 'lucide-react'
+import { Bell, Globe, Shield, Eye, Trash2, Users } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { TeamManagement } from '@/components/TeamManagement'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface AppSettings {
   notifications: {
@@ -120,217 +122,243 @@ export default function SettingsPage() {
     <div className="container mx-auto space-y-6 py-8">
       <Header title="Settings" />
 
-      {/* Notification Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-          </CardTitle>
-          <CardDescription>
-            Manage how you receive notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Email Notifications</Label>
-              <p className="text-sm text-gray-500">
-                Receive notifications via email
-              </p>
-            </div>
-            <Switch
-              checked={settings.notifications.email}
-              onCheckedChange={checked =>
-                updateSettings('notifications.email', checked)
-              }
-            />
-          </div>
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="general" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            General
+          </TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Team
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Push Notifications</Label>
-              <p className="text-sm text-gray-500">
-                Receive push notifications in browser
-              </p>
-            </div>
-            <Switch
-              checked={settings.notifications.push}
-              onCheckedChange={checked =>
-                updateSettings('notifications.push', checked)
-              }
-            />
-          </div>
+        <TabsContent value="general" className="space-y-6 mt-6">
+          {/* Notification Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Notifications
+              </CardTitle>
+              <CardDescription>
+                Manage how you receive notifications
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Email Notifications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive notifications via email
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.notifications.email}
+                  onCheckedChange={checked =>
+                    updateSettings('notifications.email', checked)
+                  }
+                />
+              </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Marketing Communications</Label>
-              <p className="text-sm text-gray-500">
-                Receive updates about new features and offers
-              </p>
-            </div>
-            <Switch
-              checked={settings.notifications.marketing}
-              onCheckedChange={checked =>
-                updateSettings('notifications.marketing', checked)
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Push Notifications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive push notifications in browser
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.notifications.push}
+                  onCheckedChange={checked =>
+                    updateSettings('notifications.push', checked)
+                  }
+                />
+              </div>
 
-      {/* Privacy Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
-            Privacy
-          </CardTitle>
-          <CardDescription>
-            Control your privacy and data visibility
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="profileVisibility">Profile Visibility</Label>
-            <Select
-              value={settings.privacy.profileVisibility}
-              onValueChange={value =>
-                updateSettings('privacy.profileVisibility', value)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Marketing Communications</Label>
+                  <p className="text-sm text-gray-500">
+                    Receive updates about new features and offers
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.notifications.marketing}
+                  onCheckedChange={checked =>
+                    updateSettings('notifications.marketing', checked)
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Show Email in Profile</Label>
-              <p className="text-sm text-gray-500">
-                Make your email visible to other users
-              </p>
-            </div>
-            <Switch
-              checked={settings.privacy.showEmail}
-              onCheckedChange={checked =>
-                updateSettings('privacy.showEmail', checked)
-              }
-            />
-          </div>
+          {/* Privacy Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Privacy
+              </CardTitle>
+              <CardDescription>
+                Control your privacy and data visibility
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profileVisibility">Profile Visibility</Label>
+                <Select
+                  value={settings.privacy.profileVisibility}
+                  onValueChange={value =>
+                    updateSettings('privacy.profileVisibility', value)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Show Phone in Profile</Label>
-              <p className="text-sm text-gray-500">
-                Make your phone number visible to other users
-              </p>
-            </div>
-            <Switch
-              checked={settings.privacy.showPhone}
-              onCheckedChange={checked =>
-                updateSettings('privacy.showPhone', checked)
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Show Email in Profile</Label>
+                  <p className="text-sm text-gray-500">
+                    Make your email visible to other users
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.privacy.showEmail}
+                  onCheckedChange={checked =>
+                    updateSettings('privacy.showEmail', checked)
+                  }
+                />
+              </div>
 
-      {/* Language & Region */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            Language & Region
-          </CardTitle>
-          <CardDescription>
-            Set your language and regional preferences
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
-            <Select
-              value={settings.language}
-              onValueChange={value => updateSettings('language', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="en">English</SelectItem>
-                <SelectItem value="es">Español</SelectItem>
-                <SelectItem value="fr">Français</SelectItem>
-                <SelectItem value="de">Deutsch</SelectItem>
-                <SelectItem value="zh">中文</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Show Phone in Profile</Label>
+                  <p className="text-sm text-gray-500">
+                    Make your phone number visible to other users
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.privacy.showPhone}
+                  onCheckedChange={checked =>
+                    updateSettings('privacy.showPhone', checked)
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="space-y-2">
-            <Label htmlFor="timezone">Timezone</Label>
-            <Select
-              value={settings.timezone}
-              onValueChange={value => updateSettings('timezone', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="UTC">UTC</SelectItem>
-                <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                <SelectItem value="America/Chicago">Central Time</SelectItem>
-                <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                <SelectItem value="America/Los_Angeles">
-                  Pacific Time
-                </SelectItem>
-                <SelectItem value="Europe/London">London</SelectItem>
-                <SelectItem value="Europe/Paris">Paris</SelectItem>
-                <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                <SelectItem value="Asia/Shanghai">Shanghai</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+          {/* Language & Region */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Language & Region
+              </CardTitle>
+              <CardDescription>
+                Set your language and regional preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="language">Language</Label>
+                <Select
+                  value={settings.language}
+                  onValueChange={value => updateSettings('language', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="de">Deutsch</SelectItem>
+                    <SelectItem value="zh">中文</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Danger Zone */}
-      <Card className="border-red-200">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-600">
-            <Trash2 className="h-5 w-5" />
-            Danger Zone
-          </CardTitle>
-          <CardDescription>
-            Irreversible and destructive actions
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="rounded-lg border border-red-200 p-4">
-              <h4 className="font-medium text-red-800">Clear All Data</h4>
-              <p className="mt-1 text-sm text-red-600">
-                This will permanently delete all your data and cannot be undone.
-              </p>
-              <Button variant="destructive" size="sm" className="mt-3">
-                Clear All Data
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="timezone">Timezone</Label>
+                <Select
+                  value={settings.timezone}
+                  onValueChange={value => updateSettings('timezone', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UTC">UTC</SelectItem>
+                    <SelectItem value="America/New_York">
+                      Eastern Time
+                    </SelectItem>
+                    <SelectItem value="America/Chicago">
+                      Central Time
+                    </SelectItem>
+                    <SelectItem value="America/Denver">
+                      Mountain Time
+                    </SelectItem>
+                    <SelectItem value="America/Los_Angeles">
+                      Pacific Time
+                    </SelectItem>
+                    <SelectItem value="Europe/London">London</SelectItem>
+                    <SelectItem value="Europe/Paris">Paris</SelectItem>
+                    <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                    <SelectItem value="Asia/Shanghai">Shanghai</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSaveSettings} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Settings'}
-        </Button>
-      </div>
+          {/* Danger Zone */}
+          <Card className="border-red-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="h-5 w-5" />
+                Danger Zone
+              </CardTitle>
+              <CardDescription>
+                Irreversible and destructive actions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="rounded-lg border border-red-200 p-4">
+                  <h4 className="font-medium text-red-800">Clear All Data</h4>
+                  <p className="mt-1 text-sm text-red-600">
+                    This will permanently delete all your data and cannot be
+                    undone.
+                  </p>
+                  <Button variant="destructive" size="sm" className="mt-3">
+                    Clear All Data
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button onClick={handleSaveSettings} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Settings'}
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="team" className="mt-6">
+          <TeamManagement catalogueId="default" isOwner={true} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
