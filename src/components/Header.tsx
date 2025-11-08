@@ -46,6 +46,7 @@ interface HeaderProps {
   onPreview?: () => void
   onSave?: () => void
   isSaving?: boolean
+  hasPremiumAccess?: boolean
 }
 
 interface UserProfile {
@@ -66,6 +67,7 @@ export function Header({
   onPreview,
   onSave,
   isSaving = false,
+  hasPremiumAccess = false,
 }: HeaderProps) {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -91,7 +93,16 @@ export function Header({
           const response = await fetch('/api/auth/profile')
           if (response.ok) {
             const data = await response.json()
-            setProfile(data.profile)
+
+            // If user is admin, set plan to BUSINESS (unlimited)
+            if (adminStatus) {
+              setProfile({
+                ...data.profile,
+                subscriptionPlan: 'BUSINESS'
+              })
+            } else {
+              setProfile(data.profile)
+            }
           }
         }
       } catch (error) {
@@ -216,11 +227,12 @@ export function Header({
                     ? 'secondary'
                     : 'default'
                 }
-                className={`flex items-center space-x-1 rounded-full px-3 py-1 text-xs ${
-                  profile?.subscriptionPlan?.toLowerCase() === 'free'
+                className={`flex items-center space-x-1 rounded-full px-3 py-1 text-xs font-semibold ${profile?.subscriptionPlan?.toLowerCase() === 'free'
                     ? 'bg-gray-100 text-gray-600'
-                    : 'border-2 border-[#2D1B69]/10 bg-transparent text-[#2D1B69] hover:bg-[#2D1B69]/5'
-                }`}
+                    : profile?.subscriptionPlan?.toLowerCase() === 'business'
+                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-sm'
+                      : 'border-2 border-[#2D1B69]/10 bg-transparent text-[#2D1B69] hover:bg-[#2D1B69]/5'
+                  }`}
               >
                 {profile?.subscriptionPlan &&
                   profile.subscriptionPlan.toLowerCase() !== 'free' && (
@@ -228,7 +240,9 @@ export function Header({
                   )}
                 <span>
                   {profile?.subscriptionPlan
-                    ? profile.subscriptionPlan.charAt(0).toUpperCase() +
+                    ? profile.subscriptionPlan === 'BUSINESS'
+                      ? 'Business Plan'
+                      : profile.subscriptionPlan.charAt(0).toUpperCase() +
                       profile.subscriptionPlan.slice(1)
                     : 'Free'}
                 </span>
@@ -398,9 +412,17 @@ export function Header({
                 <div className="text-white">
                   <div className="mb-3 flex flex-col gap-2">
                     <div>
-                      <h1 className="pb-1 text-3xl font-bold">
-                        {title || 'Edit Catalogue'}
-                      </h1>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-3xl font-bold">
+                          {title || 'Edit Catalogue'}
+                        </h1>
+                        {hasPremiumAccess && (
+                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-300/30 backdrop-blur-sm">
+                            <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
+                            <span className="text-xs font-semibold text-white">Premium Access</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center text-sm text-purple-100">
                         <span className="font-medium text-white">
                           {catalogueName}

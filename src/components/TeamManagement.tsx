@@ -62,6 +62,7 @@ import {
   FileEdit,
   Settings,
   UserCog,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSubscription } from '@/contexts/SubscriptionContext'
@@ -128,13 +129,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [emailError, setEmailError] = useState('')
   const [activeTab, setActiveTab] = useState('members')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
+  const [isUpdatingPlanSharing, setIsUpdatingPlanSharing] = useState(false)
+  const [selectedMembersForSharing, setSelectedMembersForSharing] = useState<string[]>([])
+  const [showPlanSharingDialog, setShowPlanSharingDialog] = useState(false)
   const { currentPlan } = useSubscription()
-  const maxTeamMembers = getMaxTeamMembers(currentPlan)
-  const currentTeamCount = team.filter(
-    member => member.role === 'MEMBER'
-  ).length
-  const canInvite = true // All plans now support team collaboration
-  const canAddMore = canAddTeamMember(currentPlan, currentTeamCount)
+  const canInvite = true // All plans support team collaboration with unlimited members
 
   // Load team data
   const loadTeamData = async () => {
@@ -146,6 +146,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       const data = await response.json()
       setTeam(data.team || [])
       setPendingInvitations(data.pendingInvitations || [])
+
+      // Load members who have premium access
+      const membersWithAccess = (data.team || [])
+        .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
+        .map((m: any) => m.id)
+      setSelectedMembersForSharing(membersWithAccess)
 
       // Set activity log from API or use sample data if empty
       const apiActivityLog = data.activityLog || []
@@ -257,6 +263,65 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     }
   }
 
+  // Load plan sharing settings
+  const loadPlanSharingSettings = async () => {
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`)
+      if (!response.ok) throw new Error('Failed to load plan sharing settings')
+      const data = await response.json()
+      setIsPlanSharingEnabled(data.planSharingEnabled || false)
+    } catch (error) {
+      console.error('Error loading plan sharing settings:', error)
+    }
+  }
+
+  // Toggle plan sharing
+  const togglePlanSharing = async (enabled: boolean, memberIds?: string[]) => {
+    setIsUpdatingPlanSharing(true)
+    try {
+      const response = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          enabled,
+          memberIds: memberIds || selectedMembersForSharing
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update plan sharing settings')
+      }
+
+      setIsPlanSharingEnabled(enabled)
+
+      // Add activity log entry
+      const newActivity: ActivityLogEntry = {
+        id: Date.now().toString(),
+        action: enabled ? 'Enabled plan sharing' : 'Disabled plan sharing',
+        performedBy: 'current-user-id',
+        performedByName: 'You',
+        timestamp: new Date().toISOString(),
+        details: enabled
+          ? `Team members now have access to ${currentPlan} plan features`
+          : 'Team members no longer have access to premium features'
+      }
+      setActivityLog(prev => [newActivity, ...prev])
+
+      toast.success(
+        enabled
+          ? 'Plan sharing enabled! Team members now have access to your plan features.'
+          : 'Plan sharing disabled.'
+      )
+    } catch (error) {
+      console.error('Error updating plan sharing:', error)
+      toast.error('Failed to update plan sharing settings')
+    } finally {
+      setIsUpdatingPlanSharing(false)
+    }
+  }
+
   // Validate email
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -292,13 +357,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     )
     if (existingInvitation) {
       setEmailError('An invitation has already been sent to this email')
-      return
-    }
-
-    if (!canAddMore) {
-      setEmailError(
-        `You have reached the maximum team member limit (${maxTeamMembers}) for your ${currentPlan} plan.`
-      )
       return
     }
 
@@ -492,6 +550,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const currentUserMember = team.find(member => member.id === currentUserId)
   const isActualOwner = currentUserMember?.role === 'OWNER'
 
+  // Load plan sharing settings when component mounts and when isActualOwner changes
+  useEffect(() => {
+    if (isActualOwner && currentPlan !== 'FREE') {
+      loadPlanSharingSettings()
+    }
+  }, [catalogueId, isActualOwner, currentPlan])
+
   if (isLoading) {
     return (
       <Card>
@@ -549,8 +614,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   : 'View team members on this catalogue'}
                 {canInvite && isActualOwner && (
                   <span className="mt-1 block text-sm">
-                    {currentTeamCount} of{' '}
-                    {maxTeamMembers === -1 ? '∞' : maxTeamMembers} team members
+                    {team.filter(m => m.role === 'MEMBER').length} team members
                   </span>
                 )}
               </CardDescription>
@@ -567,15 +631,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-
-
-          {/* Team member limit notice */}
-          {!canAddMore && isActualOwner && (
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                You have reached the maximum team member limit ({maxTeamMembers}
-                ) for your {currentPlan} plan.
+          {/* Info for non-owners */}
+          {!isActualOwner && currentUserMember && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <Users className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                You are a team member of this catalogue. Only the owner can invite or remove team members.
               </AlertDescription>
             </Alert>
           )}
@@ -600,6 +661,43 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </TabsList>
 
             <TabsContent value="members" className="space-y-6 mt-8">
+              {/* Premium Access Notice for Team Members */}
+              {!isActualOwner && isPlanSharingEnabled && (
+                <Alert className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-2 border-purple-300 shadow-lg">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-md">
+                        <Sparkles className="h-5 w-5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-base font-bold text-purple-900 mb-2">
+                        🎉 You have Premium Access!
+                      </h4>
+                      <AlertDescription className="text-sm text-purple-800 space-y-2">
+                        <p className="font-medium">
+                          The catalogue owner has shared their premium plan benefits with you for this catalogue.
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
+                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                            <Sparkles className="h-4 w-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-900">AI Features</span>
+                          </div>
+                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                            <FileEdit className="h-4 w-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-900">Premium Export</span>
+                          </div>
+                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                            <Settings className="h-4 w-4 text-purple-600" />
+                            <span className="text-xs font-semibold text-purple-900">Premium Templates</span>
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </div>
+                  </div>
+                </Alert>
+              )}
+
               {/* Team Members */}
               <div>
                 <div className="flex items-center justify-between mb-6">
@@ -618,10 +716,10 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                       <div
                         key={member.id}
                         className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${isCurrentUser
-                            ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-sm'
-                            : member.role === 'OWNER'
-                              ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300 shadow-sm'
-                              : 'bg-white border-gray-200 hover:border-gray-300'
+                          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-sm'
+                          : member.role === 'OWNER'
+                            ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300 shadow-sm'
+                            : 'bg-white border-gray-200 hover:border-gray-300'
                           }`}
                       >
                         <div className="flex items-center space-x-4">
@@ -664,10 +762,10 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                 <Badge
                                   variant="outline"
                                   className={`flex items-center gap-1 font-medium ${member.permission === 'ADMIN'
-                                      ? 'border-blue-500 text-blue-700 bg-blue-50'
-                                      : member.permission === 'EDITOR'
-                                        ? 'border-green-500 text-green-700 bg-green-50'
-                                        : 'border-gray-400 text-gray-700 bg-gray-50'
+                                    ? 'border-blue-500 text-blue-700 bg-blue-50'
+                                    : member.permission === 'EDITOR'
+                                      ? 'border-green-500 text-green-700 bg-green-50'
+                                      : 'border-gray-400 text-gray-700 bg-gray-50'
                                     }`}
                                 >
                                   {member.permission === 'ADMIN' ? (
@@ -678,6 +776,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                     <Eye className="h-3 w-3" />
                                   )}
                                   {member.permission}
+                                </Badge>
+                              )}
+                              {isPlanSharingEnabled && member.role === 'MEMBER' && currentPlan !== 'FREE' && (
+                                <Badge
+                                  variant="outline"
+                                  className="flex items-center gap-1 font-medium border-purple-500 text-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 shadow-sm"
+                                >
+                                  <Sparkles className="h-3 w-3" />
+                                  Premium Access
                                 </Badge>
                               )}
                             </div>
@@ -858,12 +965,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                         >
                           {/* Icon */}
                           <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-transform group-hover:scale-110 ${log.action.includes('permission')
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-                              : log.action.includes('responsibility')
-                                ? 'bg-gradient-to-br from-green-500 to-green-600'
-                                : log.action.includes('Invited') || log.action.includes('added')
-                                  ? 'bg-gradient-to-br from-purple-500 to-purple-600'
-                                  : 'bg-gradient-to-br from-red-500 to-red-600'
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+                            : log.action.includes('responsibility')
+                              ? 'bg-gradient-to-br from-green-500 to-green-600'
+                              : log.action.includes('Invited') || log.action.includes('added')
+                                ? 'bg-gradient-to-br from-purple-500 to-purple-600'
+                                : 'bg-gradient-to-br from-red-500 to-red-600'
                             }`}>
                             {log.action.includes('permission') ? (
                               <Shield className="h-5 w-5 text-white" />
@@ -923,8 +1030,149 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               </div>
             </TabsContent>
           </Tabs>
+
+          {/* Compact Plan Sharing Card - At Bottom for Owners */}
+          {isActualOwner && currentPlan !== 'FREE' && (
+            <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
+                      <p className="text-xs text-gray-600">
+                        {selectedMembersForSharing.length > 0
+                          ? `${selectedMembersForSharing.length}/3 members selected`
+                          : 'Share with up to 3 members'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPlanSharingDialog(true)}
+                      className="h-8 text-xs"
+                    >
+                      <UserCog className="h-3 w-3 mr-1" />
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </CardContent>
       </Card>
+
+      {/* Plan Sharing Dialog */}
+      <Dialog open={showPlanSharingDialog} onOpenChange={setShowPlanSharingDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-blue-600" />
+              Share Plan Benefits
+            </DialogTitle>
+            <DialogDescription>
+              Select up to 3 team members who can access your {currentPlan} plan features
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {selectedMembersForSharing.length >= 3 && (
+              <Alert className="bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-sm text-amber-900">
+                  Maximum limit reached. You can share premium access with up to 3 team members.
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="max-h-96 overflow-y-auto space-y-3">
+              {team
+                .filter(member => member.role === 'MEMBER')
+                .map(member => {
+                  const isSelected = selectedMembersForSharing.includes(member.id)
+                  const canSelect = isSelected || selectedMembersForSharing.length < 3
+
+                  return (
+                    <div
+                      key={member.id}
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={member.avatarUrl || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getMemberInitials(member)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {getMemberDisplayName(member)}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant={isSelected ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setSelectedMembersForSharing(prev =>
+                            prev.includes(member.id)
+                              ? prev.filter(id => id !== member.id)
+                              : [...prev, member.id]
+                          )
+                        }}
+                        disabled={!canSelect}
+                        className="h-8"
+                      >
+                        {isSelected ? (
+                          <>
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Shared
+                          </>
+                        ) : (
+                          'Share'
+                        )}
+                      </Button>
+                    </div>
+                  )
+                })}
+              {team.filter(member => member.role === 'MEMBER').length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No team members yet</p>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPlanSharingDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                await togglePlanSharing(selectedMembersForSharing.length > 0)
+                setShowPlanSharingDialog(false)
+                toast.success('Plan sharing updated!')
+              }}
+              disabled={isUpdatingPlanSharing}
+            >
+              {isUpdatingPlanSharing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
@@ -962,15 +1210,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 <p className="mt-1 text-sm text-red-600">{emailError}</p>
               )}
             </div>
-            {!canAddMore && (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  You have reached the maximum team member limit (
-                  {maxTeamMembers}) for your {currentPlan} plan.
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
           <DialogFooter>
             <Button
@@ -981,7 +1220,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </Button>
             <Button
               onClick={sendInvitation}
-              disabled={isInviting || !canAddMore || !inviteEmail.trim()}
+              disabled={isInviting || !inviteEmail.trim()}
               className="flex items-center gap-2"
             >
               {isInviting ? (

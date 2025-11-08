@@ -106,6 +106,7 @@ export async function GET(
       avatarUrl: member.profile.avatarUrl,
       role: member.role,
       joinedAt: member.joinedAt,
+      hasPremiumAccess: member.hasPremiumAccess || false,
     }))
 
     const team = [owner, ...members]

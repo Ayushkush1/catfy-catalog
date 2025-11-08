@@ -184,6 +184,9 @@ export default function EditCataloguePage() {
   const [selectedTheme, setSelectedTheme] = useState('modern')
   const [products, setProducts] = useState<Product[]>([])
   const [smartSortEnabled, setSmartSortEnabled] = useState(false)
+  const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
+  const [isOwner, setIsOwner] = useState(false)
+  const [currentUserHasPremiumAccess, setCurrentUserHasPremiumAccess] = useState(false)
 
   // Theme data matching the themes page
   const THEMES = [
@@ -783,6 +786,37 @@ export default function EditCataloguePage() {
 
       const data = await response.json()
       setCatalogue(data.catalogue)
+
+      // Check if current user is owner
+      const { data: { user } } = await supabase.auth.getUser()
+      const userIsOwner = data.catalogue.profileId === user?.id
+      setIsOwner(userIsOwner)
+
+      // Check plan sharing status and user's premium access
+      if (!userIsOwner) {
+        try {
+          const teamResponse = await fetch(`/api/catalogues/${catalogueId}/team`)
+          if (teamResponse.ok) {
+            const teamData = await teamResponse.json()
+            const currentMember = teamData.team.find((m: any) => m.id === user?.id)
+            setCurrentUserHasPremiumAccess(currentMember?.hasPremiumAccess || false)
+          }
+        } catch (err) {
+          console.log('Could not check team member status')
+        }
+      }
+
+      // Check plan sharing status
+      try {
+        const planResponse = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`)
+        if (planResponse.ok) {
+          const planData = await planResponse.json()
+          setIsPlanSharingEnabled(planData.planSharingEnabled || false)
+        }
+      } catch (err) {
+        // Plan sharing check failed, ignore
+        console.log('Could not check plan sharing status')
+      }
     } catch (error: any) {
       console.error('Error fetching catalogue:', error)
       setErrorWithAutoDismiss(error.message || 'Failed to load catalogue')
@@ -1214,6 +1248,7 @@ export default function EditCataloguePage() {
         onPreview={handlePreview}
         onSave={saveCatalogue}
         isSaving={isSaving}
+        hasPremiumAccess={!isOwner && currentUserHasPremiumAccess}
       />
       <div className="-mt-6 min-h-screen bg-gray-100">
         {/* Main Layout Container */}
@@ -1239,8 +1274,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Eye className="mr-3 h-4 w-4" />
@@ -1250,16 +1285,16 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('categories')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <FolderOpen className="mr-3 h-4 w-4" />
                   Categories
                   <span
                     className={`ml-auto rounded-full px-2 py-1 text-xs ${activeTab === 'categories'
-                        ? 'bg-gray-200 text-gray-900'
-                        : 'bg-gray-200 text-gray-600'
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'bg-gray-200 text-gray-600'
                       }`}
                   >
                     {catalogue.categories.length}
@@ -1269,8 +1304,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('products')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Package className="mr-3 h-4 w-4" />
@@ -1283,8 +1318,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('theme')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
@@ -1294,8 +1329,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('team')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Users className="mr-3 h-4 w-4" />
@@ -1305,8 +1340,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('settings')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
-                      ? 'rounded-lg bg-gray-100 text-gray-900'
-                      : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-lg bg-gray-100 text-gray-900'
+                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <Settings className="mr-3 h-4 w-4" />

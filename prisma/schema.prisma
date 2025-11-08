@@ -57,6 +57,7 @@ model Catalogue {
   slug           String?         @unique
   status         CatalogueStatus @default(DRAFT)
   settings       Json?
+  planSharingEnabled Boolean      @default(false)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   publishedAt    DateTime?
@@ -267,15 +268,16 @@ model WebhookEvent {
 }
 
 model TeamMember {
-  id          String    @id @default(uuid())
-  role        TeamRole  @default(MEMBER)
-  joinedAt    DateTime  @default(now())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  catalogueId String
-  profileId   String
-  catalogue   Catalogue @relation(fields: [catalogueId], references: [id], onDelete: Cascade)
-  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  role             TeamRole  @default(MEMBER)
+  hasPremiumAccess Boolean   @default(false)
+  joinedAt         DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  catalogueId      String
+  profileId        String
+  catalogue        Catalogue @relation(fields: [catalogueId], references: [id], onDelete: Cascade)
+  profile          Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
   @@unique([catalogueId, profileId])
   @@map("team_members")
