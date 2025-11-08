@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useCatalogueRealtime } from '@/hooks/useCatalogueRealtime'
 import { useCataloguePresence } from '@/hooks/useCataloguePresence'
 import { VersionConflictDialog } from '@/components/editor/VersionConflictDialog'
-import { ActiveUsersCard } from '@/components/editor/ActiveUsersCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -1312,6 +1311,8 @@ export default function EditCataloguePage() {
         onSave={saveCatalogue}
         isSaving={isSaving}
         hasPremiumAccess={!isOwner && currentUserHasPremiumAccess}
+        activeUsers={activeUsers}
+        isTrackingPresence={isTracking}
       />
       <div className="-mt-6 min-h-screen bg-gray-100">
         {/* Main Layout Container */}
@@ -3721,9 +3722,6 @@ export default function EditCataloguePage() {
         feature="product and category management"
         currentPlan={currentPlan}
       />
-
-      {/* Active users presence card */}
-      <ActiveUsersCard users={activeUsers} isTracking={isTracking} />
 
       {/* Version conflict dialog */}
       <VersionConflictDialog

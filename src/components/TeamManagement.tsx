@@ -597,13 +597,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 <Users className="h-5 w-5" />
                 Team Management
                 {isActualOwner && (
-                  <Badge variant="secondary" className="ml-2 bg-purple-600 text-white">
+                  <Badge variant="secondary" className="ml-2 bg-purple-600 text-white hover:text-white hover:bg-purple-600">
                     <Crown className="h-3 w-3 mr-1" />
                     You are the Owner
                   </Badge>
                 )}
                 {!isActualOwner && currentUserMember && (
-                  <Badge variant="secondary" className="ml-2 bg-blue-600 text-white">
+                  <Badge variant="secondary" className="ml-2 bg-blue-600 text-white hover:text-white hover:bg-blue-600">
                     Team Member
                   </Badge>
                 )}
@@ -927,6 +927,37 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   </div>
                 </>
               )}
+              {/* Compact Plan Sharing Card - At Bottom for Owners */}
+          {isActualOwner && currentPlan !== 'FREE' && (
+            <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Shield className="h-4 w-4 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
+                      <p className="text-xs text-gray-600">
+                        {selectedMembersForSharing.length > 0
+                          ? `${selectedMembersForSharing.length}/3 members selected`
+                          : 'Share with up to 3 members'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowPlanSharingDialog(true)}
+                      className="h-8 text-xs"
+                    >
+                      <UserCog className="h-3 w-3 mr-1" />
+                      Manage
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
             </TabsContent>
 
             {/* Activity Log Tab */}
@@ -1031,37 +1062,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </TabsContent>
           </Tabs>
 
-          {/* Compact Plan Sharing Card - At Bottom for Owners */}
-          {isActualOwner && currentPlan !== 'FREE' && (
-            <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-4 w-4 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
-                      <p className="text-xs text-gray-600">
-                        {selectedMembersForSharing.length > 0
-                          ? `${selectedMembersForSharing.length}/3 members selected`
-                          : 'Share with up to 3 members'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPlanSharingDialog(true)}
-                      className="h-8 text-xs"
-                    >
-                      <UserCog className="h-3 w-3 mr-1" />
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          
         </CardContent>
       </Card>
 

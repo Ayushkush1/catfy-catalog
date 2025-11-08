@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
+import { ActiveUsersNavbar } from '@/components/editor/ActiveUsersNavbar'
+import { PresenceUser } from '@/hooks/useCataloguePresence'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +49,8 @@ interface HeaderProps {
   onSave?: () => void
   isSaving?: boolean
   hasPremiumAccess?: boolean
+  activeUsers?: PresenceUser[]
+  isTrackingPresence?: boolean
 }
 
 interface UserProfile {
@@ -68,6 +72,8 @@ export function Header({
   onSave,
   isSaving = false,
   hasPremiumAccess = false,
+  activeUsers = [],
+  isTrackingPresence = false,
 }: HeaderProps) {
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -220,6 +226,7 @@ export function Header({
 
             {/* Right Section - Actions and Profile */}
             <div className="flex items-center space-x-1">
+              
               {/* Plan Badge */}
               <Badge
                 variant={
@@ -268,6 +275,12 @@ export function Header({
                   <Settings className="h-5 w-5" />
                 </Link>
               </Button>
+
+              {/* Active Users - Show when tracking presence */}
+              {isTrackingPresence && (
+                <ActiveUsersNavbar users={activeUsers} isTracking={isTrackingPresence} />
+              )}
+
 
               {/* Profile Dropdown */}
               <DropdownMenu>
