@@ -301,6 +301,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         template: catalogue.template,
         isPublic: catalogue.isPublic,
         slug: catalogue.slug,
+        version: (catalogue as any).version || 1, // Include version for optimistic locking
         settings: (catalogue.settings as Record<string, any>) || {},
         products: catalogue.products.map(product => ({
           id: product.id,
@@ -320,10 +321,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           sortOrder: product.sortOrder,
           category: product.category
             ? {
-                id: product.category.id,
-                name: product.category.name,
-                color: product.category.color,
-              }
+              id: product.category.id,
+              name: product.category.name,
+              color: product.category.color,
+            }
             : null,
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
@@ -417,6 +418,25 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     console.log('PUT request received for catalogue:', params.id)
     console.log('Request body:', body)
+
+    // Check for version conflicts (optimistic locking)
+    const currentVersion = (existingCatalogue as any).version || 1
+    const clientVersion = body.version
+    const forceUpdate = body.forceUpdate === true
+
+    if (clientVersion !== undefined && !forceUpdate && clientVersion !== currentVersion) {
+      // Version conflict detected
+      return NextResponse.json(
+        {
+          error: 'Version conflict',
+          message: 'This catalogue has been modified by another user. Please reload to get the latest version.',
+          currentVersion,
+          clientVersion,
+          updatedAt: existingCatalogue.updatedAt,
+        },
+        { status: 409 } // 409 Conflict
+      )
+    }
 
     const validatedData = updateCatalogueSchema.parse(body)
     console.log('Validated data:', validatedData)
@@ -568,8 +588,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: {
         ...dbFields,
         settings: updatedSettings,
+        version: currentVersion + 1, // Increment version for optimistic locking
         updatedAt: new Date(),
-      },
+      } as any,
       include: {
         _count: {
           select: {
@@ -608,6 +629,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         theme: updatedCatalogue.theme,
         isPublic: updatedCatalogue.isPublic,
         settings: updatedCatalogue.settings,
+        version: updatedCatalogue.version, // Include version in response
         productCount: updatedCatalogue._count.products,
         categoryCount: updatedCatalogue._count.categories,
         createdAt: updatedCatalogue.createdAt,

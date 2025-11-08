@@ -1,13 +1,17 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 // import { formatDistanceToNow } from 'date-fns'
 import { Header } from '@/components/Header'
 import { TeamManagement } from '@/components/TeamManagement'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useCatalogueRealtime } from '@/hooks/useCatalogueRealtime'
+import { useCataloguePresence } from '@/hooks/useCataloguePresence'
+import { VersionConflictDialog } from '@/components/editor/VersionConflictDialog'
+import { ActiveUsersCard } from '@/components/editor/ActiveUsersCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -187,6 +191,38 @@ export default function EditCataloguePage() {
   const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
   const [currentUserHasPremiumAccess, setCurrentUserHasPremiumAccess] = useState(false)
+
+  // Collaborative editing state
+  const [catalogueVersion, setCatalogueVersion] = useState<number>(1)
+  const [showConflictDialog, setShowConflictDialog] = useState(false)
+  const [conflictData, setConflictData] = useState<any>(null)
+  const [currentUser, setCurrentUser] = useState<{
+    userId: string
+    fullName: string
+    email: string
+  } | null>(null)
+  const [currentSection, setCurrentSection] = useState<string>('overview')
+
+  // Memoize the real-time update handler
+  const handleRealtimeUpdate = useCallback((update: any) => {
+    console.log('Real-time update received:', update)
+    // Optionally reload data when others make changes
+  }, [])
+
+  // Real-time updates hook
+  useCatalogueRealtime({
+    catalogueId,
+    onUpdate: handleRealtimeUpdate,
+    enabled: !!catalogueId,
+  })
+
+  // Presence tracking hook
+  const { activeUsers, isTracking } = useCataloguePresence({
+    catalogueId,
+    currentUser: currentUser!,
+    currentSection,
+    enabled: !!currentUser && !!catalogueId,
+  })
 
   // Theme data matching the themes page
   const THEMES = [
@@ -787,10 +823,22 @@ export default function EditCataloguePage() {
       const data = await response.json()
       setCatalogue(data.catalogue)
 
+      // Store version for optimistic locking
+      setCatalogueVersion(data.catalogue.version || 1)
+
       // Check if current user is owner
       const { data: { user } } = await supabase.auth.getUser()
       const userIsOwner = data.catalogue.profileId === user?.id
       setIsOwner(userIsOwner)
+
+      // Set current user for presence tracking
+      if (user && data.catalogue.profile) {
+        setCurrentUser({
+          userId: user.id,
+          fullName: data.catalogue.profile.fullName || data.catalogue.profile.email || 'User',
+          email: data.catalogue.profile.email || user.email || '',
+        })
+      }
 
       // Check plan sharing status and user's premium access
       if (!userIsOwner) {
@@ -825,7 +873,7 @@ export default function EditCataloguePage() {
     }
   }
 
-  const saveCatalogue = async () => {
+  const saveCatalogue = async (forceUpdate = false) => {
     console.log('saveCatalogue called, catalogue state:', catalogue)
 
     if (!catalogue) {
@@ -847,6 +895,8 @@ export default function EditCataloguePage() {
         slug: catalogue.slug,
         theme: catalogue.theme,
         settings: catalogue.settings,
+        version: catalogueVersion, // Include version for conflict detection
+        forceUpdate, // Allow overwriting if user chooses
       }
 
       console.log('Saving catalogue with data:', requestData)
@@ -863,8 +913,21 @@ export default function EditCataloguePage() {
       const responseData = await response.json()
       console.log('API response:', responseData)
 
+      // Check for version conflict
+      if (response.status === 409) {
+        setConflictData(responseData)
+        setShowConflictDialog(true)
+        setIsSaving(false)
+        return
+      }
+
       if (!response.ok) {
         throw new Error(responseData.error || 'Failed to save catalogue')
+      }
+
+      // Update version on successful save
+      if (responseData.catalogue?.version) {
+        setCatalogueVersion(responseData.catalogue.version)
       }
 
       toast.success('Catalogue saved successfully!')
@@ -1272,7 +1335,10 @@ export default function EditCataloguePage() {
                 </Button>
 
                 <button
-                  onClick={() => setActiveTab('overview')}
+                  onClick={() => {
+                    setActiveTab('overview')
+                    setCurrentSection('general')
+                  }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
                     ? 'rounded-lg bg-gray-100 text-gray-900'
                     : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -1283,7 +1349,10 @@ export default function EditCataloguePage() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('categories')}
+                  onClick={() => {
+                    setActiveTab('categories')
+                    setCurrentSection('categories')
+                  }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
                     ? 'rounded-lg bg-gray-100 text-gray-900'
                     : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -1302,7 +1371,10 @@ export default function EditCataloguePage() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('products')}
+                  onClick={() => {
+                    setActiveTab('products')
+                    setCurrentSection('products')
+                  }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
                     ? 'rounded-lg bg-gray-100 text-gray-900'
                     : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -1316,7 +1388,10 @@ export default function EditCataloguePage() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('theme')}
+                  onClick={() => {
+                    setActiveTab('theme')
+                    setCurrentSection('general')
+                  }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
                     ? 'rounded-lg bg-gray-100 text-gray-900'
                     : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -1327,7 +1402,10 @@ export default function EditCataloguePage() {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab('team')}
+                  onClick={() => {
+                    setActiveTab('team')
+                    setCurrentSection('general')
+                  }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
                     ? 'rounded-lg bg-gray-100 text-gray-900'
                     : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -3642,6 +3720,21 @@ export default function EditCataloguePage() {
         onClose={() => setShowUpgradePrompt(false)}
         feature="product and category management"
         currentPlan={currentPlan}
+      />
+
+      {/* Active users presence card */}
+      <ActiveUsersCard users={activeUsers} isTracking={isTracking} />
+
+      {/* Version conflict dialog */}
+      <VersionConflictDialog
+        open={showConflictDialog}
+        onOpenChange={setShowConflictDialog}
+        onReload={() => window.location.reload()}
+        onOverwrite={async () => {
+          setShowConflictDialog(false)
+          await saveCatalogue(true) // Force update
+        }}
+        updatedAt={conflictData?.updatedAt}
       />
     </>
   )

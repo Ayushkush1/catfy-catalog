@@ -58,6 +58,7 @@ model Catalogue {
   status         CatalogueStatus @default(DRAFT)
   settings       Json?
   planSharingEnabled Boolean      @default(false)
+  version        Int             @default(1)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   publishedAt    DateTime?
