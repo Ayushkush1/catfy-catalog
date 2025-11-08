@@ -226,7 +226,7 @@ export function Header({
 
             {/* Right Section - Actions and Profile */}
             <div className="flex items-center space-x-1">
-              
+
               {/* Plan Badge */}
               <Badge
                 variant={
@@ -235,10 +235,10 @@ export function Header({
                     : 'default'
                 }
                 className={`flex items-center space-x-1 rounded-full px-3 py-1 text-xs font-semibold ${profile?.subscriptionPlan?.toLowerCase() === 'free'
-                    ? 'bg-gray-100 text-gray-600'
-                    : profile?.subscriptionPlan?.toLowerCase() === 'business'
-                      ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-sm'
-                      : 'border-2 border-[#2D1B69]/10 bg-transparent text-[#2D1B69] hover:bg-[#2D1B69]/5'
+                  ? 'bg-gray-100 text-gray-600'
+                  : profile?.subscriptionPlan?.toLowerCase() === 'business'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-sm'
+                    : 'border-2 border-[#2D1B69]/10 bg-transparent text-[#2D1B69] hover:bg-[#2D1B69]/5'
                   }`}
               >
                 {profile?.subscriptionPlan &&
