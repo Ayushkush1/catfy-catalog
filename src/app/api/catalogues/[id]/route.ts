@@ -9,14 +9,14 @@ export const runtime = 'nodejs'
 const updateCatalogueSchema = z.object({
   // Basic catalogue info
   name: z.string().min(1, 'Catalogue name is required').max(100).optional(),
-  description: z.string().optional(),
-  quote: z.string().optional(),
-  tagline: z.string().optional(),
-  year: z.string().optional(),
-  introImage: z.string().optional(),
-  theme: z.string().optional(),
-  isPublic: z.boolean().optional(),
-  slug: z.string().optional(),
+  description: z.string().nullable().optional(),
+  quote: z.string().nullable().optional(),
+  tagline: z.string().nullable().optional(),
+  year: z.string().nullable().optional(),
+  introImage: z.string().nullable().optional(),
+  theme: z.string().nullable().optional(),
+  isPublic: z.boolean().nullable().optional(),
+  slug: z.string().nullable().optional(),
 
   // Company/Profile information (flattened)
   companyName: z.string().optional(),
@@ -54,162 +54,8 @@ const updateCatalogueSchema = z.object({
   templateId: z.string().optional(),
   template: z.string().optional(), // 🔥 ADD: catalogue.template field
 
-  // Legacy settings object for backward compatibility
-  settings: z
-    .object({
-      // Style Customizations
-      customColors: z
-        .object({
-          textColors: z
-            .object({
-              companyName: z.string().optional(),
-              title: z.string().optional(),
-              description: z.string().optional(),
-              productName: z.string().optional(),
-              productDescription: z.string().optional(),
-              productPrice: z.string().optional(),
-              categoryName: z.string().optional(),
-            })
-            .optional(),
-          backgroundColors: z
-            .object({
-              main: z.string().optional(),
-              cover: z.string().optional(),
-              productCard: z.string().optional(),
-              categorySection: z.string().optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-      fontCustomization: z
-        .object({
-          fontFamily: z
-            .object({
-              title: z.string().optional(),
-              description: z.string().optional(),
-              productName: z.string().optional(),
-              productDescription: z.string().optional(),
-              companyName: z.string().optional(),
-              categoryName: z.string().optional(),
-            })
-            .optional(),
-          fontSize: z
-            .object({
-              title: z.number().optional(),
-              description: z.number().optional(),
-              productName: z.number().optional(),
-              productDescription: z.number().optional(),
-              companyName: z.number().optional(),
-              categoryName: z.number().optional(),
-            })
-            .optional(),
-          fontWeight: z
-            .object({
-              title: z.string().optional(),
-              description: z.string().optional(),
-              productName: z.string().optional(),
-              productDescription: z.string().optional(),
-              companyName: z.string().optional(),
-              categoryName: z.string().optional(),
-            })
-            .optional(),
-          // Legacy fields for backward compatibility
-          headingFont: z.string().optional(),
-          bodyFont: z.string().optional(),
-          headingSize: z.number().optional(),
-          bodySize: z.number().optional(),
-          headingWeight: z.number().optional(),
-          bodyWeight: z.number().optional(),
-          lineHeight: z.number().optional(),
-          letterSpacing: z.number().optional(),
-        })
-        .optional(),
-      spacingCustomization: z
-        .object({
-          padding: z
-            .object({
-              page: z.number().optional(),
-              productCard: z.number().optional(),
-              section: z.number().optional(),
-            })
-            .optional(),
-          margin: z
-            .object({
-              elements: z.number().optional(),
-              sections: z.number().optional(),
-            })
-            .optional(),
-          gap: z
-            .object({
-              products: z.number().optional(),
-              content: z.number().optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-      advancedStyles: z
-        .object({
-          borders: z
-            .object({
-              productCard: z
-                .object({
-                  width: z.number().optional(),
-                  style: z.string().optional(),
-                  color: z.string().optional(),
-                  radius: z.number().optional(),
-                })
-                .optional(),
-              buttons: z
-                .object({
-                  width: z.number().optional(),
-                  style: z.string().optional(),
-                  color: z.string().optional(),
-                  radius: z.number().optional(),
-                })
-                .optional(),
-            })
-            .optional(),
-          shadows: z
-            .object({
-              productCard: z
-                .object({
-                  enabled: z.boolean().optional(),
-                  blur: z.number().optional(),
-                  spread: z.number().optional(),
-                  color: z.string().optional(),
-                  opacity: z.number().optional(),
-                })
-                .optional(),
-              buttons: z
-                .object({
-                  enabled: z.boolean().optional(),
-                  blur: z.number().optional(),
-                  spread: z.number().optional(),
-                  color: z.string().optional(),
-                  opacity: z.number().optional(),
-                })
-                .optional(),
-            })
-            .optional(),
-        })
-        .optional(),
-      // Editor template data
-      editorData: z.string().optional(),
-      // IframeEditor persistence data
-      iframeEditor: z
-        .object({
-          liveData: z.record(z.any()).optional(),
-          styleMutations: z.record(z.any()).optional(), // Changed from array to record (object)
-          templateId: z.string().optional(),
-          pages: z.array(z.any()).optional(),
-          currentPageIndex: z.number().optional(),
-          userZoom: z.number().optional(),
-          showGrid: z.boolean().optional(),
-          lastSaved: z.string().optional(),
-        })
-        .optional(),
-    })
-    .optional(),
+  // Legacy settings object for backward compatibility - accept any structure
+  settings: z.any().optional(),
 })
 
 interface RouteParams {
@@ -419,12 +265,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     console.log('PUT request received for catalogue:', params.id)
     console.log('Request body:', body)
 
+    // Extract version control fields before validation
+    const { version: clientVersion, forceUpdate, ...dataToValidate } = body
+
+    console.log('Data to validate (after removing version/forceUpdate):', dataToValidate)
+
     // Check for version conflicts (optimistic locking)
     const currentVersion = (existingCatalogue as any).version || 1
-    const clientVersion = body.version
-    const forceUpdate = body.forceUpdate === true
+    const forceUpdateFlag = forceUpdate === true
 
-    if (clientVersion !== undefined && !forceUpdate && clientVersion !== currentVersion) {
+    if (clientVersion !== undefined && !forceUpdateFlag && clientVersion !== currentVersion) {
       // Version conflict detected
       return NextResponse.json(
         {
@@ -438,7 +288,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const validatedData = updateCatalogueSchema.parse(body)
+    let validatedData
+    try {
+      validatedData = updateCatalogueSchema.parse(dataToValidate)
+      console.log('Validated data:', validatedData)
+    } catch (validationError) {
+      console.error('Validation error details:', validationError)
+      if (validationError instanceof z.ZodError) {
+        console.error('Validation errors:', JSON.stringify(validationError.errors, null, 2))
+      }
+      throw validationError
+    }
     console.log('Validated data:', validatedData)
 
     console.log('Existing catalogue settings:', existingCatalogue.settings)

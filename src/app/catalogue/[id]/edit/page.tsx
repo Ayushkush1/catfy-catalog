@@ -878,7 +878,7 @@ export default function EditCataloguePage() {
     if (!catalogue) {
       console.error('Catalogue is null or undefined')
       toast.error('Catalogue data not loaded. Please refresh the page.')
-      return
+      return false
     }
 
     try {
@@ -917,7 +917,7 @@ export default function EditCataloguePage() {
         setConflictData(responseData)
         setShowConflictDialog(true)
         setIsSaving(false)
-        return
+        return false
       }
 
       if (!response.ok) {
@@ -931,9 +931,11 @@ export default function EditCataloguePage() {
 
       toast.success('Catalogue saved successfully!')
       await fetchCatalogue()
+      return true
     } catch (error: any) {
       console.error('Error saving catalogue:', error)
       toast.error(error.message || 'Failed to save catalogue')
+      return false
     } finally {
       setIsSaving(false)
     }
@@ -2271,21 +2273,21 @@ export default function EditCataloguePage() {
 
       {/* Category Dialog */}
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
+            <DialogTitle className="text-2xl font-bold text-white">
               {editingCategory ? 'Edit Category' : 'Add Category'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/80">
               {editingCategory
                 ? 'Update category information'
                 : 'Create a new category for your products'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="categoryName">Category Name</Label>
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label htmlFor="categoryName" className="text-base font-semibold text-gray-900">Category Name</Label>
               <Input
                 id="categoryName"
                 value={categoryForm.name}
@@ -2293,11 +2295,12 @@ export default function EditCataloguePage() {
                   setCategoryForm(prev => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Enter category name"
+                className="mt-2 h-11"
               />
             </div>
 
-            <div>
-              <Label htmlFor="categoryDescription">Description</Label>
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label htmlFor="categoryDescription" className="text-base font-semibold text-gray-900">Description</Label>
               <Textarea
                 id="categoryDescription"
                 value={categoryForm.description}
@@ -2309,18 +2312,22 @@ export default function EditCataloguePage() {
                 }
                 placeholder="Enter category description"
                 rows={3}
+                className="mt-2"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
             <Button
               variant="outline"
               onClick={() => setShowCategoryDialog(false)}
             >
               Cancel
             </Button>
-            <Button onClick={saveCategory}>
+            <Button 
+              className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
+              onClick={saveCategory}
+            >
               {editingCategory ? 'Update' : 'Create'} Category
             </Button>
           </DialogFooter>
@@ -2329,21 +2336,22 @@ export default function EditCataloguePage() {
 
       {/* Product Dialog */}
       <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-        <DialogContent className="h-full max-h-[95vh] max-w-2xl overflow-auto">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
+            <DialogTitle className="text-2xl font-bold text-white">
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-white/80">
               {editingProduct
                 ? 'Update product information'
                 : 'Add a new product to your catalogue'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="productName">Product Name</Label>
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            {/* Product Name */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label htmlFor="productName" className="text-base font-semibold text-gray-900">Product Name</Label>
               <Input
                 id="productName"
                 value={productForm.name}
@@ -2351,12 +2359,14 @@ export default function EditCataloguePage() {
                   setProductForm(prev => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Enter product name"
+                className="mt-2 h-11"
               />
             </div>
 
-            <div>
-              <Label htmlFor="productDescription">Description</Label>
-              <div className="space-y-2">
+            {/* Product Description with AI */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label htmlFor="productDescription" className="text-base font-semibold text-gray-900">Description</Label>
+              <div className="mt-2 space-y-2">
                 <Textarea
                   id="productDescription"
                   value={productForm.description}
@@ -2449,8 +2459,9 @@ export default function EditCataloguePage() {
               </div>
             </div>
 
-            <div>
-              <Label className="mb-2 block text-sm font-medium">
+            {/* Product Image */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label className="text-base font-semibold text-gray-900">
                 Product Image
               </Label>
               {!productForm.imageUrl ? (
@@ -2503,8 +2514,9 @@ export default function EditCataloguePage() {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="productTags">Tags</Label>
+            {/* Tags */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <Label htmlFor="productTags" className="text-base font-semibold text-gray-900">Tags</Label>
               <Input
                 id="productTags"
                 value={productForm.tags?.join(', ') || ''}
@@ -2516,12 +2528,16 @@ export default function EditCataloguePage() {
                   setProductForm(prev => ({ ...prev, tags: tagsArray }))
                 }}
                 placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
+                className="mt-2 h-11"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Price Information */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <h4 className="mb-4 text-base font-semibold text-gray-900">Price Information</h4>
+              <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="productPrice">Price</Label>
+                <Label htmlFor="productPrice" className="text-sm font-semibold text-gray-900">Price</Label>
                 <Input
                   id="productPrice"
                   type="number"
@@ -2533,18 +2549,19 @@ export default function EditCataloguePage() {
                     }))
                   }
                   placeholder="0.00"
+                  className="mt-2 h-11"
                 />
               </div>
 
               <div>
-                <Label htmlFor="productPriceDisplay">Price Display</Label>
+                <Label htmlFor="productPriceDisplay" className="text-sm font-semibold text-gray-900">Price Display</Label>
                 <Select
                   value={productForm.priceDisplay}
                   onValueChange={(value: 'show' | 'hide' | 'contact') =>
                     setProductForm(prev => ({ ...prev, priceDisplay: value }))
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="mt-2 h-11">
                     <SelectValue placeholder="Select price display" />
                   </SelectTrigger>
                   <SelectContent>
@@ -2554,12 +2571,16 @@ export default function EditCataloguePage() {
                   </SelectContent>
                 </Select>
               </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* Category & Status */}
+            <div className="rounded-lg border bg-white p-4 shadow-sm">
+              <h4 className="mb-4 text-base font-semibold text-gray-900">Category & Status</h4>
+              <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="productCategory">Category</Label>
-                <div className="flex items-center gap-2">
+                <Label htmlFor="productCategory" className="text-sm font-semibold text-gray-900">Category</Label>
+                <div className="mt-2 flex items-center gap-2">
                   <Select
                     value={productForm.categoryId}
                     onValueChange={value =>
@@ -2637,27 +2658,34 @@ export default function EditCataloguePage() {
                 </p>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="productActive"
-                  checked={productForm.isActive}
-                  onCheckedChange={checked =>
-                    setProductForm(prev => ({ ...prev, isActive: checked }))
-                  }
-                />
-                <Label htmlFor="productActive">Active</Label>
+              <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Product Status</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="productActive"
+                    checked={productForm.isActive}
+                    onCheckedChange={checked =>
+                      setProductForm(prev => ({ ...prev, isActive: checked }))
+                    }
+                  />
+                  <Label htmlFor="productActive" className="font-normal">Active</Label>
+                </div>
+              </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
             <Button
               variant="outline"
               onClick={() => setShowProductDialog(false)}
             >
               Cancel
             </Button>
-            <Button onClick={saveProduct}>
+            <Button 
+              className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
+              onClick={saveProduct}
+            >
               {editingProduct ? 'Update' : 'Add'} Product
             </Button>
           </DialogFooter>
@@ -2666,20 +2694,20 @@ export default function EditCataloguePage() {
 
       {/* Edit Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Settings</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
+            <DialogTitle className="text-2xl font-bold">Catalogue Settings</DialogTitle>
+            <DialogDescription className="text-white/80">
               Configure display and visibility settings for your catalogue
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {/* Display Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Display Settings</h3>
-
-              <div className="flex items-center justify-between">
+            <div className="rounded-lg border bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">Display Settings</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">Show Prices</Label>
                   <p className="text-sm text-gray-600">
@@ -2804,13 +2832,14 @@ export default function EditCataloguePage() {
                   }
                 />
               </div>
+              </div>
             </div>
 
             {/* Visibility Settings */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Visibility Settings</h3>
-
-              <div className="flex items-center justify-between">
+            <div className="rounded-lg border bg-white p-5 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">Visibility Settings</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base font-medium">
                     Catalogue Visibility
@@ -2903,10 +2932,11 @@ export default function EditCataloguePage() {
                   </details>
                 </div>
               )}
+              </div>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
             <Button
               variant="outline"
               onClick={() => setShowSettingsDialog(false)}
@@ -2914,6 +2944,7 @@ export default function EditCataloguePage() {
               Cancel
             </Button>
             <Button
+              className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
               onClick={() => {
                 setShowSettingsDialog(false)
                 saveCatalogue()
@@ -2927,95 +2958,170 @@ export default function EditCataloguePage() {
 
       {/* Edit Details Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Catalogue Details</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col overflow-hidden p-0">
+          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
+            <DialogTitle className="text-2xl font-bold">Edit Catalogue Details</DialogTitle>
+            <DialogDescription className="text-white/80">
               Update your catalogue branding and information
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Basic Information</h3>
-              <div>
-                <Label htmlFor="catalogueName">Catalogue Name</Label>
-                <Input
-                  id="catalogueName"
-                  value={catalogue?.name || ''}
-                  onChange={e =>
-                    setCatalogue(prev =>
-                      prev ? { ...prev, name: e.target.value } : null
-                    )
-                  }
-                  placeholder="Enter catalogue name"
-                />
-              </div>
+          {/* Scrollable content with step indicators */}
+          <div className="flex flex-1 overflow-hidden">
+            {/* Left sidebar - Section navigation */}
+            <div className="w-64 border-r bg-gray-50 p-4">
+              <div className="sticky top-0 space-y-2">
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Form Sections</p>
+                </div>
+                
+                <a href="#basic-info" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <span className="text-xs font-bold">1</span>
+                  </div>
+                  <span>Basic Info</span>
+                </a>
 
-              <div>
-                <Label htmlFor="catalogueDescription">Description</Label>
-                <Textarea
-                  id="catalogueDescription"
-                  value={catalogue?.description || ''}
-                  onChange={e =>
-                    setCatalogue(prev =>
-                      prev ? { ...prev, description: e.target.value } : null
-                    )
-                  }
-                  placeholder="Describe your catalogue"
-                  rows={3}
-                />
-              </div>
+                <a href="#media-assets" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                    <span className="text-xs font-bold">2</span>
+                  </div>
+                  <span>Media & Assets</span>
+                </a>
 
-              <div>
-                <Label htmlFor="catalogueTagline">Tagline</Label>
-                <Input
-                  id="catalogueTagline"
-                  value={catalogue?.tagline || ''}
-                  onChange={e =>
-                    setCatalogue(prev =>
-                      prev ? { ...prev, tagline: e.target.value } : null
-                    )
-                  }
-                  placeholder="Enter a catchy tagline for your catalogue"
-                />
-              </div>
+                <a href="#company-info" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <span className="text-xs font-bold">3</span>
+                  </div>
+                  <span>Company Info</span>
+                </a>
 
-              <div>
-                <Label htmlFor="catalogueQuote">Quote</Label>
-                <Textarea
-                  id="catalogueQuote"
-                  value={catalogue?.quote || ''}
-                  onChange={e =>
-                    setCatalogue(prev =>
-                      prev ? { ...prev, quote: e.target.value } : null
-                    )
-                  }
-                  placeholder="Enter an inspiring quote for your catalogue"
-                  rows={3}
-                />
-              </div>
+                <a href="#contact-details" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+                    <span className="text-xs font-bold">4</span>
+                  </div>
+                  <span>Contact Details</span>
+                </a>
 
-              <div>
-                <Label htmlFor="catalogueYear">Catalogue Year</Label>
-                <Input
-                  id="catalogueYear"
-                  value={(catalogue as any)?.year || ''}
-                  onChange={e =>
-                    setCatalogue(prev =>
-                      prev ? ({ ...prev, year: e.target.value } as any) : null
-                    )
-                  }
-                  placeholder="2025"
-                />
+                <a href="#social-media" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 text-pink-600">
+                    <span className="text-xs font-bold">5</span>
+                  </div>
+                  <span>Social Media</span>
+                </a>
               </div>
+            </div>
 
-              <div>
-                <Label className="mb-2 block text-sm font-medium">
-                  Intro Image
-                </Label>
-                {!catalogue?.introImage ? (
+            {/* Right content area */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-8">
+                {/* Section 1: Basic Information */}
+                <div id="basic-info" className="scroll-mt-6">
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+                      <span className="text-lg font-bold">1</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
+                      <p className="text-sm text-gray-500">Essential details about your catalogue</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div>
+                      <Label htmlFor="catalogueName" className="text-sm font-semibold text-gray-700">
+                        Catalogue Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="catalogueName"
+                        value={catalogue?.name || ''}
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev ? { ...prev, name: e.target.value } : null
+                          )
+                        }
+                        placeholder="e.g., Summer Collection 2025"
+                        className="mt-2 h-11"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="catalogueDescription" className="text-sm font-semibold text-gray-700">
+                        Description
+                      </Label>
+                      <Textarea
+                        id="catalogueDescription"
+                        value={catalogue?.description || ''}
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev ? { ...prev, description: e.target.value } : null
+                          )
+                        }
+                        placeholder="Describe your catalogue and what makes it special..."
+                        rows={3}
+                        className="mt-2"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="catalogueTagline" className="text-sm font-semibold text-gray-700">
+                          Tagline
+                        </Label>
+                        <Input
+                          id="catalogueTagline"
+                          value={catalogue?.tagline || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev ? { ...prev, tagline: e.target.value } : null
+                            )
+                          }
+                          placeholder="A catchy tagline"
+                          className="mt-2 h-11"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="catalogueYear" className="text-sm font-semibold text-gray-700">
+                          Catalogue Year
+                        </Label>
+                        <Input
+                          id="catalogueYear"
+                          value={(catalogue as any)?.year || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev ? ({ ...prev, year: e.target.value } as any) : null
+                            )
+                          }
+                          placeholder="2025"
+                          className="mt-2 h-11"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="catalogueQuote" className="text-sm font-semibold text-gray-700">
+                        Quote
+                      </Label>
+                      <Textarea
+                        id="catalogueQuote"
+                        value={catalogue?.quote || ''}
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev ? { ...prev, quote: e.target.value } : null
+                          )
+                        }
+                        placeholder="An inspiring quote for your catalogue"
+                        rows={3}
+                        className="mt-2"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="mb-2 block text-sm font-semibold text-gray-700">
+                        Intro Image
+                      </Label>
+                      {!catalogue?.introImage ? (
                   <FileUpload
                     uploadType="catalogue"
                     catalogueId={catalogueId}
@@ -3067,16 +3173,27 @@ export default function EditCataloguePage() {
                 )}
               </div>
             </div>
+                </div>
 
-            {/* Media & Assets */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Media & Assets</h3>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">
-                    Company Logo
-                  </Label>
-                  {!catalogue?.settings?.mediaAssets?.logoUrl ? (
+                {/* Section 2: Media & Assets */}
+                <div id="media-assets" className="scroll-mt-6">
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg">
+                      <span className="text-lg font-bold">2</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Media & Assets</h3>
+                      <p className="text-sm text-gray-500">Upload logos and cover images</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <Label className="mb-2 block text-sm font-semibold text-gray-700">
+                          Company Logo
+                        </Label>
+                        {!catalogue?.settings?.mediaAssets?.logoUrl ? (
                     <FileUpload
                       uploadType="catalogue"
                       catalogueId={catalogueId}
@@ -3227,274 +3344,103 @@ export default function EditCataloguePage() {
                 </div>
               </div>
             </div>
-
-            {/* Company Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Company Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    value={catalogue?.settings?.companyInfo?.companyName || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              companyInfo: {
-                                ...(prev.settings?.companyInfo || {}),
-                                companyName: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="Enter your company name"
-                  />
                 </div>
 
-                <div>
-                  <Label htmlFor="companyDescription">
-                    Company Description
-                  </Label>
-                  <Textarea
-                    id="companyDescription"
-                    value={
-                      catalogue?.settings?.companyInfo?.companyDescription || ''
-                    }
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              companyInfo: {
-                                ...(prev.settings?.companyInfo || {}),
-                                companyDescription: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="Describe your company"
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
+                {/* Section 3: Company Information */}
+                <div id="company-info" className="scroll-mt-6">
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg">
+                      <span className="text-lg font-bold">3</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Company Information</h3>
+                      <p className="text-sm text-gray-500">Tell us about your company</p>
+                    </div>
+                  </div>
 
-            {/* Contact Details */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Contact Details</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div>
-                  <Label htmlFor="contactEmail">Email</Label>
-                  <Input
-                    id="contactEmail"
-                    type="email"
-                    value={catalogue?.settings?.contactDetails?.email || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDetails: {
-                                ...(prev.settings?.contactDetails || {}),
-                                email: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="contact@company.com"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="contactPhone">Phone</Label>
-                  <Input
-                    id="contactPhone"
-                    value={catalogue?.settings?.contactDetails?.phone || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDetails: {
-                                ...(prev.settings?.contactDetails || {}),
-                                phone: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="+1 (555) 123-4567"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="contactWebsite">Website</Label>
-                  <Input
-                    id="contactWebsite"
-                    value={catalogue?.settings?.contactDetails?.website || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDetails: {
-                                ...(prev.settings?.contactDetails || {}),
-                                website: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="https://www.company.com"
-                  />
-                </div>
-              </div>
-
-              {/* Address and Contact Description */}
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="contactAddress">Address</Label>
-                  <Input
-                    id="contactAddress"
-                    value={
-                      (catalogue?.settings as any)?.contactDetails?.address ||
-                      ''
-                    }
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDetails: {
-                                ...(prev.settings as any)?.contactDetails,
-                                address: e.target.value,
-                              },
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="123 Main Street, City, State 12345"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="contactDescription">
-                    Contact Page Description
-                  </Label>
-                  <Textarea
-                    id="contactDescription"
-                    value={
-                      (catalogue?.settings as any)?.contactDescription || ''
-                    }
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              contactDescription: e.target.value,
-                            },
-                          }
-                          : null
-                      )
-                    }
-                    placeholder="Get in touch with us for more information about our products"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              {/* Contact Page Customization */}
-              <div className="space-y-4">
-                <h4 className="text-md font-medium">
-                  Contact Page Customization
-                </h4>
-                <div className="grid grid-cols-1 gap-4">
-                  {/* Contact Image */}
-                  <div>
-                    <Label className="mb-2 block text-sm font-medium">
-                      Contact Image
-                    </Label>
-                    {!(catalogue?.settings as any)?.contactDetails
-                      ?.contactImage ? (
-                      <FileUpload
-                        uploadType="catalogue"
-                        catalogueId={catalogueId}
-                        maxFiles={1}
-                        accept={[
-                          'image/jpeg',
-                          'image/jpg',
-                          'image/png',
-                          'image/webp',
-                        ]}
-                        onUpload={files => {
-                          if (files.length > 0) {
-                            setCatalogue(prev =>
-                              prev
-                                ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)
-                                        ?.contactDetails,
-                                      contactImage: files[0].url,
-                                    },
+                  <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div>
+                      <Label htmlFor="companyName" className="text-sm font-semibold text-gray-700">
+                        Company Name
+                      </Label>
+                      <Input
+                        id="companyName"
+                        value={catalogue?.settings?.companyInfo?.companyName || ''}
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev
+                              ? {
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  companyInfo: {
+                                    ...(prev.settings?.companyInfo || {}),
+                                    companyName: e.target.value,
                                   },
-                                }
-                                : null
-                            )
-                          }
-                        }}
-                        onError={error => {
-                          setErrorWithAutoDismiss(
-                            `Contact image upload failed: ${error}`
+                                },
+                              }
+                              : null
                           )
-                        }}
+                        }
+                        placeholder="Your company name"
+                        className="mt-2 h-11"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="companyDescription" className="text-sm font-semibold text-gray-700">
+                        Company Description
+                      </Label>
+                      <Textarea
+                        id="companyDescription"
+                        value={
+                          catalogue?.settings?.companyInfo?.companyDescription || ''
+                        }
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev
+                              ? {
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  companyInfo: {
+                                    ...(prev.settings?.companyInfo || {}),
+                                    companyDescription: e.target.value,
+                                  },
+                                },
+                              }
+                              : null
+                          )
+                        }
+                        placeholder="Describe your company"
+                        rows={3}
                         className="mt-2"
                       />
-                    ) : (
-                      <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
-                        <p className="mb-2 text-sm text-gray-600">
-                          Current contact image:
-                        </p>
-                        <img
-                          src={
-                            (catalogue.settings as any).contactDetails
-                              .contactImage
-                          }
-                          alt="Contact Image"
-                          className="h-24 w-32 rounded border object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Contact Details */}
+                <div id="contact-details" className="scroll-mt-6">
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg">
+                      <span className="text-lg font-bold">4</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Contact Details</h3>
+                      <p className="text-sm text-gray-500">How customers can reach you</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <div>
+                        <Label htmlFor="contactEmail" className="text-sm font-semibold text-gray-700">Email</Label>
+                        <Input
+                          id="contactEmail"
+                          type="email"
+                          value={catalogue?.settings?.contactDetails?.email || ''}
+                          onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
@@ -3502,114 +3448,298 @@ export default function EditCataloguePage() {
                                   settings: {
                                     ...(prev.settings || {}),
                                     contactDetails: {
-                                      ...(prev.settings as any)
-                                        ?.contactDetails,
-                                      contactImage: '',
+                                      ...(prev.settings?.contactDetails || {}),
+                                      email: e.target.value,
                                     },
                                   },
                                 }
                                 : null
                             )
                           }
-                          className="text-xs"
-                        >
-                          Change Contact Image
-                        </Button>
+                          placeholder="contact@company.com"
+                          className="mt-2 h-11"
+                        />
                       </div>
-                    )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      Upload an image to display on the contact page (e.g.,
-                      office, team photo, or workspace)
-                    </p>
-                  </div>
 
-                  {/* Contact Quote */}
-                  <div>
-                    <Label htmlFor="contactQuote">Contact Quote</Label>
-                    <Textarea
-                      id="contactQuote"
-                      value={
-                        (catalogue?.settings as any)?.contactDetails
-                          ?.contactQuote || ''
-                      }
-                      onChange={e =>
-                        setCatalogue(prev =>
-                          prev
-                            ? {
-                              ...prev,
-                              settings: {
-                                ...(prev.settings || {}),
-                                contactDetails: {
-                                  ...(prev.settings as any)?.contactDetails,
-                                  contactQuote: e.target.value,
-                                },
-                              },
-                            }
-                            : null
-                        )
-                      }
-                      placeholder="Enter an inspiring quote for the contact page (e.g., 'Where creativity meets craftsmanship')"
-                      rows={2}
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      A quote or message that will be displayed over the contact
-                      image
-                    </p>
-                  </div>
+                      <div>
+                        <Label htmlFor="contactPhone" className="text-sm font-semibold text-gray-700">Phone</Label>
+                        <Input
+                          id="contactPhone"
+                          value={catalogue?.settings?.contactDetails?.phone || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings?.contactDetails || {}),
+                                      phone: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
+                          }
+                          placeholder="+1 234 567 8900"
+                          className="mt-2 h-11"
+                        />
+                      </div>
 
-                  {/* Contact Quote By */}
-                  <div>
-                    <Label htmlFor="contactQuoteBy">Quote Attribution</Label>
-                    <Input
-                      id="contactQuoteBy"
-                      value={
-                        (catalogue?.settings as any)?.contactDetails
-                          ?.contactQuoteBy || ''
-                      }
-                      onChange={e =>
-                        setCatalogue(prev =>
-                          prev
-                            ? {
-                              ...prev,
-                              settings: {
-                                ...(prev.settings || {}),
-                                contactDetails: {
-                                  ...(prev.settings as any)?.contactDetails,
-                                  contactQuoteBy: e.target.value,
+                      <div>
+                        <Label htmlFor="contactWebsite" className="text-sm font-semibold text-gray-700">Website</Label>
+                        <Input
+                          id="contactWebsite"
+                          value={catalogue?.settings?.contactDetails?.website || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings?.contactDetails || {}),
+                                      website: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
+                          }
+                          placeholder="https://www.company.com"
+                          className="mt-2 h-11"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="contactAddress" className="text-sm font-semibold text-gray-700">Address</Label>
+                      <Input
+                        id="contactAddress"
+                        value={
+                          (catalogue?.settings as any)?.contactDetails?.address ||
+                          ''
+                        }
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev
+                              ? {
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  contactDetails: {
+                                    ...(prev.settings as any)?.contactDetails,
+                                    address: e.target.value,
+                                  },
                                 },
-                              },
-                            }
-                            : null
-                        )
-                      }
-                      placeholder="Enter who the quote is from (e.g., 'John Smith, CEO' or 'COMPANY NAME')"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Attribution for the contact quote (company name, founder,
-                      or team member)
-                    </p>
+                              }
+                              : null
+                          )
+                        }
+                        placeholder="123 Main Street, City, State 12345"
+                        className="mt-2 h-11"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="contactDescription" className="text-sm font-semibold text-gray-700">
+                        Contact Page Description
+                      </Label>
+                      <Textarea
+                        id="contactDescription"
+                        value={
+                          (catalogue?.settings as any)?.contactDescription || ''
+                        }
+                        onChange={e =>
+                          setCatalogue(prev =>
+                            prev
+                              ? {
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  contactDescription: e.target.value,
+                                },
+                              }
+                              : null
+                          )
+                        }
+                        placeholder="Get in touch with us for more information about our products"
+                        rows={3}
+                        className="mt-2"
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-700">Contact Page Customization</h4>
+                      
+                      <div>
+                        <Label htmlFor="contactImage" className="text-sm font-medium text-gray-600">
+                          Contact Image
+                        </Label>
+                        {!(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+                          <FileUpload
+                            uploadType="catalogue"
+                            catalogueId={catalogueId}
+                            maxFiles={1}
+                            accept={[
+                              'image/jpeg',
+                              'image/jpg',
+                              'image/png',
+                              'image/webp',
+                            ]}
+                            onUpload={files => {
+                              if (files.length > 0) {
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...(prev.settings || {}),
+                                        contactDetails: {
+                                          ...(prev.settings as any)?.contactDetails,
+                                          contactImage: files[0].url,
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
+                              }
+                            }}
+                            onError={error => {
+                              setErrorWithAutoDismiss(
+                                `Contact image upload failed: ${error}`
+                              )
+                            }}
+                            className="mt-2"
+                          />
+                        ) : (
+                          <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                            <img
+                              src={
+                                (catalogue.settings as any).contactDetails
+                                  .contactImage
+                              }
+                              alt="Contact"
+                              className="h-32 w-full rounded border object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...(prev.settings || {}),
+                                        contactDetails: {
+                                          ...(prev.settings as any)?.contactDetails,
+                                          contactImage: '',
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
+                              }
+                            >
+                              Change Image
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <Label htmlFor="contactQuote" className="text-sm font-medium text-gray-600">Contact Quote</Label>
+                        <Textarea
+                          id="contactQuote"
+                          value={
+                            (catalogue?.settings as any)?.contactDetails
+                              ?.contactQuote || ''
+                          }
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)?.contactDetails,
+                                      contactQuote: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
+                          }
+                          placeholder="A meaningful quote for your contact page"
+                          rows={2}
+                          className="mt-2"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="contactQuoteBy" className="text-sm font-medium text-gray-600">Quote Attribution</Label>
+                        <Input
+                          id="contactQuoteBy"
+                          value={
+                            (catalogue?.settings as any)?.contactDetails
+                              ?.contactQuoteBy || ''
+                          }
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)?.contactDetails,
+                                      contactQuoteBy: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
+                          }
+                          placeholder="e.g., 'John Smith, CEO'"
+                          className="mt-2 h-11"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Social Media */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Social Media</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="socialFacebook">Facebook</Label>
-                  <Input
-                    id="socialFacebook"
-                    value={catalogue?.settings?.socialMedia?.facebook || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              socialMedia: {
+                {/* Section 5: Social Media */}
+                <div id="social-media" className="scroll-mt-6">
+                  <div className="mb-6 flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-lg">
+                      <span className="text-lg font-bold">5</span>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">Social Media</h3>
+                      <p className="text-sm text-gray-500">Connect your social profiles</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <Label htmlFor="socialFacebook" className="text-sm font-semibold text-gray-700">Facebook</Label>
+                        <Input
+                          id="socialFacebook"
+                          value={catalogue?.settings?.socialMedia?.facebook || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
                                 ...(prev.settings?.socialMedia || {}),
                                 facebook: e.target.value,
                               },
@@ -3619,11 +3749,12 @@ export default function EditCataloguePage() {
                       )
                     }
                     placeholder="https://facebook.com/yourpage"
+                    className="mt-2 h-11"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="socialTwitter">Twitter</Label>
+                  <Label htmlFor="socialTwitter" className="text-sm font-semibold text-gray-700">Twitter</Label>
                   <Input
                     id="socialTwitter"
                     value={catalogue?.settings?.socialMedia?.twitter || ''}
@@ -3644,11 +3775,12 @@ export default function EditCataloguePage() {
                       )
                     }
                     placeholder="https://twitter.com/yourhandle"
+                    className="mt-2 h-11"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="socialInstagram">Instagram</Label>
+                  <Label htmlFor="socialInstagram" className="text-sm font-semibold text-gray-700">Instagram</Label>
                   <Input
                     id="socialInstagram"
                     value={catalogue?.settings?.socialMedia?.instagram || ''}
@@ -3669,11 +3801,12 @@ export default function EditCataloguePage() {
                       )
                     }
                     placeholder="https://instagram.com/yourhandle"
+                    className="mt-2 h-11"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="socialLinkedin">LinkedIn</Label>
+                  <Label htmlFor="socialLinkedin" className="text-sm font-semibold text-gray-700">LinkedIn</Label>
                   <Input
                     id="socialLinkedin"
                     value={catalogue?.settings?.socialMedia?.linkedin || ''}
@@ -3694,23 +3827,46 @@ export default function EditCataloguePage() {
                       )
                     }
                     placeholder="https://linkedin.com/company/yourcompany"
+                    className="mt-2 h-11"
                   />
+                </div>
+              </div>
+            </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+          <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditDialog(false)}
+              disabled={isSaving}
+              className="h-11 px-6"
+            >
               Cancel
             </Button>
             <Button
-              onClick={() => {
-                setShowEditDialog(false)
-                saveCatalogue()
+              onClick={async () => {
+                const success = await saveCatalogue()
+                if (success) {
+                  setShowEditDialog(false)
+                }
               }}
+              disabled={isSaving}
+              className="h-11 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 text-white hover:from-[#1E1338] hover:to-[#4F46E5]"
             >
-              Save Changes
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving Changes...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
