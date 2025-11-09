@@ -2324,7 +2324,7 @@ export default function EditCataloguePage() {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
               onClick={saveCategory}
             >
@@ -2536,41 +2536,41 @@ export default function EditCataloguePage() {
             <div className="rounded-lg border bg-white p-4 shadow-sm">
               <h4 className="mb-4 text-base font-semibold text-gray-900">Price Information</h4>
               <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="productPrice" className="text-sm font-semibold text-gray-900">Price</Label>
-                <Input
-                  id="productPrice"
-                  type="number"
-                  value={productForm.price}
-                  onChange={e =>
-                    setProductForm(prev => ({
-                      ...prev,
-                      price: parseFloat(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder="0.00"
-                  className="mt-2 h-11"
-                />
-              </div>
+                <div>
+                  <Label htmlFor="productPrice" className="text-sm font-semibold text-gray-900">Price</Label>
+                  <Input
+                    id="productPrice"
+                    type="number"
+                    value={productForm.price}
+                    onChange={e =>
+                      setProductForm(prev => ({
+                        ...prev,
+                        price: parseFloat(e.target.value) || 0,
+                      }))
+                    }
+                    placeholder="0.00"
+                    className="mt-2 h-11"
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="productPriceDisplay" className="text-sm font-semibold text-gray-900">Price Display</Label>
-                <Select
-                  value={productForm.priceDisplay}
-                  onValueChange={(value: 'show' | 'hide' | 'contact') =>
-                    setProductForm(prev => ({ ...prev, priceDisplay: value }))
-                  }
-                >
-                  <SelectTrigger className="mt-2 h-11">
-                    <SelectValue placeholder="Select price display" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="show">Show Price</SelectItem>
-                    <SelectItem value="hide">Hide Price</SelectItem>
-                    <SelectItem value="contact">Contact for Price</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="productPriceDisplay" className="text-sm font-semibold text-gray-900">Price Display</Label>
+                  <Select
+                    value={productForm.priceDisplay}
+                    onValueChange={(value: 'show' | 'hide' | 'contact') =>
+                      setProductForm(prev => ({ ...prev, priceDisplay: value }))
+                    }
+                  >
+                    <SelectTrigger className="mt-2 h-11">
+                      <SelectValue placeholder="Select price display" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="show">Show Price</SelectItem>
+                      <SelectItem value="hide">Hide Price</SelectItem>
+                      <SelectItem value="contact">Contact for Price</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -2578,99 +2578,99 @@ export default function EditCataloguePage() {
             <div className="rounded-lg border bg-white p-4 shadow-sm">
               <h4 className="mb-4 text-base font-semibold text-gray-900">Category & Status</h4>
               <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="productCategory" className="text-sm font-semibold text-gray-900">Category</Label>
-                <div className="mt-2 flex items-center gap-2">
-                  <Select
-                    value={productForm.categoryId}
-                    onValueChange={value =>
-                      setProductForm(prev => ({ ...prev, categoryId: value }))
-                    }
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {catalogue.categories.map(category => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    className="border-blue-400/20 bg-blue-500/10 text-xs text-blue-600"
-                    disabled={!productForm.name || !productForm.description}
-                    onClick={async () => {
-                      try {
-                        const response = await fetch('/api/ai/category', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            text: `${productForm.name} ${productForm.description}`,
-                            existingCategories: catalogue.categories,
-                          }),
-                        })
+                <div>
+                  <Label htmlFor="productCategory" className="text-sm font-semibold text-gray-900">Category</Label>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Select
+                      value={productForm.categoryId}
+                      onValueChange={value =>
+                        setProductForm(prev => ({ ...prev, categoryId: value }))
+                      }
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {catalogue.categories.map(category => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      className="border-blue-400/20 bg-blue-500/10 text-xs text-blue-600"
+                      disabled={!productForm.name || !productForm.description}
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/ai/category', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              text: `${productForm.name} ${productForm.description}`,
+                              existingCategories: catalogue.categories,
+                            }),
+                          })
 
-                        const data = await response.json()
+                          const data = await response.json()
 
-                        if (data.success && data.category) {
-                          setProductForm(prev => ({
-                            ...prev,
-                            categoryId: data.category.id,
-                          }))
-                          toast.success('Category suggested successfully!')
-                        } else {
-                          throw new Error(
-                            data.error || 'Failed to suggest category'
+                          if (data.success && data.category) {
+                            setProductForm(prev => ({
+                              ...prev,
+                              categoryId: data.category.id,
+                            }))
+                            toast.success('Category suggested successfully!')
+                          } else {
+                            throw new Error(
+                              data.error || 'Failed to suggest category'
+                            )
+                          }
+                        } catch (error) {
+                          console.error('AI Category Suggestion Error:', error)
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : 'Failed to suggest category'
                           )
                         }
-                      } catch (error) {
-                        console.error('AI Category Suggestion Error:', error)
-                        toast.error(
-                          error instanceof Error
-                            ? error.message
-                            : 'Failed to suggest category'
-                        )
-                      }
-                    }}
-                  >
-                    {isGeneratingDescription ? (
-                      <>
-                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                        Suggesting...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-1 h-3 w-3" /> Suggest Category
-                      </>
-                    )}
-                  </Button>
+                      }}
+                    >
+                      {isGeneratingDescription ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Suggesting...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-1 h-3 w-3" /> Suggest Category
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Enter product name and description first for better category
+                    suggestions
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter product name and description first for better category
-                  suggestions
-                </p>
-              </div>
 
-              <div>
-                <Label className="text-sm font-semibold text-gray-900 mb-2 block">Product Status</Label>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="productActive"
-                    checked={productForm.isActive}
-                    onCheckedChange={checked =>
-                      setProductForm(prev => ({ ...prev, isActive: checked }))
-                    }
-                  />
-                  <Label htmlFor="productActive" className="font-normal">Active</Label>
+                <div>
+                  <Label className="text-sm font-semibold text-gray-900 mb-2 block">Product Status</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="productActive"
+                      checked={productForm.isActive}
+                      onCheckedChange={checked =>
+                        setProductForm(prev => ({ ...prev, isActive: checked }))
+                      }
+                    />
+                    <Label htmlFor="productActive" className="font-normal">Active</Label>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
           </div>
@@ -2682,7 +2682,7 @@ export default function EditCataloguePage() {
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
               onClick={saveProduct}
             >
@@ -2708,130 +2708,130 @@ export default function EditCataloguePage() {
               <h3 className="mb-4 text-lg font-semibold text-gray-900">Display Settings</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-medium">Show Prices</Label>
-                  <p className="text-sm text-gray-600">
-                    Display product prices in the catalogue
-                  </p>
-                </div>
-                <Switch
-                  checked={
-                    catalogue?.settings?.displaySettings?.showPrices || false
-                  }
-                  onCheckedChange={checked =>
-                    setCatalogue(prev =>
-                      prev
-                        ? {
-                          ...prev,
-                          settings: {
-                            ...prev.settings,
-                            displaySettings: {
-                              ...prev.settings?.displaySettings,
-                              showPrices: checked,
+                  <div>
+                    <Label className="text-base font-medium">Show Prices</Label>
+                    <p className="text-sm text-gray-600">
+                      Display product prices in the catalogue
+                    </p>
+                  </div>
+                  <Switch
+                    checked={
+                      catalogue?.settings?.displaySettings?.showPrices || false
+                    }
+                    onCheckedChange={checked =>
+                      setCatalogue(prev =>
+                        prev
+                          ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showPrices: checked,
+                              },
                             },
-                          },
-                        }
-                        : null
-                    )
-                  }
-                />
-              </div>
+                          }
+                          : null
+                      )
+                    }
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-medium">
-                    Show Categories
-                  </Label>
-                  <p className="text-sm text-gray-600">
-                    Group products by categories
-                  </p>
-                </div>
-                <Switch
-                  checked={
-                    catalogue?.settings?.displaySettings?.showCategories ||
-                    false
-                  }
-                  onCheckedChange={checked =>
-                    setCatalogue(prev =>
-                      prev
-                        ? {
-                          ...prev,
-                          settings: {
-                            ...prev.settings,
-                            displaySettings: {
-                              ...prev.settings?.displaySettings,
-                              showCategories: checked,
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">
+                      Show Categories
+                    </Label>
+                    <p className="text-sm text-gray-600">
+                      Group products by categories
+                    </p>
+                  </div>
+                  <Switch
+                    checked={
+                      catalogue?.settings?.displaySettings?.showCategories ||
+                      false
+                    }
+                    onCheckedChange={checked =>
+                      setCatalogue(prev =>
+                        prev
+                          ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showCategories: checked,
+                              },
                             },
-                          },
-                        }
-                        : null
-                    )
-                  }
-                />
-              </div>
+                          }
+                          : null
+                      )
+                    }
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-medium">Allow Search</Label>
-                  <p className="text-sm text-gray-600">
-                    Enable search functionality
-                  </p>
-                </div>
-                <Switch
-                  checked={
-                    catalogue?.settings?.displaySettings?.allowSearch || false
-                  }
-                  onCheckedChange={checked =>
-                    setCatalogue(prev =>
-                      prev
-                        ? {
-                          ...prev,
-                          settings: {
-                            ...prev.settings,
-                            displaySettings: {
-                              ...prev.settings?.displaySettings,
-                              allowSearch: checked,
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">Allow Search</Label>
+                    <p className="text-sm text-gray-600">
+                      Enable search functionality
+                    </p>
+                  </div>
+                  <Switch
+                    checked={
+                      catalogue?.settings?.displaySettings?.allowSearch || false
+                    }
+                    onCheckedChange={checked =>
+                      setCatalogue(prev =>
+                        prev
+                          ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                allowSearch: checked,
+                              },
                             },
-                          },
-                        }
-                        : null
-                    )
-                  }
-                />
-              </div>
+                          }
+                          : null
+                      )
+                    }
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-medium">
-                    Show Product Codes
-                  </Label>
-                  <p className="text-sm text-gray-600">
-                    Display product SKU/codes
-                  </p>
-                </div>
-                <Switch
-                  checked={
-                    catalogue?.settings?.displaySettings?.showProductCodes ||
-                    false
-                  }
-                  onCheckedChange={checked =>
-                    setCatalogue(prev =>
-                      prev
-                        ? {
-                          ...prev,
-                          settings: {
-                            ...prev.settings,
-                            displaySettings: {
-                              ...prev.settings?.displaySettings,
-                              showProductCodes: checked,
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">
+                      Show Product Codes
+                    </Label>
+                    <p className="text-sm text-gray-600">
+                      Display product SKU/codes
+                    </p>
+                  </div>
+                  <Switch
+                    checked={
+                      catalogue?.settings?.displaySettings?.showProductCodes ||
+                      false
+                    }
+                    onCheckedChange={checked =>
+                      setCatalogue(prev =>
+                        prev
+                          ? {
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showProductCodes: checked,
+                              },
                             },
-                          },
-                        }
-                        : null
-                    )
-                  }
-                />
-              </div>
+                          }
+                          : null
+                      )
+                    }
+                  />
+                </div>
               </div>
             </div>
 
@@ -2840,98 +2840,98 @@ export default function EditCataloguePage() {
               <h3 className="mb-4 text-lg font-semibold text-gray-900">Visibility Settings</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base font-medium">
-                    Catalogue Visibility
-                  </Label>
-                  <p className="text-sm text-gray-600">
-                    Control who can see your catalogue
-                  </p>
-                </div>
-                <Switch
-                  checked={catalogue?.isPublic || false}
-                  onCheckedChange={checked => {
-                    setCatalogue(prev => {
-                      if (!prev) return null
-
-                      // Auto-generate slug from catalogue name if making public and no slug exists
-                      if (checked && !prev.slug && prev.name) {
-                        const autoSlug = prev.name
-                          .toLowerCase()
-                          .replace(/[^a-z0-9]+/g, '-')
-                          .replace(/^-|-$/g, '')
-                          .substring(0, 50) // Limit length
-                        return { ...prev, isPublic: checked, slug: autoSlug }
-                      }
-
-                      return { ...prev, isPublic: checked }
-                    })
-                  }}
-                />
-              </div>
-              <p className="text-sm text-gray-600">
-                {catalogue?.isPublic
-                  ? 'Public - Visible to everyone'
-                  : 'Private - Only visible to you'}
-              </p>
-
-              {/* Public Link - Only show when public and has slug */}
-              {catalogue?.isPublic && catalogue?.slug && (
-                <div className="space-y-2 border-t pt-2">
-                  <Label className="text-base font-medium">
-                    Public Share Link
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      readOnly
-                      value={`${typeof window !== 'undefined' ? window.location.origin : ''}/view/${catalogue.slug}`}
-                      className="border-green-200 bg-green-50 font-mono text-sm"
-                    />
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        const link = `${window.location.origin}/view/${catalogue.slug}`
-                        navigator.clipboard.writeText(link)
-                        toast.success('Public link copied!')
-                      }}
-                    >
-                      Copy
-                    </Button>
+                  <div>
+                    <Label className="text-base font-medium">
+                      Catalogue Visibility
+                    </Label>
+                    <p className="text-sm text-gray-600">
+                      Control who can see your catalogue
+                    </p>
                   </div>
-                  <p className="text-xs text-green-600">
-                    ✓ Anyone with this link can view your catalogue
-                  </p>
+                  <Switch
+                    checked={catalogue?.isPublic || false}
+                    onCheckedChange={checked => {
+                      setCatalogue(prev => {
+                        if (!prev) return null
 
-                  {/* Advanced: Edit slug */}
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-700">
-                      Customize URL slug
-                    </summary>
-                    <div className="mt-2 space-y-2">
-                      <Input
-                        placeholder="e.g., my-product-catalog-2025"
-                        value={catalogue?.slug || ''}
-                        onChange={e => {
-                          const value = e.target.value
+                        // Auto-generate slug from catalogue name if making public and no slug exists
+                        if (checked && !prev.slug && prev.name) {
+                          const autoSlug = prev.name
                             .toLowerCase()
-                            .replace(/[^a-z0-9-]/g, '-')
-                            .replace(/-+/g, '-')
+                            .replace(/[^a-z0-9]+/g, '-')
                             .replace(/^-|-$/g, '')
-                            .substring(0, 50)
-                          setCatalogue(prev =>
-                            prev ? { ...prev, slug: value } : null
-                          )
-                        }}
-                        className="font-mono text-sm"
-                      />
-                      <p className="text-xs text-gray-500">
-                        URL-friendly characters only (a-z, 0-9, -)
-                      </p>
-                    </div>
-                  </details>
+                            .substring(0, 50) // Limit length
+                          return { ...prev, isPublic: checked, slug: autoSlug }
+                        }
+
+                        return { ...prev, isPublic: checked }
+                      })
+                    }}
+                  />
                 </div>
-              )}
+                <p className="text-sm text-gray-600">
+                  {catalogue?.isPublic
+                    ? 'Public - Visible to everyone'
+                    : 'Private - Only visible to you'}
+                </p>
+
+                {/* Public Link - Only show when public and has slug */}
+                {catalogue?.isPublic && catalogue?.slug && (
+                  <div className="space-y-2 border-t pt-2">
+                    <Label className="text-base font-medium">
+                      Public Share Link
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input
+                        readOnly
+                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/view/${catalogue.slug}`}
+                        className="border-green-200 bg-green-50 font-mono text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const link = `${window.location.origin}/view/${catalogue.slug}`
+                          navigator.clipboard.writeText(link)
+                          toast.success('Public link copied!')
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                    <p className="text-xs text-green-600">
+                      ✓ Anyone with this link can view your catalogue
+                    </p>
+
+                    {/* Advanced: Edit slug */}
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-700">
+                        Customize URL slug
+                      </summary>
+                      <div className="mt-2 space-y-2">
+                        <Input
+                          placeholder="e.g., my-product-catalog-2025"
+                          value={catalogue?.slug || ''}
+                          onChange={e => {
+                            const value = e.target.value
+                              .toLowerCase()
+                              .replace(/[^a-z0-9-]/g, '-')
+                              .replace(/-+/g, '-')
+                              .replace(/^-|-$/g, '')
+                              .substring(0, 50)
+                            setCatalogue(prev =>
+                              prev ? { ...prev, slug: value } : null
+                            )
+                          }}
+                          className="font-mono text-sm"
+                        />
+                        <p className="text-xs text-gray-500">
+                          URL-friendly characters only (a-z, 0-9, -)
+                        </p>
+                      </div>
+                    </details>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2974,7 +2974,7 @@ export default function EditCataloguePage() {
                 <div className="mb-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Form Sections</p>
                 </div>
-                
+
                 <a href="#basic-info" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                     <span className="text-xs font-bold">1</span>
@@ -3026,7 +3026,7 @@ export default function EditCataloguePage() {
                       <p className="text-sm text-gray-500">Essential details about your catalogue</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div>
                       <Label htmlFor="catalogueName" className="text-sm font-semibold text-gray-700">
@@ -3122,57 +3122,57 @@ export default function EditCataloguePage() {
                         Intro Image
                       </Label>
                       {!catalogue?.introImage ? (
-                  <FileUpload
-                    uploadType="catalogue"
-                    catalogueId={catalogueId}
-                    maxFiles={1}
-                    accept={[
-                      'image/jpeg',
-                      'image/jpg',
-                      'image/png',
-                      'image/webp',
-                    ]}
-                    onUpload={files => {
-                      if (files.length > 0) {
-                        setCatalogue(prev =>
-                          prev ? { ...prev, introImage: files[0].url } : null
-                        )
-                      }
-                    }}
-                    onError={error => {
-                      setErrorWithAutoDismiss(
-                        `Intro image upload failed: ${error}`
-                      )
-                    }}
-                    className="mt-2"
-                  />
-                ) : (
-                  <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
-                    <p className="mb-2 text-sm text-gray-600">
-                      Current intro image:
-                    </p>
-                    <img
-                      src={catalogue.introImage}
-                      alt="Intro Image"
-                      className="h-24 w-32 rounded border object-cover"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCatalogue(prev =>
-                          prev ? { ...prev, introImage: '' } : null
-                        )
-                      }
-                      className="text-xs"
-                    >
-                      Change Image
-                    </Button>
+                        <FileUpload
+                          uploadType="catalogue"
+                          catalogueId={catalogueId}
+                          maxFiles={1}
+                          accept={[
+                            'image/jpeg',
+                            'image/jpg',
+                            'image/png',
+                            'image/webp',
+                          ]}
+                          onUpload={files => {
+                            if (files.length > 0) {
+                              setCatalogue(prev =>
+                                prev ? { ...prev, introImage: files[0].url } : null
+                              )
+                            }
+                          }}
+                          onError={error => {
+                            setErrorWithAutoDismiss(
+                              `Intro image upload failed: ${error}`
+                            )
+                          }}
+                          className="mt-2"
+                        />
+                      ) : (
+                        <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                          <p className="mb-2 text-sm text-gray-600">
+                            Current intro image:
+                          </p>
+                          <img
+                            src={catalogue.introImage}
+                            alt="Intro Image"
+                            className="h-24 w-32 rounded border object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              setCatalogue(prev =>
+                                prev ? { ...prev, introImage: '' } : null
+                              )
+                            }
+                            className="text-xs"
+                          >
+                            Change Image
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
                 </div>
 
                 {/* Section 2: Media & Assets */}
@@ -3194,156 +3194,156 @@ export default function EditCataloguePage() {
                           Company Logo
                         </Label>
                         {!catalogue?.settings?.mediaAssets?.logoUrl ? (
-                    <FileUpload
-                      uploadType="catalogue"
-                      catalogueId={catalogueId}
-                      maxFiles={1}
-                      accept={[
-                        'image/jpeg',
-                        'image/jpg',
-                        'image/png',
-                        'image/webp',
-                      ]}
-                      onUpload={files => {
-                        if (files.length > 0) {
-                          setCatalogue(prev =>
-                            prev
-                              ? {
-                                ...prev,
-                                settings: {
-                                  ...prev.settings,
-                                  mediaAssets: {
-                                    ...prev.settings?.mediaAssets,
-                                    logoUrl: files[0].url,
-                                  },
-                                },
+                          <FileUpload
+                            uploadType="catalogue"
+                            catalogueId={catalogueId}
+                            maxFiles={1}
+                            accept={[
+                              'image/jpeg',
+                              'image/jpg',
+                              'image/png',
+                              'image/webp',
+                            ]}
+                            onUpload={files => {
+                              if (files.length > 0) {
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          logoUrl: files[0].url,
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
                               }
-                              : null
-                          )
-                        }
-                      }}
-                      onError={error => {
-                        setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
-                      }}
-                      className="mt-2"
-                    />
-                  ) : (
-                    <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
-                      <p className="mb-2 text-sm text-gray-600">
-                        Current logo:
-                      </p>
-                      <img
-                        src={catalogue.settings.mediaAssets.logoUrl}
-                        alt="Company Logo"
-                        className="h-20 w-20 rounded border object-contain"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setCatalogue(prev =>
-                            prev
-                              ? {
-                                ...prev,
-                                settings: {
-                                  ...prev.settings,
-                                  mediaAssets: {
-                                    ...prev.settings?.mediaAssets,
-                                    logoUrl: '',
-                                  },
-                                },
+                            }}
+                            onError={error => {
+                              setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
+                            }}
+                            className="mt-2"
+                          />
+                        ) : (
+                          <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                            <p className="mb-2 text-sm text-gray-600">
+                              Current logo:
+                            </p>
+                            <img
+                              src={catalogue.settings.mediaAssets.logoUrl}
+                              alt="Company Logo"
+                              className="h-20 w-20 rounded border object-contain"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          logoUrl: '',
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
                               }
-                              : null
-                          )
-                        }
-                        className="text-xs"
-                      >
-                        Change Logo
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                              className="text-xs"
+                            >
+                              Change Logo
+                            </Button>
+                          </div>
+                        )}
+                      </div>
 
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">
-                    Cover Image
-                  </Label>
-                  {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
-                    <FileUpload
-                      uploadType="catalogue"
-                      catalogueId={catalogueId}
-                      maxFiles={1}
-                      accept={[
-                        'image/jpeg',
-                        'image/jpg',
-                        'image/png',
-                        'image/webp',
-                      ]}
-                      onUpload={files => {
-                        if (files.length > 0) {
-                          setCatalogue(prev =>
-                            prev
-                              ? {
-                                ...prev,
-                                settings: {
-                                  ...prev.settings,
-                                  mediaAssets: {
-                                    ...prev.settings?.mediaAssets,
-                                    coverImageUrl: files[0].url,
-                                  },
-                                },
+                      <div>
+                        <Label className="mb-2 block text-sm font-medium">
+                          Cover Image
+                        </Label>
+                        {!catalogue?.settings?.mediaAssets?.coverImageUrl ? (
+                          <FileUpload
+                            uploadType="catalogue"
+                            catalogueId={catalogueId}
+                            maxFiles={1}
+                            accept={[
+                              'image/jpeg',
+                              'image/jpg',
+                              'image/png',
+                              'image/webp',
+                            ]}
+                            onUpload={files => {
+                              if (files.length > 0) {
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          coverImageUrl: files[0].url,
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
                               }
-                              : null
-                          )
-                        }
-                      }}
-                      onError={error => {
-                        setErrorWithAutoDismiss(
-                          `Cover image upload failed: ${error}`
-                        )
-                      }}
-                      className="mt-2"
-                    />
-                  ) : (
-                    <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
-                      <p className="mb-2 text-sm text-gray-600">
-                        Current cover image:
-                      </p>
-                      <img
-                        src={catalogue.settings.mediaAssets.coverImageUrl}
-                        alt="Cover Image"
-                        className="h-32 w-full rounded border object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          setCatalogue(prev =>
-                            prev
-                              ? {
-                                ...prev,
-                                settings: {
-                                  ...prev.settings,
-                                  mediaAssets: {
-                                    ...prev.settings?.mediaAssets,
-                                    coverImageUrl: '',
-                                  },
-                                },
+                            }}
+                            onError={error => {
+                              setErrorWithAutoDismiss(
+                                `Cover image upload failed: ${error}`
+                              )
+                            }}
+                            className="mt-2"
+                          />
+                        ) : (
+                          <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                            <p className="mb-2 text-sm text-gray-600">
+                              Current cover image:
+                            </p>
+                            <img
+                              src={catalogue.settings.mediaAssets.coverImageUrl}
+                              alt="Cover Image"
+                              className="h-32 w-full rounded border object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setCatalogue(prev =>
+                                  prev
+                                    ? {
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          coverImageUrl: '',
+                                        },
+                                      },
+                                    }
+                                    : null
+                                )
                               }
-                              : null
-                          )
-                        }
-                        className="text-xs"
-                      >
-                        Change Cover Image
-                      </Button>
+                              className="text-xs"
+                            >
+                              Change Cover Image
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
+                  </div>
                 </div>
 
                 {/* Section 3: Company Information */}
@@ -3573,7 +3573,7 @@ export default function EditCataloguePage() {
 
                     <div className="space-y-4">
                       <h4 className="text-sm font-semibold text-gray-700">Contact Page Customization</h4>
-                      
+
                       <div>
                         <Label htmlFor="contactImage" className="text-sm font-medium text-gray-600">
                           Contact Image
@@ -3740,106 +3740,106 @@ export default function EditCataloguePage() {
                                   settings: {
                                     ...(prev.settings || {}),
                                     socialMedia: {
-                                ...(prev.settings?.socialMedia || {}),
-                                facebook: e.target.value,
-                              },
-                            },
+                                      ...(prev.settings?.socialMedia || {}),
+                                      facebook: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
                           }
-                          : null
-                      )
-                    }
-                    placeholder="https://facebook.com/yourpage"
-                    className="mt-2 h-11"
-                  />
-                </div>
+                          placeholder="https://facebook.com/yourpage"
+                          className="mt-2 h-11"
+                        />
+                      </div>
 
-                <div>
-                  <Label htmlFor="socialTwitter" className="text-sm font-semibold text-gray-700">Twitter</Label>
-                  <Input
-                    id="socialTwitter"
-                    value={catalogue?.settings?.socialMedia?.twitter || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              socialMedia: {
-                                ...(prev.settings?.socialMedia || {}),
-                                twitter: e.target.value,
-                              },
-                            },
+                      <div>
+                        <Label htmlFor="socialTwitter" className="text-sm font-semibold text-gray-700">Twitter</Label>
+                        <Input
+                          id="socialTwitter"
+                          value={catalogue?.settings?.socialMedia?.twitter || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      twitter: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
                           }
-                          : null
-                      )
-                    }
-                    placeholder="https://twitter.com/yourhandle"
-                    className="mt-2 h-11"
-                  />
-                </div>
+                          placeholder="https://twitter.com/yourhandle"
+                          className="mt-2 h-11"
+                        />
+                      </div>
 
-                <div>
-                  <Label htmlFor="socialInstagram" className="text-sm font-semibold text-gray-700">Instagram</Label>
-                  <Input
-                    id="socialInstagram"
-                    value={catalogue?.settings?.socialMedia?.instagram || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              socialMedia: {
-                                ...(prev.settings?.socialMedia || {}),
-                                instagram: e.target.value,
-                              },
-                            },
+                      <div>
+                        <Label htmlFor="socialInstagram" className="text-sm font-semibold text-gray-700">Instagram</Label>
+                        <Input
+                          id="socialInstagram"
+                          value={catalogue?.settings?.socialMedia?.instagram || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      instagram: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
                           }
-                          : null
-                      )
-                    }
-                    placeholder="https://instagram.com/yourhandle"
-                    className="mt-2 h-11"
-                  />
-                </div>
+                          placeholder="https://instagram.com/yourhandle"
+                          className="mt-2 h-11"
+                        />
+                      </div>
 
-                <div>
-                  <Label htmlFor="socialLinkedin" className="text-sm font-semibold text-gray-700">LinkedIn</Label>
-                  <Input
-                    id="socialLinkedin"
-                    value={catalogue?.settings?.socialMedia?.linkedin || ''}
-                    onChange={e =>
-                      setCatalogue(prev =>
-                        prev
-                          ? {
-                            ...prev,
-                            settings: {
-                              ...(prev.settings || {}),
-                              socialMedia: {
-                                ...(prev.settings?.socialMedia || {}),
-                                linkedin: e.target.value,
-                              },
-                            },
+                      <div>
+                        <Label htmlFor="socialLinkedin" className="text-sm font-semibold text-gray-700">LinkedIn</Label>
+                        <Input
+                          id="socialLinkedin"
+                          value={catalogue?.settings?.socialMedia?.linkedin || ''}
+                          onChange={e =>
+                            setCatalogue(prev =>
+                              prev
+                                ? {
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      linkedin: e.target.value,
+                                    },
+                                  },
+                                }
+                                : null
+                            )
                           }
-                          : null
-                      )
-                    }
-                    placeholder="https://linkedin.com/company/yourcompany"
-                    className="mt-2 h-11"
-                  />
-                </div>
-              </div>
-            </div>
+                          placeholder="https://linkedin.com/company/yourcompany"
+                          className="mt-2 h-11"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowEditDialog(false)}
               disabled={isSaving}
               className="h-11 px-6"
