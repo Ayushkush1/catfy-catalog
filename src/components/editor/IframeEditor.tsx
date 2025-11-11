@@ -1,56 +1,26 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { createRoot } from 'react-dom/client'
-import {
-  FileText,
-  Layers as LayersIcon,
-  Shapes,
-  Type,
-  Upload,
-  Palette,
-  Star,
-  ChevronRight,
-  ChevronDown,
-  ChevronLeft,
-  Trash2,
-  Copy,
-  ChevronUp,
-  Edit3,
-  Settings,
-  Sparkles,
-  Image,
-  Move3D,
-  Circle,
-  Tag,
-  LayoutGrid,
-  GripVertical,
-} from 'lucide-react'
-import { IconContext } from '@phosphor-icons/react'
-import * as PhosphorIcons from '@phosphor-icons/react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { FileText, Layers as LayersIcon, Shapes, Type, Upload, Palette, Star, ChevronRight, ChevronDown, ChevronLeft, Trash2, Copy, ChevronUp } from 'lucide-react'
 import { HtmlTemplates } from './iframe-templates'
 import Mustache from 'mustache'
-import html2canvas from 'html2canvas'
-import { useSimpleDrag } from '@/hooks/useSimpleDrag'
 
-export type IframePage = {
-  id: string
-  name: string
-  html: string
-  css?: string
-  createdAt?: Date
-  updatedAt?: Date
-}
+ export type IframePage = {
+    id: string
+    name: string
+    html: string
+    css?: string
+    createdAt?: Date
+    updatedAt?: Date
+  }
 
-export type PrebuiltTemplate = {
-  id: string
-  name: string
-  engine: 'mustache' | 'handlebars'
-  pages: IframePage[]
-  sharedCss?: string
-  dataTransform?: (data: any) => any
-  pageGenerator?: (data: any, basePages: IframePage[]) => IframePage[]
-}
+ export type PrebuiltTemplate = {
+    id: string
+    name: string
+    engine: 'mustache' | 'handlebars'
+    pages: IframePage[]
+    sharedCss?: string
+  }
 
 type LiveData = Record<string, any>
 // Sidebar palette element types for drag-and-drop insertion
@@ -69,27 +39,18 @@ type PaletteElementType =
   | 'gallery'
   | 'product-card'
 
-interface IframeEditorProps {
-  template: PrebuiltTemplate
-  initialData?: LiveData
-  onLiveDataChange?: (data: LiveData) => void
+  interface IframeEditorProps {
+    template: PrebuiltTemplate
+    initialData?: LiveData
+    onLiveDataChange?: (data: LiveData) => void
   // Optional style mutation persistence
   initialStyleMutations?: Record<string, Partial<CSSStyleDeclaration>>
-  onStyleMutationsChange?: (
-    mutations: Record<string, Partial<CSSStyleDeclaration>>
-  ) => void
+  onStyleMutationsChange?: (mutations: Record<string, Partial<CSSStyleDeclaration>>) => void
   // Allow parent to grab iframe element for export/print
-  registerIframeGetter?: (getter: () => HTMLIFrameElement | null) => void
+    registerIframeGetter?: (getter: () => HTMLIFrameElement | null) => void
   // Preview mode: disable interactions and hide sidebars when true
-  previewMode?: boolean
-  onTemplateIdChange?: (id: string) => void
-  // Database persistence
-  catalogueId?: string
-  autoSave?: boolean
-  autoSaveInterval?: number // in milliseconds, default 5000
-  onSaveSuccess?: () => void
-  onSaveError?: (error: string) => void
-  onIframeReady?: () => void // Callback when iframe is fully loaded with content
+    previewMode?: boolean
+    onTemplateIdChange?: (id: string) => void
   // Optional: expose editor controls to parent toolbar
   registerEditorControls?: (controls: {
     undo: () => void
@@ -106,16 +67,12 @@ interface IframeEditorProps {
     print: () => void
     exportHTML: () => void
     exportJSON: () => void
-    exportPDF: () => Promise<void>
-    exportPNG: () => Promise<void>
     // Page navigation and info
     getPages: () => IframePage[]
     getCurrentPageIndex: () => number
     setCurrentPageIndex: (i: number) => void
     goPrev: () => void
     goNext: () => void
-    // Manual save function
-    saveToDatabase: () => Promise<void>
   }) => void
 }
 
@@ -126,53 +83,28 @@ interface IframeEditorProps {
  * - Live data inputs bound to Mustache placeholders
  * - Render pages inside a sandboxed iframe via srcdoc
  */
-export default function IframeEditor({
-  template,
-  initialData,
-  onLiveDataChange,
-  initialStyleMutations,
-  onStyleMutationsChange,
-  registerIframeGetter,
-  previewMode = false,
-  onTemplateIdChange,
-  catalogueId,
-  autoSave = true,
-  autoSaveInterval = 5000,
-  onSaveSuccess,
-  onSaveError,
-  onIframeReady,
-  registerEditorControls,
-}: IframeEditorProps) {
+export default function IframeEditor({ template, initialData, onLiveDataChange, initialStyleMutations, onStyleMutationsChange, registerIframeGetter, previewMode = false, onTemplateIdChange, registerEditorControls }: IframeEditorProps) {
   const [currentPageIndex, setCurrentPageIndex] = useState(0)
-  const [isPageTransitioning, setIsPageTransitioning] = useState(false)
-  const [activeLeftTab, setActiveLeftTab] = useState<
-    'pages' | 'layers' | 'elements' | 'text' | 'assets' | 'icons' | null
-  >(null)
-  const [rightTab, setRightTab] = useState<'content' | 'style' | 'effects'>(
-    'style'
-  )
-  const [liveData, setLiveData] = useState<LiveData>(
-    initialData || {
-      product: {
-        title: 'Sample Product',
-        price: '₹1,299',
-        image: '/assets/heroImage.png',
-        description: 'A brief product description goes here.',
-      },
-      profile: {
-        companyName: 'Catfy Co.',
-        tagline: 'Beautiful catalogues, simply built.',
-      },
+  const [activeLeftTab, setActiveLeftTab] = useState<'pages'|'layers'|'elements'|'text'|'assets'|'templates'|'icons'>('pages')
+  const [rightTab, setRightTab] = useState<'content'|'style'>('style')
+  const [liveData, setLiveData] = useState<LiveData>(initialData || {
+    product: {
+      title: 'Sample Product',
+      price: '₹1,299',
+      image: '/assets/heroImage.png',
+      description: 'A brief product description goes here.'
+    },
+    profile: {
+      companyName: 'Catfy Co.',
+      tagline: 'Beautiful catalogues, simply built.'
     }
-  )
+  })
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([])
   const stageContainerRef = useRef<HTMLDivElement>(null)
   const canvasWrapperRef = useRef<HTMLDivElement>(null)
-  const leftSidebarRef = useRef<HTMLDivElement>(null)
   const rightSidebarRef = useRef<HTMLDivElement>(null)
-
+  
   // Enable trackpad pinch-to-zoom when hovering over the canvas area
   useEffect(() => {
     const container = stageContainerRef.current
@@ -188,82 +120,16 @@ export default function IframeEditor({
         ev.preventDefault()
         const step = 0.06
         const direction = ev.deltaY < 0 ? 1 : -1
-        setUserZoom(z => Math.min(3, Math.max(0.5, z + direction * step)))
+        setUserZoom((z) => Math.min(3, Math.max(0.5, z + direction * step)))
       }
     }
     container.addEventListener('wheel', onWheel, { passive: false })
     return () => container.removeEventListener('wheel', onWheel as any)
   }, [])
-  const [styleMutations, setStyleMutations] = useState<
-    Record<string, Partial<CSSStyleDeclaration>>
-  >(initialStyleMutations || {})
+  const [styleMutations, setStyleMutations] = useState<Record<string, Partial<CSSStyleDeclaration>>>(initialStyleMutations || {})
   // Simple history stacks for undo/redo of style changes
-  const [pastMutations, setPastMutations] = useState<
-    Record<string, Partial<CSSStyleDeclaration>>[]
-  >([])
-  const [futureMutations, setFutureMutations] = useState<
-    Record<string, Partial<CSSStyleDeclaration>>[]
-  >([])
-
-  // Comprehensive history system for all canvas changes
-  const [htmlHistory, setHtmlHistory] = useState<string[]>([])
-  const [htmlHistoryIndex, setHtmlHistoryIndex] = useState<number>(-1)
-  const htmlHistoryIndexRef = useRef<number>(-1)
-  const isRestoringHistory = useRef<boolean>(false)
-
-  // Keep ref in sync with state
-  useEffect(() => {
-    htmlHistoryIndexRef.current = htmlHistoryIndex
-  }, [htmlHistoryIndex])
-
-  // Save current HTML state to history BEFORE making changes
-  const saveToHistory = useCallback(() => {
-    if (isRestoringHistory.current) {
-      console.log('⏭️ Skipping history save - currently restoring')
-      return
-    }
-
-    const doc = iframeRef.current?.contentDocument
-    if (!doc || !doc.body) return
-
-    const currentHtml = doc.body.innerHTML
-    const currentIndex = htmlHistoryIndexRef.current
-
-    console.log('💾 Saving to history - current index:', currentIndex)
-
-    setHtmlHistory(prev => {
-      // Remove any future history if we're not at the end
-      const newHistory = prev.slice(0, currentIndex + 1)
-
-      // Don't add duplicate state
-      if (
-        newHistory.length > 0 &&
-        newHistory[newHistory.length - 1] === currentHtml
-      ) {
-        console.log('⚠️ Duplicate state - not saving')
-        return prev
-      }
-
-      // Add current state
-      newHistory.push(currentHtml)
-
-      console.log(
-        '✅ History saved - new index:',
-        currentIndex + 1,
-        'total states:',
-        newHistory.length
-      )
-
-      // Limit history to 50 states
-      if (newHistory.length > 50) {
-        return newHistory.slice(-50)
-      }
-      return newHistory
-    })
-
-    setHtmlHistoryIndex(currentIndex + 1)
-  }, [])
-
+  const [pastMutations, setPastMutations] = useState<Record<string, Partial<CSSStyleDeclaration>>[]>([])
+  const [futureMutations, setFutureMutations] = useState<Record<string, Partial<CSSStyleDeclaration>>[]>([])
   const lastAppliedPathsRef = useRef<string[]>([])
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [selectedTag, setSelectedTag] = useState<string>('')
@@ -272,2288 +138,49 @@ export default function IframeEditor({
   const [scale, setScale] = useState<number>(1)
   const [userZoom, setUserZoom] = useState<number>(1)
   const [showGrid, setShowGrid] = useState<boolean>(false)
-  const [hoverStyles, setHoverStyles] = useState<
-    Record<string, { backgroundColor?: string; color?: string }>
-  >({})
+  const [hoverStyles, setHoverStyles] = useState<Record<string, { backgroundColor?: string; color?: string }>>({})
   const [hoveredPath, setHoveredPath] = useState<string | null>(null)
-  const [currentStyles, setCurrentStyles] = useState<Record<string, string>>({})
-  const [fontDropdownOpen, setFontDropdownOpen] = useState(false)
-  const [pagePreviews, setPagePreviews] = useState<Record<string, string>>({})
-  const [selectedElementType, setSelectedElementType] =
-    useState<string>('unknown')
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({})
-
-  // Simple drag functionality
-  const { startDrag, isDragging } = useSimpleDrag({
-    iframeRef,
-    onElementMove: (id: string, x: number, y: number) => {
-      console.log(`Element ${id} moved to: ${x}, ${y}`)
-    },
-  })
-
-  // Element UI Configuration for smart sidebar
-  const ELEMENT_UI_CONFIG = {
-    text: {
-      content: [{ group: 'Content', icon: 'Type', fields: ['text', 'link'] }],
-      style: [
-        {
-          group: 'Typography',
-          icon: 'Type',
-          fields: [
-            'fontFamily',
-            'fontSize',
-            'fontWeight',
-            'color',
-            'textAlign',
-            'lineHeight',
-            'letterSpacing',
-          ],
-        },
-        { group: 'Background', icon: 'Palette', fields: ['backgroundColor'] },
-        { group: 'Spacing', icon: 'Move3D', fields: ['padding', 'margin'] },
-      ],
-      effects: [
-        {
-          group: 'Visual Effects',
-          icon: 'Sparkles',
-          fields: ['boxShadow', 'opacity', 'transform'],
-        },
-      ],
-    },
-    image: {
-      content: [
-        {
-          group: 'Image Source',
-          icon: 'Image',
-          fields: ['upload', 'src', 'alt'],
-        },
-      ],
-      style: [
-        {
-          group: 'Appearance',
-          icon: 'Settings',
-          fields: ['objectFit', 'borderRadius', 'border'],
-        },
-        {
-          group: 'Size & Position',
-          icon: 'Move3D',
-          fields: ['width', 'height', 'padding', 'margin'],
-        },
-      ],
-      effects: [
-        {
-          group: 'Visual Effects',
-          icon: 'Sparkles',
-          fields: ['boxShadow', 'opacity', 'filter'],
-        },
-      ],
-    },
-    button: {
-      content: [{ group: 'Content', icon: 'Type', fields: ['text', 'link'] }],
-      style: [
-        {
-          group: 'Colors',
-          icon: 'Palette',
-          fields: ['backgroundColor', 'color'],
-        },
-        {
-          group: 'Typography',
-          icon: 'Type',
-          fields: ['fontFamily', 'fontWeight', 'fontSize'],
-        },
-        { group: 'Shape', icon: 'Circle', fields: ['borderRadius', 'border'] },
-        { group: 'Spacing', icon: 'Move3D', fields: ['padding', 'margin'] },
-      ],
-      effects: [
-        {
-          group: 'Visual Effects',
-          icon: 'Sparkles',
-          fields: ['boxShadow', 'hover', 'transition'],
-        },
-      ],
-    },
-    container: {
-      content: [],
-      style: [
-        {
-          group: 'Background',
-          icon: 'Palette',
-          fields: ['backgroundColor', 'backgroundImage'],
-        },
-        {
-          group: 'Layout',
-          icon: 'LayoutGrid',
-          fields: ['layout', 'justifyContent', 'alignItems', 'gap'],
-        },
-        { group: 'Shape', icon: 'Circle', fields: ['border', 'borderRadius'] },
-        { group: 'Spacing', icon: 'Move3D', fields: ['padding', 'margin'] },
-      ],
-      effects: [
-        {
-          group: 'Visual Effects',
-          icon: 'Sparkles',
-          fields: ['boxShadow', 'backdrop', 'overflow'],
-        },
-      ],
-    },
-    default: {
-      content: [{ group: 'Content', icon: 'Type', fields: ['text'] }],
-      style: [
-        {
-          group: 'Appearance',
-          icon: 'Settings',
-          fields: ['backgroundColor', 'color', 'border', 'borderRadius'],
-        },
-        {
-          group: 'Typography',
-          icon: 'Type',
-          fields: ['fontFamily', 'fontSize', 'fontWeight', 'textAlign'],
-        },
-        { group: 'Spacing', icon: 'Move3D', fields: ['padding', 'margin'] },
-      ],
-      effects: [
-        {
-          group: 'Visual Effects',
-          icon: 'Sparkles',
-          fields: ['boxShadow', 'opacity'],
-        },
-      ],
-    },
-  }
-
-  // Font options for custom dropdown
-  const fontOptions = [
-    {
-      value: 'Inter, system-ui, Arial',
-      label: 'Inter',
-      description: 'Modern Sans-Serif',
-      family: 'Inter, system-ui, Arial',
-    },
-    {
-      value: 'Arial, Helvetica, sans-serif',
-      label: 'Arial',
-      description: 'Classic Sans-Serif',
-      family: 'Arial, Helvetica, sans-serif',
-    },
-    {
-      value: 'Helvetica Neue, Helvetica, sans-serif',
-      label: 'Helvetica Neue',
-      description: 'Clean Sans-Serif',
-      family: 'Helvetica Neue, Helvetica, sans-serif',
-    },
-    {
-      value: 'Roboto, sans-serif',
-      label: 'Roboto',
-      description: 'Google Font',
-      family: 'Roboto, sans-serif',
-    },
-    {
-      value: 'Open Sans, sans-serif',
-      label: 'Open Sans',
-      description: 'Friendly Sans-Serif',
-      family: 'Open Sans, sans-serif',
-    },
-    {
-      value: 'Lato, sans-serif',
-      label: 'Lato',
-      description: 'Professional Sans-Serif',
-      family: 'Lato, sans-serif',
-    },
-    {
-      value: 'Montserrat, sans-serif',
-      label: 'Montserrat',
-      description: 'Geometric Sans-Serif',
-      family: 'Montserrat, sans-serif',
-    },
-    {
-      value: 'Poppins, sans-serif',
-      label: 'Poppins',
-      description: 'Rounded Sans-Serif',
-      family: 'Poppins, sans-serif',
-    },
-    {
-      value: 'Source Sans Pro, sans-serif',
-      label: 'Source Sans Pro',
-      description: 'Adobe Font',
-      family: 'Source Sans Pro, sans-serif',
-    },
-    {
-      value: 'Georgia, serif',
-      label: 'Georgia',
-      description: 'Classic Serif',
-      family: 'Georgia, serif',
-    },
-    {
-      value: 'Times New Roman, Times, serif',
-      label: 'Times New Roman',
-      description: 'Traditional Serif',
-      family: 'Times New Roman, Times, serif',
-    },
-    {
-      value: 'Playfair Display, serif',
-      label: 'Playfair Display',
-      description: 'Elegant Serif',
-      family: 'Playfair Display, serif',
-    },
-    {
-      value: 'Merriweather, serif',
-      label: 'Merriweather',
-      description: 'Readable Serif',
-      family: 'Merriweather, serif',
-    },
-    {
-      value: 'Crimson Text, serif',
-      label: 'Crimson Text',
-      description: 'Book Serif',
-      family: 'Crimson Text, serif',
-    },
-    {
-      value: 'Courier New, monospace',
-      label: 'Courier New',
-      description: 'Typewriter',
-      family: 'Courier New, monospace',
-    },
-    {
-      value: 'Monaco, Consolas, monospace',
-      label: 'Monaco',
-      description: 'Code Font',
-      family: 'Monaco, Consolas, monospace',
-    },
-    {
-      value: 'Source Code Pro, monospace',
-      label: 'Source Code Pro',
-      description: 'Modern Mono',
-      family: 'Source Code Pro, monospace',
-    },
-    {
-      value: 'Fira Code, monospace',
-      label: 'Fira Code',
-      description: 'Programming Font',
-      family: 'Fira Code, monospace',
-    },
-    {
-      value: 'Dancing Script, cursive',
-      label: 'Dancing Script',
-      description: 'Handwritten',
-      family: 'Dancing Script, cursive',
-    },
-    {
-      value: 'Lobster, cursive',
-      label: 'Lobster',
-      description: 'Display Script',
-      family: 'Lobster, cursive',
-    },
-    {
-      value: 'Pacifico, cursive',
-      label: 'Pacifico',
-      description: 'Brush Script',
-      family: 'Pacifico, cursive',
-    },
-    {
-      value: 'Oswald, sans-serif',
-      label: 'Oswald',
-      description: 'Condensed Sans-Serif',
-      family: 'Oswald, sans-serif',
-    },
-    {
-      value: 'Raleway, sans-serif',
-      label: 'Raleway',
-      description: 'Elegant Sans-Serif',
-      family: 'Raleway, sans-serif',
-    },
-    {
-      value: 'Nunito, sans-serif',
-      label: 'Nunito',
-      description: 'Rounded Sans-Serif',
-      family: 'Nunito, sans-serif',
-    },
-  ]
-
-  // Get selected font option
-  const getSelectedFont = () => {
-    const currentFont = currentStyles.fontFamily || 'Inter, system-ui, Arial'
-    return (
-      fontOptions.find(font => font.value === currentFont) || fontOptions[0]
-    )
-  }
-
-  // Detect element type for smart sidebar
-  const detectElementType = (
-    tagName: string,
-    element?: HTMLElement
-  ): string => {
-    const tag = tagName.toLowerCase()
-
-    // Text elements
-    if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'a'].includes(tag)) {
-      return 'text'
-    }
-
-    // Image elements
-    if (tag === 'img') {
-      return 'image'
-    }
-
-    // Button elements
-    if (
-      tag === 'button' ||
-      (tag === 'a' && element?.classList.contains('btn'))
-    ) {
-      return 'button'
-    }
-
-    // Container elements
-    if (
-      [
-        'div',
-        'section',
-        'article',
-        'main',
-        'aside',
-        'nav',
-        'header',
-        'footer',
-      ].includes(tag)
-    ) {
-      return 'container'
-    }
-
-    return 'default'
-  }
-
-  // Get current element configuration
-  const getCurrentElementConfig = () => {
-    const config =
-      ELEMENT_UI_CONFIG[selectedElementType as keyof typeof ELEMENT_UI_CONFIG]
-    return config || ELEMENT_UI_CONFIG.default
-  }
-
-  // Toggle section expansion
-  const toggleSection = (sectionName: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName],
-    }))
-  }
-
-  // Render smart section
-  const renderSmartSection = (
-    section: { group: string; icon: string; fields: string[] },
-    tabType: 'content' | 'style' | 'effects'
-  ) => {
-    const isExpanded = expandedSections[section.group] ?? true // Default to expanded
-
-    // Map icon names to Lucide React components with colorful styling
-    const getIconComponent = (iconName: string) => {
-      switch (iconName) {
-        case 'Type':
-          return <Type className="h-4 w-4 text-blue-500" />
-        case 'Image':
-          return <Image className="h-4 w-4 text-green-500" />
-        case 'Settings':
-          return <Settings className="h-4 w-4 text-purple-500" />
-        case 'Palette':
-          return <Palette className="h-4 w-4 text-pink-500" />
-        case 'Move3D':
-          return <Move3D className="h-4 w-4 text-orange-500" />
-        case 'Circle':
-          return <Circle className="h-4 w-4 text-cyan-500" />
-        case 'Tag':
-          return <Tag className="h-4 w-4 text-indigo-500" />
-        case 'LayoutGrid':
-          return <LayoutGrid className="h-4 w-4 text-emerald-500" />
-        case 'Sparkles':
-          return <Sparkles className="h-4 w-4 text-yellow-500" />
-        case 'Link':
-          return <Type className="h-4 w-4 text-blue-600" />
-        case 'Content':
-          return <FileText className="h-4 w-4 text-slate-600" />
-        default:
-          return <Settings className="h-4 w-4 text-gray-500" />
-      }
-    }
-
-    return (
-      <div
-        key={section.group}
-        className="mb-3 overflow-hidden rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/50 shadow-sm transition-shadow duration-200 hover:shadow-md"
-      >
-        <button
-          onClick={() => toggleSection(section.group)}
-          className="flex w-full items-center justify-between px-3 py-2.5 transition-all duration-200 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50"
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="rounded-lg bg-white p-1 shadow-sm">
-              {getIconComponent(section.icon)}
-            </span>
-            <span className="text-xs font-semibold text-gray-800">
-              {section.group}
-            </span>
-          </div>
-          <ChevronDown
-            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          />
-        </button>
-
-        {isExpanded && (
-          <div className="space-y-3 bg-gradient-to-br from-gray-50/30 to-white p-3 pt-1 duration-200 animate-in slide-in-from-top-2">
-            {section.fields.map(field => renderSmartField(field, tabType))}
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  // Render smart field based on field type
-  const renderSmartField = (
-    field: string,
-    tabType: 'content' | 'style' | 'effects'
-  ) => {
-    switch (field) {
-      case 'text':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Text Content
-            </label>
-            <textarea
-              className="h-20 w-full resize-none rounded-lg border border-gray-300 bg-white px-2 py-2 text-xs"
-              value={selectedContent}
-              onChange={e => {
-                const val = e.target.value
-                setSelectedContent(val)
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el) (el as HTMLElement).textContent = val
-              }}
-              placeholder="Enter your text..."
-            />
-          </div>
-        )
-
-      case 'link':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Link (Optional)
-            </label>
-            <input
-              type="url"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="https://example.com"
-              onChange={e => {
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el && selectedTag === 'a') {
-                  ;(el as HTMLAnchorElement).href = e.target.value
-                }
-              }}
-            />
-          </div>
-        )
-
-      case 'fontFamily':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Font Family
-            </label>
-            <div className="font-dropdown-container relative">
-              <button
-                type="button"
-                onClick={() => setFontDropdownOpen(!fontDropdownOpen)}
-                className="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium hover:border-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <div className="flex items-center space-x-2">
-                  <span
-                    style={{
-                      fontFamily: getSelectedFont().family,
-                      fontSize: '12px',
-                    }}
-                  >
-                    {getSelectedFont().label}
-                  </span>
-                </div>
-                <ChevronDown
-                  className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${fontDropdownOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              {fontDropdownOpen && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg">
-                  {fontOptions.map(font => (
-                    <button
-                      key={font.value}
-                      type="button"
-                      onClick={() => {
-                        updateSelectedStyles({ fontFamily: font.value })
-                        setFontDropdownOpen(false)
-                      }}
-                      className={`w-full border-b border-gray-100 px-3 py-2 text-left last:border-b-0 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none ${
-                        getSelectedFont().value === font.value
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700'
-                      }`}
-                    >
-                      <div
-                        style={{ fontFamily: font.family, fontSize: '13px' }}
-                      >
-                        {font.label}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )
-
-      case 'fontSize':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Font Size
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="range"
-                min="8"
-                max="72"
-                value={
-                  currentStyles.fontSize ? parseInt(currentStyles.fontSize) : 16
-                }
-                className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200"
-                onChange={e =>
-                  updateSelectedStyles({ fontSize: `${e.target.value}px` })
-                }
-              />
-              <input
-                type="number"
-                min="8"
-                max="72"
-                value={
-                  currentStyles.fontSize ? parseInt(currentStyles.fontSize) : 16
-                }
-                className="h-8 w-12 rounded border border-gray-300 bg-white px-1 text-center text-xs"
-                onChange={e =>
-                  updateSelectedStyles({ fontSize: `${e.target.value}px` })
-                }
-              />
-            </div>
-          </div>
-        )
-
-      case 'color':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Text Color
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={currentStyles.color || '#000000'}
-                className="h-8 w-10 cursor-pointer rounded border border-gray-300"
-                onChange={e => updateSelectedStyles({ color: e.target.value })}
-              />
-              <input
-                type="text"
-                value={currentStyles.color || '#000000'}
-                className="h-8 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-xs"
-                onChange={e => updateSelectedStyles({ color: e.target.value })}
-              />
-            </div>
-          </div>
-        )
-
-      case 'backgroundColor':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Background Color
-            </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={currentStyles.backgroundColor || '#ffffff'}
-                className="h-8 w-10 cursor-pointer rounded border border-gray-300"
-                onChange={e =>
-                  updateSelectedStyles({ backgroundColor: e.target.value })
-                }
-              />
-              <input
-                type="text"
-                value={currentStyles.backgroundColor || '#ffffff'}
-                className="h-8 flex-1 rounded-lg border border-gray-300 bg-white px-2 text-xs"
-                onChange={e =>
-                  updateSelectedStyles({ backgroundColor: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        )
-
-      case 'fontWeight':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Font Weight
-            </label>
-            <select
-              value={currentStyles.fontWeight || '400'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ fontWeight: e.target.value as any })
-              }
-            >
-              <option value="400">Regular</option>
-              <option value="500">Medium</option>
-              <option value="600">Semibold</option>
-              <option value="700">Bold</option>
-            </select>
-          </div>
-        )
-
-      case 'textAlign':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Text Alignment
-            </label>
-            <div className="flex gap-1">
-              {['left', 'center', 'right', 'justify'].map(align => (
-                <button
-                  key={align}
-                  onClick={() => updateSelectedStyles({ textAlign: align })}
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs capitalize ${
-                    currentStyles.textAlign === align
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {align}
-                </button>
-              ))}
-            </div>
-          </div>
-        )
-
-      case 'padding':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Padding (Inside Spacing)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={
-                currentStyles.padding ? parseInt(currentStyles.padding) : 0
-              }
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ padding: `${e.target.value}px` })
-              }
-            />
-          </div>
-        )
-
-      case 'margin':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Margin (Outside Spacing)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={currentStyles.margin ? parseInt(currentStyles.margin) : 0}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ margin: `${e.target.value}px` })
-              }
-            />
-          </div>
-        )
-
-      case 'lineHeight':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Line Height
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="3"
-              step="0.1"
-              value={
-                currentStyles.lineHeight
-                  ? parseFloat(currentStyles.lineHeight)
-                  : 1.5
-              }
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ lineHeight: e.target.value })
-              }
-            />
-          </div>
-        )
-
-      case 'letterSpacing':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Letter Spacing
-            </label>
-            <input
-              type="number"
-              min="-2"
-              max="10"
-              step="0.1"
-              value={
-                currentStyles.letterSpacing
-                  ? parseFloat(currentStyles.letterSpacing)
-                  : 0
-              }
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ letterSpacing: `${e.target.value}px` })
-              }
-            />
-          </div>
-        )
-
-      case 'upload':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Image Upload / Replace
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                id="image-upload"
-                onChange={e => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    const reader = new FileReader()
-                    reader.onload = event => {
-                      const doc = iframeRef.current?.contentDocument
-                      if (!doc || !selectedPath) return
-                      const el = resolvePathToElement(doc, selectedPath)
-                      if (el && selectedTag === 'img') {
-                        ;(el as HTMLImageElement).src = event.target
-                          ?.result as string
-                      }
-                    }
-                    reader.readAsDataURL(file)
-                  }
-                }}
-              />
-              <label
-                htmlFor="image-upload"
-                className="flex h-8 flex-1 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white px-3 text-xs hover:bg-gray-50"
-              >
-                📤 Upload Image
-              </label>
-            </div>
-          </div>
-        )
-
-      case 'src':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Image URL (Optional)
-            </label>
-            <input
-              type="url"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="https://example.com/image.jpg"
-              onChange={e => {
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el && selectedTag === 'img') {
-                  ;(el as HTMLImageElement).src = e.target.value
-                }
-              }}
-            />
-          </div>
-        )
-
-      case 'alt':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Alt Text
-            </label>
-            <input
-              type="text"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="Describe the image..."
-              onChange={e => {
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el && selectedTag === 'img') {
-                  ;(el as HTMLImageElement).alt = e.target.value
-                }
-              }}
-            />
-          </div>
-        )
-
-      case 'objectFit':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Image Fit
-            </label>
-            <select
-              value={currentStyles.objectFit || 'cover'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ objectFit: e.target.value as any })
-              }
-            >
-              <option value="contain">Contain</option>
-              <option value="cover">Cover</option>
-              <option value="fill">Fill</option>
-              <option value="none">None</option>
-              <option value="scale-down">Scale Down</option>
-            </select>
-          </div>
-        )
-
-      case 'borderRadius':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Corner Radius
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="50"
-              value={
-                currentStyles.borderRadius
-                  ? parseInt(currentStyles.borderRadius)
-                  : 0
-              }
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-              onChange={e =>
-                updateSelectedStyles({ borderRadius: `${e.target.value}px` })
-              }
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {currentStyles.borderRadius || '0px'}
-            </div>
-          </div>
-        )
-
-      case 'boxShadow':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Shadow
-            </label>
-            <select
-              value={
-                currentStyles.boxShadow && currentStyles.boxShadow !== 'none'
-                  ? 'custom'
-                  : 'none'
-              }
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e => {
-                if (e.target.value === 'none') {
-                  updateSelectedStyles({ boxShadow: 'none' })
-                } else if (e.target.value === 'small') {
-                  updateSelectedStyles({
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  })
-                } else if (e.target.value === 'medium') {
-                  updateSelectedStyles({
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                  })
-                } else if (e.target.value === 'large') {
-                  updateSelectedStyles({
-                    boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
-                  })
-                }
-              }}
-            >
-              <option value="none">No Shadow</option>
-              <option value="small">Small Shadow</option>
-              <option value="medium">Medium Shadow</option>
-              <option value="large">Large Shadow</option>
-            </select>
-          </div>
-        )
-
-      case 'border':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Border
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <input
-                type="number"
-                min="0"
-                max="10"
-                placeholder="Width"
-                value={
-                  currentStyles.borderWidth
-                    ? parseInt(currentStyles.borderWidth)
-                    : 0
-                }
-                className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs"
-                onChange={e =>
-                  updateSelectedStyles({ borderWidth: `${e.target.value}px` })
-                }
-              />
-              <select
-                value={currentStyles.borderStyle || 'solid'}
-                className="h-8 rounded-lg border border-gray-300 bg-white px-2 text-xs"
-                onChange={e =>
-                  updateSelectedStyles({ borderStyle: e.target.value as any })
-                }
-              >
-                <option value="solid">Solid</option>
-                <option value="dashed">Dashed</option>
-                <option value="dotted">Dotted</option>
-              </select>
-              <input
-                type="color"
-                value={currentStyles.borderColor || '#000000'}
-                className="h-8 cursor-pointer rounded border border-gray-300"
-                onChange={e =>
-                  updateSelectedStyles({ borderColor: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        )
-
-      case 'width':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Width
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="800"
-              value={currentStyles.width ? parseInt(currentStyles.width) : 200}
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-              onChange={e =>
-                updateSelectedStyles({ width: `${e.target.value}px` })
-              }
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {currentStyles.width || 'auto'}
-            </div>
-          </div>
-        )
-
-      case 'height':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Height
-            </label>
-            <input
-              type="range"
-              min="50"
-              max="600"
-              value={
-                currentStyles.height ? parseInt(currentStyles.height) : 200
-              }
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-              onChange={e =>
-                updateSelectedStyles({ height: `${e.target.value}px` })
-              }
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {currentStyles.height || 'auto'}
-            </div>
-          </div>
-        )
-
-      case 'label':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Section Label / ID
-            </label>
-            <input
-              type="text"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="Section name..."
-              onChange={e => {
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el) {
-                  el.setAttribute('data-label', e.target.value)
-                }
-              }}
-            />
-          </div>
-        )
-
-      case 'id':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Element ID
-            </label>
-            <input
-              type="text"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="unique-id"
-              onChange={e => {
-                const doc = iframeRef.current?.contentDocument
-                if (!doc || !selectedPath) return
-                const el = resolvePathToElement(doc, selectedPath)
-                if (el) {
-                  ;(el as HTMLElement).id = e.target.value
-                }
-              }}
-            />
-          </div>
-        )
-
-      case 'backgroundImage':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Background Image
-            </label>
-            <input
-              type="url"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              placeholder="https://example.com/bg.jpg"
-              onChange={e => {
-                const value = e.target.value
-                updateSelectedStyles({
-                  backgroundImage: value ? `url(${value})` : 'none',
-                })
-              }}
-            />
-          </div>
-        )
-
-      case 'layout':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Layout
-            </label>
-            <div className="flex gap-1">
-              {[
-                { value: 'flex', label: 'Flex' },
-                { value: 'grid', label: 'Grid' },
-                { value: 'block', label: 'Block' },
-              ].map(layout => (
-                <button
-                  key={layout.value}
-                  onClick={() =>
-                    updateSelectedStyles({ display: layout.value })
-                  }
-                  className={`h-8 flex-1 rounded border border-gray-300 text-xs ${
-                    currentStyles.display === layout.value
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {layout.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )
-
-      case 'justifyContent':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Horizontal Alignment
-            </label>
-            <select
-              value={currentStyles.justifyContent || 'flex-start'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ justifyContent: e.target.value as any })
-              }
-            >
-              <option value="flex-start">Left</option>
-              <option value="center">Center</option>
-              <option value="flex-end">Right</option>
-              <option value="space-between">Space Between</option>
-              <option value="space-around">Space Around</option>
-            </select>
-          </div>
-        )
-
-      case 'alignItems':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Vertical Alignment
-            </label>
-            <select
-              value={currentStyles.alignItems || 'flex-start'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ alignItems: e.target.value as any })
-              }
-            >
-              <option value="flex-start">Top</option>
-              <option value="center">Center</option>
-              <option value="flex-end">Bottom</option>
-              <option value="stretch">Stretch</option>
-            </select>
-          </div>
-        )
-
-      case 'gap':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Spacing (Gap between children)
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="50"
-              value={currentStyles.gap ? parseInt(currentStyles.gap) : 0}
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-              onChange={e =>
-                updateSelectedStyles({ gap: `${e.target.value}px` })
-              }
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {currentStyles.gap || '0px'}
-            </div>
-          </div>
-        )
-
-      case 'opacity':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Opacity
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.1"
-              value={
-                currentStyles.opacity ? parseFloat(currentStyles.opacity) : 1
-              }
-              className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-              onChange={e => updateSelectedStyles({ opacity: e.target.value })}
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              {Math.round(parseFloat(currentStyles.opacity || '1') * 100)}%
-            </div>
-          </div>
-        )
-
-      case 'transform':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Transform
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="mb-1 block text-[9px] text-gray-500">
-                  Rotate (deg)
-                </label>
-                <input
-                  type="range"
-                  min="-180"
-                  max="180"
-                  value={0}
-                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-                  onChange={e =>
-                    updateSelectedStyles({
-                      transform: `rotate(${e.target.value}deg)`,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[9px] text-gray-500">
-                  Scale
-                </label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={1}
-                  className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200"
-                  onChange={e =>
-                    updateSelectedStyles({
-                      transform: `scale(${e.target.value})`,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        )
-
-      case 'filter':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Image Filter
-            </label>
-            <select
-              value="none"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e => {
-                const filterValue =
-                  e.target.value === 'none' ? 'none' : e.target.value
-                updateSelectedStyles({ filter: filterValue })
-              }}
-            >
-              <option value="none">No Filter</option>
-              <option value="blur(2px)">Blur</option>
-              <option value="brightness(1.2)">Bright</option>
-              <option value="contrast(1.2)">High Contrast</option>
-              <option value="grayscale(1)">Grayscale</option>
-              <option value="sepia(1)">Sepia</option>
-              <option value="saturate(1.5)">Saturated</option>
-            </select>
-          </div>
-        )
-
-      case 'hover':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Hover Effects
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="mb-1 block text-[9px] text-gray-500">
-                  Hover Background
-                </label>
-                <input
-                  type="color"
-                  className="h-6 w-full cursor-pointer rounded border border-gray-300"
-                  onChange={e =>
-                    updateHoverStyles({ backgroundColor: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[9px] text-gray-500">
-                  Hover Text
-                </label>
-                <input
-                  type="color"
-                  className="h-6 w-full cursor-pointer rounded border border-gray-300"
-                  onChange={e => updateHoverStyles({ color: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-        )
-
-      case 'transition':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Transition Duration
-            </label>
-            <select
-              value={currentStyles.transitionDuration || '300ms'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({
-                  transitionDuration: e.target.value,
-                  transitionProperty: 'all',
-                  transitionTimingFunction: 'ease-in-out',
-                })
-              }
-            >
-              <option value="150ms">Fast (150ms)</option>
-              <option value="300ms">Normal (300ms)</option>
-              <option value="500ms">Slow (500ms)</option>
-              <option value="1000ms">Very Slow (1s)</option>
-            </select>
-          </div>
-        )
-
-      case 'backdrop':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Backdrop Filter
-            </label>
-            <select
-              value="none"
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e => {
-                const backdropValue =
-                  e.target.value === 'none' ? 'none' : e.target.value
-                updateSelectedStyles({ backdropFilter: backdropValue })
-              }}
-            >
-              <option value="none">No Backdrop</option>
-              <option value="blur(10px)">Blur Background</option>
-              <option value="brightness(0.8)">Darken Background</option>
-              <option value="brightness(1.2)">Brighten Background</option>
-              <option value="saturate(1.5)">Saturate Background</option>
-            </select>
-          </div>
-        )
-
-      case 'overflow':
-        return (
-          <div key={field}>
-            <label className="mb-1 block text-[11px] text-gray-600">
-              Content Overflow
-            </label>
-            <select
-              value={currentStyles.overflow || 'visible'}
-              className="h-8 w-full rounded-lg border border-gray-300 bg-white px-2 text-xs"
-              onChange={e =>
-                updateSelectedStyles({ overflow: e.target.value as any })
-              }
-            >
-              <option value="visible">Visible</option>
-              <option value="hidden">Hidden</option>
-              <option value="scroll">Scroll</option>
-              <option value="auto">Auto</option>
-            </select>
-          </div>
-        )
-
-      default:
-        return null
-    }
-  }
-
-  // Close font dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (fontDropdownOpen) {
-        const target = event.target as Element
-        if (!target.closest('.font-dropdown-container')) {
-          setFontDropdownOpen(false)
-        }
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [fontDropdownOpen])
-
-  // Generate preview thumbnails for pages
-  const generatePagePreview = async (pageHtml: string, pageId: string) => {
-    try {
-      // target thumbnail width for sidebar (approx)
-      const desiredThumbWidth = 260
-
-      // helper to capture a document body fully and scale down to thumbnail width
-      const captureDocBody = async (bodyEl: HTMLElement) => {
-        // measure full content size
-        const rect = bodyEl.getBoundingClientRect()
-        const contentWidth =
-          Math.max(bodyEl.scrollWidth, rect.width || 0) || 800
-        const contentHeight =
-          Math.max(bodyEl.scrollHeight, rect.height || 0) || 600
-
-        // compute a safe scale so html2canvas renders at an appropriate resolution
-        const scale = Math.max(
-          0.1,
-          Math.min(1, desiredThumbWidth / contentWidth)
-        )
-
-        const canvas = await html2canvas(bodyEl, {
-          width: Math.round(contentWidth),
-          height: Math.round(contentHeight),
-          scale,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-        })
-
-        // If canvas is still wider than desired, downscale to exact width to guarantee fit
-        if (canvas.width > desiredThumbWidth) {
-          const downscale = desiredThumbWidth / canvas.width
-          const off = document.createElement('canvas')
-          off.width = Math.round(canvas.width * downscale)
-          off.height = Math.round(canvas.height * downscale)
-          const ctx = off.getContext('2d')
-          if (ctx) ctx.drawImage(canvas, 0, 0, off.width, off.height)
-          return off.toDataURL('image/jpeg', 0.8)
-        }
-
-        return canvas.toDataURL('image/jpeg', 0.8)
-      }
-
-      // If this is the current page, capture from the main iframe
-      if (pageId === currentPage?.id && iframeRef.current?.contentDocument) {
-        const mainDoc = iframeRef.current.contentDocument
-        const thumb = await captureDocBody(mainDoc!.body as HTMLElement)
-        setPagePreviews(prev => ({ ...prev, [pageId]: thumb }))
-        return
-      }
-
-      // For non-current pages, create a temporary iframe with the compiled HTML
-      const transformedData = template.dataTransform
-        ? template.dataTransform(liveData)
-        : liveData
-      const compiledHtml = Mustache.render(pageHtml, transformedData)
-
-      const tempIframe = document.createElement('iframe')
-      // set the iframe large enough to render the full layout
-      tempIframe.style.width = '1200px'
-      tempIframe.style.height = '900px'
-      tempIframe.style.position = 'absolute'
-      tempIframe.style.left = '-9999px'
-      tempIframe.style.top = '-9999px'
-      tempIframe.sandbox.add('allow-same-origin')
-
-      document.body.appendChild(tempIframe)
-
-      const doc = tempIframe.contentDocument
-      if (!doc) return
-
-      // Write the compiled HTML with styles
-      const fullHtml = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <style>
-              ${template.sharedCss || ''}
-              body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-            </style>
-          </head>
-          <body>
-            ${compiledHtml}
-          </body>
-        </html>
-      `
-
-      doc.open()
-      doc.write(fullHtml)
-      doc.close()
-
-      // Wait for content to load and fonts to render
-      await new Promise(resolve => setTimeout(resolve, 800))
-
-      // Capture the full body and scale down
-      const thumbData = await captureDocBody(doc.body as HTMLElement)
-
-      // Clean up
-      document.body.removeChild(tempIframe)
-
-      // Update state
-      setPagePreviews(prev => ({ ...prev, [pageId]: thumbData }))
-    } catch (error) {
-      console.error('Failed to generate page preview:', error)
-    }
-  }
-
-  // Refresh preview for current page when changes are made
-  const refreshCurrentPagePreview = () => {
-    if (currentPage?.id) {
-      generatePagePreview(currentPage.html, currentPage.id)
-    }
-  }
-
-  // Refresh all page previews
-  const refreshAllPreviews = () => {
-    pages.forEach(page => {
-      generatePagePreview(page.html, page.id)
-    })
-  }
-
-  // Function to get current computed styles of selected element
-  const getCurrentElementStyles = (
-    element: HTMLElement
-  ): Record<string, string> => {
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return {}
-    const iframeWindow = iframeRef.current?.contentWindow
-    if (!iframeWindow) return {}
-
-    const computedStyles = iframeWindow.getComputedStyle(element)
-    return {
-      // Typography
-      color: element.style.color || rgbToHex(computedStyles.color) || '#000000',
-      fontSize: element.style.fontSize || computedStyles.fontSize,
-      fontFamily: element.style.fontFamily || computedStyles.fontFamily,
-      fontWeight: element.style.fontWeight || computedStyles.fontWeight,
-      lineHeight: element.style.lineHeight || computedStyles.lineHeight,
-      letterSpacing:
-        element.style.letterSpacing || computedStyles.letterSpacing,
-      // Dimensions
-      width:
-        element.style.width ||
-        (computedStyles.width !== 'auto' ? computedStyles.width : ''),
-      height:
-        element.style.height ||
-        (computedStyles.height !== 'auto' ? computedStyles.height : ''),
-      minWidth: element.style.minWidth || computedStyles.minWidth,
-      minHeight: element.style.minHeight || computedStyles.minHeight,
-      maxWidth: element.style.maxWidth || computedStyles.maxWidth,
-      maxHeight: element.style.maxHeight || computedStyles.maxHeight,
-      // Position & Display
-      display: element.style.display || computedStyles.display,
-      position: element.style.position || computedStyles.position,
-      zIndex: element.style.zIndex || computedStyles.zIndex,
-      overflow: element.style.overflow || computedStyles.overflow,
-      // Spacing
-      marginTop: element.style.marginTop || computedStyles.marginTop,
-      marginRight: element.style.marginRight || computedStyles.marginRight,
-      marginBottom: element.style.marginBottom || computedStyles.marginBottom,
-      marginLeft: element.style.marginLeft || computedStyles.marginLeft,
-      paddingTop: element.style.paddingTop || computedStyles.paddingTop,
-      paddingRight: element.style.paddingRight || computedStyles.paddingRight,
-      paddingBottom:
-        element.style.paddingBottom || computedStyles.paddingBottom,
-      paddingLeft: element.style.paddingLeft || computedStyles.paddingLeft,
-      // Background & Border
-      backgroundColor:
-        element.style.backgroundColor ||
-        rgbToHex(computedStyles.backgroundColor) ||
-        '#ffffff',
-      borderWidth: element.style.borderWidth || computedStyles.borderWidth,
-      borderRadius: element.style.borderRadius || computedStyles.borderRadius,
-      borderColor:
-        element.style.borderColor ||
-        rgbToHex(computedStyles.borderColor) ||
-        '#000000',
-      borderStyle: element.style.borderStyle || computedStyles.borderStyle,
-      // Effects
-      boxShadow: element.style.boxShadow || computedStyles.boxShadow,
-      objectFit: element.style.objectFit || computedStyles.objectFit,
-    }
-  }
-
-  // Helper function to convert RGB to Hex for color inputs
-  const rgbToHex = (rgb: string): string => {
-    if (!rgb || rgb === 'transparent' || rgb === 'rgba(0, 0, 0, 0)')
-      return '#ffffff'
-    if (rgb.startsWith('#')) return rgb
-    const match = rgb.match(/\d+/g)
-    if (!match || match.length < 3) return '#ffffff'
-    const [r, g, b] = match.map(Number)
-    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('')
-  }
-  // Keep a ref to the previously hovered element so we can remove the attribute cleanly
-  const prevHoveredElRef = useRef<Element | null>(null)
-  useEffect(() => {
-    const doc = iframeRef.current?.contentDocument
-    // If iframe not ready, just clear any previous hover attr and wait
-    if (!doc) {
-      if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
-        prevHoveredElRef.current.removeAttribute('data-editor-hover')
-        prevHoveredElRef.current = null
-      }
-      return
-    }
-
-    // Helper to resolve a path like '0.2.1' into an element under body
-    const resolve = (d: Document, path: string) => {
-      if (!path) return null
-      const parts = path
-        .split('.')
-        .map(n => parseInt(n, 10))
-        .filter(n => !Number.isNaN(n))
-      let cursor: Element = d.body
-      for (const i of parts) {
-        if (!cursor.children[i]) return null
-        cursor = cursor.children[i]
-      }
-      return cursor as Element
-    }
-
-    // Remove attribute from previous hovered element (if any)
-    if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
-      prevHoveredElRef.current.removeAttribute('data-editor-hover')
-      prevHoveredElRef.current = null
-    }
-
-    // If there's no hovered path or it's the same as the selected path, don't set hover
-    if (!hoveredPath || (selectedPath && hoveredPath === selectedPath)) return
-
-    const el = resolve(doc, hoveredPath)
-    if (el) {
-      try {
-        el.setAttribute('data-editor-hover', 'true')
-        prevHoveredElRef.current = el
-      } catch (e) {
-        // ignore cross-origin or other DOM errors
-      }
-    }
-
-    // Cleanup when hoveredPath changes or on unmount
-    return () => {
-      if (prevHoveredElRef.current && prevHoveredElRef.current.isConnected) {
-        prevHoveredElRef.current.removeAttribute('data-editor-hover')
-        prevHoveredElRef.current = null
-      }
-    }
-  }, [hoveredPath, selectedPath, iframeRef])
   const [pages, setPages] = useState<IframePage[]>(template.pages)
   const currentPage = pages[currentPageIndex]
-
-  // Use ref to store the latest pages without causing re-renders
-  const pagesRef = useRef<IframePage[]>(pages)
-  useEffect(() => {
-    pagesRef.current = pages
-  }, [pages])
-
-  // Generate dynamic pages using pageGenerator if available
-  useEffect(() => {
-    console.log('🔄 Page generation triggered with data:', {
-      hasPageGenerator: !!template.pageGenerator,
-      catalogueExists: !!liveData.catalogue,
-      productsCount: liveData.catalogue?.products?.length || 0,
-      templateId: template.id,
-    })
-
-    if (template.pageGenerator) {
-      const generatedPages = template.pageGenerator(liveData, template.pages)
-      console.log(
-        '📄 Generated pages:',
-        generatedPages.map(p => ({ id: p.id, name: p.name }))
-      )
-      setPages(generatedPages)
-    } else {
-      console.log('📄 Using base template pages')
-      setPages(template.pages)
-    }
-  }, [
-    template.id,
-    template.pageGenerator,
-    liveData, // Watch entire liveData object for changes
-    JSON.stringify(liveData.catalogue?.products), // Deep watch products array
-  ])
-
-  // Auto-collapse left tab when element is selected (except for layers tab)
-  useEffect(() => {
-    if (selectedPath && activeLeftTab && activeLeftTab !== 'layers') {
-      setActiveLeftTab(null)
-    }
-  }, [selectedPath, activeLeftTab])
-
-  // Detect element type when selection changes
-  useEffect(() => {
-    if (selectedPath && selectedTag) {
-      const elementType = detectElementType(selectedTag)
-      setSelectedElementType(elementType)
-
-      // Auto-expand first section of each tab
-      const config =
-        ELEMENT_UI_CONFIG[elementType as keyof typeof ELEMENT_UI_CONFIG] ||
-        ELEMENT_UI_CONFIG.default
-
-      // Expand all sections by default for better user experience
-      const allSections: Record<string, boolean> = {}
-      config.content.forEach(section => {
-        allSections[section.group] = true
-      })
-      config.style.forEach(section => {
-        allSections[section.group] = true
-      })
-      config.effects?.forEach(section => {
-        allSections[section.group] = true
-      })
-
-      setExpandedSections(allSections)
-    }
-  }, [selectedPath, selectedTag])
-
-  // Generate previews when pages change
-  useEffect(() => {
-    pages.forEach(page => {
-      if (!pagePreviews[page.id]) {
-        generatePagePreview(page.html, page.id)
-      }
-    })
-  }, [pages.length, pagePreviews]) // Depend on page count and previews state
-
-  // Refresh current page preview when style mutations change
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      refreshCurrentPagePreview()
-    }, 1000) // Debounce to avoid too frequent updates
-
-    return () => clearTimeout(timeoutId)
-  }, [styleMutations])
-
-  // Refresh current page preview when live data changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      refreshCurrentPagePreview()
-    }, 1000) // Debounce to avoid too frequent updates
-
-    return () => clearTimeout(timeoutId)
-  }, [liveData])
-
-  // Refresh preview when current page changes
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      refreshCurrentPagePreview()
-    }, 1500) // Wait a bit longer for page transition to complete
-
-    return () => clearTimeout(timeoutId)
-  }, [currentPageIndex])
-
-  // Database persistence
-  const [isSaving, setIsSaving] = useState(false)
-  const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Track if iframe content has been modified (DOM changes)
-  const [isDirty, setIsDirty] = useState(false)
-  const iframeContentRef = useRef<string>('') // Store the actual HTML from iframe
-
-  // Save status: 'saved' | 'saving' | 'unsaved' | 'error'
-  const [saveStatus, setSaveStatus] = useState<
-    'saved' | 'saving' | 'unsaved' | 'error'
-  >('saved')
-  const lastChangeTimeRef = useRef<number>(Date.now())
-
-  // Function to capture current iframe HTML (including all user edits)
-  const captureIframeHTML = (): string => {
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return ''
-
-    // Clone the body to avoid modifying the live DOM
-    const bodyClone = doc.body.cloneNode(true) as HTMLElement
-
-    // Remove editor-specific attributes that shouldn't be saved
-    bodyClone
-      .querySelectorAll('[data-editor-selected], [data-editor-hover]')
-      .forEach(el => {
-        el.removeAttribute('data-editor-selected')
-        el.removeAttribute('data-editor-hover')
-        el.removeAttribute('contenteditable')
-      })
-
-    // Remove editor-specific style tags
-    const editorStyles = bodyClone.querySelectorAll(
-      '#editor-interaction-styles, #editor-hover-styles'
-    )
-    editorStyles.forEach(style => style.remove())
-
-    return bodyClone.innerHTML
-  }
-
-  // Function to extract CSS from iframe
-  const captureIframeCSS = (): string => {
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return ''
-
-    const styles: string[] = []
-    doc
-      .querySelectorAll(
-        'style:not(#editor-interaction-styles):not(#editor-hover-styles)'
-      )
-      .forEach(styleEl => {
-        styles.push(styleEl.textContent || '')
-      })
-
-    return styles.join('\n')
-  }
-
-  // 🔥 NEW: Assign unique data-id to elements that don't have one
-  const assignDataIds = () => {
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return
-
-    let counter = 0
-    const walk = (el: Element | null) => {
-      // Null check
-      if (!el || !el.tagName) return
-
-      // Skip script, style, svg elements
-      if (['SCRIPT', 'STYLE', 'SVG', 'PATH'].includes(el.tagName)) return
-
-      // Assign ID if not present
-      if (!el.getAttribute('data-id')) {
-        el.setAttribute('data-id', `el-${Date.now()}-${counter++}`)
-      }
-
-      // Also mark as editable if it's a text container
-      const isTextElement = [
-        'H1',
-        'H2',
-        'H3',
-        'H4',
-        'H5',
-        'H6',
-        'P',
-        'SPAN',
-        'A',
-        'LI',
-        'TD',
-        'TH',
-        'LABEL',
-        'BUTTON',
-      ].includes(el.tagName)
-      if (isTextElement && !el.querySelector('img, svg')) {
-        el.setAttribute('data-editable', 'true')
-      }
-
-      // Recurse to children
-      Array.from(el.children).forEach(walk)
-    }
-
-    walk(doc.body)
-  }
-
-  // Save function to persist data to database
-  const saveToDatabase = async () => {
-    if (!catalogueId || isSaving) return
-
-    setIsSaving(true)
-    setSaveStatus('saving')
-
-    try {
-      // Capture the ACTUAL HTML from iframe (with all user edits)
-      const capturedHTML = captureIframeHTML()
-      const capturedCSS = captureIframeCSS()
-
-      console.log('💾 Saving to database...')
-      console.log('📄 Captured HTML length:', capturedHTML.length, 'chars')
-      console.log(
-        '🎨 Style mutations:',
-        Object.keys(styleMutations).length,
-        'elements'
-      )
-      console.log('📊 Live data keys:', Object.keys(liveData))
-
-      // Update the current page with captured HTML (use ref to avoid re-render)
-      const updatedPages = pagesRef.current.map((page, idx) => {
-        if (idx === currentPageIndex) {
-          return {
-            ...page,
-            html: capturedHTML,
-            css: capturedCSS,
-            updatedAt: new Date(),
-          }
-        }
-        return page
-      })
-
-      const editorState = {
-        liveData,
-        styleMutations,
-        templateId: template.id,
-        pages: updatedPages, // Save updated HTML, not original template
-        currentPageIndex,
-        userZoom,
-        showGrid,
-        lastSaved: new Date().toISOString(),
-      }
-
-      const response = await fetch(`/api/catalogues/${catalogueId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          settings: {
-            iframeEditor: editorState,
-          },
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save editor state')
-      }
-
-      // ✅ FIX: Only update pagesRef, NOT pages state to prevent re-render/blink
-      // The pages state will be synced when user switches pages
-      pagesRef.current = updatedPages
-
-      setLastSaved(new Date())
-      setIsDirty(false)
-      setSaveStatus('saved')
-      onSaveSuccess?.()
-
-      console.log('✅ Save successful!')
-    } catch (error) {
-      console.error('❌ Error saving editor state:', error)
-      setSaveStatus('error')
-      onSaveError?.(error instanceof Error ? error.message : 'Failed to save')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  // Improved auto-save with debouncing - only save after user stops editing
-  const scheduleAutoSave = () => {
-    if (!autoSave || !catalogueId || previewMode) return
-
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-    }
-
-    // Mark as unsaved
-    setSaveStatus('unsaved')
-    lastChangeTimeRef.current = Date.now()
-
-    // Schedule save after inactivity period
-    saveTimeoutRef.current = setTimeout(() => {
-      // Only save if there have been no changes for the full interval
-      const timeSinceLastChange = Date.now() - lastChangeTimeRef.current
-      if (timeSinceLastChange >= autoSaveInterval) {
-        saveToDatabase()
-      }
-    }, autoSaveInterval)
-  }
-
-  // Load initial data from database
-  useEffect(() => {
-    const loadInitialData = async () => {
-      if (!catalogueId) return
-
-      try {
-        const response = await fetch(`/api/catalogues/${catalogueId}`)
-        if (!response.ok) return
-
-        const data = await response.json()
-        const iframeEditorSettings = data.catalogue?.settings?.iframeEditor
-
-        console.log('🔍 IframeEditor - Loading initial data:', {
-          hasIframeEditorSettings: !!iframeEditorSettings,
-          savedTemplateId: iframeEditorSettings?.templateId,
-          currentTemplateId: template.id,
-          hasSavedPages: !!iframeEditorSettings?.pages,
-          savedPageCount: iframeEditorSettings?.pages?.length || 0,
-          freshPageCount: template.pages.length,
-          fullSettings: iframeEditorSettings,
-        })
-
-        if (iframeEditorSettings) {
-          // Load saved editor state
-          if (iframeEditorSettings.liveData && !initialData) {
-            setLiveData(iframeEditorSettings.liveData)
-          }
-          if (iframeEditorSettings.styleMutations && !initialStyleMutations) {
-            setStyleMutations(iframeEditorSettings.styleMutations)
-          }
-
-          // 🔥 FIX: Only load saved pages if they belong to the SAME template
-          // Otherwise, use the fresh template pages to avoid showing wrong template
-          const savedTemplateId = iframeEditorSettings.templateId
-          const currentTemplateId = template.id
-
-          console.log('🔍 IframeEditor - Page loading decision:', {
-            savedTemplateId,
-            currentTemplateId,
-            hasSavedPages: !!iframeEditorSettings.pages,
-            savedPageCount: iframeEditorSettings.pages?.length || 0,
-            templateMatch: savedTemplateId === currentTemplateId,
-          })
-
-          // 🔥 FIX: Only load saved pages if they belong to the SAME template
-          // This prevents old template pages from overlaying on new templates
-          if (
-            iframeEditorSettings.pages &&
-            savedTemplateId === currentTemplateId
-          ) {
-            console.log('✅ Loading saved pages - template matches:', {
-              savedTemplateId,
-              currentTemplateId,
-              pageCount: iframeEditorSettings.pages.length,
-            })
-            setPages(iframeEditorSettings.pages)
-            pagesRef.current = iframeEditorSettings.pages // Keep ref in sync
-          } else if (
-            iframeEditorSettings.pages &&
-            savedTemplateId !== currentTemplateId
-          ) {
-            console.warn('⚠️ Template changed - using fresh template pages:', {
-              savedTemplateId,
-              currentTemplateId,
-              savedPageCount: iframeEditorSettings.pages.length,
-              freshPageCount: template.pages.length,
-            })
-            // Don't load saved pages - they're from a different template!
-            // The template pages will be used from the initial state
-          }
-          // } else {
-          //   console.log('ℹ️ No saved pages found or no template mismatch')
-          // }
-          if (typeof iframeEditorSettings.currentPageIndex === 'number') {
-            setCurrentPageIndex(iframeEditorSettings.currentPageIndex)
-          }
-          if (typeof iframeEditorSettings.userZoom === 'number') {
-            setUserZoom(iframeEditorSettings.userZoom)
-          }
-          if (typeof iframeEditorSettings.showGrid === 'boolean') {
-            setShowGrid(iframeEditorSettings.showGrid)
-          }
-          if (iframeEditorSettings.lastSaved) {
-            setLastSaved(new Date(iframeEditorSettings.lastSaved))
-          }
-        }
-      } catch (error) {
-        console.error('Error loading initial editor data:', error)
-      }
-    }
-
-    loadInitialData()
-  }, [catalogueId]) // Only run when catalogueId changes
-
-  // Trigger auto-save when data changes (debounced)
-  useEffect(() => {
-    if (!previewMode && isDirty) {
-      scheduleAutoSave()
-    }
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [isDirty, liveData, styleMutations, currentPageIndex])
-
-  // Separate effect for when user actively changes these settings
-  useEffect(() => {
-    if (!previewMode && (userZoom !== 1 || showGrid !== false)) {
-      scheduleAutoSave()
-    }
-  }, [userZoom, showGrid])
 
   // Compile current page with Mustache
   const compiledHtml = useMemo(() => {
     const cssBlock = `<style>${template?.sharedCss || ''}\n${currentPage?.css || ''}</style>`
     if (!currentPage) return cssBlock
 
-    // Apply data transformation if template provides one
-    let transformedData = template.dataTransform
-      ? template.dataTransform(liveData)
-      : liveData
-
-    // For product pages, add page-specific products and pagination info
-    if (currentPage.id.startsWith('products-')) {
-      const pageNumber = parseInt(currentPage.id.split('-')[1]) || 1
-      const products = liveData?.catalogue?.products || []
-      const productsPerPage = 3
-      const startIdx = (pageNumber - 1) * productsPerPage
-      const pageProducts = products.slice(startIdx, startIdx + productsPerPage)
-      const totalProductPages = Math.ceil(products.length / productsPerPage)
-
-      transformedData = {
-        ...transformedData,
-        pageProducts,
-        pageNumber,
-        totalProductPages,
-      }
-    }
-
     if (template.engine === 'mustache') {
-      const rendered = Mustache.render(currentPage.html, transformedData)
+      const rendered = Mustache.render(currentPage.html, liveData)
       return `${cssBlock}\n${rendered}`
     }
     // For now, default to Mustache until Handlebars adapter lands
-    const rendered = Mustache.render(currentPage.html, transformedData)
+    const rendered = Mustache.render(currentPage.html, liveData)
     return `${cssBlock}\n${rendered}`
   }, [template, currentPage, liveData])
 
-  // Compile HTML for all pages (used in preview mode)
-  const allPagesCompiledHtml = useMemo(() => {
-    return pages.map(page => {
-      const cssBlock = `<style>${template?.sharedCss || ''}\n${page?.css || ''}</style>`
-
-      // Apply data transformation if template provides one
-      let transformedData = template.dataTransform
-        ? template.dataTransform(liveData)
-        : liveData
-
-      // For product pages, add page-specific products and pagination info
-      if (page.id.startsWith('products-')) {
-        const pageNumber = parseInt(page.id.split('-')[1]) || 1
-        const products = liveData?.catalogue?.products || []
-        const productsPerPage = 3
-        const startIdx = (pageNumber - 1) * productsPerPage
-        const pageProducts = products.slice(
-          startIdx,
-          startIdx + productsPerPage
-        )
-        const totalProductPages = Math.ceil(products.length / productsPerPage)
-
-        transformedData = {
-          ...transformedData,
-          pageProducts,
-          pageNumber,
-          totalProductPages,
-        }
-      }
-
-      if (template.engine === 'mustache') {
-        const rendered = Mustache.render(page.html, transformedData)
-        return `${cssBlock}\n${rendered}`
-      }
-      // For now, default to Mustache until Handlebars adapter lands
-      const rendered = Mustache.render(page.html, transformedData)
-      return `${cssBlock}\n${rendered}`
-    })
-  }, [template, pages, liveData]) // Track the last rendered HTML to prevent unnecessary iframe reloads
-  const lastRenderedHtmlRef = useRef<string>('')
-
   useEffect(() => {
     if (!iframeRef.current) return
-
-    // ✅ OPTIMIZATION: Only update srcdoc if HTML actually changed
-    // This prevents blinking during auto-save when HTML hasn't changed
-    if (lastRenderedHtmlRef.current === compiledHtml) {
-      console.log('⏭️ Skipping iframe update - HTML unchanged')
-      return
-    }
-
-    lastRenderedHtmlRef.current = compiledHtml
-    console.log('🔄 Updating iframe with new HTML')
-
     // Write to iframe via srcdoc for sandboxed DOM
     iframeRef.current.srcdoc = compiledHtml
     // Reapply style mutations when content updates
     const applyMutations = () => {
       const doc = iframeRef.current?.contentDocument
-      if (!doc || !doc.body) return
-
-      // 🔥 Step 1: Assign data-id attributes to all elements
-      assignDataIds()
-
-      // Step 2: Apply saved style mutations
+      if (!doc) return
       Object.entries(styleMutations).forEach(([path, styles]) => {
         const el = resolvePathToElement(doc, path)
         if (el) Object.assign((el as HTMLElement).style, styles)
       })
-
-      // Step 3: Mark ready for PDF if needed
-      if (doc.body) {
-        doc.body.setAttribute('data-pdf-ready', 'true')
-      }
-
-      // 🔥 Step 4: Set up MutationObserver to track DOM changes
-      const observer = new MutationObserver(mutations => {
-        // Filter out our own editor changes (data-editor-* attributes)
-        const hasRealChanges = mutations.some(mutation => {
-          if (mutation.type === 'attributes') {
-            const attrName = mutation.attributeName
-            return (
-              attrName &&
-              !attrName.startsWith('data-editor-') &&
-              attrName !== 'contenteditable'
-            )
-          }
-          return true // characterData or childList changes are real
-        })
-
-        if (hasRealChanges) {
-          setIsDirty(true)
-        }
-      })
-
-      // Observe the entire iframe body for changes
-      observer.observe(doc.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        characterData: true,
-        attributeOldValue: true,
-        characterDataOldValue: true,
-      })
-
-      // 🎯 Step 5: Simple drag system ready (no initialization needed)
-
-      // 🔥 Step 6: Notify parent that iframe is fully loaded and ready
-      console.log('✅ IframeEditor: Calling onIframeReady callback')
-      onIframeReady?.()
-
-      // Refresh preview for current page after iframe is ready
-      setTimeout(() => {
-        refreshCurrentPagePreview()
-      }, 500)
-
-      // Store observer cleanup
-      return () => observer.disconnect()
+      // Mark ready for PDF if needed
+      doc.body.setAttribute('data-pdf-ready', 'true')
     }
     // Wait a tick for DOM to be ready
-    const timeoutId = setTimeout(() => {
-      console.log(
-        '🔧 IframeEditor: Applying mutations and setting up observers'
-      )
-      applyMutations()
-    }, 50)
-    return () => clearTimeout(timeoutId)
-  }, [compiledHtml, styleMutations, onIframeReady])
-
-  // Render all pages in preview mode
-  useEffect(() => {
-    if (!previewMode) return
-
-    allPagesCompiledHtml.forEach((pageHtml, index) => {
-      const iframe = iframeRefs.current[index]
-      if (!iframe) return
-
-      // Write to iframe via srcdoc for sandboxed DOM
-      iframe.srcdoc = pageHtml
-
-      // Wait for iframe to load, then apply any necessary setup
-      const applySetup = () => {
-        const doc = iframe.contentDocument
-        if (!doc || !doc.body) return
-
-        // Mark ready for PDF if needed
-        if (doc.body) {
-          doc.body.setAttribute('data-pdf-ready', 'true')
-        }
-
-        // Apply style mutations if any exist for this page
-        Object.entries(styleMutations).forEach(([path, styles]) => {
-          const el = resolvePathToElement(doc, path)
-          if (el) Object.assign((el as HTMLElement).style, styles)
-        })
-      }
-
-      // Wait a tick for DOM to be ready
-      setTimeout(() => {
-        applySetup()
-      }, 50)
-    })
-  }, [allPagesCompiledHtml, previewMode, styleMutations])
+    setTimeout(applyMutations, 50)
+  }, [compiledHtml])
 
   // Inject interaction styles (disable outlines; we render overlay rectangles)
   const ensureInteractionStyleTag = () => {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    let tag = doc.getElementById(
-      'editor-interaction-styles'
-    ) as HTMLStyleElement | null
+    let tag = doc.getElementById('editor-interaction-styles') as HTMLStyleElement | null
     if (!tag) {
       tag = doc.createElement('style')
       tag.id = 'editor-interaction-styles'
@@ -2562,26 +189,18 @@ export default function IframeEditor({
       if (container) container.appendChild(tag)
     }
     tag.textContent = `
-      /* Remove focus ring from contenteditable elements completely */
-      *[contenteditable]:focus,
-      *[contenteditable]:focus-visible,
-      [data-editor-selected="true"],
-      [data-editor-hover="true"] {
-        outline: none !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-      
-      /* Prevent user selection to avoid accidental text selection */
       [data-editor-hover="true"],
-      [data-editor-selected="true"] {
-        user-select: none;
-      }
+      [data-editor-selected="true"] { outline: none !important; box-shadow: none !important; }
+      
+      /* Hide element borders while hovered/selected in editor to avoid double lines */
+      [data-editor-hover="true"],
+      [data-editor-selected="true"] { border-color: transparent !important; }
+      /* Tailwind ring utilities sometimes add pseudo-element ring; neutralize them */
+      [data-editor-hover="true"],
+      [data-editor-selected="true"] { --tw-ring-color: transparent !important; --tw-ring-offset-shadow: 0 0 #0000 !important; --tw-ring-shadow: 0 0 #0000 !important; }
     `
   }
-  useEffect(() => {
-    ensureInteractionStyleTag()
-  }, [compiledHtml])
+  useEffect(() => { ensureInteractionStyleTag() }, [compiledHtml])
 
   // Reset page index when template changes to avoid out-of-bound page selection
   useEffect(() => {
@@ -2595,24 +214,6 @@ export default function IframeEditor({
     setCurrentPageIndex(0)
     clearSelection()
   }, [template?.id])
-
-  // Sync pages state from pagesRef when user switches pages with smooth transition
-  // This ensures saved changes persist across page navigation with fade animation
-  useEffect(() => {
-    // Only sync if pagesRef has different content than pages state
-    if (pagesRef.current !== pages) {
-      // Start fade out
-      setIsPageTransitioning(true)
-
-      // Wait for fade out, then update pages and fade in
-      const timer = setTimeout(() => {
-        setPages([...pagesRef.current])
-        setIsPageTransitioning(false)
-      }, 200) // 200ms fade out, then fade in
-
-      return () => clearTimeout(timer)
-    }
-  }, [currentPageIndex])
 
   const onInputChange = (path: string, value: string) => {
     setLiveData(prev => {
@@ -2629,17 +230,6 @@ export default function IframeEditor({
       return next
     })
   }
-
-  // Update liveData when initialData prop changes
-  useEffect(() => {
-    if (initialData) {
-      console.log('📥 Updating liveData from initialData prop:', {
-        hasProducts: !!initialData.catalogue?.products,
-        productsCount: initialData.catalogue?.products?.length || 0,
-      })
-      setLiveData(initialData)
-    }
-  }, [initialData])
 
   // Propagate liveData changes to parent if requested
   useEffect(() => {
@@ -2665,142 +255,42 @@ export default function IframeEditor({
     if (!registerEditorControls) return
     const controls = {
       undo: () => {
-        console.log(
-          '🔄 UNDO called - historyIndex:',
-          htmlHistoryIndex,
-          'historyLength:',
-          htmlHistory.length
-        )
-        if (htmlHistoryIndex <= 0) {
-          console.log('⚠️ Cannot undo - at start of history')
-          return
-        }
-
-        isRestoringHistory.current = true
-        const doc = iframeRef.current?.contentDocument
-        if (!doc || !doc.body) return
-
-        const previousHtml = htmlHistory[htmlHistoryIndex - 1]
-        console.log(
-          '✅ Restoring previous state from index:',
-          htmlHistoryIndex - 1
-        )
-        doc.body.innerHTML = previousHtml
-        setHtmlHistoryIndex(prev => prev - 1)
-
-        // Clear selection as paths may have changed
-        setSelectedPath(null)
-
-        setTimeout(() => {
-          isRestoringHistory.current = false
-        }, 100)
+        if (pastMutations.length === 0) return
+        const previous = pastMutations[pastMutations.length - 1]
+        setPastMutations(p => p.slice(0, p.length - 1))
+        setFutureMutations(f => [styleMutations, ...f])
+        setStyleMutations(previous)
       },
       redo: () => {
-        console.log(
-          '🔄 REDO called - historyIndex:',
-          htmlHistoryIndex,
-          'historyLength:',
-          htmlHistory.length
-        )
-        if (htmlHistoryIndex >= htmlHistory.length - 1) {
-          console.log('⚠️ Cannot redo - at end of history')
-          return
-        }
-
-        isRestoringHistory.current = true
-        const doc = iframeRef.current?.contentDocument
-        if (!doc || !doc.body) return
-
-        const nextHtml = htmlHistory[htmlHistoryIndex + 1]
-        console.log('✅ Restoring next state from index:', htmlHistoryIndex + 1)
-        doc.body.innerHTML = nextHtml
-        setHtmlHistoryIndex(prev => prev + 1)
-
-        // Clear selection as paths may have changed
-        setSelectedPath(null)
-
-        setTimeout(() => {
-          isRestoringHistory.current = false
-        }, 100)
+        if (futureMutations.length === 0) return
+        const next = futureMutations[0]
+        setFutureMutations(f => f.slice(1))
+        setPastMutations(p => [...p, styleMutations])
+        setStyleMutations(next)
       },
-      zoomIn: () => setUserZoom(z => Math.min(2, Number((z + 0.1).toFixed(2)))),
-      zoomOut: () =>
-        setUserZoom(z => Math.max(0.5, Number((z - 0.1).toFixed(2)))),
+      zoomIn: () => setUserZoom(z => Math.min(2, Number((z + 0.1).toFixed(2)))) ,
+      zoomOut: () => setUserZoom(z => Math.max(0.5, Number((z - 0.1).toFixed(2)))) ,
       setZoom: (z: number) => setUserZoom(Math.max(0.5, Math.min(2, z))),
       getZoom: () => userZoom,
       toggleGrid: () => setShowGrid(g => !g),
       setGrid: (v: boolean) => setShowGrid(Boolean(v)),
       getGrid: () => showGrid,
-      hasUndo: () => {
-        const canUndo = htmlHistoryIndex > 0
-        return canUndo
-      },
-      hasRedo: () => {
-        const canRedo = htmlHistoryIndex < htmlHistory.length - 1
-        return canRedo
-      },
+      hasUndo: () => pastMutations.length > 0,
+      hasRedo: () => futureMutations.length > 0,
       print: () => {
-        try {
-          iframeRef.current?.contentWindow?.print?.()
-        } catch {}
+        try { iframeRef.current?.contentWindow?.print?.() } catch {}
       },
       exportHTML: () => exportCurrentPageAsHTML(),
       exportJSON: () => exportEditorStateAsJSON(),
-      exportPDF: () => exportAllPagesToPDF(),
-      exportPNG: () => exportCurrentPageAsPNG(),
       // Pages
-      getPages: () => pagesRef.current, // Use ref to get latest pages without re-render
+      getPages: () => pages,
       getCurrentPageIndex: () => currentPageIndex,
-      setCurrentPageIndex: (i: number) =>
-        setCurrentPageIndex(Math.max(0, Math.min(pages.length - 1, i))),
+      setCurrentPageIndex: (i: number) => setCurrentPageIndex(Math.max(0, Math.min(pages.length - 1, i))),
       goPrev: () => setCurrentPageIndex(i => Math.max(0, i - 1)),
       goNext: () => setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1)),
-      // Database persistence
-      saveToDatabase: saveToDatabase,
-      getSaveStatus: () => saveStatus,
-      getLastSaved: () => lastSaved,
-      isDirty: () => isDirty,
     }
     registerEditorControls(controls)
-  }, [
-    registerEditorControls,
-    userZoom,
-    showGrid,
-    pages,
-    currentPageIndex,
-    saveToDatabase,
-    saveStatus,
-    lastSaved,
-    isDirty,
-    htmlHistory,
-    htmlHistoryIndex,
-  ])
-
-  // Save initial HTML to history when iframe loads
-  useEffect(() => {
-    const iframe = iframeRef.current
-    if (!iframe) return
-
-    const saveInitialState = () => {
-      const doc = iframe.contentDocument
-      if (!doc || !doc.body) return
-
-      // Only save if history is empty
-      if (htmlHistory.length === 0) {
-        const initialHtml = doc.body.innerHTML
-        console.log('📝 Saving initial HTML state')
-        setHtmlHistory([initialHtml])
-        setHtmlHistoryIndex(0)
-      }
-    }
-
-    iframe.addEventListener('load', saveInitialState)
-    setTimeout(saveInitialState, 150)
-
-    return () => {
-      iframe.removeEventListener('load', saveInitialState)
-    }
-  }, [compiledHtml, htmlHistory.length])
+  }, [registerEditorControls, userZoom, styleMutations, pastMutations, futureMutations, showGrid, pages, currentPageIndex])
 
   // Selection handling inside iframe (disabled in preview mode)
   useEffect(() => {
@@ -2812,25 +302,13 @@ export default function IframeEditor({
       if (!doc) return
       let target = ev.target as HTMLElement
       if (!target) return
-
-      // Don't handle clicks on drag handles or during dragging
-      if (
-        target.classList.contains('drag-handle') ||
-        target.closest('.dragging') ||
-        doc.querySelector('.dragging')
-      )
-        return
       // Promote selection to parent when clicking near element edges to allow selecting outer containers
       const edgePromote = (start: HTMLElement): HTMLElement => {
         let el: HTMLElement = start
         const margin = 8
         while (el.parentElement && el.parentElement !== doc.body) {
           const r = el.getBoundingClientRect()
-          const nearEdge =
-            ev.clientX - r.left < margin ||
-            r.right - ev.clientX < margin ||
-            ev.clientY - r.top < margin ||
-            r.bottom - ev.clientY < margin
+          const nearEdge = (ev.clientX - r.left < margin) || (r.right - ev.clientX < margin) || (ev.clientY - r.top < margin) || (r.bottom - ev.clientY < margin)
           if (!nearEdge) break
           el = el.parentElement as HTMLElement
         }
@@ -2841,20 +319,16 @@ export default function IframeEditor({
       // Tag the element to enable hover CSS targeting by path
       target.setAttribute('data-editor-path', path)
       // Solid outline for selection; clear previous
-      const prevSel = doc.querySelector(
-        '[data-editor-selected="true"]'
-      ) as HTMLElement | null
+      const prevSel = doc.querySelector('[data-editor-selected="true"]') as HTMLElement | null
       if (prevSel && prevSel !== target) {
         prevSel.removeAttribute('data-editor-selected')
         // Disable inline editing on previously selected element
         prevSel.removeAttribute('contenteditable')
       }
       target.setAttribute('data-editor-selected', 'true')
-      // Set tabindex to -1 to prevent native focus and gray border
-      target.setAttribute('tabindex', '-1')
-      // Don't focus the element to avoid browser's default focus ring
-      // target.setAttribute('contenteditable', 'true')
-      // try { target.focus({ preventScroll: true }) } catch { }
+      // Always enable inline content editing on selection
+      target.setAttribute('contenteditable', 'true')
+      try { target.focus({ preventScroll: true }) } catch {}
       setSelectedPath(path)
       setSelectedTag(target.tagName.toLowerCase())
       setSelectedContent(target.textContent || '')
@@ -2881,9 +355,7 @@ export default function IframeEditor({
     const onMouseLeave = () => {
       const doc = iframe.contentDocument
       if (!doc) return
-      const el = doc.querySelector(
-        '[data-editor-hover="true"]'
-      ) as HTMLElement | null
+      const el = doc.querySelector('[data-editor-hover="true"]') as HTMLElement | null
       if (el) el.removeAttribute('data-editor-hover')
       lastHoverEl = null
       setHoveredPath(null)
@@ -2915,45 +387,19 @@ export default function IframeEditor({
   // Reflect contenteditable state when selection changes
   useEffect(() => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc) {
-      setIsContentEditable(false)
-      setCurrentStyles({})
-      return
-    }
-    const prevSel = doc.querySelector(
-      '[data-editor-selected="true"]'
-    ) as HTMLElement | null
-    if (
-      prevSel &&
-      (!selectedPath || computeElementPath(doc, prevSel) !== selectedPath)
-    ) {
+    if (!doc) { setIsContentEditable(false); return }
+    const prevSel = doc.querySelector('[data-editor-selected="true"]') as HTMLElement | null
+    if (prevSel && (!selectedPath || computeElementPath(doc, prevSel) !== selectedPath)) {
       prevSel.removeAttribute('data-editor-selected')
       prevSel.removeAttribute('contenteditable')
     }
-    if (!selectedPath) {
-      setIsContentEditable(false)
-      setCurrentStyles({})
-      return
-    }
+    if (!selectedPath) { setIsContentEditable(false); return }
     const el = resolvePathToElement(doc, selectedPath) as HTMLElement | null
-    if (!el) {
-      setIsContentEditable(false)
-      setCurrentStyles({})
-      return
-    }
-
-    // Extract current styles from the element
-    const styles = getCurrentElementStyles(el)
-    setCurrentStyles(styles)
-
-    // Set tabindex to -1 to prevent native focus and gray border
-    el.setAttribute('tabindex', '-1')
-    // Don't set contenteditable or focus to avoid browser's default focus ring
-    // const editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true'
-    // if (!editable) el.setAttribute('contenteditable', 'true')
+    if (!el) { setIsContentEditable(false); return }
+    const editable = el.isContentEditable || el.getAttribute('contenteditable') === 'true'
+    if (!editable) el.setAttribute('contenteditable', 'true')
     el.setAttribute('data-editor-selected', 'true')
-    // Don't focus the element to avoid gray border
-    // try { (el as HTMLElement).focus({ preventScroll: true }) } catch { }
+    try { (el as HTMLElement).focus({ preventScroll: true }) } catch {}
     setSelectedTag(el.tagName.toLowerCase())
     setSelectedContent((el as HTMLElement).textContent || '')
     setIsContentEditable(true)
@@ -2969,24 +415,7 @@ export default function IframeEditor({
     }
     const onDrop = (ev: DragEvent) => {
       ev.preventDefault()
-
-      // Check for icon data first
-      const iconData = ev.dataTransfer?.getData('application/x-editor-icon')
-      if (iconData) {
-        try {
-          const { name, weight, svg } = JSON.parse(iconData)
-          const target = ev.target as HTMLElement | null
-          addIconToCanvas(svg, name, target || undefined)
-          return
-        } catch (e) {
-          console.error('Failed to parse icon data:', e)
-        }
-      }
-
-      // Check for element data
-      let type = ev.dataTransfer?.getData('application/x-editor-element') as
-        | PaletteElementType
-        | ''
+      let type = ev.dataTransfer?.getData('application/x-editor-element') as PaletteElementType | ''
       if (!type) {
         const plain = ev.dataTransfer?.getData('text/plain') || ''
         if (plain) type = plain as PaletteElementType
@@ -3017,13 +446,11 @@ export default function IframeEditor({
   }, [compiledHtml, previewMode])
 
   // Apply style mutations to iframe DOM (clear previously applied paths to avoid stale styles)
-  const applyStyleMutationsToIframe = (
-    mutations: Record<string, Partial<CSSStyleDeclaration>>
-  ) => {
+  const applyStyleMutationsToIframe = (mutations: Record<string, Partial<CSSStyleDeclaration>>) => {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
     // Clear previous inline styles for tracked paths
-    lastAppliedPathsRef.current.forEach(path => {
+    lastAppliedPathsRef.current.forEach((path) => {
       const el = resolvePathToElement(doc, path)
       if (el && (el as HTMLElement).style) {
         ;(el as HTMLElement).removeAttribute('style')
@@ -3055,23 +482,17 @@ export default function IframeEditor({
     // Apply to DOM immediately for responsive feedback
     Object.assign((el as HTMLElement).style, updates)
     // Update mutations map
-    setStyleMutations(prev => ({
-      ...prev,
-      [selectedPath]: { ...(prev[selectedPath] || {}), ...updates },
-    }))
+    setStyleMutations(prev => ({ ...prev, [selectedPath]: { ...(prev[selectedPath] || {}), ...updates } }))
   }
 
   const clearSelection = () => {
     setSelectedPath(null)
     setSelectedTag('')
     const doc = iframeRef.current?.contentDocument
-    const prevSel = doc?.querySelector(
-      '[data-editor-selected="true"]'
-    ) as HTMLElement | null
+    const prevSel = doc?.querySelector('[data-editor-selected="true"]') as HTMLElement | null
     if (prevSel) {
       prevSel.removeAttribute('data-editor-selected')
       prevSel.removeAttribute('contenteditable')
-      prevSel.removeAttribute('tabindex')
     }
     setIsContentEditable(false)
   }
@@ -3080,9 +501,7 @@ export default function IframeEditor({
   const ensureHoverStyleTag = () => {
     const doc = iframeRef.current?.contentDocument
     if (!doc) return null
-    let tag = doc.getElementById(
-      'editor-hover-styles'
-    ) as HTMLStyleElement | null
+    let tag = doc.getElementById('editor-hover-styles') as HTMLStyleElement | null
     if (!tag) {
       tag = doc.createElement('style')
       tag.id = 'editor-hover-styles'
@@ -3096,16 +515,12 @@ export default function IframeEditor({
   const rebuildHoverStyles = () => {
     const tag = ensureHoverStyleTag()
     if (!tag) return
-    const rules = Object.entries(hoverStyles)
-      .map(([path, styles]) => {
-        const bg = styles.backgroundColor
-          ? `background-color: ${styles.backgroundColor};`
-          : ''
-        const color = styles.color ? `color: ${styles.color};` : ''
-        if (!bg && !color) return ''
-        return `[data-editor-path="${path}"]:hover { ${bg} ${color} }`
-      })
-      .filter(Boolean)
+    const rules = Object.entries(hoverStyles).map(([path, styles]) => {
+      const bg = styles.backgroundColor ? `background-color: ${styles.backgroundColor};` : ''
+      const color = styles.color ? `color: ${styles.color};` : ''
+      if (!bg && !color) return ''
+      return `[data-editor-path="${path}"]:hover { ${bg} ${color} }`
+    }).filter(Boolean)
     tag.textContent = rules.join('\n')
   }
 
@@ -3113,14 +528,9 @@ export default function IframeEditor({
     rebuildHoverStyles()
   }, [hoverStyles, compiledHtml])
 
-  const updateHoverStyles = (
-    updates: Partial<{ backgroundColor: string; color: string }>
-  ) => {
+  const updateHoverStyles = (updates: Partial<{ backgroundColor: string; color: string }>) => {
     if (!selectedPath) return
-    setHoverStyles(prev => ({
-      ...prev,
-      [selectedPath]: { ...(prev[selectedPath] || {}), ...updates },
-    }))
+    setHoverStyles(prev => ({ ...prev, [selectedPath]: { ...(prev[selectedPath] || {}), ...updates } }))
   }
 
   // Unselect when clicking outside the canvas, except when clicking the right sidebar
@@ -3130,12 +540,9 @@ export default function IframeEditor({
       if (!target) return
       const canvas = canvasWrapperRef.current
       const rightBar = rightSidebarRef.current
-      const leftBar = leftSidebarRef.current
       const insideCanvas = canvas ? canvas.contains(target) : false
       const insideRight = rightBar ? rightBar.contains(target) : false
-      const insideLeft = leftBar ? leftBar.contains(target) : false
-      // Keep selection when clicking inside canvas, right sidebar, or left sidebar
-      if (!insideCanvas && !insideRight && !insideLeft) {
+      if (!insideCanvas && !insideRight) {
         setSelectedPath(null)
       }
     }
@@ -3144,11 +551,7 @@ export default function IframeEditor({
   }, [])
 
   // Export helpers
-  const downloadFile = (
-    filename: string,
-    content: string,
-    mime = 'text/plain'
-  ) => {
+  const downloadFile = (filename: string, content: string, mime = 'text/plain') => {
     const blob = new Blob([content], { type: `${mime};charset=utf-8` })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -3162,11 +565,7 @@ export default function IframeEditor({
 
   const exportCurrentPageAsHTML = () => {
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${compiledHtml}</body></html>`
-    downloadFile(
-      `${template.name}-${currentPage?.name || 'page'}.html`,
-      html,
-      'text/html'
-    )
+    downloadFile(`${template.name}-${currentPage?.name || 'page'}.html`, html, 'text/html')
   }
 
   const exportEditorStateAsJSON = () => {
@@ -3176,169 +575,7 @@ export default function IframeEditor({
       liveData,
       styleMutations,
     }
-    downloadFile(
-      `${template.name}-state.json`,
-      JSON.stringify(data, null, 2),
-      'application/json'
-    )
-  }
-
-  // Export all pages to a single PDF using Playwright (server-side)
-  const exportAllPagesToPDF = async () => {
-    try {
-      const iframe = iframeRef.current
-      if (!iframe || !iframe.contentDocument) {
-        throw new Error('Iframe not ready')
-      }
-
-      const originalPageIndex = currentPageIndex
-      const pagesData: Array<{
-        html: string
-        name: string
-        width?: number
-        height?: number
-      }> = []
-
-      // Get iframe dimensions (canvas size)
-      const iframeWidth = iframe.clientWidth || iframe.offsetWidth || 1200
-      const iframeHeight = iframe.clientHeight || iframe.offsetHeight || 1600
-
-      console.log(`Canvas dimensions: ${iframeWidth}x${iframeHeight}`)
-
-      // Collect HTML from all pages
-      for (let i = 0; i < pages.length; i++) {
-        // Navigate to page
-        setCurrentPageIndex(i)
-
-        // Wait longer for page to render completely
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        const doc = iframe.contentDocument
-        if (!doc || !doc.body) {
-          console.warn(`Skipping page ${i} - document not ready`)
-          continue
-        }
-
-        // Wait for data-pdf-ready attribute
-        let attempts = 0
-        while (!doc.body.getAttribute('data-pdf-ready') && attempts < 10) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          attempts++
-        }
-
-        // Capture the full HTML including styles
-        const html = captureIframeHTML()
-        const css = captureIframeCSS()
-
-        if (!html) {
-          console.warn(`Skipping page ${i} - no HTML content`)
-          continue
-        }
-
-        // Get actual body dimensions from the rendered content
-        const bodyWidth = doc.body.scrollWidth || iframeWidth
-        const bodyHeight = doc.body.scrollHeight || iframeHeight
-
-        // Create complete HTML document
-        const fullHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <style>${css}</style>
-          </head>
-          <body>
-            ${html}
-          </body>
-          </html>
-        `
-
-        pagesData.push({
-          html: fullHtml,
-          name: pages[i].name || `Page ${i + 1}`,
-          width: bodyWidth,
-          height: bodyHeight,
-        })
-      }
-
-      // Restore original page
-      setCurrentPageIndex(originalPageIndex)
-
-      if (pagesData.length === 0) {
-        throw new Error('No pages could be captured for PDF export')
-      }
-
-      // Send to server for PDF generation using Playwright
-      const response = await fetch('/api/export/pdf-pages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          pages: pagesData,
-          catalogueName: template.name,
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response
-          .json()
-          .catch(() => ({ error: 'Unknown error' }))
-        throw new Error(error.error || 'Failed to generate PDF')
-      }
-
-      // Download the PDF
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${template.name}-catalogue.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      console.error('PDF export failed:', error)
-      throw error
-    }
-  }
-
-  // Export current page as PNG
-  const exportCurrentPageAsPNG = async () => {
-    try {
-      const iframe = iframeRef.current
-      if (!iframe || !iframe.contentDocument) {
-        throw new Error('Iframe not ready')
-      }
-
-      const doc = iframe.contentDocument
-      if (!doc || !doc.body) {
-        throw new Error('Document not ready')
-      }
-
-      const canvas = await html2canvas(doc.body, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      })
-
-      canvas.toBlob(blob => {
-        if (!blob) {
-          throw new Error('Failed to create image blob')
-        }
-
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${template.name}-${currentPage?.name || 'page'}.png`
-        a.click()
-        URL.revokeObjectURL(url)
-      }, 'image/png')
-    } catch (error) {
-      console.error('PNG export failed:', error)
-      throw error
-    }
+    downloadFile(`${template.name}-state.json`, JSON.stringify(data, null, 2), 'application/json')
   }
 
   // Utilities: element path by child index
@@ -3356,10 +593,7 @@ export default function IframeEditor({
   }
 
   function resolvePathToElement(doc: Document, path: string): Element | null {
-    const parts = path
-      .split('.')
-      .map(n => parseInt(n, 10))
-      .filter(n => !Number.isNaN(n))
+    const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
     let cursor: Element = doc.body
     for (const idx of parts) {
       if (!cursor.children || !cursor.children[idx]) return null
@@ -3369,10 +603,7 @@ export default function IframeEditor({
   }
 
   // Palette element creation and insertion
-  const createPaletteElement = (
-    doc: Document,
-    type: PaletteElementType
-  ): HTMLElement => {
+  const createPaletteElement = (doc: Document, type: PaletteElementType): HTMLElement => {
     let el: HTMLElement
     switch (type) {
       case 'heading': {
@@ -3384,8 +615,7 @@ export default function IframeEditor({
       }
       case 'paragraph': {
         el = doc.createElement('p')
-        el.textContent =
-          'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+        el.textContent = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
         el.style.fontSize = '14px'
         el.style.lineHeight = '1.6'
         break
@@ -3413,8 +643,7 @@ export default function IframeEditor({
       }
       case 'image': {
         el = doc.createElement('img') as HTMLImageElement
-        ;(el as HTMLImageElement).src =
-          liveData.product?.image || 'https://via.placeholder.com/150'
+        ;(el as HTMLImageElement).src = liveData.product?.image || 'https://via.placeholder.com/150'
         el.style.maxWidth = '100%'
         el.style.display = 'block'
         ;(el as HTMLImageElement).alt = 'Image'
@@ -3461,7 +690,7 @@ export default function IframeEditor({
         el.style.display = 'flex'
         el.style.gap = '12px'
         el.style.alignItems = 'stretch'
-        const cols = [0, 1, 2].map(() => doc.createElement('div'))
+        const cols = [0,1,2].map(() => doc.createElement('div'))
         cols.forEach((c, i) => {
           c.style.flex = '1'
           c.style.border = '1px dashed #d1d5db'
@@ -3521,9 +750,7 @@ export default function IframeEditor({
         el.style.gridTemplateColumns = '120px 1fr'
         el.style.gap = '12px'
         const img = doc.createElement('img') as HTMLImageElement
-        img.src =
-          liveData.product?.image ||
-          'https://via.placeholder.com/120.png?text=Image'
+        img.src = liveData.product?.image || 'https://via.placeholder.com/120.png?text=Image'
         img.style.width = '120px'
         img.style.height = '120px'
         img.style.objectFit = 'cover'
@@ -3558,247 +785,12 @@ export default function IframeEditor({
   }
 
   const addElement = (type: PaletteElementType, containerEl?: HTMLElement) => {
-    // Save state BEFORE adding element
-    saveToHistory()
-
     const doc = iframeRef.current?.contentDocument
     if (!doc) return
-    const target =
-      containerEl ||
-      (selectedPath ? resolvePathToElement(doc, selectedPath) : doc.body)
+    const target = containerEl || (selectedPath ? resolvePathToElement(doc, selectedPath) : doc.body)
     const container = (target as HTMLElement) || doc.body
     const el = createPaletteElement(doc, type)
     container.appendChild(el)
-  }
-
-  // Add icon to canvas
-  const addIconToCanvas = (
-    iconSvg: string,
-    iconName: string,
-    dropTarget?: HTMLElement
-  ) => {
-    // Save state BEFORE adding icon
-    saveToHistory()
-
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return
-
-    // Determine target: use dropTarget if provided, otherwise selected element or body
-    let target: Element | null = null
-    if (dropTarget && dropTarget.ownerDocument === doc) {
-      target = dropTarget
-    } else if (selectedPath) {
-      target = resolvePathToElement(doc, selectedPath)
-    }
-    const container = (target as HTMLElement) || doc.body
-
-    // Create a wrapper span for the icon with better visibility
-    const iconWrapper = doc.createElement('span')
-    iconWrapper.setAttribute('data-element-type', 'icon')
-    iconWrapper.setAttribute('data-icon-name', iconName)
-    iconWrapper.style.cssText = `
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      margin: 4px 8px;
-      cursor: pointer;
-      color: #1f2937;
-      vertical-align: middle;
-    `
-    iconWrapper.className = 'icon-element'
-    iconWrapper.setAttribute('contenteditable', 'false')
-
-    // Try to parse the provided SVG string (expected from Phosphor) and import
-    // the actual SVG element into the iframe document so the real icon shows up.
-    // Fall back to a simple placeholder if parsing/import fails.
-    try {
-      const parsed = new DOMParser().parseFromString(iconSvg, 'image/svg+xml')
-      const svgEl = parsed.querySelector('svg') as SVGElement | null
-      if (svgEl) {
-        // Import the parsed SVG node into the iframe document so it's usable there
-        const imported = doc.importNode(svgEl, true) as SVGElement
-        // Ensure it scales to the wrapper and inherits color
-        try {
-          imported.setAttribute('width', '100%')
-          imported.setAttribute('height', '100%')
-          imported.style.display = 'block'
-          // Make the wrapper control the visible color via `currentColor`.
-          // Many Phosphor icons use `stroke` or `fill` on child paths — ensure
-          // child shapes inherit a visible color by setting missing attributes
-          // to `currentColor` so they pick up the wrapper's `color` style.
-          const shapeSelectors = [
-            'path',
-            'rect',
-            'circle',
-            'ellipse',
-            'line',
-            'polyline',
-            'polygon',
-            'g',
-          ]
-          shapeSelectors.forEach(() => {})
-          const allChildren = Array.from(
-            imported.querySelectorAll('*')
-          ) as Element[]
-          allChildren.forEach(ch => {
-            try {
-              const el = ch as Element
-              const tag = (el.tagName || '').toLowerCase()
-              // Only touch common SVG shape elements
-              if (
-                [
-                  'path',
-                  'rect',
-                  'circle',
-                  'ellipse',
-                  'line',
-                  'polyline',
-                  'polygon',
-                  'g',
-                  'use',
-                ].includes(tag)
-              ) {
-                if (!el.getAttribute('fill'))
-                  el.setAttribute('fill', 'currentColor')
-                if (!el.getAttribute('stroke'))
-                  el.setAttribute('stroke', 'currentColor')
-              }
-            } catch (e) {
-              // ignore any DOM exceptions
-            }
-          })
-        } catch (e) {
-          // ignore setAttribute errors in some environments
-        }
-        // Add an accessible title if missing
-        if (!imported.querySelector('title')) {
-          const t = doc.createElement('title')
-          t.textContent = iconName
-          imported.insertBefore(t, imported.firstChild)
-        }
-        iconWrapper.appendChild(imported)
-      } else {
-        // If the string didn't contain an <svg>, try to build one around path content
-        const inner = extractSVGPath(iconSvg)
-        iconWrapper.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 256 256" fill="currentColor" style="display:block">
-            <title>${iconName}</title>
-            ${inner}
-          </svg>
-        `
-      }
-    } catch (err) {
-      console.error(
-        'Failed to parse icon SVG, falling back to placeholder:',
-        err
-      )
-      iconWrapper.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 256 256" fill="currentColor" style="display:block">
-          <title>${iconName}</title>
-          ${extractSVGPath(iconSvg)}
-        </svg>
-      `
-    }
-
-    container.appendChild(iconWrapper)
-
-    // Auto-select the newly added icon
-    setTimeout(() => {
-      const newPath = computeElementPath(doc, iconWrapper)
-      setSelectedPath(newPath)
-    }, 50)
-  }
-
-  // Helper to extract SVG path from icon SVG string
-  // Helper to extract inner SVG content (paths / groups) from a provided SVG string.
-  // Returns a string suitable for embedding inside an <svg> when parsing the full
-  // SVG element isn't possible. If nothing useful is found it returns a small
-  // circle placeholder so the inserted element remains visible.
-  const extractSVGPath = (svgString: string): string => {
-    if (!svgString)
-      return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
-    try {
-      const parsed = new DOMParser().parseFromString(svgString, 'image/svg+xml')
-      const svg = parsed.querySelector('svg')
-      if (!svg) {
-        // Maybe input was already just inner content
-        const trimmed = svgString.trim()
-        if (trimmed) return trimmed
-        return '<circle cx="128" cy="128" r="80" fill="currentColor" />'
-      }
-      // Collect child nodes (paths, rects, circles, groups, etc.)
-      const children = Array.from(svg.childNodes)
-        .map(n => (n as any).outerHTML || n.textContent)
-        .filter(Boolean)
-        .join('\n')
-      return (
-        children || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
-      )
-    } catch (e) {
-      console.warn('extractSVGPath parse failed:', e)
-      const trimmed = svgString.trim()
-      return (
-        trimmed || '<circle cx="128" cy="128" r="80" fill="currentColor" />'
-      )
-    }
-  }
-
-  // Add image to canvas
-  const addImageToCanvas = (imageSrc: string, imageName: string) => {
-    // Save state BEFORE adding image
-    saveToHistory()
-
-    const doc = iframeRef.current?.contentDocument
-    if (!doc) return
-    const target = selectedPath
-      ? resolvePathToElement(doc, selectedPath)
-      : doc.body
-    const container = (target as HTMLElement) || doc.body
-
-    const img = doc.createElement('img')
-    img.src = imageSrc
-    img.alt = imageName
-    img.setAttribute('data-element-type', 'image')
-    img.setAttribute('data-image-name', imageName)
-    img.style.cssText =
-      'max-width: 200px; height: auto; margin: 8px; border-radius: 8px; cursor: pointer;'
-    img.className = 'image-element'
-
-    container.appendChild(img)
-  }
-
-  // Handle asset upload
-  const handleAssetUpload = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const result = e.target?.result as string
-      if (file.type.startsWith('image/')) {
-        addImageToCanvas(result, file.name)
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
-  // Simple drag handler
-  const handleStartDrag = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const doc = iframeRef.current?.contentDocument
-    if (!doc || !selectedPath) return
-
-    const element = resolvePathToElement(doc, selectedPath) as HTMLElement
-    if (!element) return
-
-    // Ensure element has an ID for tracking
-    if (!element.dataset.id) {
-      element.dataset.id = `element-${Date.now()}`
-    }
-
-    // Start the drag
-    startDrag(element, e.clientX, e.clientY)
   }
 
   // Auto-fit canvas to viewport while preserving A4 aspect ratio (794x1123)
@@ -3826,8 +818,7 @@ export default function IframeEditor({
   }, [userZoom])
 
   const goPrev = () => setCurrentPageIndex(i => Math.max(0, i - 1))
-  const goNext = () =>
-    setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1))
+  const goNext = () => setCurrentPageIndex(i => Math.min(pages.length - 1, i + 1))
 
   // Pages actions
   const addBlankPage = () => {
@@ -3848,13 +839,7 @@ export default function IframeEditor({
     const src = pages[currentPageIndex]
     if (!src) return
     const now = new Date()
-    const copy: IframePage = {
-      ...src,
-      id: `page-${Date.now()}`,
-      name: `${src.name} Copy`,
-      createdAt: now,
-      updatedAt: now,
-    }
+    const copy: IframePage = { ...src, id: `page-${Date.now()}`, name: `${src.name} Copy`, createdAt: now, updatedAt: now }
     setPages(prev => {
       const next = [...prev]
       next.splice(currentPageIndex + 1, 0, copy)
@@ -3870,757 +855,524 @@ export default function IframeEditor({
   }
 
   return (
-    <IconContext.Provider
-      value={{ size: 20, weight: 'regular', color: 'currentColor' }}
-    >
-      <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
-        {/* Left Sidebar: Icon nav + panel */}
-        {!previewMode && (
-          <div
-            className={`flex ${activeLeftTab ? 'w-80' : 'w-20'} flex-shrink-0 transition-all duration-500 ease-in-out`}
-          >
-            {/* Icon column */}
-            <div className="m-2 flex w-16 flex-shrink-0 flex-col items-center space-y-3 rounded-xl bg-white py-2 shadow-lg">
-              {(
-                [
-                  {
-                    id: 'pages',
-                    name: 'Pages',
-                    icon: <FileText className="h-6 w-6" />,
-                  },
-                  {
-                    id: 'layers',
-                    name: 'Layers',
-                    icon: <LayersIcon className="h-6 w-6" />,
-                  },
-                  {
-                    id: 'elements',
-                    name: 'Elements',
-                    icon: <Shapes className="h-6 w-6" />,
-                  },
-                  {
-                    id: 'icons',
-                    name: 'Icons',
-                    icon: <Star className="h-6 w-6" />,
-                  },
-                  {
-                    id: 'text',
-                    name: 'Text',
-                    icon: <Type className="h-6 w-6" />,
-                  },
-                  {
-                    id: 'assets',
-                    name: 'Assets',
-                    icon: <Upload className="h-6 w-6" />,
-                  },
-                ] as const
-              ).map(tab => (
+    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+      {/* Left Sidebar: Icon nav + panel */}
+      {!previewMode && (
+      <div className={`flex ${activeLeftTab ? 'w-80' : 'w-16'} transition-all`}>
+        {/* Icon column */}
+        <div className="w-16 bg-white flex flex-col items-center py-2 m-2 rounded-xl shadow-lg space-y-3">
+          {([
+            { id: 'pages', name: 'Pages', icon: <FileText className="w-6 h-6" /> },
+            { id: 'layers', name: 'Layers', icon: <LayersIcon className="w-6 h-6" /> },
+            { id: 'templates', name: 'Templates', icon: <Palette className="w-6 h-6" /> },
+            { id: 'elements', name: 'Elements', icon: <Shapes className="w-6 h-6" /> },
+            { id: 'icons', name: 'Icons', icon: <Star className="w-6 h-6" /> },
+            { id: 'text', name: 'Text', icon: <Type className="w-6 h-6" /> },
+            { id: 'assets', name: 'Assets', icon: <Upload className="w-6 h-6" /> },
+          ] as const).map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveLeftTab(prev => (prev === (tab.id as any) ? null : (tab.id as any)))}
+              className={`w-16 h-16 flex flex-col items-center justify-center rounded-lg transition-all duration-200 group relative`}
+              title={tab.name}
+            >
+              <div className={`p-2 rounded-xl ${
+                activeLeftTab === (tab.id as any)
+                  ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white mb-1 shadow-md'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md'
+              }`}>
+                {tab.icon}
+              </div>
+              <span className="text-[11px] font-medium leading-tight text-center">{tab.name}</span>
+            </button>
+          ))}
+        </div>
+        {/* Panel */}
+        {activeLeftTab && !selectedPath && (
+        <div className="flex-1 overflow-auto rounded-xl bg-white shadow-lg mr-2 my-2">
+          {activeLeftTab === 'pages' && (
+            <div className="flex flex-col h-full bg-white">
+              {/* Header */}
+              <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+                <div className="font-medium text-sm">Pages ({pages.length})</div>
                 <button
-                  key={tab.id}
-                  onClick={() =>
-                    setActiveLeftTab(prev =>
-                      prev === (tab.id as any) ? null : (tab.id as any)
-                    )
-                  }
-                  className={`group relative flex h-16 w-16 transform flex-col items-center justify-center rounded-lg transition-all duration-300 ease-in-out `}
-                  title={tab.name}
+                  onClick={addBlankPage}
+                  className="px-2 py-1 text-xs rounded bg-white border border-gray-300 hover:bg-gray-50"
+                  title="Add Page"
                 >
-                  <div
-                    className={`rounded-xl p-2 transition-all duration-300 ease-in-out ${
-                      activeLeftTab === (tab.id as any)
-                        ? 'mb-1 bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white '
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 hover:shadow-md '
-                    }`}
-                  >
-                    {tab.icon}
-                  </div>
-                  <span className="text-center text-[11px] font-medium leading-tight">
-                    {tab.name}
-                  </span>
+                  +
                 </button>
-              ))}
-            </div>
-            {/* Panel */}
-            {activeLeftTab && (activeLeftTab === 'layers' || !selectedPath) && (
-              <div
-                ref={leftSidebarRef}
-                className="my-2 mr-2 flex-1 transform rounded-xl bg-white shadow-lg transition-all duration-500 ease-in-out animate-in slide-in-from-left-5"
-              >
-                {activeLeftTab === 'pages' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">
-                        Pages ({pages.length})
-                      </div>
-                      <button
-                        onClick={addBlankPage}
-                        className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-50"
-                        title="Add Page"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    {/* Pages list */}
-                    <div className="flex-1 space-y-2 overflow-y-auto p-2">
-                      {pages.map((p, idx) => (
-                        <div
-                          key={p.id}
-                          className={`group transform cursor-pointer rounded-lg border-2 p-2 transition-all duration-300 ease-in-out ${idx === currentPageIndex ? 'scale-105 border-blue-500 bg-blue-50 shadow-lg' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md'}`}
-                          onClick={() => setCurrentPageIndex(idx)}
-                        >
-                          {/* Live Preview Thumbnail */}
-                          <div className="relative mb-2 flex w-full items-center justify-center overflow-hidden rounded bg-gray-100">
-                            {pagePreviews[p.id] ? (
-                              <img
-                                src={pagePreviews[p.id]}
-                                alt={`Preview of ${p.name}`}
-                                className="h-auto max-h-40 w-full object-contain transition-transform duration-200 group-hover:scale-110"
-                              />
-                            ) : (
-                              <div className="flex h-24 w-full animate-pulse items-center justify-center bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
-                                <div className="text-xs text-gray-500">
-                                  Generating...
-                                </div>
-                              </div>
-                            )}
-                            {idx === currentPageIndex && (
-                              <div className="absolute right-1 top-1 h-2 w-2 rounded-full bg-green-500 shadow-sm"></div>
-                            )}
-                          </div>
-
-                          {/* Name and actions */}
-                          <div className="flex items-center justify-between">
-                            <div className="truncate text-xs font-medium text-gray-700">
-                              {p.name}
-                            </div>
-                            <div className="flex items-center gap-1 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                              <button
-                                className="transform rounded border border-gray-300 bg-white px-2 py-1 text-xs transition-all duration-200 hover:scale-105 hover:bg-gray-100"
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  duplicateCurrentPage()
-                                }}
-                              >
-                                Duplicate
-                              </button>
-                              {pages.length > 1 && (
-                                <button
-                                  className="transform rounded border border-red-300 bg-white px-2 py-1 text-xs text-red-600 transition-all duration-200 hover:scale-105 hover:bg-red-50"
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    deleteCurrentPage()
-                                  }}
-                                >
-                                  Delete
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Updated info */}
-                          <div className="mt-1 text-xs text-gray-500">
-                            {idx === currentPageIndex && (
-                              <span className="mr-1 inline-block h-2 w-2 rounded-full bg-green-500" />
-                            )}
-                            Updated{' '}
-                            {(() => {
-                              const d =
-                                p.updatedAt instanceof Date
-                                  ? p.updatedAt
-                                  : p.updatedAt
-                                    ? new Date(p.updatedAt)
-                                    : new Date()
-                              return d.toISOString().split('T')[0]
-                            })()}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Pager */}
-                    <div className="flex items-center justify-between border-t border-gray-200 p-3 text-xs">
-                      <span>
-                        Page {currentPageIndex + 1} of {pages.length}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <button
-                          className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === 0 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
-                          onClick={goPrev}
-                          disabled={currentPageIndex === 0}
-                          title="Previous"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <button
-                          className={`transform rounded px-2 py-1 transition-all duration-200 hover:scale-110 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : 'hover:bg-gray-100'}`}
-                          onClick={goNext}
-                          disabled={currentPageIndex === pages.length - 1}
-                          title="Next"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {activeLeftTab === 'layers' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white pb-2">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">Layers</div>
-                    </div>
-
-                    {/* Layers content - scrollable */}
-                    <div className="flex-1 overflow-y-auto">
-                      <LayersPanel
-                        iframeRef={iframeRef}
-                        selectedPath={selectedPath}
-                        hoveredPath={hoveredPath}
-                        onSelectPath={p => {
-                          setSelectedPath(p)
-                        }}
-                        onHoverPath={p => setHoveredPath(p)}
-                      />
-                    </div>
-                  </div>
-                )}
-                {activeLeftTab === 'elements' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">Elements</div>
-                    </div>
-
-                    {/* Elements content - scrollable */}
-                    <div className="flex-1 overflow-y-auto">
-                      <ElementsPanel onAdd={type => addElement(type)} />
-                    </div>
-                  </div>
-                )}
-                {activeLeftTab === 'text' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">Text Elements</div>
-                    </div>
-
-                    {/* Text content - scrollable */}
-                    <div className="flex-1 overflow-y-auto">
-                      <ElementsPanel
-                        onAdd={type => addElement(type)}
-                        onlyText
-                      />
-                    </div>
-                  </div>
-                )}
-                {activeLeftTab === 'icons' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">Icons</div>
-                    </div>
-
-                    {/* Icons content - scrollable */}
-                    <div className="flex-1 overflow-y-auto">
-                      <IconsPanel
-                        onAddIcon={(iconSvg, iconName) =>
-                          addIconToCanvas(iconSvg, iconName)
-                        }
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {activeLeftTab === 'assets' && (
-                  <div className="flex h-full flex-col rounded-xl bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between border-b border-gray-200 p-3">
-                      <div className="text-sm font-medium">Assets</div>
-                    </div>
-
-                    {/* Assets content - scrollable */}
-                    <div className="flex-1 overflow-y-auto">
-                      <AssetsPanel
-                        onAddImage={(imageSrc, imageName) =>
-                          addImageToCanvas(imageSrc, imageName)
-                        }
-                        onUploadAsset={file => handleAssetUpload(file)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
-          </div>
-        )}
 
-        {/* Center Canvas: Iframe (auto-fits to viewport) */}
-        {(() => {
-          const leftCollapsed = previewMode || !activeLeftTab
-          const rightCollapsed = !selectedPath
-          const sidebarsCollapsed = leftCollapsed && rightCollapsed
-          const containerClasses = sidebarsCollapsed
-            ? 'items-center overflow-hidden'
-            : 'items-start overflow-auto'
-          // Add margin-right to balance the left sidebar when both are collapsed
-          // Also add proper padding to prevent overlap and ensure equal spacing
-          const containerStyle =
-            sidebarsCollapsed && !previewMode
-              ? {
-                  marginRight: '80px',
-                  padding: '2rem 1rem',
-                  transition: 'all 0.5s ease-in-out',
-                }
-              : { padding: '1rem', transition: 'all 0.5s ease-in-out' }
-          return (
-            <div
-              ref={stageContainerRef}
-              className={`flex flex-1 bg-gray-50 ${containerClasses} h-full justify-center transition-all duration-500 ease-in-out`}
-              style={containerStyle}
-            >
-              {previewMode ? (
-                // Preview Mode: Show all pages stacked vertically
-                <div className="flex h-full w-full flex-col items-center gap-8 overflow-auto py-8">
-                  {pages.map((page, index) => (
-                    <div
-                      key={page.id}
-                      className="flex flex-col items-center gap-2"
-                      style={{
-                        transform: `scale(${scale})`,
-                        transformOrigin: 'top center',
-                      }}
-                    >
-                      <div className="rounded-full bg-gray-200 px-3 py-1 text-xs font-medium text-gray-700">
-                        Page {index + 1}
-                      </div>
-                      <div
-                        className="border bg-white shadow transition-all duration-300 ease-in-out"
-                        style={{
-                          width: BASE_W,
-                          height: BASE_H,
-                        }}
-                      >
-                        <iframe
-                          ref={el => {
-                            iframeRefs.current[index] = el
-                          }}
-                          title={`Page ${index + 1}`}
-                          style={{
-                            width: BASE_W,
-                            height: BASE_H,
-                            border: 'none',
-                          }}
-                          sandbox="allow-same-origin allow-scripts"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Edit Mode: Show single page with navigation
-                <div
-                  ref={canvasWrapperRef}
-                  style={{
-                    width: BASE_W * scale,
-                    height: BASE_H * scale,
-                    position: 'relative',
-                    overflow: 'visible',
-                    transition: 'all 0.3s ease-in-out',
-                  }}
-                >
-                  {/* Simple drag status */}
-                  {isDragging && (
-                    <div className="absolute left-4 top-4 z-10 rounded-lg border border-blue-200 bg-blue-50 p-3 shadow-sm">
-                      <div className="flex items-center gap-2 text-sm text-blue-700">
-                        <Move3D size={14} className="animate-pulse" />
-                        <span>Dragging element...</span>
-                      </div>
-                      <div className="mt-1 text-xs text-blue-500">
-                        Release to drop at new position
-                      </div>
-                    </div>
-                  )}
-
+              {/* Pages list */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {pages.map((p, idx) => (
                   <div
-                    className="border bg-white shadow transition-all duration-300 ease-in-out"
-                    style={{
-                      width: BASE_W,
-                      height: BASE_H,
-                      transform: `scale(${scale})`,
-                      transformOrigin: 'top left',
-                    }}
+                    key={p.id}
+                    className={`group border-2 rounded-lg p-2 transition-all ${idx === currentPageIndex ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                    onClick={() => setCurrentPageIndex(idx)}
                   >
-                    <iframe
-                      ref={iframeRef}
-                      title={`Page ${currentPageIndex + 1}`}
-                      style={{
-                        width: BASE_W,
-                        height: BASE_H,
-                        border: 'none',
-                        opacity: isPageTransitioning ? 0 : 1,
-                        transform: isPageTransitioning
-                          ? 'translateX(20px) scale(0.98)'
-                          : 'translateX(0) scale(1)',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      }}
-                      sandbox="allow-same-origin allow-scripts"
-                    />
-                  </div>
-                  {showGrid && (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        pointerEvents: 'none',
-                        backgroundImage:
-                          'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
-                        backgroundSize: `${20 * scale}px ${20 * scale}px`,
-                      }}
-                    />
-                  )}
-                  {/* Show hover border when hovering any element, even if something is selected */}
-                  {hoveredPath && (
-                    <HoverRectOverlay
-                      iframeRef={iframeRef}
-                      hoveredPath={hoveredPath}
-                      selectedPath={selectedPath}
-                      scale={scale}
-                    />
-                  )}
-                  {selectedPath && (
-                    <SelectionActionsOverlay
-                      iframeRef={iframeRef}
-                      selectedPath={selectedPath}
-                      scale={scale}
-                      onChangeSelectedPath={p => setSelectedPath(p)}
-                      onStartDrag={handleStartDrag}
-                      onSaveHistory={saveToHistory}
-                    />
-                  )}
-                  {/* Canvas Toolbar removed; controls now live in the top navbar */}
-                </div>
-              )}
-            </div>
-          )
-        })()}
+                    {/* Thumbnail placeholder */}
+                    <div className="w-full h-24 bg-gray-100 rounded mb-2"></div>
 
-        {/* Right Sidebar: Style editing */}
-        <div
-          className={`my-2 rounded-l-xl shadow-lg transition-all duration-500 ease-in-out ${!previewMode && selectedPath ? 'w-72' : 'w-0'} overflow-hidden`}
-        >
-          {!previewMode && selectedPath && (
-            <div
-              ref={rightSidebarRef}
-              className="flex h-full w-72 transform flex-col space-y-3 rounded-l-xl bg-white p-3 transition-all duration-500 ease-in-out"
-            >
-              {/* Tabs */}
-              <div className="flex items-center justify-between">
-                <div className="flex w-full gap-1 rounded-xl border border-[#E5E1FF] bg-gradient-to-r from-[#E9E5FF] via-[#F3EFFF] to-[#E9E5FF] p-1 shadow-sm">
-                  <button
-                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'content' ? 'bg-gradient-to-r from-white to-blue-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                    onClick={() => setRightTab('content')}
-                  >
-                    <Edit3
-                      size={12}
-                      className={rightTab === 'content' ? 'text-blue-600' : ''}
-                    />
-                    Edit
-                  </button>
-                  <button
-                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'style' ? 'bg-gradient-to-r from-white to-pink-50 text-gray-900 shadow-sm ' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                    onClick={() => setRightTab('style')}
-                  >
-                    <Palette
-                      size={12}
-                      className={rightTab === 'style' ? 'text-pink-600' : ''}
-                    />
-                    Design
-                  </button>
-                  <button
-                    className={`flex flex-1 transform items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-center text-xs transition-all duration-300 ease-in-out  ${rightTab === 'effects' ? 'bg-gradient-to-r from-white to-yellow-50 text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'}`}
-                    onClick={() => setRightTab('effects')}
-                  >
-                    <Sparkles
-                      size={12}
-                      className={
-                        rightTab === 'effects' ? 'text-yellow-600' : ''
-                      }
-                    />
-                    Effects
-                  </button>
-                </div>
+                    {/* Name and actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-medium text-gray-700 truncate">{p.name}</div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100">
+                        <button
+                          className="px-2 py-1 text-xs rounded border border-gray-300 bg-white hover:bg-gray-100"
+                          onClick={(e) => { e.stopPropagation(); duplicateCurrentPage() }}
+                        >
+                          Duplicate
+                        </button>
+                        {pages.length > 1 && (
+                          <button
+                            className="px-2 py-1 text-xs rounded border border-red-300 bg-white text-red-600 hover:bg-red-50"
+                            onClick={(e) => { e.stopPropagation(); deleteCurrentPage() }}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Updated info */}
+                    <div className="mt-1 text-xs text-gray-500">
+                      {idx === currentPageIndex && (
+                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1" />
+                      )}
+                      Updated {(() => {
+                        const d = p.updatedAt instanceof Date ? p.updatedAt : (p.updatedAt ? new Date(p.updatedAt) : new Date())
+                        return d.toISOString().split('T')[0]
+                      })()}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Panel (scrollable) */}
-              <div
-                className="no-scrollbar flex-1 space-y-3 overflow-auto transition-all duration-300 ease-in-out"
-                style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
-              >
-                {selectedPath ? (
-                  <>
-                    {rightTab === 'content' && (
-                      <div className="space-y-3 duration-300 animate-in fade-in slide-in-from-right-3">
-                        {/* Smart Content Sections */}
-                        <div className="mb-2">
-                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                            <span className="font-medium capitalize">
-                              {selectedElementType}
-                            </span>
-                            <span>Editing</span>
-                          </div>
-                        </div>
-
-                        {getCurrentElementConfig().content.map(section =>
-                          renderSmartSection(section, 'content')
-                        )}
-
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                            onClick={clearSelection}
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {rightTab === 'style' && (
-                      <div className="duration-300 animate-in fade-in slide-in-from-right-3">
-                        {/* Smart Style Sections */}
-                        <div className="mb-2">
-                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                            <span className="font-medium capitalize">
-                              {selectedElementType}
-                            </span>
-                            <span>Design</span>
-                          </div>
-                        </div>
-
-                        {getCurrentElementConfig().style.map((section, index) =>
-                          renderSmartSection(section, 'style')
-                        )}
-
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                            onClick={clearSelection}
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {rightTab === 'effects' && (
-                      <div className="duration-300 animate-in fade-in slide-in-from-right-3">
-                        {/* Smart Effects Sections */}
-                        <div className="mb-2">
-                          <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                            <span className="font-medium capitalize">
-                              {selectedElementType}
-                            </span>
-                            <span>Effects</span>
-                          </div>
-                        </div>
-
-                        {getCurrentElementConfig().effects?.map(
-                          (section, index) =>
-                            renderSmartSection(section, 'effects')
-                        )}
-
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-[11px] hover:bg-gray-50"
-                            onClick={clearSelection}
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="text-[11px] text-gray-500">
-                    Click an element in the preview to edit its{' '}
-                    {rightTab === 'content'
-                      ? 'content'
-                      : rightTab === 'style'
-                        ? 'design'
-                        : 'effects'}
-                    .
-                  </div>
-                )}
+              {/* Pager */}
+              <div className="p-3 border-t border-gray-200 flex items-center justify-between text-xs">
+                <span>Page {currentPageIndex + 1} of {pages.length}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    className={`px-2 py-1  ${currentPageIndex === 0 ? 'text-gray-400' : ''}`}
+                    onClick={goPrev}
+                    disabled={currentPageIndex === 0}
+                    title="Previous"
+                  >
+                    <ChevronLeft className="w-4 h-4" />   
+                  </button>
+                  <button
+                    className={`px-2 py-1 ${currentPageIndex === pages.length - 1 ? 'text-gray-400' : ''}`}
+                    onClick={goNext}
+                    disabled={currentPageIndex === pages.length - 1}
+                    title="Next"
+                  >
+                  <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
+          {activeLeftTab === 'layers' && (
+            <LayersPanel iframeRef={iframeRef} selectedPath={selectedPath} hoveredPath={hoveredPath} onSelectPath={(p) => { setSelectedPath(p); }} />
+          )}
+          {activeLeftTab === 'elements' && (
+            <ElementsPanel onAdd={(type) => addElement(type)} />
+          )}
+          {activeLeftTab === 'text' && (
+            <ElementsPanel onAdd={(type) => addElement(type)} onlyText />
+          )}
+          {activeLeftTab === 'templates' && (
+            <div className="p-3 space-y-3">
+              <div className="font-semibold">Templates</div>
+              <div className="text-xs text-gray-500">Select a template to apply</div>
+              <ul className="space-y-2">
+                {HtmlTemplates.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded border transition-colors ${t.id === template.id ? 'bg-gray-100 border-gray-300' : 'hover:bg-gray-50'}`}
+                      onClick={() => onTemplateIdChange?.(t.id)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-800">{t.name}</span>
+                        {t.id === template.id && <span className="text-xs text-gray-500">Selected</span>}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {activeLeftTab === 'icons' && (
+            <div className="p-3 text-sm text-gray-600">Icons library coming soon.</div>
+          )}
+          
+          {activeLeftTab === 'assets' && (
+            <div className="p-3 text-sm text-gray-600">Assets manager coming soon.</div>
+          )}
         </div>
+        )}
       </div>
-    </IconContext.Provider>
+      )}
+
+      {/* Center Canvas: Iframe (auto-fits to viewport) */}
+      {(() => {
+        const leftCollapsed = previewMode || !activeLeftTab
+        const rightCollapsed = !selectedPath
+        const sidebarsCollapsed = leftCollapsed && rightCollapsed
+        const containerClasses = sidebarsCollapsed
+          ? 'items-center overflow-hidden'
+          : 'items-start overflow-auto'
+        return (
+          <div ref={stageContainerRef} className={`flex-1 bg-gray-50 flex ${containerClasses} justify-center p-4 h-full`}>
+            <div ref={canvasWrapperRef} style={{ width: BASE_W * scale, height: BASE_H * scale, position: 'relative', overflow: 'visible' }}>
+              <div
+                className="bg-white shadow border"
+                style={{ width: BASE_W, height: BASE_H, transform: `scale(${scale})`, transformOrigin: 'top left' }}
+              >
+                <iframe
+                  ref={iframeRef}
+                  title={`Page ${currentPageIndex + 1}`}
+                  style={{ width: BASE_W, height: BASE_H, border: 'none' }}
+                  sandbox="allow-same-origin allow-scripts"
+                />
+              </div>
+              {showGrid && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    pointerEvents: 'none',
+                    backgroundImage:
+                      'linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)',
+                    backgroundSize: `${20 * scale}px ${20 * scale}px`,
+                  }}
+                />
+              )}
+              {/* Show hover rectangle only when nothing is selected to avoid double rectangles */}
+              {hoveredPath && !selectedPath && (
+                <HoverRectOverlay iframeRef={iframeRef} hoveredPath={hoveredPath} selectedPath={selectedPath} scale={scale} />
+              )}
+              {selectedPath && (
+                <SelectionActionsOverlay iframeRef={iframeRef} selectedPath={selectedPath} scale={scale} onChangeSelectedPath={(p) => setSelectedPath(p)} />
+              )}
+              {/* Canvas Toolbar removed; controls now live in the top navbar */}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Right Sidebar: Style editing */}
+      {!previewMode && selectedPath && (
+      <div ref={rightSidebarRef} className="w-72 shadow-lg rounded-xl bg-white p-3 ml-2 my-2 space-y-3 h-full overflow-auto">
+        {/* Tabs */}
+        <div className="flex items-center justify-between">
+          <div className="flex w-full rounded-xl p-1 gap-1 bg-gradient-to-r from-[#E9E5FF] to-[#F3EFFF] border border-[#E5E1FF]">
+            <button
+              className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab==='content' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setRightTab('content')}
+            >
+              <FileText size={12} />
+              Content
+            </button>
+            <button
+              className={`flex items-center justify-center gap-1 flex-1 text-center px-2.5 py-1.5 text-xs rounded-lg ${rightTab==='style' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setRightTab('style')}
+            >
+              <Palette size={12} />
+              Style
+            </button>
+          </div>
+        </div>
+
+        {/* Panel */}
+        <div className="space-y-3">
+          {selectedPath ? (
+            <>
+
+              {rightTab === 'content' && (
+                <div className="space-y-3">
+                  {/* Content Editing */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Content</div>
+                    <textarea
+                      className="w-full h-20 border border-gray-300 rounded-lg px-1.5 py-1.5 text-xs bg-white"
+                      value={selectedContent}
+                      onChange={(e) => {
+                        const val = e.target.value
+                        setSelectedContent(val)
+                        const doc = iframeRef.current?.contentDocument
+                        if (!doc || !selectedPath) return
+                        const el = resolvePathToElement(doc, selectedPath)
+                        if (el) (el as HTMLElement).textContent = val
+                      }}
+                    />
+                    <div className="text-[11px] text-gray-500 mt-1">Selected element becomes inline editable automatically.</div>
+                  </div>
+
+                  {/* Typography (in Content tab) */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                    <label className="block text-[11px] text-gray-600">Text Color</label>
+                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ color: e.target.value })} />
+                    <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
+                    <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Font Family</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontFamily: e.target.value })}>
+                          <option value="Inter, system-ui, Arial">Inter</option>
+                          <option value="Arial, Helvetica, sans-serif">Arial</option>
+                          <option value="Georgia, serif">Georgia</option>
+                          <option value="Times New Roman, Times, serif">Times</option>
+                          <option value="Courier New, monospace">Courier</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Font Weight</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontWeight: e.target.value as any })}>
+                          <option>400</option>
+                          <option>500</option>
+                          <option>600</option>
+                          <option>700</option>
+                          <option>800</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Line Height</label>
+                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ lineHeight: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {rightTab === 'style' && (
+                <>
+                  {/* Dimensions & Position */}
+                  <div className="rounded-xl border space-y-3 border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Dimensions & Position</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Width</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e)=>updateSelectedStyles({ width: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Height</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="auto" onChange={(e)=>updateSelectedStyles({ height: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Min Width</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e)=>updateSelectedStyles({ minWidth: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Min Height</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0" onChange={(e)=>updateSelectedStyles({ minHeight: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Max Width</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e)=>updateSelectedStyles({ maxWidth: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Max Height</label>
+                        <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="none" onChange={(e)=>updateSelectedStyles({ maxHeight: e.target.value || '' })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Display</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ display: e.target.value as any })}>
+                          <option>block</option>
+                          <option>inline</option>
+                          <option>inline-block</option>
+                          <option>flex</option>
+                          <option>grid</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Position</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ position: e.target.value as any })}>
+                          <option>static</option>
+                          <option>relative</option>
+                          <option>absolute</option>
+                          <option>fixed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Z-Index</label>
+                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ zIndex: e.target.value as any })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Overflow</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ overflow: e.target.value as any })}>
+                          <option>visible</option>
+                          <option>hidden</option>
+                          <option>scroll</option>
+                          <option>auto</option>
+                        </select>
+                      </div>
+                    </div>
+                    {/* Margin & Padding */}
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Margin (T/R/B/L)</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e)=>updateSelectedStyles({ marginTop: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e)=>updateSelectedStyles({ marginRight: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e)=>updateSelectedStyles({ marginBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e)=>updateSelectedStyles({ marginLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Padding (T/R/B/L)</label>
+                        <div className="grid grid-cols-4 gap-1">
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="T" onChange={(e)=>updateSelectedStyles({ paddingTop: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="R" onChange={(e)=>updateSelectedStyles({ paddingRight: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="B" onChange={(e)=>updateSelectedStyles({ paddingBottom: e.target.value ? `${e.target.value}px` : '' })} />
+                          <input className="h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="L" onChange={(e)=>updateSelectedStyles({ paddingLeft: e.target.value ? `${e.target.value}px` : '' })} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Background & Border */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Background & Border</div>
+                    <label className="block text-[11px] text-gray-600">Background Color</label>
+                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ backgroundColor: e.target.value })} />
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Border Width</label>
+                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderWidth: `${e.target.value}px` })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Border Radius</label>
+                        <input type="number" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderRadius: `${e.target.value}px` })} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Border Color</label>
+                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ borderColor: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Border Style</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ borderStyle: e.target.value as any })}>
+                          <option>solid</option>
+                          <option>dashed</option>
+                          <option>dotted</option>
+                          <option>none</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Typography */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Typography</div>
+                    <label className="block text-[11px] text-gray-600">Text Color</label>
+                    <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateSelectedStyles({ color: e.target.value })} />
+                    <label className="block text-[11px] text-gray-600 mt-2">Font Size</label>
+                    <input type="number" min={8} max={96} className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontSize: `${e.target.value}px` })} />
+                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Font Family</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontFamily: e.target.value })}>
+                          <option value="Inter, system-ui, Arial">Inter</option>
+                          <option value="Arial, Helvetica, sans-serif">Arial</option>
+                          <option value="Georgia, serif">Georgia</option>
+                          <option value="Times New Roman, Times, serif">Times</option>
+                          <option value="Courier New, monospace">Courier</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Font Weight</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ fontWeight: e.target.value as any })}>
+                          <option>400</option>
+                          <option>500</option>
+                          <option>600</option>
+                          <option>700</option>
+                          <option>800</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Line Height</label>
+                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ lineHeight: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Letter Spacing</label>
+                        <input type="number" step="0.1" className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ letterSpacing: `${e.target.value}px` })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Effects */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Effects</div>
+                    <label className="block text-[11px] text-gray-600">Box Shadow</label>
+                    <input className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" placeholder="0 4px 10px rgba(0,0,0,0.1)" onChange={(e)=>updateSelectedStyles({ boxShadow: e.target.value })} />
+                    {selectedTag === 'img' && (
+                      <div className="mt-2">
+                        <label className="block text-[11px] text-gray-600">Image Fit</label>
+                        <select className="w-full h-7 border border-gray-300 rounded-lg px-1.5 text-xs bg-white" onChange={(e)=>updateSelectedStyles({ objectFit: e.target.value as any })}>
+                          <option>cover</option>
+                          <option>contain</option>
+                          <option>fill</option>
+                          <option>none</option>
+                          <option>scale-down</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Hover Styles */}
+                  <div className="rounded-xl border border-gray-200 bg-[#F8F7FC] p-2">
+                    <div className="text-xs font-semibold text-gray-800 mb-2">Hover Styles</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Hover Background</label>
+                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateHoverStyles({ backgroundColor: e.target.value })} />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-gray-600">Hover Text</label>
+                        <input type="color" className="w-full h-8 border border-gray-300 rounded-lg bg-white" onChange={(e)=>updateHoverStyles({ color: e.target.value })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button className="px-2 py-1 border border-gray-300 rounded-lg text-[11px] bg-white hover:bg-gray-50" onClick={clearSelection}>Clear</button>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="text-[11px] text-gray-500">Click an element in the preview to edit its {rightTab==='content' ? 'content' : 'style'}.</div>
+          )}
+        </div>
+
+        
+        
+      </div>
+      )}
+    </div>
   )
 }
 
-// Layers Panel: Beautiful DOM tree with element type icons
-function LayersPanel({
-  iframeRef,
-  selectedPath,
-  hoveredPath,
-  onSelectPath,
-  onHoverPath,
-}: {
-  iframeRef: React.RefObject<HTMLIFrameElement>
-  selectedPath?: string | null
-  hoveredPath?: string | null
-  onSelectPath: (path: string) => void
-  onHoverPath?: (path: string | null) => void
-}) {
-  type LayerNode = {
-    label: string
-    path: string
-    children: LayerNode[]
-    id?: string
-    classes?: string
-  }
+// Layers Panel: simple DOM tree
+function LayersPanel({ iframeRef, selectedPath, hoveredPath, onSelectPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath?: string | null, hoveredPath?: string | null, onSelectPath: (path: string)=>void }) {
+  type LayerNode = { label: string; path: string; children: LayerNode[] }
   const [tree, setTree] = useState<LayerNode[]>([])
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [dragSource, setDragSource] = useState<string | null>(null)
-  const [dropTarget, setDropTarget] = useState<{
-    path: string
-    pos: 'before' | 'inside' | 'after'
-  } | null>(null)
-
-  // Friendly names for HTML elements (non-technical)
-  const friendlyNames: Record<string, string> = {
-    div: 'Container',
-    header: 'Header Section',
-    main: 'Main Content',
-    footer: 'Footer Section',
-    section: 'Section',
-    article: 'Article',
-    aside: 'Sidebar',
-    nav: 'Navigation',
-    h1: 'Main Heading',
-    h2: 'Heading',
-    h3: 'Subheading',
-    h4: 'Small Heading',
-    h5: 'Tiny Heading',
-    h6: 'Micro Heading',
-    p: 'Paragraph',
-    span: 'Text',
-    img: 'Image',
-    button: 'Button',
-    a: 'Link',
-    ul: 'List',
-    ol: 'Numbered List',
-    li: 'List Item',
-    input: 'Input Field',
-    textarea: 'Text Area',
-    form: 'Form',
-    label: 'Label',
-    select: 'Dropdown',
-    table: 'Table',
-    tr: 'Table Row',
-    td: 'Table Cell',
-    th: 'Table Header',
-    iframe: 'Embedded Content',
-    video: 'Video',
-    audio: 'Audio',
-    canvas: 'Canvas',
-    svg: 'Icon/Graphic',
-    br: 'Line Break',
-    hr: 'Divider',
-    strong: 'Bold Text',
-    em: 'Italic Text',
-    code: 'Code',
-    pre: 'Code Block',
-  }
-
-  // Get friendly name for element
-  const getFriendlyName = (tagName: string): string => {
-    return friendlyNames[tagName.toLowerCase()] || tagName.toUpperCase()
-  }
+  const [dropTarget, setDropTarget] = useState<{ path: string; pos: 'before'|'inside'|'after' } | null>(null)
 
   const isContainer = (el: Element) => {
+    // Consider elements with children as containers
     return el.children && el.children.length >= 0
-  }
-
-  // Helper to get icon for element type using Phosphor Icons
-  const getElementIcon = (tagName: string) => {
-    const tag = tagName.toLowerCase()
-    const iconProps = {
-      size: 16,
-      weight: 'regular' as const,
-      className: 'text-current',
-    }
-
-    // Layout elements
-    if (
-      tag === 'div' ||
-      tag === 'section' ||
-      tag === 'article' ||
-      tag === 'main' ||
-      tag === 'aside' ||
-      tag === 'nav' ||
-      tag === 'header' ||
-      tag === 'footer'
-    ) {
-      return <PhosphorIcons.Square {...iconProps} />
-    }
-    // Text elements
-    if (tag.match(/^h[1-6]$/)) {
-      return <PhosphorIcons.TextHOne {...iconProps} />
-    }
-    if (tag === 'p' || tag === 'span') {
-      return <PhosphorIcons.TextT {...iconProps} />
-    }
-    // Interactive elements
-    if (tag === 'button') {
-      return <PhosphorIcons.SquaresFour {...iconProps} />
-    }
-    if (tag === 'a') {
-      return <PhosphorIcons.Link {...iconProps} />
-    }
-    if (tag === 'input' || tag === 'textarea') {
-      return <PhosphorIcons.Textbox {...iconProps} />
-    }
-    // Media
-    if (tag === 'img') {
-      return <PhosphorIcons.Image {...iconProps} />
-    }
-    if (tag === 'svg') {
-      return <PhosphorIcons.Polygon {...iconProps} />
-    }
-    if (tag === 'video') {
-      return <PhosphorIcons.VideoCamera {...iconProps} />
-    }
-    // Lists
-    if (tag === 'ul' || tag === 'ol') {
-      return <PhosphorIcons.ListBullets {...iconProps} />
-    }
-    if (tag === 'li') {
-      return <PhosphorIcons.DotOutline {...iconProps} />
-    }
-    // Forms
-    if (tag === 'form') {
-      return <PhosphorIcons.Article {...iconProps} />
-    }
-    if (tag === 'label') {
-      return <PhosphorIcons.Tag {...iconProps} />
-    }
-    if (tag === 'select') {
-      return <PhosphorIcons.CaretCircleDown {...iconProps} />
-    }
-    // Table
-    if (tag === 'table') {
-      return <PhosphorIcons.Table {...iconProps} />
-    }
-    if (tag === 'tr' || tag === 'td' || tag === 'th') {
-      return <PhosphorIcons.Rows {...iconProps} />
-    }
-    // Default
-    return <PhosphorIcons.Rectangle {...iconProps} />
   }
 
   // Local utilities to resolve/compute element paths within iframe DOM
@@ -4637,14 +1389,8 @@ function LayersPanel({
     return path.join('.')
   }
 
-  const resolvePathToElementLocal = (
-    doc: Document,
-    path: string
-  ): Element | null => {
-    const parts = path
-      .split('.')
-      .map(n => parseInt(n, 10))
-      .filter(n => !Number.isNaN(n))
+  const resolvePathToElementLocal = (doc: Document, path: string): Element | null => {
+    const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
     let cursor: Element = doc.body
     for (const idx of parts) {
       if (!cursor.children || !cursor.children[idx]) return null
@@ -4655,23 +1401,16 @@ function LayersPanel({
 
   const buildTreeFromDom = () => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc) {
-      setTree([])
-      return
-    }
+    if (!doc) { setTree([]); return }
     const walk = (el: Element, prefix: number[]): LayerNode[] => {
       return Array.from(el.children).map((child, idx) => {
         const pathArr = [...prefix, idx]
         const path = pathArr.join('.')
         const label = child.tagName.toLowerCase()
-        const id = child.getAttribute('id')
-        const classes = child.getAttribute('class')
         return {
           label,
           path,
-          id: id || undefined,
-          classes: classes || undefined,
-          children: walk(child, pathArr),
+          children: walk(child, pathArr)
         }
       })
     }
@@ -4697,12 +1436,7 @@ function LayersPanel({
     e.preventDefault()
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const y = e.clientY - rect.top
-    const pos =
-      y < rect.height / 3
-        ? 'before'
-        : y > (rect.height * 2) / 3
-          ? 'after'
-          : 'inside'
+    const pos = y < rect.height / 3 ? 'before' : y > rect.height * 2/3 ? 'after' : 'inside'
     setDropTarget({ path: targetPath, pos })
   }
   const handleDrop = (targetPath: string) => {
@@ -4721,9 +1455,11 @@ function LayersPanel({
       } else if (dropTarget?.pos === 'after') {
         tgtEl.parentElement?.insertBefore(srcEl, tgtEl.nextSibling)
       } else {
+        // Fallback: insert before
         tgtEl.parentElement?.insertBefore(srcEl, tgtEl)
       }
     } finally {
+      // Rebuild tree and update selection path to new location
       const newPath = computeElementPathLocal(doc, srcEl)
       buildTreeFromDom()
       onSelectPath(newPath)
@@ -4737,106 +1473,35 @@ function LayersPanel({
     const isDropHere = dropTarget && dropTarget.path === node.path
     const isSelected = selectedPath === node.path
     const isHovered = hoveredPath === node.path
-    const hasChildren = node.children.length > 0
-
-    // Calculate background width based on depth - less width for deeper nesting
-    const bgWidth = `calc(100% - ${depth * 12}px)`
-    const marginLeft = `${depth * 12}px`
-
     return (
-      <li key={node.path} className="relative select-none">
-        {/* Background layer with dynamic width */}
-        {(isSelected || isHovered) && (
-          <div
-            className={`pointer-events-none absolute left-0 rounded-lg transition-all ${
-              isSelected
-                ? 'bg-gradient-to-r from-[#2D1B69]/10 to-[#6366F1]/10 shadow-sm'
-                : 'bg-gray-50'
-            }`}
-            style={{
-              top: 0,
-              height: isHovered && !isSelected ? 'calc(100% - 4px)' : '100%',
-              width:
-                isHovered && !isSelected ? `calc(${bgWidth} - 4px)` : bgWidth,
-              marginLeft: marginLeft,
-            }}
-          />
-        )}
-
+      <li key={node.path} className="select-none">
         <div
           draggable
           onDragStart={() => handleDragStart(node.path)}
-          onDragOver={e => handleDragOver(e, node.path)}
+          onDragOver={(e) => handleDragOver(e, node.path)}
           onDrop={() => handleDrop(node.path)}
-          onMouseEnter={() => onHoverPath?.(node.path)}
-          onMouseLeave={() => onHoverPath?.(null)}
-          className={`group relative flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-xs transition-all ${
-            isSelected ? 'text-[#2D1B69]' : ''
-          } ${isDropHere ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+          className={`flex items-center gap-2 px-3 py-1 text-xs cursor-pointer rounded ${isSelected ? 'bg-indigo-50 text-indigo-700' : isHovered ? 'bg-gray-100' : ''} ${isDropHere ? 'ring-1 ring-blue-300' : ''}`}
           onClick={() => onSelectPath(node.path)}
           title={node.path}
-          style={{ paddingLeft: `${depth * 12 + 8}px` }}
         >
-          {/* Expand/Collapse chevron */}
-          <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center">
-            {hasChildren ? (
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  toggleCollapse(node.path)
-                }}
-                className={`rounded p-0.5 transition-transform hover:bg-gray-200 ${isCollapsed ? '' : 'rotate-0'}`}
-              >
-                <ChevronRight
-                  size={12}
-                  className={`transition-transform ${isCollapsed ? '' : 'rotate-90'}`}
-                />
-              </button>
-            ) : null}
-          </div>
-
-          {/* Element type icon */}
-          <div
-            className={`flex-shrink-0 ${isSelected ? 'text-[#6366F1]' : 'text-gray-500 group-hover:text-gray-700'}`}
-          >
-            {getElementIcon(node.label)}
-          </div>
-
-          {/* Element label and metadata */}
-          <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span
-              className={`truncate font-medium ${isSelected ? 'text-[#2D1B69]' : 'text-gray-700'}`}
+          {/* Chevron */}
+          {node.children.length > 0 ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleCollapse(node.path) }}
+              className="p-0.5 text-gray-600 hover:text-gray-900"
             >
-              {getFriendlyName(node.label)}
-            </span>
-            {node.id && (
-              <span className="rounded bg-blue-100 px-1.5 py-0.5 font-mono text-[10px] text-blue-700">
-                #{node.id}
-              </span>
-            )}
-          </div>
-
-          {/* Children count badge */}
-          {hasChildren && (
-            <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-                isSelected
-                  ? 'bg-[#6366F1]/20 text-[#6366F1]'
-                  : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
-              }`}
-            >
-              {node.children.length}
-            </span>
+              {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+            </button>
+          ) : (
+            <span className="w-[14px]" />
           )}
+          {/* Indicator */}
+          <span className={`inline-block w-2 h-2 rounded-full ${isSelected ? 'bg-indigo-600' : isHovered ? 'bg-gray-400' : 'bg-transparent border border-gray-300'}`} />
+          {/* Label */}
+          <span className="truncate" style={{ paddingLeft: depth * 8 }}>{node.label}</span>
         </div>
-
-        {/* Render children */}
-        {!isCollapsed && hasChildren && (
-          <ul className="relative mt-0.5">
-            <div
-              className="absolute bottom-0 left-0 top-0 w-px bg-gradient-to-b from-gray-200 to-transparent"
-              style={{ marginLeft: `${depth * 12 + 16}px` }}
-            />
+        {!isCollapsed && node.children.length > 0 && (
+          <ul className="ml-4 border-l border-gray-200">
             {node.children.map(child => renderNode(child, depth + 1))}
           </ul>
         )}
@@ -4845,462 +1510,46 @@ function LayersPanel({
   }
 
   return (
-    <>
-      {tree.length > 0 ? (
-        <ul className="space-y-0.5 p-2 ">{tree.map(n => renderNode(n))}</ul>
-      ) : (
-        <div className="flex h-full flex-col items-center justify-center p-4 text-center">
-          <LayersIcon className="mb-2 h-8 w-8 text-gray-300" />
-          <p className="text-xs text-gray-500">No layers found</p>
-        </div>
-      )}
-    </>
-  )
-}
-
-// (hover sync effect moved into component body earlier)
-
-// Elements Panel
-function ElementsPanel({
-  onAdd,
-  onlyText,
-}: {
-  onAdd: (type: PaletteElementType) => void
-  onlyText?: boolean
-}) {
-  // Helper to provide a short description / visual hint for an element
-  const hint = (type: PaletteElementType) => {
-    switch (type) {
-      case 'button':
-        return 'CTA button - primary action'
-      case 'input':
-        return 'Single-line input field'
-      case 'image':
-        return 'Display an image or cover'
-      case 'icon':
-        return 'Small decorative icon'
-      case 'container':
-        return 'Container to group content'
-      case 'divider':
-        return 'Thin separator line'
-      case 'columns-2':
-        return 'Two-column layout'
-      case 'columns-3':
-        return 'Three-column layout'
-      case 'hero':
-        return 'Large hero section'
-      case 'gallery':
-        return 'Grid of images'
-      case 'product-card':
-        return 'Compact product card'
-      case 'heading':
-        return 'Section heading'
-      case 'paragraph':
-        return 'Paragraph / body text'
-      default:
-        return ''
-    }
-  }
-
-  return (
-    <div className="p-3">
-      <div className="grid grid-cols-1 gap-3">
-        {!onlyText && (
-          <>
-            <PaletteItem
-              label="Button"
-              type="button"
-              onAdd={onAdd}
-              hintText={hint('button')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="0"
-                    y="4"
-                    width="28"
-                    height="12"
-                    rx="6"
-                    fill="#6366F1"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Input"
-              type="input"
-              onAdd={onAdd}
-              hintText={hint('input')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="0"
-                    y="4"
-                    width="28"
-                    height="12"
-                    rx="4"
-                    fill="#E5E7EB"
-                  />
-                  <rect
-                    x="4"
-                    y="8"
-                    width="20"
-                    height="2"
-                    rx="1"
-                    fill="#9CA3AF"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Image"
-              type="image"
-              onAdd={onAdd}
-              hintText={hint('image')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect width="28" height="20" rx="4" fill="#F3F4F6" />
-                  <circle cx="8" cy="8" r="2" fill="#9CA3AF" />
-                  <rect x="3" y="12" width="22" height="4" fill="#E5E7EB" />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Icon"
-              type="icon"
-              onAdd={onAdd}
-              hintText={hint('icon')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <polygon
-                    points="14,2 17,11 26,11 19,16 22,24 14,19 6,24 9,16 2,11 11,11"
-                    fill="#F59E0B"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Container"
-              type="container"
-              onAdd={onAdd}
-              hintText={hint('container')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="1"
-                    y="1"
-                    width="26"
-                    height="18"
-                    rx="3"
-                    stroke="#D1D5DB"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Divider"
-              type="divider"
-              onAdd={onAdd}
-              hintText={hint('divider')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="2"
-                    y="9"
-                    width="24"
-                    height="2"
-                    rx="1"
-                    fill="#E5E7EB"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="2 Columns"
-              type="columns-2"
-              onAdd={onAdd}
-              hintText={hint('columns-2')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="1"
-                    y="1"
-                    width="12"
-                    height="18"
-                    rx="2"
-                    fill="#F8FAFC"
-                    stroke="#E6E9EE"
-                  />
-                  <rect
-                    x="15"
-                    y="1"
-                    width="12"
-                    height="18"
-                    rx="2"
-                    fill="#F8FAFC"
-                    stroke="#E6E9EE"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="3 Columns"
-              type="columns-3"
-              onAdd={onAdd}
-              hintText={hint('columns-3')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="1"
-                    y="1"
-                    width="8"
-                    height="18"
-                    rx="2"
-                    fill="#F8FAFC"
-                    stroke="#E6E9EE"
-                  />
-                  <rect
-                    x="10"
-                    y="1"
-                    width="8"
-                    height="18"
-                    rx="2"
-                    fill="#F8FAFC"
-                    stroke="#E6E9EE"
-                  />
-                  <rect
-                    x="19"
-                    y="1"
-                    width="8"
-                    height="18"
-                    rx="2"
-                    fill="#F8FAFC"
-                    stroke="#E6E9EE"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Hero"
-              type="hero"
-              onAdd={onAdd}
-              hintText={hint('hero')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="0"
-                    y="0"
-                    width="28"
-                    height="20"
-                    rx="3"
-                    fill="#EEF2FF"
-                  />
-                  <rect
-                    x="3"
-                    y="3"
-                    width="22"
-                    height="6"
-                    rx="2"
-                    fill="#6366F1"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Gallery"
-              type="gallery"
-              onAdd={onAdd}
-              hintText={hint('gallery')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="1"
-                    y="1"
-                    width="8"
-                    height="8"
-                    rx="1"
-                    fill="#F3F4F6"
-                    stroke="#E5E7EB"
-                  />
-                  <rect
-                    x="10"
-                    y="1"
-                    width="8"
-                    height="8"
-                    rx="1"
-                    fill="#F3F4F6"
-                    stroke="#E5E7EB"
-                  />
-                  <rect
-                    x="19"
-                    y="1"
-                    width="8"
-                    height="8"
-                    rx="1"
-                    fill="#F3F4F6"
-                    stroke="#E5E7EB"
-                  />
-                </svg>
-              }
-            />
-            <PaletteItem
-              label="Product Card"
-              type="product-card"
-              onAdd={onAdd}
-              hintText={hint('product-card')}
-              icon={
-                <svg
-                  width="28"
-                  height="20"
-                  viewBox="0 0 28 20"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect
-                    x="1"
-                    y="1"
-                    width="26"
-                    height="18"
-                    rx="3"
-                    fill="#FFFFFF"
-                    stroke="#E6E9EE"
-                  />
-                  <rect
-                    x="3"
-                    y="3"
-                    width="8"
-                    height="8"
-                    rx="2"
-                    fill="#F3F4F6"
-                  />
-                  <rect
-                    x="13"
-                    y="4"
-                    width="12"
-                    height="3"
-                    rx="1"
-                    fill="#E5E7EB"
-                  />
-                </svg>
-              }
-            />
-          </>
-        )}
-        <PaletteItem
-          label="Heading"
-          type="heading"
-          onAdd={onAdd}
-          hintText={hint('heading')}
-          icon={
-            <svg
-              width="28"
-              height="20"
-              viewBox="0 0 28 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect x="2" y="4" width="24" height="3" rx="1" fill="#111827" />
-              <rect x="2" y="10" width="18" height="3" rx="1" fill="#111827" />
-            </svg>
-          }
-        />
-        <PaletteItem
-          label="Paragraph"
-          type="paragraph"
-          onAdd={onAdd}
-          hintText={hint('paragraph')}
-          icon={
-            <svg
-              width="28"
-              height="20"
-              viewBox="0 0 28 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect x="2" y="3" width="24" height="2" rx="1" fill="#9CA3AF" />
-              <rect x="2" y="7" width="20" height="2" rx="1" fill="#9CA3AF" />
-              <rect x="2" y="11" width="16" height="2" rx="1" fill="#9CA3AF" />
-            </svg>
-          }
-        />
+    <div className="flex flex-col h-full">
+      <div className="p-3 font-semibold border-b">Layers</div>
+      <div className="flex-1 overflow-y-auto p-2">
+        <ul className="space-y-1">
+          {tree.map(n => renderNode(n))}
+        </ul>
       </div>
     </div>
   )
 }
 
-function PaletteItem({
-  label,
-  type,
-  onAdd,
-  hintText,
-  icon,
-}: {
-  label: string
-  type: PaletteElementType
-  onAdd: (t: PaletteElementType) => void
-  hintText?: string
-  icon?: React.ReactNode
-}) {
+// Elements Panel
+function ElementsPanel({ onAdd, onlyText }: { onAdd: (type: PaletteElementType)=>void, onlyText?: boolean }) {
+  return (
+    <div>
+      <div className="p-3 font-semibold">{onlyText ? 'Text' : 'Elements'}</div>
+      <div className="p-3 grid grid-cols-2 gap-2">
+        {!onlyText && (
+          <>
+            <PaletteItem label="Button" type="button" onAdd={onAdd} />
+            <PaletteItem label="Input" type="input" onAdd={onAdd} />
+            <PaletteItem label="Image" type="image" onAdd={onAdd} />
+            <PaletteItem label="Icon ★" type="icon" onAdd={onAdd} />
+            <PaletteItem label="Container" type="container" onAdd={onAdd} />
+            <PaletteItem label="Divider" type="divider" onAdd={onAdd} />
+            <PaletteItem label="2 Columns" type="columns-2" onAdd={onAdd} />
+            <PaletteItem label="3 Columns" type="columns-3" onAdd={onAdd} />
+            <PaletteItem label="Hero" type="hero" onAdd={onAdd} />
+            <PaletteItem label="Gallery" type="gallery" onAdd={onAdd} />
+            <PaletteItem label="Product Card" type="product-card" onAdd={onAdd} />
+          </>
+        )}
+        <PaletteItem label="Heading" type="heading" onAdd={onAdd} />
+        <PaletteItem label="Paragraph" type="paragraph" onAdd={onAdd} />
+      </div>
+    </div>
+  )
+}
+
+function PaletteItem({ label, type, onAdd }: { label: string, type: PaletteElementType, onAdd: (t: PaletteElementType)=>void }) {
   const onDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData('application/x-editor-element', type)
     e.dataTransfer.setData('text/plain', type)
@@ -5308,56 +1557,17 @@ function PaletteItem({
   }
   return (
     <button
-      className="group flex items-center gap-3 rounded-lg border border-gray-100 bg-white p-3 text-left shadow-sm transition-shadow hover:shadow-md"
+      className="px-2 py-1 border rounded text-sm"
       onClick={() => onAdd(type)}
       draggable
       onDragStart={onDragStart}
-      title={hintText || label}
-    >
-      <div className="flex h-8 w-10 items-center justify-center rounded-md border border-gray-100 bg-gradient-to-br from-white to-[#F8FAFF]">
-        {icon || (
-          <svg
-            className="h-4 w-6 text-gray-400"
-            viewBox="0 0 24 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect x="1" y="1" width="22" height="14" rx="2" stroke="#E5E7EB" />
-          </svg>
-        )}
-      </div>
-      <div className="flex-1">
-        <div className="text-sm font-medium text-gray-800">{label}</div>
-        {hintText && (
-          <div className="mt-0.5 text-xs text-gray-500">{hintText}</div>
-        )}
-      </div>
-    </button>
+    >{label}</button>
   )
 }
 
 // Overlay: shows quick actions above the selected element in the canvas
-function SelectionActionsOverlay({
-  iframeRef,
-  selectedPath,
-  scale,
-  onChangeSelectedPath,
-  onStartDrag,
-  onSaveHistory,
-}: {
-  iframeRef: React.RefObject<HTMLIFrameElement>
-  selectedPath: string
-  scale: number
-  onChangeSelectedPath: (p: string | null) => void
-  onStartDrag: (e: React.MouseEvent) => void
-  onSaveHistory: () => void
-}) {
-  const [rect, setRect] = useState<{
-    top: number
-    left: number
-    width: number
-    height: number
-  } | null>(null)
+function SelectionActionsOverlay({ iframeRef, selectedPath, scale, onChangeSelectedPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, selectedPath: string, scale: number, onChangeSelectedPath: (p: string | null) => void }) {
+  const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   // Local helpers (mirror editor utilities) to avoid scope issues
   const computeElementPathLocal = (doc: Document, el: Element): string => {
     const path: number[] = []
@@ -5371,14 +1581,8 @@ function SelectionActionsOverlay({
     }
     return path.join('.')
   }
-  const resolvePathToElementLocal = (
-    doc: Document,
-    path: string
-  ): Element | null => {
-    const parts = path
-      .split('.')
-      .map(n => parseInt(n, 10))
-      .filter(n => !Number.isNaN(n))
+  const resolvePathToElementLocal = (doc: Document, path: string): Element | null => {
+    const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
     let cursor: Element = doc.body
     for (const idx of parts) {
       if (!cursor.children || !cursor.children[idx]) return null
@@ -5388,39 +1592,26 @@ function SelectionActionsOverlay({
   }
   useEffect(() => {
     const doc = iframeRef.current?.contentDocument
-    if (!doc || !selectedPath) {
-      setRect(null)
-      return
+    if (!doc || !selectedPath) { setRect(null); return }
+    const el = resolvePathToElementLocal(doc, selectedPath) as HTMLElement | null
+    if (!el) { setRect(null); return }
+    // Compute position relative to the iframe body using offsets, then scale
+    const getOffsets = (node: HTMLElement) => {
+      let top = 0, left = 0
+      let cur: HTMLElement | null = node
+      while (cur && cur !== doc.body) {
+        top += cur.offsetTop
+        left += cur.offsetLeft
+        cur = cur.offsetParent as HTMLElement | null
+      }
+      return { top, left }
     }
-    const el = resolvePathToElementLocal(
-      doc,
-      selectedPath
-    ) as HTMLElement | null
-    if (!el) {
-      setRect(null)
-      return
-    }
-
-    // Get the actual visual position using getBoundingClientRect
-    const elRect = el.getBoundingClientRect()
-    const bodyRect = doc.body.getBoundingClientRect()
-
-    // Calculate position relative to body
-    const top = elRect.top - bodyRect.top
-    const left = elRect.left - bodyRect.left
-
-    setRect({
-      top: top * scale,
-      left: left * scale,
-      width: elRect.width * scale,
-      height: elRect.height * scale,
-    })
+    const offsets = getOffsets(el)
+    const r = el.getBoundingClientRect()
+    setRect({ top: offsets.top * scale, left: offsets.left * scale, width: r.width * scale, height: r.height * scale })
   }, [selectedPath, scale])
 
   const actDelete = () => {
-    // Save state BEFORE deletion
-    onSaveHistory()
-
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5430,9 +1621,6 @@ function SelectionActionsOverlay({
   }
 
   const actDuplicate = () => {
-    // Save state BEFORE duplication
-    onSaveHistory()
-
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5444,9 +1632,6 @@ function SelectionActionsOverlay({
   }
 
   const actMoveUp = () => {
-    // Save state BEFORE move
-    onSaveHistory()
-
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5460,9 +1645,6 @@ function SelectionActionsOverlay({
   }
 
   const actMoveDown = () => {
-    // Save state BEFORE move
-    onSaveHistory()
-
     const doc = iframeRef.current?.contentDocument
     if (!doc || !selectedPath) return
     const el = resolvePathToElementLocal(doc, selectedPath)
@@ -5475,859 +1657,53 @@ function SelectionActionsOverlay({
     }
   }
 
-  const handleDragStart = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    const doc = iframeRef.current?.contentDocument
-    if (!doc || !selectedPath) return
-
-    const el = resolvePathToElementLocal(doc, selectedPath) as HTMLElement
-    if (!el) return
-
-    // Ensure element has data-id for drag system
-    if (!el.dataset.id) {
-      el.dataset.id = `element-${Date.now()}`
-    }
-
-    // Initialize position data
-    if (!el.dataset.x) el.dataset.x = '0'
-    if (!el.dataset.y) el.dataset.y = '0'
-
-    let isDragging = false
-    const startX = e.clientX
-    const startY = e.clientY
-    const initialX = parseInt(el.dataset.x || '0')
-    const initialY = parseInt(el.dataset.y || '0')
-
-    // Set initial styles
-    el.style.position = 'relative'
-
-    // Alignment guides functionality
-    let guidelines: HTMLElement[] = []
-
-    const showAlignmentGuides = (
-      draggedEl: HTMLElement,
-      x: number,
-      y: number
-    ) => {
-      // Clear existing guides
-      guidelines.forEach(guide => {
-        if (guide.parentNode) guide.parentNode.removeChild(guide)
-      })
-      guidelines = []
-
-      const draggedRect = draggedEl.getBoundingClientRect()
-      const draggedCenter = {
-        x: draggedRect.left + draggedRect.width / 2,
-        y: draggedRect.top + draggedRect.height / 2,
-      }
-
-      const otherElements = doc.querySelectorAll('[data-id]:not(.dragging)')
-
-      otherElements.forEach(otherEl => {
-        const rect = otherEl.getBoundingClientRect()
-        const center = {
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        }
-
-        const tolerance = 8
-
-        // Vertical center alignment
-        if (Math.abs(draggedCenter.x - center.x) < tolerance) {
-          const guide = doc.createElement('div')
-          guide.style.cssText = `
-            position: fixed;
-            left: ${center.x}px;
-            top: 0;
-            bottom: 0;
-            width: 1px;
-            background: #3b82f6;
-            z-index: 9998;
-            pointer-events: none;
-            box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
-          `
-          doc.body.appendChild(guide)
-          guidelines.push(guide)
-        }
-
-        // Horizontal center alignment
-        if (Math.abs(draggedCenter.y - center.y) < tolerance) {
-          const guide = doc.createElement('div')
-          guide.style.cssText = `
-            position: fixed;
-            top: ${center.y}px;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #3b82f6;
-            z-index: 9998;
-            pointer-events: none;
-            box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
-          `
-          doc.body.appendChild(guide)
-          guidelines.push(guide)
-        }
-      })
-    }
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging) {
-        isDragging = true
-        el.classList.add('dragging')
-        el.style.zIndex = '9999'
-        el.style.opacity = '0.8'
-        el.style.cursor = 'grabbing'
-        el.style.boxShadow = '0 10px 25px rgba(59, 130, 246, 0.3)'
-        console.log('🚀 Started dragging element:', el.dataset.id)
-      }
-
-      const deltaX = e.clientX - startX
-      const deltaY = e.clientY - startY
-      const newX = initialX + deltaX
-      const newY = initialY + deltaY
-
-      // Snap to 10px grid
-      const snappedX = Math.round(newX / 10) * 10
-      const snappedY = Math.round(newY / 10) * 10
-
-      el.dataset.x = snappedX.toString()
-      el.dataset.y = snappedY.toString()
-      el.style.transform = `translate(${snappedX}px, ${snappedY}px)`
-
-      // Show alignment guides
-      showAlignmentGuides(el, snappedX, snappedY)
-
-      // Optional: Show position in real-time
-      console.log(`📍 Position: (${snappedX}, ${snappedY})`)
-    }
-
-    const onMouseUp = () => {
-      if (isDragging) {
-        el.classList.remove('dragging')
-        el.style.zIndex = ''
-        el.style.opacity = ''
-        el.style.cursor = ''
-        el.style.boxShadow = ''
-
-        // Clean up alignment guidelines
-        guidelines.forEach(guide => {
-          if (guide.parentNode) guide.parentNode.removeChild(guide)
-        })
-        guidelines = []
-
-        console.log(
-          '✅ Element moved to final position:',
-          el.dataset.x,
-          el.dataset.y
-        )
-
-        // Force overlay to update by temporarily clearing and restoring selection
-        const currentPath = selectedPath
-        onChangeSelectedPath(null)
-        requestAnimationFrame(() => {
-          onChangeSelectedPath(currentPath)
-        })
-
-        // Save to history after drag completes
-        onSaveHistory()
-      }
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-    }
-
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
-  }
-
   if (!rect) return null
-  // Smart positioning: try to place above element, but if no space, place below
-  const actionBarHeight = 40 // Height of the action bar (compact)
-  const actionBarWidth = 220 // Approximate width of compact action bar
-  const margin = 8
-
-  // Prefer to keep the action bar inside the iframe/canvas area to avoid overlapping sidebars
-  const iframeRect = iframeRef.current?.getBoundingClientRect()
-  const containerWidth = iframeRect ? iframeRect.width : window.innerWidth
-  const containerHeight = iframeRect ? iframeRect.height : window.innerHeight
-
-  const spaceAbove = rect.top
-  const spaceBelow = containerHeight - (rect.top + rect.height)
-
-  let barTop: number
-  if (spaceAbove >= actionBarHeight + margin) {
-    // Place above with margin
-    barTop = rect.top - actionBarHeight - margin
-  } else if (spaceBelow >= actionBarHeight + margin) {
-    // Place below with margin
-    barTop = rect.top + rect.height + margin
-  } else {
-    // Not enough space above or below, place at best available position inside container
-    barTop = Math.max(
-      margin,
-      Math.min(
-        rect.top - actionBarHeight,
-        containerHeight - actionBarHeight - margin
-      )
-    )
-  }
-
-  // Ensure action bar doesn't go off the right edge of the canvas (use container width)
-  const barLeft = Math.max(
-    margin,
-    Math.min(rect.left, containerWidth - actionBarWidth - margin)
-  )
+  // Place action bar along the top edge of the selection rectangle
+  // Raise quick actions slightly higher above the selection rectangle
+  const barTop = Math.max(0, rect.top - 36)
+  const barLeft = rect.left
   return (
     <>
-      {/* Selection rectangle – single blue border */}
-      <div
-        style={{
-          position: 'absolute',
-          top: rect.top,
-          left: rect.left,
-          width: rect.width,
-          height: rect.height,
-          pointerEvents: 'none',
-          boxSizing: 'border-box',
-          border: '2px solid #3B82F6',
-          borderRadius: '2px',
-        }}
-      />
+      {/* Selection rectangle – always rectangular */}
+      <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box' }} className="border-2 border-gray-900 rounded-sm" />
       {/* Quick actions on the top edge */}
-      <div
-        style={{
-          position: 'absolute',
-          top: barTop,
-          left: barLeft,
-          pointerEvents: 'auto',
-        }}
-      >
-        <div className="inline-flex items-center gap-1 rounded-sm border border-gray-100 bg-white px-1 py-1 shadow-sm">
-          <button
-            className="rounded-sm p-1 text-gray-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
-            title="Drag"
-            aria-label="Drag handle"
-            onMouseDown={onStartDrag}
-            style={{ cursor: 'grab' }}
-          >
-            <GripVertical size={14} />
-          </button>
-
-          <div className="mx-1 h-4 w-px bg-gray-200"></div>
-
-          <button
-            className="rounded-sm p-1 text-red-600 transition-colors hover:bg-red-50"
-            title="Delete"
-            onClick={actDelete}
-          >
-            <Trash2 size={14} />
-          </button>
-
-          <button
-            className="rounded-sm p-1 text-gray-600 transition-colors hover:bg-gray-50"
-            title="Duplicate"
-            onClick={actDuplicate}
-          >
-            <Copy size={14} />
-          </button>
-
-          <div className="mx-1 h-4 w-px bg-gray-200"></div>
-
-          <button
-            className="rounded-sm p-1 text-gray-600 transition-colors hover:bg-gray-50"
-            title="Move Up"
-            onClick={actMoveUp}
-          >
-            <ChevronUp size={14} />
-          </button>
-
-          <button
-            className="rounded-sm p-1 text-gray-600 transition-colors hover:bg-gray-50"
-            title="Move Down"
-            onClick={actMoveDown}
-          >
-            <ChevronDown size={14} />
-          </button>
+      <div style={{ position: 'absolute', top: barTop, left: barLeft, pointerEvents: 'auto' }}>
+        <div className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md bg-white/95 border shadow-sm">
+          <button className="p-1 rounded hover:bg-gray-100" title="Delete" onClick={actDelete}><Trash2 size={14} /></button>
+          <button className="p-1 rounded hover:bg-gray-100" title="Duplicate" onClick={actDuplicate}><Copy size={14} /></button>
+          <button className="p-1 rounded hover:bg-gray-100" title="Move Up" onClick={actMoveUp}><ChevronUp size={14} /></button>
+          <button className="p-1 rounded hover:bg-gray-100" title="Move Down" onClick={actMoveDown}><ChevronDown size={14} /></button>
         </div>
       </div>
     </>
   )
 }
 
-function HoverRectOverlay({
-  iframeRef,
-  hoveredPath,
-  scale,
-  selectedPath,
-}: {
-  iframeRef: React.RefObject<HTMLIFrameElement>
-  hoveredPath: string
-  scale: number
-  selectedPath?: string | null
-}) {
-  const [rect, setRect] = useState<{
-    top: number
-    left: number
-    width: number
-    height: number
-  } | null>(null)
+function HoverRectOverlay({ iframeRef, hoveredPath, scale, selectedPath }: { iframeRef: React.RefObject<HTMLIFrameElement>, hoveredPath: string, scale: number, selectedPath?: string | null }) {
+  const [rect, setRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null)
   useEffect(() => {
     const doc = iframeRef.current?.contentDocument
-    // Show hover border even when something is selected, but not on the same element
-    if (
-      !doc ||
-      !hoveredPath ||
-      (selectedPath && hoveredPath === selectedPath)
-    ) {
-      setRect(null)
-      return
-    }
+    if (!doc || !hoveredPath || (selectedPath && hoveredPath === selectedPath)) { setRect(null); return }
     const resolve = (d: Document, path: string) => {
-      const parts = path
-        .split('.')
-        .map(n => parseInt(n, 10))
-        .filter(n => !Number.isNaN(n))
+      const parts = path.split('.').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n))
       let cursor: Element = d.body
-      for (const i of parts) {
-        if (!cursor.children[i]) return null
-        cursor = cursor.children[i]
-      }
+      for (const i of parts) { if (!cursor.children[i]) return null; cursor = cursor.children[i] }
       return cursor as HTMLElement
     }
     const el = resolve(doc, hoveredPath)
-    if (!el) {
-      setRect(null)
-      return
+    if (!el) { setRect(null); return }
+    const getOffsets = (node: HTMLElement) => {
+      let top = 0, left = 0
+      let cur: HTMLElement | null = node
+      while (cur && cur !== doc.body) { top += cur.offsetTop; left += cur.offsetLeft; cur = cur.offsetParent as HTMLElement | null }
+      return { top, left }
     }
-
-    // Get the actual visual position using getBoundingClientRect
-    const elRect = el.getBoundingClientRect()
-    const bodyRect = doc.body.getBoundingClientRect()
-
-    // Calculate position relative to body
-    const top = elRect.top - bodyRect.top
-    const left = elRect.left - bodyRect.left
-
-    setRect({
-      top: top * scale,
-      left: left * scale,
-      width: elRect.width * scale,
-      height: elRect.height * scale,
-    })
+    const offsets = getOffsets(el)
+    const r = el.getBoundingClientRect()
+    setRect({ top: offsets.top * scale, left: offsets.left * scale, width: r.width * scale, height: r.height * scale })
   }, [hoveredPath, selectedPath, scale])
   if (!rect) return null
   return (
-    <div
-      style={{
-        position: 'absolute',
-        top: rect.top,
-        left: rect.left,
-        width: rect.width,
-        height: rect.height,
-        pointerEvents: 'none',
-        boxSizing: 'border-box',
-        border: '2px dashed #3B82F6',
-        borderRadius: '2px',
-      }}
-    />
-  )
-}
-
-// Icon Item Component with Drag & Drop (similar to PaletteItem)
-function IconItem({
-  icon,
-  iconWeight,
-  onAddIcon,
-}: {
-  icon: { name: string; component: any }
-  iconWeight: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
-  onAddIcon: (iconSvg: string, iconName: string) => void
-}) {
-  const IconComponent = icon.component
-  const iconRef = useRef<HTMLButtonElement>(null)
-
-  // Generate actual SVG from Phosphor icon
-  const generateIconSVG = () => {
-    // Render the Phosphor React icon into a temporary DOM node and read the SVG markup
-    const container = document.createElement('div')
-    container.style.position = 'absolute'
-    container.style.left = '-9999px'
-    container.style.top = '-9999px'
-    document.body.appendChild(container)
-
-    // Create a root and render the icon component into it
-    let root: ReturnType<typeof createRoot> | null = null
-    try {
-      root = createRoot(container)
-      root.render(
-        React.createElement(IconComponent, { size: 48, weight: iconWeight })
-      )
-
-      // Give browser a tick to paint the SVG
-      // (render is synchronous for client components, but allow a microtask)
-      // Immediately read innerHTML — it should contain the <svg> element
-      const svgString = container.innerHTML || ''
-      return svgString
-    } catch (e) {
-      console.warn(
-        'generateIconSVG render failed, falling back to simple SVG:',
-        e
-      )
-      // Fallback simple SVG that uses icon name initial
-      const fallback = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 256 256" fill="currentColor" data-phosphor-icon="${icon.name}" data-weight="${iconWeight}"><title>${icon.name}</title><text x="128" y="140" text-anchor="middle" dominant-baseline="middle" font-size="120">${icon.name.charAt(0)}</text></svg>`
-      return fallback
-    } finally {
-      // Clean up the rendered root and container
-      try {
-        if (root) root.unmount()
-      } catch (e) {}
-      try {
-        if (container.parentNode) container.parentNode.removeChild(container)
-      } catch (e) {}
-    }
-  }
-
-  const onDragStart = (e: React.DragEvent) => {
-    const svgString = generateIconSVG()
-
-    e.dataTransfer.setData(
-      'application/x-editor-icon',
-      JSON.stringify({
-        name: icon.name,
-        weight: iconWeight,
-        svg: svgString,
-      })
-    )
-    e.dataTransfer.setData('text/plain', icon.name)
-    e.dataTransfer.effectAllowed = 'copy'
-
-    // Create a drag image
-    if (iconRef.current) {
-      const rect = iconRef.current.getBoundingClientRect()
-      e.dataTransfer.setDragImage(
-        iconRef.current,
-        rect.width / 2,
-        rect.height / 2
-      )
-    }
-  }
-
-  const handleClick = () => {
-    const svgString = generateIconSVG()
-    onAddIcon(svgString, icon.name)
-  }
-
-  return (
-    <button
-      ref={iconRef}
-      onClick={handleClick}
-      draggable
-      onDragStart={onDragStart}
-      className="group flex aspect-square cursor-move items-center justify-center rounded-lg border border-gray-200 bg-white p-2 transition-all duration-200 hover:border-blue-400 hover:bg-blue-50 hover:shadow-md active:cursor-grabbing"
-      title={`${icon.name} (Drag to canvas or click)`}
-    >
-      <IconComponent
-        size={28}
-        weight={iconWeight}
-        className="text-gray-700 transition-all duration-200 group-hover:scale-110 group-hover:text-blue-600"
-      />
-    </button>
-  )
-}
-
-// Icons Panel Component with Phosphor Icons
-function IconsPanel({
-  onAddIcon,
-}: {
-  onAddIcon: (iconSvg: string, iconName: string) => void
-}) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [iconWeight, setIconWeight] = useState<
-    'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
-  >('regular')
-
-  // Helper to convert React component to SVG string
-  const iconToSvg = (IconComponent: any, iconName: string) => {
-    const div = document.createElement('div')
-    const root = (window as any).createRoot
-      ? (window as any).createRoot(div)
-      : null
-
-    // Simple SVG generation - we'll use a more direct approach
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor"><text x="128" y="128" text-anchor="middle" dominant-baseline="middle" font-size="200">${iconName.charAt(0)}</text></svg>`
-  }
-
-  // Icon library with Phosphor Icons organized by category
-  const iconLibrary = {
-    business: [
-      { name: 'Briefcase', component: PhosphorIcons.Briefcase },
-      { name: 'ChartBar', component: PhosphorIcons.ChartBar },
-      { name: 'CurrencyDollar', component: PhosphorIcons.CurrencyDollar },
-      { name: 'Bank', component: PhosphorIcons.Bank },
-      { name: 'ChartLine', component: PhosphorIcons.ChartLine },
-      { name: 'TrendUp', component: PhosphorIcons.TrendUp },
-      { name: 'Target', component: PhosphorIcons.Target },
-      { name: 'Handshake', component: PhosphorIcons.Handshake },
-      { name: 'Receipt', component: PhosphorIcons.Receipt },
-      { name: 'CreditCard', component: PhosphorIcons.CreditCard },
-      { name: 'Storefront', component: PhosphorIcons.Storefront },
-      { name: 'Package', component: PhosphorIcons.Package },
-    ],
-    social: [
-      { name: 'Heart', component: PhosphorIcons.Heart },
-      { name: 'ShareNetwork', component: PhosphorIcons.ShareNetwork },
-      { name: 'Star', component: PhosphorIcons.Star },
-      { name: 'ChatCircle', component: PhosphorIcons.ChatCircle },
-      { name: 'ThumbsUp', component: PhosphorIcons.ThumbsUp },
-      { name: 'Users', component: PhosphorIcons.Users },
-      { name: 'At', component: PhosphorIcons.At },
-      { name: 'PaperPlaneTilt', component: PhosphorIcons.PaperPlaneTilt },
-      { name: 'EnvelopeSimple', component: PhosphorIcons.EnvelopeSimple },
-      { name: 'Bell', component: PhosphorIcons.Bell },
-      { name: 'Phone', component: PhosphorIcons.Phone },
-      { name: 'VideoCamera', component: PhosphorIcons.VideoCamera },
-    ],
-    arrows: [
-      { name: 'ArrowRight', component: PhosphorIcons.ArrowRight },
-      { name: 'ArrowLeft', component: PhosphorIcons.ArrowLeft },
-      { name: 'ArrowUp', component: PhosphorIcons.ArrowUp },
-      { name: 'ArrowDown', component: PhosphorIcons.ArrowDown },
-      { name: 'CaretRight', component: PhosphorIcons.CaretRight },
-      { name: 'CaretLeft', component: PhosphorIcons.CaretLeft },
-      { name: 'CaretUp', component: PhosphorIcons.CaretUp },
-      { name: 'CaretDown', component: PhosphorIcons.CaretDown },
-      { name: 'ArrowCircleRight', component: PhosphorIcons.ArrowCircleRight },
-      { name: 'ArrowCircleLeft', component: PhosphorIcons.ArrowCircleLeft },
-      {
-        name: 'ArrowElbowDownRight',
-        component: PhosphorIcons.ArrowElbowDownRight,
-      },
-      { name: 'TrendUp', component: PhosphorIcons.TrendUp },
-    ],
-    ui: [
-      { name: 'List', component: PhosphorIcons.List },
-      { name: 'X', component: PhosphorIcons.X },
-      { name: 'Check', component: PhosphorIcons.Check },
-      { name: 'Gear', component: PhosphorIcons.Gear },
-      { name: 'MagnifyingGlass', component: PhosphorIcons.MagnifyingGlass },
-      { name: 'Plus', component: PhosphorIcons.Plus },
-      { name: 'Minus', component: PhosphorIcons.Minus },
-      { name: 'House', component: PhosphorIcons.House },
-      { name: 'Info', component: PhosphorIcons.Info },
-      { name: 'Warning', component: PhosphorIcons.Warning },
-      { name: 'Eye', component: PhosphorIcons.Eye },
-      { name: 'Lock', component: PhosphorIcons.Lock },
-    ],
-    design: [
-      { name: 'PencilLine', component: PhosphorIcons.PencilLine },
-      { name: 'Palette', component: PhosphorIcons.Palette },
-      { name: 'Image', component: PhosphorIcons.Image },
-      { name: 'SquaresFour', component: PhosphorIcons.SquaresFour },
-      { name: 'Circle', component: PhosphorIcons.Circle },
-      { name: 'Square', component: PhosphorIcons.Square },
-      { name: 'Triangle', component: PhosphorIcons.Triangle },
-      { name: 'Rectangle', component: PhosphorIcons.Rectangle },
-      { name: 'Polygon', component: PhosphorIcons.Polygon },
-      { name: 'PaintBrush', component: PhosphorIcons.PaintBrush },
-      { name: 'Eyedropper', component: PhosphorIcons.Eyedropper },
-      { name: 'Shapes', component: PhosphorIcons.Shapes },
-    ],
-    ecommerce: [
-      { name: 'ShoppingCart', component: PhosphorIcons.ShoppingCart },
-      { name: 'ShoppingBag', component: PhosphorIcons.ShoppingBag },
-      { name: 'Tag', component: PhosphorIcons.Tag },
-      { name: 'Barcode', component: PhosphorIcons.Barcode },
-      { name: 'Percent', component: PhosphorIcons.Percent },
-      { name: 'Gift', component: PhosphorIcons.Gift },
-      { name: 'Truck', component: PhosphorIcons.Truck },
-      { name: 'MapPin', component: PhosphorIcons.MapPin },
-      { name: 'Calendar', component: PhosphorIcons.Calendar },
-      { name: 'Clock', component: PhosphorIcons.Clock },
-      { name: 'Ticket', component: PhosphorIcons.Ticket },
-      { name: 'Coins', component: PhosphorIcons.Coins },
-    ],
-    media: [
-      { name: 'Play', component: PhosphorIcons.Play },
-      { name: 'Pause', component: PhosphorIcons.Pause },
-      { name: 'SkipForward', component: PhosphorIcons.SkipForward },
-      { name: 'SkipBack', component: PhosphorIcons.SkipBack },
-      { name: 'SpeakerHigh', component: PhosphorIcons.SpeakerHigh },
-      { name: 'SpeakerSlash', component: PhosphorIcons.SpeakerSlash },
-      { name: 'Camera', component: PhosphorIcons.Camera },
-      { name: 'FilmStrip', component: PhosphorIcons.FilmStrip },
-      { name: 'Microphone', component: PhosphorIcons.Microphone },
-      { name: 'MusicNote', component: PhosphorIcons.MusicNote },
-      { name: 'Headphones', component: PhosphorIcons.Headphones },
-      { name: 'Radio', component: PhosphorIcons.Radio },
-    ],
-  }
-
-  const categories = [
-    {
-      id: 'all',
-      name: 'All Icons',
-      count: Object.values(iconLibrary).flat().length,
-    },
-    { id: 'business', name: 'Business', count: iconLibrary.business.length },
-    { id: 'social', name: 'Social', count: iconLibrary.social.length },
-    { id: 'arrows', name: 'Arrows', count: iconLibrary.arrows.length },
-    { id: 'ui', name: 'UI', count: iconLibrary.ui.length },
-    { id: 'design', name: 'Design', count: iconLibrary.design.length },
-    {
-      id: 'ecommerce',
-      name: 'E-commerce',
-      count: iconLibrary.ecommerce.length,
-    },
-    { id: 'media', name: 'Media', count: iconLibrary.media.length },
-  ]
-
-  const filteredIcons =
-    selectedCategory === 'all'
-      ? Object.values(iconLibrary).flat()
-      : iconLibrary[selectedCategory as keyof typeof iconLibrary] || []
-
-  const searchedIcons = filteredIcons.filter(icon =>
-    icon.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  return (
-    <div className="h-full flex-1 overflow-y-auto rounded-b-xl border-l bg-white p-3">
-      <div className="mb-4">
-        {/* Search */}
-        <div className="relative mb-3">
-          <input
-            type="text"
-            placeholder="Search icons..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="h-8 w-full rounded-lg border border-gray-300 bg-white pl-8 pr-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <PhosphorIcons.MagnifyingGlass className="absolute left-2.5 top-2.5 h-3 w-3 text-gray-400" />
-        </div>
-
-        {/* Weight Selector */}
-        <div className="mb-3">
-          <label className="mb-1.5 block text-xs font-medium text-gray-700">
-            Icon Weight
-          </label>
-          <div className="grid grid-cols-3 gap-1">
-            {(['regular', 'bold', 'fill'] as const).map(weight => (
-              <button
-                key={weight}
-                onClick={() => setIconWeight(weight)}
-                className={`rounded-md px-2 py-1 text-xs capitalize transition-colors ${
-                  iconWeight === weight
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {weight}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="mb-4 space-y-1">
-          {categories.map(category => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`w-full rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-200 ${
-                selectedCategory === category.id
-                  ? 'bg-blue-100 font-medium text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate">{category.name}</span>
-                <span className="ml-2 flex-shrink-0 text-xs text-gray-400">
-                  {category.count}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Icons Grid */}
-      <div className="grid grid-cols-4 gap-2 p-2">
-        {searchedIcons.map((icon, index) => (
-          <IconItem
-            key={index}
-            icon={icon}
-            iconWeight={iconWeight}
-            onAddIcon={onAddIcon}
-          />
-        ))}
-      </div>
-
-      {searchedIcons.length === 0 && (
-        <div className="py-6 text-center text-gray-500">
-          <PhosphorIcons.MagnifyingGlass className="mx-auto mb-2 h-6 w-6 text-gray-300" />
-          <p className="text-xs">No icons found</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Assets Panel Component
-function AssetsPanel({
-  onAddImage,
-  onUploadAsset,
-}: {
-  onAddImage: (imageSrc: string, imageName: string) => void
-  onUploadAsset: (file: File) => void
-}) {
-  const [dragOver, setDragOver] = useState(false)
-  const [uploadedAssets, setUploadedAssets] = useState<
-    Array<{ id: string; name: string; src: string; type: string; size: number }>
-  >([])
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Sample stock images
-  const stockImages = [
-    {
-      name: 'Business Team',
-      src: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
-    },
-    {
-      name: 'Office Space',
-      src: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop',
-    },
-    {
-      name: 'Technology',
-      src: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop',
-    },
-    {
-      name: 'Meeting',
-      src: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=400&h=300&fit=crop',
-    },
-    {
-      name: 'Laptop Work',
-      src: 'https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=400&h=300&fit=crop',
-    },
-    {
-      name: 'Presentation',
-      src: 'https://images.unsplash.com/photo-1553028826-f4804a6dba3b?w=400&h=300&fit=crop',
-    },
-  ]
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-    const files = Array.from(e.dataTransfer.files)
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        handleFileUpload(file)
-      }
-    })
-  }
-
-  const handleFileUpload = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const result = e.target?.result as string
-      const newAsset = {
-        id: Date.now().toString(),
-        name: file.name,
-        src: result,
-        type: file.type,
-        size: file.size,
-      }
-      setUploadedAssets(prev => [...prev, newAsset])
-      onUploadAsset(file)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  return (
-    <div className="h-full flex-1 overflow-y-auto rounded-b-xl border-l bg-white p-3">
-      <div className="mb-4">
-        {/* Upload Area */}
-        <div
-          className={`mb-4 rounded-lg border-2 border-dashed p-3 text-center transition-colors duration-200 ${
-            dragOver
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
-          }`}
-          onDrop={handleDrop}
-          onDragOver={e => {
-            e.preventDefault()
-            setDragOver(true)
-          }}
-          onDragLeave={() => setDragOver(false)}
-        >
-          <Upload className="mx-auto mb-2 h-5 w-5 text-gray-400" />
-          <p className="mb-2 text-xs text-gray-600">Drag & drop images</p>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-lg bg-blue-500 px-3 py-1 text-xs text-white transition-colors duration-200 hover:bg-blue-600"
-          >
-            Browse Files
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={e => {
-              const files = Array.from(e.target.files || [])
-              files.forEach(handleFileUpload)
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Uploaded Assets */}
-      {uploadedAssets.length > 0 && (
-        <div className="mb-4">
-          <h4 className="mb-2 text-xs font-medium text-gray-700">
-            Uploaded Assets
-          </h4>
-          <div className="grid grid-cols-3 gap-1.5">
-            {uploadedAssets.map(asset => (
-              <button
-                key={asset.id}
-                onClick={() => onAddImage(asset.src, asset.name)}
-                className="group aspect-square overflow-hidden rounded-lg border border-gray-200 transition-colors duration-200 hover:border-blue-300"
-                title={asset.name}
-              >
-                <img
-                  src={asset.src}
-                  alt={asset.name}
-                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Stock Images */}
-      <div>
-        <h4 className="mb-2 text-xs font-medium text-gray-700">Stock Images</h4>
-        <div className="grid grid-cols-3 gap-1.5">
-          {stockImages.map((image, index) => (
-            <button
-              key={index}
-              onClick={() => onAddImage(image.src, image.name)}
-              className="group aspect-square overflow-hidden rounded-lg border border-gray-200 transition-colors duration-200 hover:border-blue-300"
-              title={image.name}
-            >
-              <img
-                src={image.src}
-                alt={image.name}
-                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-110"
-              />
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
+    <div style={{ position: 'absolute', top: rect.top, left: rect.left, width: rect.width, height: rect.height, pointerEvents: 'none', boxSizing: 'border-box' }} className="border border-dashed border-gray-500/80 rounded-sm" />
   )
 }

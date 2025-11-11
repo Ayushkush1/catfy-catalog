@@ -16,7 +16,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Header } from '@/components/Header'
+import { Sidebar } from '@/components/dashboard/Sidebar'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import {
   Crown,
   Zap,
@@ -30,6 +31,8 @@ import {
   Loader2,
   ExternalLink,
   AlertTriangle,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -247,36 +250,31 @@ export default function BillingPage() {
 
   if (isLoading) {
     return (
-      <>
-        <Header title="Billing" />
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-24 w-full" />
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-96" />
-              ))}
+      <div className="flex min-h-screen bg-[#E8EAF6]">
+        <Sidebar />
+        <div className="ml-32 flex-1">
+          <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
+          <div className="p-8">
+            <div className="space-y-6">
+              <Skeleton className="h-48 w-full rounded-xl" />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-96 rounded-xl" />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <Header title="Billing" />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            Billing & Subscription
-          </h1>
-          <p className="text-gray-600">
-            Manage your subscription and billing information
-          </p>
-        </div>
+    <div className="flex min-h-screen bg-[#E8EAF6]">
+      <Sidebar />
+      <div className="ml-32 flex-1">
+        <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
+        <div className="p-8">
 
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -285,104 +283,106 @@ export default function BillingPage() {
           </Alert>
         )}
 
-        {/* Current Subscription */}
+                {/* Current Subscription */}
         {profile?.subscription && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Current Subscription
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div>
-                  <Label className="text-sm font-medium text-gray-600">
-                    Plan
-                  </Label>
-                  <div className="mt-1 flex items-center gap-2">
+          <Card className="border-0 shadow-lg mb-8 bg-gradient-to-br from-purple-50 to-blue-50">
+            <CardContent className="p-8">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
+                    profile.subscription.plan === 'FREE' 
+                      ? 'from-gray-400 to-gray-500' 
+                      : 'from-[#6366F1] to-[#8B5CF6]'
+                  } flex items-center justify-center shadow-lg`}>
                     {profile.subscription.plan === 'FREE' ? (
-                      <Zap className="h-4 w-4 text-gray-500" />
+                      <Zap className="h-8 w-8 text-white" />
                     ) : (
-                      <Crown className="h-4 w-4 text-yellow-500" />
+                      <Crown className="h-8 w-8 text-white" />
                     )}
-                    <span className="font-semibold">
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
                       {profile.subscription.plan === 'FREE'
-                        ? 'Free'
+                        ? 'Free Plan'
                         : profile.subscription.plan === 'MONTHLY'
                           ? 'Pro Monthly'
                           : 'Pro Yearly'}
-                    </span>
-                    <Badge
-                      variant={
-                        profile.subscription.status === 'ACTIVE'
-                          ? 'default'
-                          : 'destructive'
-                      }
-                    >
-                      {profile.subscription.status}
-                    </Badge>
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={
+                          profile.subscription.status === 'ACTIVE'
+                            ? 'default'
+                            : 'destructive'
+                        }
+                        className={profile.subscription.status === 'ACTIVE' ? 'bg-green-500' : ''}
+                      >
+                        {profile.subscription.status}
+                      </Badge>
+                      {profile.subscription.plan !== 'FREE' && (
+                        <span className="text-sm text-gray-600">
+                          {profile.subscription.plan === 'MONTHLY' ? '$9.99/month' : '$99.99/year'}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-
                 {profile.subscription.plan !== 'FREE' && (
-                  <>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">
-                        Current Period
-                      </Label>
-                      <div className="mt-1">
-                        <div className="text-sm">
-                          {format(
-                            new Date(profile.subscription.currentPeriodStart),
-                            'MMM d, yyyy'
-                          )}{' '}
-                          -
-                          {format(
-                            new Date(profile.subscription.currentPeriodEnd),
-                            'MMM d, yyyy'
-                          )}
-                        </div>
-                        {profile.subscription.cancelAtPeriodEnd && (
-                          <div className="mt-1 text-sm text-orange-600">
-                            Cancels at period end
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-sm font-medium text-gray-600">
-                        Actions
-                      </Label>
-                      <div className="mt-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={openCustomerPortal}
-                          disabled={isProcessing}
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                          )}
-                          Manage Billing
-                        </Button>
-                      </div>
-                    </div>
-                  </>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openCustomerPortal}
+                    disabled={isProcessing}
+                    className="bg-white hover:bg-gray-50"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                    )}
+                    Manage Subscription
+                  </Button>
                 )}
               </div>
+
+              {profile.subscription.plan !== 'FREE' && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-white rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <Label className="text-xs font-medium text-gray-500">Current Period</Label>
+                      <div className="text-sm font-medium text-gray-900">
+                        {format(new Date(profile.subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
+                        {format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="h-5 w-5 text-purple-600" />
+                    <div>
+                      <Label className="text-xs font-medium text-gray-500">Next Billing</Label>
+                      <div className="text-sm font-medium text-gray-900">
+                        {profile.subscription.cancelAtPeriodEnd 
+                          ? 'Cancels at period end'
+                          : format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
 
         {/* Coupon Code */}
         {(!profile?.subscription || profile.subscription.plan === 'FREE') && (
-          <Card className="mb-8">
+          <Card className="mb-8 border-0 shadow-lg">
             <CardHeader>
-              <CardTitle>Have a coupon code?</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                Have a coupon code?
+              </CardTitle>
               <CardDescription>
                 Enter your coupon code to get a discount on your subscription
               </CardDescription>
@@ -416,6 +416,7 @@ export default function BillingPage() {
         )}
 
         {/* Pricing Plans */}
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Available Plans</h3>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {pricingPlans.map(plan => {
             const isCurrentPlan = profile?.subscription?.plan === plan.id
@@ -424,13 +425,13 @@ export default function BillingPage() {
             return (
               <Card
                 key={plan.id}
-                className={`relative ${
-                  plan.popular ? 'border-blue-500 shadow-lg' : ''
+                className={`relative border-0 shadow-lg hover:shadow-xl transition-all ${
+                  plan.popular ? 'ring-2 ring-purple-500' : ''
                 } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
-                    <Badge className="bg-blue-500 text-white">
+                    <Badge className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white border-0">
                       Most Popular
                     </Badge>
                   </div>
@@ -446,11 +447,17 @@ export default function BillingPage() {
 
                 <CardHeader className="pb-4 text-center">
                   <div className="mb-4 flex justify-center">
-                    {plan.id === 'FREE' ? (
-                      <Zap className="h-8 w-8 text-gray-500" />
-                    ) : (
-                      <Crown className="h-8 w-8 text-yellow-500" />
-                    )}
+                    <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
+                      plan.id === 'FREE' 
+                        ? 'from-gray-400 to-gray-500' 
+                        : 'from-[#6366F1] to-[#8B5CF6]'
+                    } flex items-center justify-center shadow-lg`}>
+                      {plan.id === 'FREE' ? (
+                        <Zap className="h-8 w-8 text-white" />
+                      ) : (
+                        <Crown className="h-8 w-8 text-white" />
+                      )}
+                    </div>
                   </div>
 
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
@@ -543,35 +550,41 @@ export default function BillingPage() {
         </div>
 
         {/* FAQ or Additional Info */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Billing Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <h4 className="mb-2 font-medium">Payment & Security</h4>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li>• Secure payments powered by Stripe</li>
-                  <li>• Cancel anytime, no hidden fees</li>
-                  <li>• 30-day money-back guarantee</li>
-                  <li>• Automatic billing on renewal date</li>
-                </ul>
-              </div>
+        <Card className="mt-8 border-0 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50">
+          <CardContent className="p-8">
+            <div className="flex items-start gap-4">
+              <Shield className="h-12 w-12 text-purple-600 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Secure Billing with Stripe
+                </h3>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div>
+                    <h4 className="mb-2 font-medium text-gray-900">Payment & Security</h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Secure payments powered by Stripe</li>
+                      <li>• Cancel anytime, no hidden fees</li>
+                      <li>• 30-day money-back guarantee</li>
+                      <li>• Automatic billing on renewal date</li>
+                    </ul>
+                  </div>
 
-              <div>
-                <h4 className="mb-2 font-medium">Need Help?</h4>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  <li>• Contact support for billing questions</li>
-                  <li>• View detailed invoices in billing portal</li>
-                  <li>• Update payment methods anytime</li>
-                  <li>• Download receipts for tax purposes</li>
-                </ul>
+                  <div>
+                    <h4 className="mb-2 font-medium text-gray-900">Need Help?</h4>
+                    <ul className="space-y-1 text-sm text-gray-600">
+                      <li>• Contact support for billing questions</li>
+                      <li>• View detailed invoices in billing portal</li>
+                      <li>• Update payment methods anytime</li>
+                      <li>• Download receipts for tax purposes</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </>
+    </div>
   )
 }

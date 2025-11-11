@@ -2,30 +2,36 @@
 
 import {
   Plus,
-  Search,
-  Filter,
   Package,
   Eye,
-  Edit,
-  Share2,
-  Download,
-  Trash2,
-  MoreVertical,
-  FolderOpen,
   TrendingUp,
   Crown,
   Calendar,
-  Palette,
   Sparkles,
   Book,
   Clock,
   FileText,
   ArrowRight,
+  DollarSign,
+  ShoppingCart,
+  Download,
+  BarChart3,
+  CheckCircle2,
+  CircleDollarSign,
+  Share2,
+  MoreVertical,
+  Trash2,
+  Edit,
+  Palette,
+  FolderOpen,
+  Zap,
+  Star,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { Sidebar } from '@/components/dashboard/Sidebar'
 import {
   Card,
   CardContent,
@@ -34,17 +40,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Header } from '@/components/Header'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,12 +51,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
-import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
+import Image from 'next/image'
+import { formatDistanceToNow, format } from 'date-fns'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
-import Image from 'next/image'
-import { i } from 'vitest/dist/reporters-w_64AS5f.js'
+import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
 
 interface Catalogue {
   id: string
@@ -92,6 +89,8 @@ interface DashboardStats {
   totalProducts: number
   totalViews: number
   totalExports: number
+  totalProjects?: number
+  activeTools?: number
 }
 
 interface RecentItem {
@@ -113,6 +112,7 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [error, setError] = useState('')
+  const [showCataloguesModal, setShowCataloguesModal] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -290,6 +290,8 @@ export default function DashboardPage() {
           totalProducts,
           totalViews: 0, // Would come from analytics
           totalExports: 0, // Would come from exports table
+          totalProjects: cataloguesData.catalogues.length,
+          activeTools: 2, // Catalogue and PDF Editor
         })
 
         // Get recent items (last 6 updated catalogues)
@@ -443,806 +445,487 @@ export default function DashboardPage() {
   const { currentPlan, canCreateCatalogue, canExport } = useSubscription()
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
 
+  // Computed values for the UI
+  const catalogueCount = stats?.totalCatalogues || 0
+  const productCount = stats?.totalProducts || 0
+
   if (isLoading) {
     return (
-      <>
-        <Header title="Dashboard" />
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-24" />
-              ))}
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-48" />
-              ))}
+      <div className="flex min-h-screen bg-[#F7F8FC]">
+        <Sidebar />
+        <div className="ml-32 flex-1">
+          <DashboardHeader />
+          <div className="container mx-auto px-4 py-8">
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-64" />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-24" />
+                ))}
+              </div>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-48" />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <Header title="Dashboard" />
-      <div className="min-h-screen bg-gray-50 pb-10 pt-2">
-        {/* Purple Gradient Hero Section */}
-        <div className="mx-8 rounded-[3rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-16 text-white">
-          <div className="container mx-auto">
-            <div className="flex items-center justify-between">
-              <div className="pb-6 text-white">
-                <div className="mb-6 flex flex-col gap-8">
-                  <div>
-                    <h1
-                      className="pb-4 pt-4 text-4xl font-extrabold"
-                      style={{
-                        fontFamily: "'Poppins', 'Segoe UI', Arial, sans-serif",
-                      }}
-                    >
-                      Hi, {profile?.fullName || 'Ayush Kumar'}
-                    </h1>
-                    <p
-                      className="text-md max-w-[760px] text-white"
-                      style={{
-                        fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
-                      }}
-                    >
-                      Welcome back to your creative workspace. Choose your tool
-                      and start creating amazing content - from product
-                      catalogues to professional PDF documents!
-                    </p>
+    <div className="flex min-h-screen bg-[#E8EAF6]">
+      <Sidebar />
+      <div className="ml-28 flex-1">
+        <DashboardHeader />
 
-                    {profile?.subscription?.plan === 'FREE' && (
-                      <div className="mt-2">
-                        <Badge className="border-amber-200 bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
-                          Free Plan
-                        </Badge>
-                        <span className="ml-2 text-xs text-amber-200">
-                          Upgrade for unlimited exports and premium features.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+        <div className="p-8">
+          
 
-                {/* Feature Highlights */}
-                <div className="mb-8 mt-2 flex flex-wrap gap-1">
-                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-400">
-                      <svg
-                        className="h-2 w-2 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-[11px] font-medium text-white">
-                      AI-Powered
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-400">
-                      <svg
-                        className="h-2 w-2 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-[11px] font-medium text-white">
-                      Multiple Tools
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 backdrop-blur-sm">
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-purple-400">
-                      <svg
-                        className="h-2 w-2 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <span className="text-[11px] font-medium text-white">
-                      Instant Export
-                    </span>
-                  </div>
-                </div>
-              </div>
+          
 
-              {/* Enhanced Floating Catalogue Cards with Micro Animations */}
-              <div className="absolute right-56 top-16 hidden h-[350px] w-[410px] xl:block">
-                <Image
-                  height={350}
-                  width={410}
-                  src="/assets/heroImage.png"
-                  alt="Catalogue Hero"
-                  className="pointer-events-none z-10 h-full w-full select-none object-contain drop-shadow-xl"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="container relative z-10 mx-auto -mt-6 px-6">
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Stats Cards */}
+          {/* Bills Section - Top Cards */}
           {stats && (
-            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
-              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
-                        Total Catalogues
-                      </p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">
-                        {stats.totalCatalogues}
-                      </p>
-                    </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
-                      <Book className="h-6 w-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="mb-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
+                
+              </div>
 
-              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
-                        Total Products
-                      </p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">
-                        {stats.totalProducts}
-                      </p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                {/* Total Projects Across All Tools */}
+                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
+                  {/* Decorative Elements */}
+                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/30 blur-2xl" />
+                  
+                  
+                  {/* Sticker Badge */}
+                  
+                  
+                  <CardContent className="relative p-6">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
+                      <FolderOpen className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
-                      <Package className="h-6 w-6 text-white" />
+                    <p className="mb-1 text-sm font-medium text-gray-600">Total Projects</p>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-3xl font-bold bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">{stats.totalProjects || catalogueCount}</h3>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
+                        All Tools
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-500">
+                      Across {stats.activeTools || 2} active tools
+                    </p>
+                  </CardContent>
+                  
+                  
+                </Card>
 
-              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
-                        Total Views
-                      </p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">
-                        {stats.totalViews}
-                      </p>
+                {/* Active Tools */}
+                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-cyan-50 via-white to-teal-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
+                  {/* Decorative Elements */}
+                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-cyan-400/30 to-teal-400/30 blur-2xl" />
+                  
+                  
+                  {/* Sticker Badge */}
+                  
+                  
+                  <CardContent className="relative p-6">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
+                      <TrendingUp className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
-                      <Eye className="h-6 w-6 text-white" />
+                    <p className="mb-1 text-sm font-medium text-gray-600">Active Tools</p>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-3xl font-bold bg-gradient-to-br from-cyan-600 to-teal-600 bg-clip-text text-transparent">{stats.activeTools || 2}</h3>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge className="rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
+                        Available
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-500">
+                      Tools ready to use
+                    </p>
+                  </CardContent>
+                  
+                 
+                </Card>
 
-              <Card className="group h-24 overflow-hidden rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="mb-1 text-sm font-medium text-[#779CAB]">
-                        Total Exports
-                      </p>
-                      <p className="text-2xl font-bold text-[#1A1B41]">
-                        {stats.totalExports}
-                      </p>
+                {/* Recent Activity */}
+                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-purple-50 via-white to-pink-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
+                  {/* Decorative Elements */}
+                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-purple-400/30 to-pink-400/30 blur-2xl" />
+                  
+                  
+                  {/* Sticker Badge */}
+                  
+                  
+                  <CardContent className="relative p-6">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
+                      <Calendar className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] transition-transform duration-300 group-hover:scale-110">
-                      <Download className="h-6 w-6 text-white" />
+                    <p className="mb-1 text-sm font-medium text-gray-600">Recent Activity</p>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-3xl font-bold bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">{recentItems.length}</h3>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
+                        Last 7 days
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-500">
+                      Recent updates
+                    </p>
+                  </CardContent>
+                  
+                  
+                </Card>
+
+                {/* Current Plan */}
+                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-emerald-50 via-white to-green-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
+                  {/* Decorative Elements */}
+                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-400/30 to-green-400/30 blur-2xl" />
+                  
+                  
+                  {/* Sticker Badge */}
+                  
+                  
+                  <CardContent className="relative p-6">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
+                      <Sparkles className="h-7 w-7 text-white" />
+                    </div>
+                    <p className="mb-1 text-sm font-medium text-gray-600">Subscription</p>
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-3xl font-bold bg-gradient-to-br from-emerald-600 to-green-600 bg-clip-text text-transparent">{currentPlan}</h3>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Badge className="rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
+                        {currentPlan === 'FREE' ? 'Limited' : 'Premium'}
+                      </Badge>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-500">
+                      {currentPlan === 'FREE' ? 'Upgrade for more' : 'Full access'}
+                    </p>
+                  </CardContent>
+                  
+                  
+                </Card>
+              </div>
             </div>
           )}
 
-
-
-          {/* Tools Selection Section - Compact */}
-          <div className="mb-10">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Choose Your Tool
-              </h2>
-              <p className="text-sm text-gray-600">
-                Select the tool you want to work with
-              </p>
+          {/* Tools Overview Section */}
+          <div className="mt-10">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Available Tools</h2>
+              
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Catalogue Tool Card - Compact */}
-              <Card className="group relative overflow-hidden p-2 rounded-2xl border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#6366F1] hover:shadow-lg flex flex-col">
-                <div className="absolute -right-3 top-0 h-32 w-32 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
-                  <Book className="h-full w-full text-[#6366F1]" />
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Catalogue Tool */}
+              <Card
+                className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                onClick={() => setShowCataloguesModal(true)}
+              >
+                <div className="absolute right-0 top-0 h-40 w-40 translate-x-12 -translate-y-12 transform opacity-10">
+                  <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-400 to-purple-600" />
                 </div>
-
-                <CardHeader className="relative pb-3">
-                  <div className="mb-2 flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2D1B69] to-[#6366F1] shadow-md transition-transform duration-300 group-hover:scale-110">
-                      <Book className="h-6 w-6 text-white" />
+                <CardContent className="relative p-8">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg transition-transform duration-300 group-hover:scale-110">
+                      <Book className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-bold text-gray-900">
-                        Product Catalogues
-                      </CardTitle>
-                      <CardDescription className="text-xs text-gray-600">
-                        Create & manage catalogues with AI
-                      </CardDescription>
+                    <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+                      Active
+                    </Badge>
+                  </div>
+
+                  <h3 className="mb-2 text-2xl font-bold text-gray-900">Product Catalogue</h3>
+                  <p className="mb-4 text-sm text-gray-600">
+                    Create beautiful, professional product catalogues with AI-powered descriptions and stunning templates.
+                  </p>
+
+                  <div className="mb-6 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-2xl font-bold text-gray-900">{catalogueCount}</p>
+                      <p className="text-xs text-gray-600">Catalogues</p>
+                    </div>
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-2xl font-bold text-gray-900">{productCount}</p>
+                      <p className="text-xs text-gray-600">Products</p>
                     </div>
                   </div>
-                </CardHeader>
 
-                <CardContent className="relative space-y-4 pt-0 flex-1 flex flex-col justify-between">
-                  {/* Compact Features */}
                   <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>AI-powered descriptions & themes</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>AI-powered descriptions</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>Share & export to PDF</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>Professional templates</span>
                     </div>
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>Team collaboration & management</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>Export to PDF</span>
                     </div>
                   </div>
 
-                  {/* Compact Stats */}
-                  <div className="flex items-center gap-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-3">
-                    <div className="flex-1 text-center">
-                      <div className="text-xl font-bold text-[#6366F1]">
-                        {stats?.totalCatalogues || 0}
-                      </div>
-                      <div className="text-[10px] text-gray-600">Catalogues</div>
-                    </div>
-                    <div className="h-10 w-px bg-gray-300"></div>
-                    <div className="flex-1 text-center">
-                      <div className="text-xl font-bold text-[#6366F1]">
-                        {stats?.totalProducts || 0}
-                      </div>
-                      <div className="text-[10px] text-gray-600">Products</div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        document.getElementById('all-catalogues')?.scrollIntoView({
-                          behavior: 'smooth'
-                        })
-                      }}
-                      variant="outline"
-                      className="flex-1 rounded-lg border-[#6366F1] py-2.5 text-xs font-semibold text-[#6366F1] transition-all hover:bg-[#6366F1] hover:text-white"
-                    >
-                      <Eye className="mr-1.5 h-3.5 w-3.5" />
-                      Browse
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        if (canCreateCatalogue()) {
-                          router.push('/catalogue/new')
-                        } else {
-                          setShowUpgradePrompt(true)
-                        }
-                      }}
-                      className="flex-1  rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] py-2.5 text-xs font-semibold text-white shadow-sm transition-all hover:shadow-md"
-                    >
-                      <Plus className="mr-1.5 h-3.5 w-3.5" />
-                      Create New
-                    </Button>
-                  </div>
+                  <Button
+                    className="mt-6 w-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d] shadow-md hover:shadow-lg transition-all duration-200"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowCataloguesModal(true)
+                    }}
+                  >
+                    Open Tool
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
                 </CardContent>
               </Card>
 
-              {/* PDF Editor Tool Card - Compact */}
-              <Card className="group relative overflow-hidden rounded-2xl p-2 border-0 shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-[#10B981] hover:shadow-lg flex flex-col">
-                <div className="absolute -right-3 top-0 h-32 w-32 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
-                  <FileText className="h-full w-full text-[#10B981]" />
+              {/* PDF Editor Tool */}
+              <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
+                <div className="absolute right-0 top-0 h-40 w-40 translate-x-12 -translate-y-12 transform opacity-10">
+                  <div className="h-full w-full rounded-full bg-gradient-to-br from-emerald-400 to-teal-600" />
                 </div>
-
-                <CardHeader className="relative pb-3">
-                  <div className="mb-2 flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#059669] to-[#10B981] shadow-md transition-transform duration-300 group-hover:scale-110">
-                      <FileText className="h-6 w-6 text-white" />
+                <CardContent className="relative p-8">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg transition-transform duration-300 group-hover:scale-110">
+                      <FileText className="h-7 w-7 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-bold text-gray-900">
-                        PDF Editor
-                      </CardTitle>
-                      <CardDescription className="text-xs text-gray-600">
-                        Edit & annotate PDF documents
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="relative space-y-4 pt-0 flex-1 flex flex-col justify-between">
-                  {/* Compact Features */}
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>Edit text & images in PDFs</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>Annotations, merge & sign forms</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-xs text-gray-700">
-                      <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-2.5 w-2.5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <span>Convert & compress documents</span>
-                    </div>
-                  </div>
-
-                  {/* Coming Soon Badge */}
-                  <div className="flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 p-3">
-                    <Badge className="border-amber-200 bg-transparent px-3 py-1.5 text-xs font-semibold text-amber-700">
-                      <Sparkles className="mr-1 h-3 w-3" />
+                    <Badge className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100">
                       Coming Soon
                     </Badge>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      disabled
-                      variant="outline"
-                      className="flex-1 cursor-not-allowed rounded-lg border-gray-300 py-2.5 text-xs font-semibold text-gray-400 opacity-50"
-                    >
-                      <Eye className="mr-1.5 h-3.5 w-3.5" />
-                      Browse
-                    </Button>
-                    <Button
-                      disabled
-                      className="flex-1 cursor-not-allowed rounded-lg bg-gray-300 py-2.5 text-xs font-semibold text-gray-500 opacity-50"
-                    >
-                      <Plus className="mr-1.5 h-3.5 w-3.5" />
-                      Create New
-                    </Button>
+                  <h3 className="mb-2 text-2xl font-bold text-gray-900">PDF Editor</h3>
+                  <p className="mb-4 text-sm text-gray-600">
+                    Professional PDF editing with advanced features for creating, editing, and managing documents.
+                  </p>
+
+                  <div className="mb-6 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-2xl font-bold text-gray-900">0</p>
+                      <p className="text-xs text-gray-600">Documents</p>
+                    </div>
+                    <div className="rounded-xl bg-gray-50 p-3">
+                      <p className="text-2xl font-bold text-gray-900">0</p>
+                      <p className="text-xs text-gray-600">Templates</p>
+                    </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-gray-400" />
+                      <span>Advanced PDF editing</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-gray-400" />
+                      <span>Text and image support</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CheckCircle2 className="h-4 w-4 text-gray-400" />
+                      <span>Professional templates</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    className="mt-6 w-full bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
+                    disabled
+                  >
+                    Coming Soon
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          {/* Recent Activity Section */}
-          <div className="mb-10">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-gray-600" />
-                <h2 className="text-xl font-bold text-gray-900">
-                  Recent Activity
-                </h2>
+          {/* Invoices Section - Main Content */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-14">
+            {/* Left: Large Purple Card with Progress */}
+            <div className="lg:col-span-1 pt-2">
+              
+                <h2 className="text-lg font-semibold text-gray-900">Total Projects</h2>
+
+              {/* Smaller Stat Cards Below */}
+              <div className="mt-4 grid grid-cols-1 gap-4">
+                <Card className="rounded-3xl border-0 bg-white shadow-lg">
+                  <CardContent className="flex items-center justify-between p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+                        <Book className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Catalogues</p>
+                        <h4 className="text-xl font-bold text-gray-900">
+                          {catalogueCount}
+                        </h4>
+                      </div>
+                    </div>
+                    <Badge className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                      {productCount} items
+                    </Badge>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-3xl border-0 bg-white shadow-lg">
+                  <CardContent className="flex items-center justify-between p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50">
+                        <FileText className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">PDF Documents</p>
+                        <h4 className="text-xl font-bold text-gray-900">
+                          0
+                        </h4>
+                      </div>
+                    </div>
+                    <div className="relative h-10 w-10">
+                      <svg className="h-full w-full -rotate-90 transform">
+                        <circle
+                          cx="20"
+                          cy="20"
+                          r="16"
+                          stroke="#E5E7EB"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <circle
+                          cx="20"
+                          cy="20"
+                          r="16"
+                          stroke="#8B5CF6"
+                          strokeWidth="4"
+                          fill="none"
+                          strokeDasharray={`${2 * Math.PI * 16}`}
+                          strokeDashoffset={`${2 * Math.PI * 16}`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-purple-600">
+                        0%
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              {recentItems.length > 0 && (
-                <Button
-                  variant="ghost"
-                  className="text-sm text-[#6366F1] hover:text-[#4f46e5]"
-                  onClick={() => {
-                    document.getElementById('all-catalogues')?.scrollIntoView({
-                      behavior: 'smooth'
-                    })
-                  }}
-                >
-                  View All
-                  <ArrowRight className="ml-1 h-4 w-4" />
+            </div>
+
+            {/* Right: Chart and Activity */}
+            <div className="lg:col-span-2">
+             
+
+              {/* History Section */}
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Recent Work</h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowCataloguesModal(true)}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
+              </div>
+
+              {/* Recent Activity List */}
+              {recentItems.length > 0 ? (
+                <Card className="rounded-3xl border-0 bg-white shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="space-y-3">
+                      {recentItems.slice(0, 3).map((item) => {
+                        const catalogue = catalogues.find(c => c.id === item.id)
+                        const toolIcon = item.type === 'CATALOGUE' ? Book : FileText
+                        const ToolIcon = toolIcon
+
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => router.push(`/editor/${item.id}`)}
+                            className="group flex cursor-pointer items-center gap-4 rounded-2xl bg-gray-50 p-4 transition-all hover:bg-gray-100 hover:shadow-md"
+                          >
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-md">
+                              <ToolIcon className="h-6 w-6 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="font-semibold text-gray-900 truncate">{item.name}</p>
+                                <Badge variant="outline" className="text-xs h-5 px-1.5">
+                                  {item.type === 'CATALOGUE' ? 'Catalogue' : 'PDF'}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-xs text-gray-500">
+                                  Updated {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                                </p>
+                                {catalogue && catalogue.theme && (
+                                  <>
+                                    <span className="text-xs text-gray-400">•</span>
+                                    <span className="text-xs text-gray-500 capitalize">{catalogue.theme}</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="hidden items-center gap-6 md:flex">
+                              <div className="text-center">
+                                <p className="text-sm font-semibold text-gray-900">{item.productCount || 0}</p>
+                                <p className="text-xs text-gray-500">Items</p>
+                              </div>
+                              <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${catalogue?.isPublic
+                                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                }`}>
+                                {catalogue?.isPublic ? 'Public' : 'Private'}
+                              </Badge>
+                            </div>
+                            <ArrowRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1" />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="rounded-3xl border-0 bg-white p-8 text-center shadow-lg">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+                      <FolderOpen className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-gray-900">No projects yet</p>
+                      <p className="text-sm text-gray-500 mt-1">Start creating with our tools</p>
+                    </div>
+                    <Button
+                      onClick={() => setShowCataloguesModal(true)}
+                      className="mt-2 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d] shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      Get Started
+                    </Button>
+                  </div>
+                </Card>
               )}
             </div>
-
-            {recentItems.length > 0 ? (
-              <div className="overflow-x-auto pb-4">
-                <div className="flex gap-4">
-                  {recentItems.map(item => (
-                    <Card
-                      key={item.id}
-                      onClick={() => router.push(`/catalogue/${item.id}/edit`)}
-                      className="group min-w-[280px] cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300  hover:border-[#6366F1] hover:shadow-lg"
-                    >
-                      <div className="relative h-24 overflow-hidden bg-gradient-to-br from-[#2D1B69] to-[#6366F1]">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2)_0%,transparent_60%)]" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="rounded-full bg-white/20 p-3 backdrop-blur-sm">
-                            {item.type === 'CATALOGUE' ? (
-                              <Book className="h-6 w-6 text-white" />
-                            ) : (
-                              <FileText className="h-6 w-6 text-white" />
-                            )}
-                          </div>
-                        </div>
-                        <Badge className="absolute left-3 top-3 border-white/30 bg-white/20 text-xs text-white backdrop-blur-sm">
-                          {item.type === 'CATALOGUE' ? 'Catalogue' : 'PDF'}
-                        </Badge>
-                      </div>
-
-                      <div className="p-4">
-                        <h3 className="mb-1 font-semibold text-gray-900 line-clamp-1">
-                          {item.name}
-                        </h3>
-                        <p className="mb-3 text-xs text-gray-500 line-clamp-1">
-                          {item.description || 'No description'}
-                        </p>
-
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            <span>{item.productCount || 0} items</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>
-                              {formatDistanceToNow(new Date(item.updatedAt), {
-                                addSuffix: true,
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <Card className="rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50 to-white p-8 text-center shadow-sm">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#2D1B69]/10 to-[#6366F1]/10">
-                  <Clock className="h-8 w-8 text-[#6366F1]" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">
-                  No Recent Activity
-                </h3>
-                <p className="mb-4 text-sm text-gray-600">
-                  Start creating catalogues to see your recent work here
-                </p>
-                <Button
-                  onClick={() => {
-                    if (canCreateCatalogue()) {
-                      router.push('/catalogue/new')
-                    } else {
-                      setShowUpgradePrompt(true)
-                    }
-                  }}
-                  className="rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:shadow-md"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Catalogue
-                </Button>
-              </Card>
-            )}
           </div>
 
-          {/* Catalogues Section */}
-          <div id="all-catalogues" className="space-y-6">
-            <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  All Catalogues
-                </h2>
-                <p className=" text-sm text-gray-600">
-                  Manage and organize your creative collections
-                </p>
-              </div>
+          
 
-              <div className="flex w-full items-center gap-3 md:w-auto">
-                <Button
-                  variant="ghost"
-                  className="text-[#2D1B69] hover:bg-purple-50 hover:text-[#2d1b69b8]"
-                >
-                  VIEW ALL
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (canCreateCatalogue()) {
-                      router.push('/catalogue/new')
-                    } else {
-                      setShowUpgradePrompt(true)
-                    }
-                  }}
-                  className=" rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-2 font-medium text-white"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  New Catalog
-                </Button>
-              </div>
-            </div>
-
-            {/* Catalogues Grid */}
-            {filteredCatalogues.length === 0 ? (
-              <Card className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-lg transition-all duration-300 hover:shadow-xl">
-                <CardContent className="p-12 text-center">
-                  <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#2D1B69] to-[#6366F1]">
-                    <Package className="h-10 w-10 text-white" />
-                  </div>
-                  <h3 className="mb-3 text-xl font-bold text-gray-900">
-                    {catalogues.length === 0
-                      ? 'No catalogues yet'
-                      : 'No catalogues found'}
-                  </h3>
-                  <p className="mx-auto mb-8 max-w-sm leading-relaxed text-gray-600">
-                    {catalogues.length === 0
-                      ? 'Create your first catalogue to get started and showcase your amazing products'
-                      : "Try adjusting your search or filter criteria to find what you're looking for"}
-                  </p>
-                  {catalogues.length === 0 && (
-                    <Button
-                      onClick={() => {
-                        if (canCreateCatalogue()) {
-                          router.push('/catalogue/new')
-                        } else {
-                          setShowUpgradePrompt(true)
-                        }
-                      }}
-                      className="transform rounded-xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#1e1348] hover:to-[#4f46e5] hover:shadow-xl"
-                    >
-                      <Plus className="mr-2 h-5 w-5" />
-                      Create Your First Catalogue
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredCatalogues.map(catalogue => (
-                  <Card
-                    onClick={() =>
-                      router.push(`/catalogue/${catalogue.id}/edit`)
-                    }
-                    key={catalogue.id}
-                    className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-                  >
-                    {/* Enhanced Image Header with Gradient */}
-                    <div className="relative h-48 overflow-hidden">
-                      {/* Dynamic Theme-based Gradients */}
-                      {catalogue.name === 'Fragrance' && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-indigo-700" />
-                      )}
-                      {catalogue.name === 'Fashion Collection' && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-pink-500 via-rose-600 to-red-700" />
-                      )}
-                      {catalogue.name === 'Tech Gadgets' && (
-                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700" />
-                      )}
-                      {![
-                        'Fragrance',
-                        'Fashion Collection',
-                        'Tech Gadgets',
-                      ].includes(catalogue.name) && (
-                          <div className="absolute inset-0 bg-gradient-to-br from-[#2D1B69] via-[#6366F1] to-[#8B5CF6]" />
-                        )}
-
-                      {/* Beautiful Pattern Overlay */}
-                      <div className="absolute inset-0 opacity-30">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.2)_0%,transparent_50%)]" />
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_75%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
-                        <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-white/20"></div>
-                        <div className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 transform rounded-full border border-white/30"></div>
-                      </div>
-
-                      {/* Content Overlay */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                        {/* Catalogue Icon */}
-                        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm ">
-                          <Package className="h-8 w-8 text-white" />
-                        </div>
-
-                        {/* Catalogue Name */}
-                        <h3 className="mb-2 text-2xl font-bold text-white ">
-                          {catalogue.name}
-                        </h3>
-
-                        {/* Quick Stats */}
-                        <div className="flex items-center space-x-4 text-sm text-white/90">
-                          <div className="flex items-center space-x-1">
-                            <Package className="h-4 w-4" />
-                            <span>{catalogue._count?.products || 0} items</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Eye className="h-4 w-4" />
-                            <span>{Math.floor(Math.random() * 100)} views</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Status Badge */}
-                      <div className="absolute left-4 top-4">
-                        <Badge
-                          variant={catalogue.isPublic ? 'default' : 'secondary'}
-                          className={`border px-3 py-1 text-xs font-medium backdrop-blur-sm ${catalogue.isPublic
-                            ? 'border-emerald-400 bg-emerald-500/90 text-white'
-                            : 'border-red-400 bg-red-500/90 text-white'
-                            }`}
-                        >
-                          {catalogue.isPublic ? 'Public' : 'Private'}
-                        </Badge>
-                      </div>
-
-                      {/* Direct Action Buttons - Show on Hover */}
-                      <div className="absolute right-4 top-4 flex translate-x-2 transform flex-col space-y-2 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
-                        <Button
-                          size="sm"
-                          onClick={e => {
-                            e.stopPropagation()
-                            router.push(`/catalogue/${catalogue.id}/preview`)
-                          }}
-                          className="h-9 w-9 rounded-lg border border-white/30 bg-white/20 p-0 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/30 hover:text-white"
-                          title="Preview Catalogue"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              size="sm"
-                              onClick={e => e.stopPropagation()}
-                              className="h-9 w-9 rounded-lg border border-white/30 bg-white/20 p-0 text-white backdrop-blur-sm transition-all duration-200 hover:bg-white/30 hover:text-white"
-                              title="More Options"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="end"
-                            className="w-48 bg-white/95 backdrop-blur-sm"
-                          >
-                            <DropdownMenuItem
-                              onClick={e => {
-                                e.stopPropagation()
-                                shareCatalogue(catalogue)
-                              }}
-                              className="cursor-pointer hover:bg-gray-50"
-                            >
-                              <Share2 className="mr-3 h-4 w-4 text-blue-600" />
-                              Share Catalogue
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={e => {
-                                e.stopPropagation()
-                                exportToPDF(catalogue.id)
-                              }}
-                              disabled={!canExport()}
-                              className="cursor-pointer hover:bg-gray-50"
-                            >
-                              <Download className="mr-3 h-4 w-4 text-green-600" />
-                              Export PDF
-                              {!canExport() && (
-                                <Crown className="ml-auto h-3 w-3 text-amber-500" />
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="cursor-pointer text-red-600 hover:bg-red-50 focus:text-red-600"
-                              onClick={e => {
-                                e.stopPropagation()
-                                deleteCatalogue(catalogue.id)
-                              }}
-                            >
-                              <Trash2 className="mr-3 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-
-                    {/* Enhanced Content Section */}
-                    <div className="bg-white p-6">
-                      {/* Description */}
-                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-gray-600">
-                        {catalogue.description ||
-                          'A beautifully crafted catalogue showcasing premium products with modern design and user-friendly interface.'}
-                      </p>
-
-                      {/* Enhanced Stats Grid */}
-                      <div className="mb-4 grid grid-cols-2 gap-3">
-                        <div className="rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 p-3 text-center">
-                          <div className="mb-1 text-lg font-bold text-blue-700">
-                            {catalogue._count?.products || 0}
-                          </div>
-                          <div className="text-xs font-medium text-blue-600">
-                            Products
-                          </div>
-                        </div>
-                        <div className="rounded-lg border border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50 p-3 text-center">
-                          <div className="mb-1 text-lg font-bold text-purple-700">
-                            {catalogue._count?.categories || 0}
-                          </div>
-                          <div className="text-xs font-medium text-purple-600">
-                            Categories
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Theme and Date Info */}
-                      <div className="flex items-center justify-between">
-                        <Badge
-                          variant="outline"
-                          className="border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 px-3 py-1 text-xs text-gray-700"
-                        >
-                          <Palette className="mr-1 h-3 w-3" />
-                          {catalogue.theme || 'Modern'}
-                        </Badge>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Calendar className="mr-1 h-3 w-3" />
-                          {formatDistanceToNow(new Date(catalogue.updatedAt), {
-                            addSuffix: true,
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Subtle Hover Glow Effect */}
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/0 via-purple-400/0 to-pink-400/0 transition-all duration-500 group-hover:from-blue-400/5 group-hover:via-purple-400/5 group-hover:to-pink-400/5"></div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Catalogues Modal */}
+          <CataloguesModal
+            open={showCataloguesModal}
+            onOpenChange={setShowCataloguesModal}
+          />
 
           {/* Upgrade Prompt Modal */}
           <UpgradePrompt
             isOpen={showUpgradePrompt}
             onClose={() => setShowUpgradePrompt(false)}
-            feature="catalogue creation"
+            feature="dashboard"
             currentPlan={currentPlan}
           />
         </div>
       </div>
-    </>
+    </div>
   )
 }
+

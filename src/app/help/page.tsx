@@ -1,6 +1,7 @@
 'use client'
 
-import { Header } from '@/components/Header'
+import { Sidebar } from '@/components/dashboard/Sidebar'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import {
   Card,
   CardContent,
@@ -23,6 +24,8 @@ import {
   Search,
   ChevronRight,
   FileText,
+  Book,
+  Video,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -129,88 +132,83 @@ export default function HelpSupportPage() {
   }
 
   return (
-    <>
-      <Header title="Help & Support" showBackButton backHref="/profile" />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-gray-900">
-            How can we help you?
-          </h1>
-          <p className="mx-auto max-w-2xl text-xl text-gray-600">
-            Find answers to common questions or get in touch with our support
-            team
-          </p>
-        </div>
+    <div className="flex min-h-screen bg-[#E8EAF6]">
+      <Sidebar />
+      <div className="ml-32 flex-1">
+        <DashboardHeader title="Help & Support" subtitle="Find answers and get support when you need it" />
+        
+        <div className="p-8">
 
-        {/* Quick Actions */}
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          <Card className="text-center transition-shadow hover:shadow-lg">
+          {/* Search Bar */}
+          <Card className="border-0 shadow-lg mb-8">
             <CardContent className="p-6">
-              <MessageSquare className="mx-auto mb-4 h-12 w-12 text-blue-600" />
-              <h3 className="mb-2 text-lg font-semibold">Live Chat</h3>
-              <p className="mb-4 text-gray-600">
-                Get instant help from our support team
-              </p>
-              <Button className="w-full">Start Chat</Button>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center transition-shadow hover:shadow-lg">
-            <CardContent className="p-6">
-              <Mail className="mx-auto mb-4 h-12 w-12 text-green-600" />
-              <h3 className="mb-2 text-lg font-semibold">Email Support</h3>
-              <p className="mb-4 text-gray-600">Send us a detailed message</p>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  document
-                    .getElementById('contact-form')
-                    ?.scrollIntoView({ behavior: 'smooth' })
-                }}
-              >
-                Send Email
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="text-center transition-shadow hover:shadow-lg">
-            <CardContent className="p-6">
-              <Phone className="mx-auto mb-4 h-12 w-12 text-purple-600" />
-              <h3 className="mb-2 text-lg font-semibold">Phone Support</h3>
-              <p className="mb-4 text-gray-600">
-                Call us during business hours
-              </p>
-              <Button variant="outline" className="w-full">
-                +1 (555) 123-4567
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Support Hours */}
-        <Card className="mb-12">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <Clock className="h-5 w-5 text-gray-600" />
-                <span className="text-gray-600">Support Hours:</span>
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Search for help articles, guides, and more..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full pl-12"
+                />
               </div>
-              <div className="flex items-center space-x-4">
-                <Badge variant="outline">Mon-Fri: 9AM-6PM EST</Badge>
-                <Badge variant="outline">Sat: 10AM-4PM EST</Badge>
-                <Badge variant="secondary">Sun: Closed</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg mb-4 mx-auto group-hover:scale-110 transition-transform">
+                  <MessageSquare className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">Live Chat</h3>
+                <p className="mb-4 text-sm text-gray-600">
+                  Get instant help from our support team
+                </p>
+                <Button className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#5558E3] hover:to-[#7C4DE8] text-white">Start Chat</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg mb-4 mx-auto group-hover:scale-110 transition-transform">
+                  <Mail className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">Email Support</h3>
+                <p className="mb-4 text-sm text-gray-600">Send us a detailed message</p>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    document
+                      .getElementById('contact-form')
+                      ?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                >
+                  Send Email
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+              <CardContent className="p-6 text-center">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg mb-4 mx-auto group-hover:scale-110 transition-transform">
+                  <Phone className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">Phone Support</h3>
+                <p className="mb-4 text-sm text-gray-600">
+                  Call us during business hours
+                </p>
+                <Button variant="outline" className="w-full">
+                  +1 (555) 123-4567
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
         {/* FAQ Section */}
         <div className="mb-12">
-          <h2 className="mb-8 text-center text-3xl font-bold text-gray-900">
-            Frequently Asked Questions
-          </h2>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
 
           {/* Search and Filter */}
           <div className="mb-8 flex flex-col gap-4 md:flex-row">
@@ -381,7 +379,8 @@ export default function HelpSupportPage() {
             </Button>
           </div>
         </div>
+        </div>
       </div>
-    </>
+    </div>
   )
 }

@@ -18,11 +18,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Header } from '@/components/Header'
-import { Bell, Globe, Shield, Eye, Trash2, Users } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Sidebar } from '@/components/dashboard/Sidebar'
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
+import { Bell, Globe, Shield, Trash2, Users, User, Lock, Palette, Save, AlertTriangle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import { TeamManagement } from '@/components/TeamManagement'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface AppSettings {
@@ -40,6 +41,13 @@ interface AppSettings {
   timezone: string
 }
 
+interface UserProfile {
+  name: string
+  email: string
+  company: string
+  bio: string
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>({
     notifications: {
@@ -55,6 +63,12 @@ export default function SettingsPage() {
     language: 'en',
     timezone: 'UTC',
   })
+  const [profile, setProfile] = useState<UserProfile>({
+    name: '',
+    email: '',
+    company: '',
+    bio: '',
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
@@ -65,6 +79,10 @@ export default function SettingsPage() {
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings))
     }
+    const savedProfile = localStorage.getItem('userProfile')
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile))
+    }
     setLoading(false)
   }, [])
 
@@ -73,6 +91,7 @@ export default function SettingsPage() {
     try {
       // Save to localStorage (in a real app, this would be an API call)
       localStorage.setItem('appSettings', JSON.stringify(settings))
+      localStorage.setItem('userProfile', JSON.stringify(profile))
 
       toast({
         title: 'Settings saved',
@@ -87,6 +106,10 @@ export default function SettingsPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const updateProfile = (field: keyof UserProfile, value: string) => {
+    setProfile(prev => ({ ...prev, [field]: value }))
   }
 
   const updateSettings = (path: string, value: any) => {
@@ -106,12 +129,15 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-8">
-        <Header title="Settings" />
-        <div className="flex h-64 items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
-            <p className="mt-2 text-gray-600">Loading settings...</p>
+      <div className="flex min-h-screen bg-[#E8EAF6]">
+        <Sidebar />
+        <div className="ml-32 flex-1">
+          <DashboardHeader title="Settings" subtitle="Manage your account and preferences" />
+          <div className="flex h-64 items-center justify-center">
+            <div className="text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-[#6366F1]"></div>
+              <p className="mt-2 text-gray-600">Loading settings...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -119,34 +145,92 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
-      <Header title="Settings" />
+    <div className="flex min-h-screen bg-[#E8EAF6]">
+      <Sidebar />
+      <div className="ml-32 flex-1">
+        <DashboardHeader title="Settings" subtitle="Manage your account and preferences" />
 
-      <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="general" className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="team" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Team
-          </TabsTrigger>
-        </TabsList>
+        <div className="p-8">
+          <Tabs defaultValue="general" className="w-full">
+            <TabsList className="grid w-full max-w-md mb-6">
+              <TabsTrigger value="general" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                General Settings
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="general" className="space-y-6 mt-6">
-          {/* Notification Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notifications
-              </CardTitle>
-              <CardDescription>
-                Manage how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <TabsContent value="general" className="space-y-6">
+              {/* Profile Settings */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    Profile Information
+                  </CardTitle>
+                  <CardDescription>
+                    Update your personal information and profile details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="Enter your name"
+                        value={profile.name}
+                        onChange={(e) => updateProfile('name', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={profile.email}
+                        onChange={(e) => updateProfile('email', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Company</Label>
+                    <Input
+                      id="company"
+                      placeholder="Your company name"
+                      value={profile.company}
+                      onChange={(e) => updateProfile('company', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      placeholder="Tell us about yourself"
+                      value={profile.bio}
+                      onChange={(e) => updateProfile('bio', e.target.value)}
+                      rows={4}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Notification Settings */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <Bell className="h-5 w-5 text-white" />
+                    </div>
+                    Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    Manage how you receive notifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Email Notifications</Label>
@@ -194,18 +278,20 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Privacy Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Privacy
-              </CardTitle>
-              <CardDescription>
-                Control your privacy and data visibility
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              {/* Privacy Settings */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    Privacy
+                  </CardTitle>
+                  <CardDescription>
+                    Control your privacy and data visibility
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="profileVisibility">Profile Visibility</Label>
                 <Select
@@ -256,18 +342,20 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Language & Region */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="h-5 w-5" />
-                Language & Region
-              </CardTitle>
-              <CardDescription>
-                Set your language and regional preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              {/* Language & Region */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <Globe className="h-5 w-5 text-white" />
+                    </div>
+                    Language & Region
+                  </CardTitle>
+                  <CardDescription>
+                    Set your language and regional preferences
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="language">Language</Label>
                 <Select
@@ -320,45 +408,131 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* Danger Zone */}
-          <Card className="border-red-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <Trash2 className="h-5 w-5" />
-                Danger Zone
-              </CardTitle>
-              <CardDescription>
-                Irreversible and destructive actions
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="rounded-lg border border-red-200 p-4">
-                  <h4 className="font-medium text-red-800">Clear All Data</h4>
-                  <p className="mt-1 text-sm text-red-600">
-                    This will permanently delete all your data and cannot be
-                    undone.
-                  </p>
-                  <Button variant="destructive" size="sm" className="mt-3">
-                    Clear All Data
-                  </Button>
-                </div>
+              {/* Appearance */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <Palette className="h-5 w-5 text-white" />
+                    </div>
+                    Appearance
+                  </CardTitle>
+                  <CardDescription>
+                    Customize the look and feel of your workspace
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
+                    <div className="space-y-0.5">
+                      <Label>Theme</Label>
+                      <p className="text-sm text-gray-500">
+                        Currently using light theme
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="bg-white">
+                        Light
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Dark
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Security */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6]">
+                      <Lock className="h-5 w-5 text-white" />
+                    </div>
+                    Security
+                  </CardTitle>
+                  <CardDescription>
+                    Manage your account security settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-lg border border-gray-200 p-4">
+                    <h4 className="font-medium text-gray-900">Password</h4>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Last changed 3 months ago
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      Change Password
+                    </Button>
+                  </div>
+                  <div className="rounded-lg border border-gray-200 p-4">
+                    <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Add an extra layer of security to your account
+                    </p>
+                    <Button variant="outline" size="sm" className="mt-3">
+                      Enable 2FA
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Danger Zone */}
+              <Card className="border-0 shadow-lg border-red-200 bg-red-50/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl text-red-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100">
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    </div>
+                    Danger Zone
+                  </CardTitle>
+                  <CardDescription>
+                    Irreversible and destructive actions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-red-200 bg-white p-4">
+                      <h4 className="font-medium text-red-800">Clear All Data</h4>
+                      <p className="mt-1 text-sm text-red-600">
+                        This will permanently delete all your data and cannot be undone.
+                      </p>
+                      <Button variant="destructive" size="sm" className="mt-3">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear All Data
+                      </Button>
+                    </div>
+                    <div className="rounded-lg border border-red-200 bg-white p-4">
+                      <h4 className="font-medium text-red-800">Delete Account</h4>
+                      <p className="mt-1 text-sm text-red-600">
+                        Permanently delete your account and all associated data.
+                      </p>
+                      <Button variant="destructive" size="sm" className="mt-3">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Save Button */}
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={saving}
+                  className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#5558E3] hover:to-[#7C3AED]"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? 'Saving...' : 'Save Settings'}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Save Button */}
-          <div className="flex justify-end">
-            <Button onClick={handleSaveSettings} disabled={saving}>
-              {saving ? 'Saving...' : 'Save Settings'}
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="team" className="mt-6">
-          <TeamManagement catalogueId="default" isOwner={true} />
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   )
 }
