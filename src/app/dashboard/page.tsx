@@ -31,7 +31,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { Sidebar } from '@/components/dashboard/Sidebar'
 import {
   Card,
   CardContent,
@@ -452,7 +451,6 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-[#F7F8FC]">
-        <Sidebar />
         <div className="ml-32 flex-1">
           <DashboardHeader />
           <div className="container mx-auto px-4 py-8">
@@ -477,142 +475,217 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-[#E8EAF6]">
-      <Sidebar />
-      <div className="ml-28 flex-1">
+      <div className="ml-24 flex-1">
         <DashboardHeader />
 
         <div className="p-8">
-          
 
-          
 
           {/* Bills Section - Top Cards */}
           {stats && (
             <div className="mb-6">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Overview</h2>
-                
+
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                {/* Total Projects Across All Tools */}
-                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
-                  {/* Decorative Elements */}
-                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-blue-400/30 to-purple-400/30 blur-2xl" />
-                  
-                  
-                  {/* Sticker Badge */}
-                  
-                  
+                {/* Total Catalogues - Blue theme */}
+                <Card className="group relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-blue-50/50 via-white to-blue-50/30 shadow-md transition-all hover:shadow-xl hover:scale-[1.01]">
+                  {/* subtle animated blob */}
+                  <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-blue-200/40 blur-2xl animate-float" />
+
                   <CardContent className="relative p-6">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
-                      <FolderOpen className="h-7 w-7 text-white" />
+                    <div className="flex items-center justify-between">
+                      {/* Left: Icon + Title */}
+                      <div className="flex flex-col gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center animate-gentle-bob">
+                          <Book className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-4xl font-extrabold text-gray-900">{catalogueCount}</h3>
+                          <p className="mt-2 text-sm text-gray-600 font-semibold">Total Catalogues</p>
+                          <p className="mt-0.5 text-xs text-gray-400">Active projects</p>
+                        </div>
+                      </div>
+
+                      {/* Right: Circular Progress - Completion Rate */}
+                      <div className="relative h-16 w-16">
+                        <svg className="h-full w-full -rotate-90 transform">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#E0E7FF"
+                            strokeWidth="6"
+                            fill="none"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#3B82F6"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 28}`}
+                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - (catalogueCount > 0 && productCount > 0 ? Math.min((catalogues.filter(c => c._count?.products > 0).length / catalogueCount), 1) : 0))}`}
+                            strokeLinecap="round"
+                            className="animate-pulse-slow"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-blue-600">
+                          {catalogueCount > 0 && productCount > 0 ? Math.round((catalogues.filter(c => c._count?.products > 0).length / catalogueCount) * 100) : 0}%
+                        </span>
+                      </div>
                     </div>
-                    <p className="mb-1 text-sm font-medium text-gray-600">Total Projects</p>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">{stats.totalProjects || catalogueCount}</h3>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
-                        All Tools
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-xs text-gray-500">
-                      Across {stats.activeTools || 2} active tools
-                    </p>
                   </CardContent>
-                  
-                  
                 </Card>
 
-                {/* Active Tools */}
-                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-cyan-50 via-white to-teal-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
-                  {/* Decorative Elements */}
-                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-cyan-400/30 to-teal-400/30 blur-2xl" />
-                  
-                  
-                  {/* Sticker Badge */}
-                  
-                  
+                {/* Total Products - Green theme */}
+                <Card className="group relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-green-50/50 via-white to-green-50/30 shadow-md transition-all hover:shadow-xl hover:scale-[1.01]">
+                  <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-green-200/40 blur-2xl animate-float-reverse" />
+
                   <CardContent className="relative p-6">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
-                      <TrendingUp className="h-7 w-7 text-white" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center animate-gentle-bob">
+                          <Package className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-4xl font-extrabold text-gray-900">{productCount}</h3>
+                          <p className="mt-2 text-sm text-gray-600 font-semibold">Total Products</p>
+                          <p className="mt-0.5 text-xs text-gray-400">Across catalogues</p>
+                        </div>
+                      </div>
+
+                      {/* Average Products per Catalogue */}
+                      <div className="relative h-16 w-16">
+                        <svg className="h-full w-full -rotate-90 transform">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#D1FAE5"
+                            strokeWidth="6"
+                            fill="none"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#10B981"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 28}`}
+                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - (catalogueCount > 0 ? Math.min((productCount / catalogueCount) / 20, 1) : 0))}`}
+                            strokeLinecap="round"
+                            className="animate-pulse-slow"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-green-600">
+                          {catalogueCount > 0 ? Math.round((productCount / catalogueCount) * 100 / 20) : 0}%
+                        </span>
+                      </div>
                     </div>
-                    <p className="mb-1 text-sm font-medium text-gray-600">Active Tools</p>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold bg-gradient-to-br from-cyan-600 to-teal-600 bg-clip-text text-transparent">{stats.activeTools || 2}</h3>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge className="rounded-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
-                        Available
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-xs text-gray-500">
-                      Tools ready to use
-                    </p>
                   </CardContent>
-                  
-                 
                 </Card>
 
-                {/* Recent Activity */}
-                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-purple-50 via-white to-pink-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
-                  {/* Decorative Elements */}
-                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-purple-400/30 to-pink-400/30 blur-2xl" />
-                  
-                  
-                  {/* Sticker Badge */}
-                  
-                  
+                {/* Recent Activity - Red theme */}
+                <Card className="group relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-red-50/50 via-white to-red-50/30 shadow-md transition-all hover:shadow-xl hover:scale-[1.01]">
+                  <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-red-200/40 blur-2xl animate-slow-spin" />
+
                   <CardContent className="relative p-6">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
-                      <Calendar className="h-7 w-7 text-white" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-red-100 flex items-center justify-center animate-gentle-bob">
+                          <Clock className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-4xl font-extrabold text-gray-900">{recentItems.length}</h3>
+                          <p className="mt-2 text-sm text-gray-600 font-semibold">Recent Updates</p>
+                          <p className="mt-0.5 text-xs text-gray-400">Last 7 days</p>
+                        </div>
+                      </div>
+
+                      {/* Activity Rate - Projects updated recently */}
+                      <div className="relative h-16 w-16">
+                        <svg className="h-full w-full -rotate-90 transform">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#FEE2E2"
+                            strokeWidth="6"
+                            fill="none"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#EF4444"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 28}`}
+                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - (catalogueCount > 0 ? Math.min(recentItems.length / catalogueCount, 1) : 0))}`}
+                            strokeLinecap="round"
+                            className="animate-pulse-slow"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-red-600">
+                          {catalogueCount > 0 ? Math.round((recentItems.length / catalogueCount) * 100) : 0}%
+                        </span>
+                      </div>
                     </div>
-                    <p className="mb-1 text-sm font-medium text-gray-600">Recent Activity</p>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">{recentItems.length}</h3>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
-                        Last 7 days
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-xs text-gray-500">
-                      Recent updates
-                    </p>
                   </CardContent>
-                  
-                  
                 </Card>
 
-                {/* Current Plan */}
-                <Card className="group relative overflow-hidden rounded-3xl border-0 bg-gradient-to-br from-emerald-50 via-white to-green-50 shadow-lg transition-all hover:shadow-2xl hover:-translate-y-1">
-                  {/* Decorative Elements */}
-                  <div className="absolute -left-6 -bottom-6 h-24 w-24 rounded-full bg-gradient-to-br from-emerald-400/30 to-green-400/30 blur-2xl" />
-                  
-                  
-                  {/* Sticker Badge */}
-                  
-                  
+                {/* Platform Tools - Purple theme */}
+                <Card className="group relative overflow-hidden rounded-2xl border-0 bg-gradient-to-br from-purple-50/50 via-white to-purple-50/30 shadow-md transition-all hover:shadow-xl hover:scale-[1.01]">
+                  <div className="absolute -right-6 -bottom-6 h-20 w-20 rounded-full bg-purple-200/40 blur-2xl animate-pulse-slow" />
+
                   <CardContent className="relative p-6">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg transform group-hover:rotate-6 group-hover:scale-110 transition-all duration-300">
-                      <Sparkles className="h-7 w-7 text-white" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-3">
+                        <div className="h-12 w-12 rounded-xl bg-purple-100 flex items-center justify-center animate-gentle-bob">
+                          <Zap className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-4xl font-extrabold text-gray-900">{stats?.activeTools || 2}</h3>
+                          <p className="mt-2 text-sm text-gray-600 font-semibold">Platform Tools</p>
+                          <p className="mt-0.5 text-xs text-gray-400">More coming soon</p>
+                        </div>
+                      </div>
+
+                      {/* Tool Adoption Rate - Currently 2 of planned 5 tools */}
+                      <div className="relative h-16 w-16">
+                        <svg className="h-full w-full -rotate-90 transform">
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#EDE9FE"
+                            strokeWidth="6"
+                            fill="none"
+                          />
+                          <circle
+                            cx="32"
+                            cy="32"
+                            r="28"
+                            stroke="#9333EA"
+                            strokeWidth="6"
+                            fill="none"
+                            strokeDasharray={`${2 * Math.PI * 28}`}
+                            strokeDashoffset={`${2 * Math.PI * 28 * (1 - ((stats?.activeTools || 2) / 5))}`}
+                            strokeLinecap="round"
+                            className="animate-pulse-slow"
+                          />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-purple-600">
+                          {Math.round(((stats?.activeTools || 2) / 5) * 100)}%
+                        </span>
+                      </div>
                     </div>
-                    <p className="mb-1 text-sm font-medium text-gray-600">Subscription</p>
-                    <div className="flex items-baseline gap-2">
-                      <h3 className="text-3xl font-bold bg-gradient-to-br from-emerald-600 to-green-600 bg-clip-text text-transparent">{currentPlan}</h3>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Badge className="rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 px-3 py-1 text-xs font-semibold shadow-md">
-                        {currentPlan === 'FREE' ? 'Limited' : 'Premium'}
-                      </Badge>
-                    </div>
-                    <p className="mt-3 text-xs text-gray-500">
-                      {currentPlan === 'FREE' ? 'Upgrade for more' : 'Full access'}
-                    </p>
                   </CardContent>
-                  
-                  
                 </Card>
               </div>
             </div>
@@ -622,7 +695,7 @@ export default function DashboardPage() {
           <div className="mt-10">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Available Tools</h2>
-              
+
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -749,8 +822,8 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 pt-14">
             {/* Left: Large Purple Card with Progress */}
             <div className="lg:col-span-1 pt-2">
-              
-                <h2 className="text-lg font-semibold text-gray-900">Total Projects</h2>
+
+              <h2 className="text-lg font-semibold text-gray-900">Total Projects</h2>
 
               {/* Smaller Stat Cards Below */}
               <div className="mt-4 grid grid-cols-1 gap-4">
@@ -819,7 +892,7 @@ export default function DashboardPage() {
 
             {/* Right: Chart and Activity */}
             <div className="lg:col-span-2">
-             
+
 
               {/* History Section */}
               <div className="mb-4 flex items-center justify-between">
@@ -873,8 +946,8 @@ export default function DashboardPage() {
                                 <p className="text-xs text-gray-500">Items</p>
                               </div>
                               <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${catalogue?.isPublic
-                                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
                                 }`}>
                                 {catalogue?.isPublic ? 'Public' : 'Private'}
                               </Badge>
@@ -908,7 +981,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          
+
 
           {/* Catalogues Modal */}
           <CataloguesModal

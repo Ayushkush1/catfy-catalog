@@ -27,16 +27,16 @@ export function Breadcrumb({ variant = 'dark' }: BreadcrumbProps) {
     let currentPath = ''
     paths.forEach((path, index) => {
       if (path === 'dashboard') return // Skip the dashboard itself in breadcrumbs after home
-      
+
       currentPath += `/${path}`
-      
+
       // Customize labels for better UX
       let label = path.charAt(0).toUpperCase() + path.slice(1)
       if (label === 'Catalogue') label = 'Catalogues'
       if (label === 'Pdf-editor') label = 'PDF Editor'
       if (label === 'Edit') label = 'Editor'
       if (label === 'New') label = 'Create New'
-      
+
       breadcrumbs.push({
         label,
         href: currentPath,

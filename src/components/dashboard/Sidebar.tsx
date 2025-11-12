@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
+import {
   Home,
   BarChart3,
   Users,
@@ -42,21 +42,21 @@ const sidebarItems: SidebarItem[] = [
     id: 'team',
     label: 'Team',
     icon: Users,
-    href: '/team',
+    href: '/dashboard/team',
     isActive: true
   },
   {
     id: 'billing',
     label: 'Billing',
     icon: CreditCard,
-    href: '/billing',
+    href: '/dashboard/billing',
     isActive: true
   },
   {
     id: 'help',
     label: 'Help',
     icon: HelpCircle,
-    href: '/help',
+    href: '/dashboard/help',
     isActive: true
   }
 ]
@@ -168,9 +168,9 @@ export function Sidebar() {
           .nav-item:nth-child(5) { animation-delay: 0.25s; }
         `}</style>
       </div>
-      
+
       {/* Content */}
-      <div className="relative flex h-full flex-col items-center py-4 z-10">
+      <div className="relative flex h-full flex-col items-center pb-4 pt-2 z-10">
         {/* Logo */}
         <div className="mb-16">
           <Link href="/dashboard" className="group relative flex items-center justify-center">
@@ -198,10 +198,10 @@ export function Sidebar() {
             {sidebarItems.map((item, index) => {
               const Icon = item.icon
               // Exact match for home, prefix match for others
-              const isCurrentPath = item.href === '/dashboard' 
+              const isCurrentPath = item.href === '/dashboard'
                 ? pathname === '/dashboard'
                 : pathname === item.href || pathname.startsWith(item.href + '/')
-              
+
               return (
                 <div key={item.id} className="relative nav-item">
                   <Link
@@ -211,18 +211,18 @@ export function Sidebar() {
                       isCurrentPath
                         ? 'nav-link-active bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40 scale-105'
                         : item.isActive
-                        ? 'bg-gray-100/80 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg hover:scale-110'
-                        : 'cursor-not-allowed bg-gray-50/50 opacity-40'
+                          ? 'bg-gray-100/80 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg hover:scale-110'
+                          : 'cursor-not-allowed bg-gray-50/50 opacity-40'
                     )}
                   >
-                    <Icon 
+                    <Icon
                       className={cn(
                         'transition-all duration-300 ease-out',
-                        isCurrentPath 
-                          ? 'h-6 w-6 text-white icon-active' 
-                          : item.isActive 
-                          ? 'h-5 w-5 text-gray-700 icon-hover group-hover:scale-105 group-hover:text-[#6366F1]' 
-                          : 'h-6 w-6 text-gray-400'
+                        isCurrentPath
+                          ? 'h-6 w-6 text-white icon-active'
+                          : item.isActive
+                            ? 'h-5 w-5 text-gray-700 icon-hover group-hover:scale-105 group-hover:text-[#6366F1]'
+                            : 'h-6 w-6 text-gray-400'
                       )}
                       strokeWidth={2.2}
                     />
@@ -253,7 +253,7 @@ export function Sidebar() {
         <div className="mt-auto w-full px-3">
           <div className="relative">
             <Link
-              href="/settings"
+              href="/dashboard/settings"
               className={cn(
                 'nav-link group relative flex h-11 w-full items-center justify-center rounded-xl transition-all duration-300 ease-out',
                 pathname === '/settings'
@@ -261,11 +261,11 @@ export function Sidebar() {
                   : 'bg-gray-100/80 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg hover:scale-110'
               )}
             >
-              <Settings 
+              <Settings
                 className={cn(
                   'transition-all duration-300 ease-out',
-                  pathname === '/settings' 
-                    ? 'h-6 w-6 text-white icon-active' 
+                  pathname === '/settings'
+                    ? 'h-6 w-6 text-white icon-active'
                     : 'h-5 w-5 text-gray-700 icon-settings group-hover:text-[#6366F1]'
                 )}
                 strokeWidth={2}

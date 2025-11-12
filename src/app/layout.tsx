@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
+import { GlobalSidebar } from '@/components/dashboard/SidebarVisibility'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const roboto = Roboto({ subsets: ['latin'], weight: ['300', '400', '500', '700'], variable: '--font-roboto' })
@@ -63,6 +64,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${roboto.variable} ${openSans.variable} ${lato.variable} ${montserrat.variable} ${poppins.variable} ${playfairDisplay.variable} ${merriweather.variable} ${inter.className}`}>
         <Providers>
+          <GlobalSidebar />
           {children}
           <Toaster />
           <SonnerToaster position="top-right" richColors />

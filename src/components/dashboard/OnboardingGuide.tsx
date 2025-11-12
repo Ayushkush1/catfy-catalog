@@ -77,7 +77,7 @@ export function OnboardingGuide() {
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-      
+
       {/* Onboarding Card */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md">
         <Card className="relative overflow-hidden rounded-2xl border-0 shadow-2xl">
@@ -114,11 +114,10 @@ export function OnboardingGuide() {
               {steps.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-                    index <= currentStep 
-                      ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1]' 
+                  className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${index <= currentStep
+                      ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1]'
                       : 'bg-gray-200'
-                  }`}
+                    }`}
                 />
               ))}
             </div>

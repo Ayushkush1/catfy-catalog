@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,29 +15,29 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
-  Plus,
-  Search,
-  Book,
-  Eye,
-  Edit,
-  Trash2,
-  MoreVertical,
-  Sparkles,
-  Globe,
-  Lock,
-  Calendar,
-  Package,
-  Palette,
-  Layers,
-  Star,
-  Zap,
+    Plus,
+    Search,
+    Book,
+    Eye,
+    Edit,
+    Trash2,
+    MoreVertical,
+    Sparkles,
+    Globe,
+    Lock,
+    Calendar,
+    Package,
+    Palette,
+    Layers,
+    Star,
+    Zap,
 } from 'lucide-react'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { createClient } from '@/lib/supabase/client'
 import { formatDistanceToNow } from 'date-fns'
@@ -62,20 +62,20 @@ interface Catalogue {
 }
 
 interface Template {
-  id: string
-  name: string
-  description: string
-  preview?: string
-  previewImage?: string
-  theme?: string
-  category?: string
-  isPremium?: boolean
-  features?: string[]
+    id: string
+    name: string
+    description: string
+    preview?: string
+    previewImage?: string
+    theme?: string
+    category?: string
+    isPremium?: boolean
+    features?: string[]
 }
 
 interface CataloguesModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+    open: boolean
+    onOpenChange: (open: boolean) => void
 }const availableTemplates: Template[] = [
     {
         id: 'modern',
@@ -448,11 +448,11 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
 
                                                             {/* Overlay gradient for better visibility */}
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 pointer-events-none"></div>
-                                                            
+
                                                             {/* Decorative Elements - reduced opacity */}
                                                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-2xl pointer-events-none"></div>
                                                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/10 to-purple-400/10 rounded-full blur-xl pointer-events-none"></div>
-                                                            
+
                                                             {/* Product Count Badge - visible on hover */}
                                                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                                                                 <Badge className="bg-white/90 backdrop-blur-sm text-gray-700 shadow-lg">
@@ -498,7 +498,7 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
                                                                         </DropdownMenuContent>
                                                                     </DropdownMenu>
                                                                 </div>
-                                                                
+
                                                                 <div className="absolute bottom-3 left-3 right-3">
                                                                     <Button
                                                                         onClick={(e) => {
@@ -546,7 +546,7 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
                                                                     <span className="truncate">{formatDistanceToNow(new Date(catalogue.updatedAt), { addSuffix: true })}</span>
                                                                 </div>
                                                             </div>
-                                                           
+
                                                         </div>
                                                     </CardContent>
                                                 </Card>

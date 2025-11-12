@@ -1266,15 +1266,69 @@ export default function EditCataloguePage() {
   if (isLoading) {
     return (
       <>
-        <Header title="Edit Catalogue" showGradientBanner={true} />
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-32 w-full" />
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <Skeleton className="h-48" />
-              <Skeleton className="h-48" />
-              <Skeleton className="h-48" />
+        {/* Header skeleton */}
+        <div className="pl-20 bg-[#E8EAF6]">
+          <Header title="Edit Catalogue" showGradientBanner={true} />
+        </div>
+
+        {/* Page layout skeleton */}
+        <div className="-mt-6 pl-28 min-h-screen bg-[#E8EAF6]">
+          <div className="flex">
+            {/* Left Sidebar skeleton */}
+            <div className="min-h-screen w-64 bg-white">
+              <div className="p-4 space-y-1">
+                <Skeleton className="mb-4 h-9 w-full rounded-lg" />
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-11 w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+
+            {/* Main Content skeleton */}
+            <div className="mr-8 flex flex-1 bg-gray-50">
+              <div className="flex-1 p-6 space-y-6">
+                {/* Stats cards */}
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <Skeleton key={i} className="h-24 rounded-2xl" />
+                  ))}
+                </div>
+
+                {/* Recent Categories Section */}
+                <div className="grid grid-cols-5 gap-6">
+                  <div className="col-span-4">
+                    <div className="rounded-lg bg-white p-6">
+                      <div className="mb-6 flex items-center justify-between">
+                        <div>
+                          <Skeleton className="h-6 w-40 mb-2" />
+                          <Skeleton className="h-3 w-48" />
+                        </div>
+                        <Skeleton className="h-8 w-32" />
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Skeleton key={i} className="h-64 rounded-2xl" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions skeleton */}
+                  <div className="col-span-1">
+                    <div className="px-1">
+                      <div className="mb-6">
+                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="h-3 w-40" />
+                      </div>
+                      <div className="space-y-3">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <Skeleton key={i} className="h-20 rounded-lg" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1285,7 +1339,9 @@ export default function EditCataloguePage() {
   if (!catalogue) {
     return (
       <>
-        <Header title="Edit Catalogue" showGradientBanner={true} />
+        <div className="ml-24">
+          <Header title="Edit Catalogue" showGradientBanner={true} />
+        </div>
         <div className="container mx-auto px-4 py-8">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -1300,42 +1356,33 @@ export default function EditCataloguePage() {
 
   return (
     <>
-      <Header
-        title="Edit Catalogue"
-        catalogueName={catalogue.name}
-        lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
-          month: 'long',
-          day: 'numeric',
-          year: 'numeric',
-        })}
-        showGradientBanner={true}
-        onPreview={handlePreview}
-        onSave={saveCatalogue}
-        isSaving={isSaving}
-        hasPremiumAccess={!isOwner && currentUserHasPremiumAccess}
-        activeUsers={activeUsers}
-        isTrackingPresence={isTracking}
-      />
-      <div className="-mt-6 min-h-screen bg-gray-100">
+      <div className="pl-24 bg-[#E8EAF6]">
+        <Header
+          title="Edit Catalogue"
+          catalogueName={catalogue.name}
+          lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
+          showGradientBanner={true}
+          onPreview={handlePreview}
+          onSave={saveCatalogue}
+          isSaving={isSaving}
+          hasPremiumAccess={!isOwner && currentUserHasPremiumAccess}
+          activeUsers={activeUsers}
+          isTrackingPresence={isTracking}
+        />
+      </div>
+      <div className="-mt-6 pl-32 min-h-screen bg-[#E8EAF6]">
         {/* Main Layout Container */}
         <div className="flex">
           {/* Left Sidebar */}
-          <div className="ml-8 min-h-screen w-64 bg-white">
+          <div className="min-h-screen w-64 bg-white pt-4">
             {/* Navigation */}
             <nav className="p-4">
-              <div className="space-y-1">
-                {/* Dashboard/Back Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  asChild
-                  className="mb-4 w-full justify-start text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                >
-                  <Link href="/dashboard">
-                    <ArrowLeft className="mr-3 h-4 w-4" />
-                    Dashboard
-                  </Link>
-                </Button>
+              <div className="space-y-2">
+
 
                 <button
                   onClick={() => {
@@ -1343,8 +1390,8 @@ export default function EditCataloguePage() {
                     setCurrentSection('general')
                   }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <Eye className="mr-3 h-4 w-4" />
@@ -1357,15 +1404,15 @@ export default function EditCataloguePage() {
                     setCurrentSection('categories')
                   }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <FolderOpen className="mr-3 h-4 w-4" />
                   Categories
                   <span
                     className={`ml-auto rounded-full px-2 py-1 text-xs ${activeTab === 'categories'
-                      ? 'bg-gray-200 text-gray-900'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'bg-gray-200 text-gray-600'
                       }`}
                   >
@@ -1379,8 +1426,8 @@ export default function EditCataloguePage() {
                     setCurrentSection('products')
                   }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <Package className="mr-3 h-4 w-4" />
@@ -1396,8 +1443,8 @@ export default function EditCataloguePage() {
                     setCurrentSection('general')
                   }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
@@ -1410,8 +1457,8 @@ export default function EditCataloguePage() {
                     setCurrentSection('general')
                   }}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <Users className="mr-3 h-4 w-4" />
@@ -1421,8 +1468,8 @@ export default function EditCataloguePage() {
                 <button
                   onClick={() => setActiveTab('settings')}
                   className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
-                    ? 'rounded-lg bg-gray-100 text-gray-900'
-                    : 'rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
                     }`}
                 >
                   <Settings className="mr-3 h-4 w-4" />

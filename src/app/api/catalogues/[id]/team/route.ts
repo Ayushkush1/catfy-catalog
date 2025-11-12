@@ -97,6 +97,10 @@ export async function GET(
       joinedAt: catalogue.createdAt,
     }
 
+    const settings = (catalogue as any).settings || {}
+    const teamPermissions = settings.teamPermissions || {}
+    const teamResponsibilities = settings.teamResponsibilities || {}
+
     const members = catalogue.teamMembers.map(member => ({
       id: member.profile.id,
       email: member.profile.email,
@@ -107,6 +111,8 @@ export async function GET(
       role: member.role,
       joinedAt: member.joinedAt,
       hasPremiumAccess: member.hasPremiumAccess || false,
+      permission: teamPermissions[member.profile.id],
+      responsibility: teamResponsibilities[member.profile.id],
     }))
 
     const team = [owner, ...members]

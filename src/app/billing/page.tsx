@@ -16,7 +16,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Sidebar } from '@/components/dashboard/Sidebar'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import {
   Crown,
@@ -251,7 +250,6 @@ export default function BillingPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-[#E8EAF6]">
-        <Sidebar />
         <div className="ml-32 flex-1">
           <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
           <div className="p-8">
@@ -271,318 +269,314 @@ export default function BillingPage() {
 
   return (
     <div className="flex min-h-screen bg-[#E8EAF6]">
-      <Sidebar />
       <div className="ml-32 flex-1">
         <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
         <div className="p-8">
 
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-                {/* Current Subscription */}
-        {profile?.subscription && (
-          <Card className="border-0 shadow-lg mb-8 bg-gradient-to-br from-purple-50 to-blue-50">
-            <CardContent className="p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
-                    profile.subscription.plan === 'FREE' 
-                      ? 'from-gray-400 to-gray-500' 
-                      : 'from-[#6366F1] to-[#8B5CF6]'
-                  } flex items-center justify-center shadow-lg`}>
-                    {profile.subscription.plan === 'FREE' ? (
-                      <Zap className="h-8 w-8 text-white" />
-                    ) : (
-                      <Crown className="h-8 w-8 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                      {profile.subscription.plan === 'FREE'
-                        ? 'Free Plan'
-                        : profile.subscription.plan === 'MONTHLY'
-                          ? 'Pro Monthly'
-                          : 'Pro Yearly'}
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant={
-                          profile.subscription.status === 'ACTIVE'
-                            ? 'default'
-                            : 'destructive'
-                        }
-                        className={profile.subscription.status === 'ACTIVE' ? 'bg-green-500' : ''}
-                      >
-                        {profile.subscription.status}
-                      </Badge>
-                      {profile.subscription.plan !== 'FREE' && (
-                        <span className="text-sm text-gray-600">
-                          {profile.subscription.plan === 'MONTHLY' ? '$9.99/month' : '$99.99/year'}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                {profile.subscription.plan !== 'FREE' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={openCustomerPortal}
-                    disabled={isProcessing}
-                    className="bg-white hover:bg-gray-50"
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                    )}
-                    Manage Subscription
-                  </Button>
-                )}
-              </div>
-
-              {profile.subscription.plan !== 'FREE' && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-white rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <Label className="text-xs font-medium text-gray-500">Current Period</Label>
-                      <div className="text-sm font-medium text-gray-900">
-                        {format(new Date(profile.subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
-                        {format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-purple-600" />
-                    <div>
-                      <Label className="text-xs font-medium text-gray-500">Next Billing</Label>
-                      <div className="text-sm font-medium text-gray-900">
-                        {profile.subscription.cancelAtPeriodEnd 
-                          ? 'Cancels at period end'
-                          : format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Coupon Code */}
-        {(!profile?.subscription || profile.subscription.plan === 'FREE') && (
-          <Card className="mb-8 border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-purple-600" />
-                Have a coupon code?
-              </CardTitle>
-              <CardDescription>
-                Enter your coupon code to get a discount on your subscription
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={e => setCouponCode(e.target.value.toUpperCase())}
-                    onBlur={validateCoupon}
-                  />
-                </div>
-                <Button variant="outline" onClick={validateCoupon}>
-                  Apply
-                </Button>
-              </div>
-              {couponDiscount && (
-                <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
-                  <div className="flex items-center gap-2 text-green-700">
-                    <Check className="h-4 w-4" />
-                    <span className="font-medium">
-                      {couponDiscount}% discount applied!
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Pricing Plans */}
-        <h3 className="text-xl font-bold text-gray-900 mb-6">Available Plans</h3>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {pricingPlans.map(plan => {
-            const isCurrentPlan = profile?.subscription?.plan === plan.id
-            const discountedPrice = calculateDiscountedPrice(plan.price)
-
-            return (
-              <Card
-                key={plan.id}
-                className={`relative border-0 shadow-lg hover:shadow-xl transition-all ${
-                  plan.popular ? 'ring-2 ring-purple-500' : ''
-                } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
-                    <Badge className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white border-0">
-                      Most Popular
-                    </Badge>
-                  </div>
-                )}
-
-                {isCurrentPlan && (
-                  <div className="absolute -top-3 right-4">
-                    <Badge className="bg-green-500 text-white">
-                      Current Plan
-                    </Badge>
-                  </div>
-                )}
-
-                <CardHeader className="pb-4 text-center">
-                  <div className="mb-4 flex justify-center">
-                    <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
-                      plan.id === 'FREE' 
-                        ? 'from-gray-400 to-gray-500' 
+          {/* Current Subscription */}
+          {profile?.subscription && (
+            <Card className="border-0 shadow-lg mb-8 bg-gradient-to-br from-purple-50 to-blue-50">
+              <CardContent className="p-8">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${profile.subscription.plan === 'FREE'
+                        ? 'from-gray-400 to-gray-500'
                         : 'from-[#6366F1] to-[#8B5CF6]'
-                    } flex items-center justify-center shadow-lg`}>
-                      {plan.id === 'FREE' ? (
+                      } flex items-center justify-center shadow-lg`}>
+                      {profile.subscription.plan === 'FREE' ? (
                         <Zap className="h-8 w-8 text-white" />
                       ) : (
                         <Crown className="h-8 w-8 text-white" />
                       )}
                     </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                        {profile.subscription.plan === 'FREE'
+                          ? 'Free Plan'
+                          : profile.subscription.plan === 'MONTHLY'
+                            ? 'Pro Monthly'
+                            : 'Pro Yearly'}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          variant={
+                            profile.subscription.status === 'ACTIVE'
+                              ? 'default'
+                              : 'destructive'
+                          }
+                          className={profile.subscription.status === 'ACTIVE' ? 'bg-green-500' : ''}
+                        >
+                          {profile.subscription.status}
+                        </Badge>
+                        {profile.subscription.plan !== 'FREE' && (
+                          <span className="text-sm text-gray-600">
+                            {profile.subscription.plan === 'MONTHLY' ? '$9.99/month' : '$99.99/year'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                  {profile.subscription.plan !== 'FREE' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={openCustomerPortal}
+                      disabled={isProcessing}
+                      className="bg-white hover:bg-gray-50"
+                    >
+                      {isProcessing ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                      )}
+                      Manage Subscription
+                    </Button>
+                  )}
+                </div>
 
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
+                {profile.subscription.plan !== 'FREE' && (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-white rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <Label className="text-xs font-medium text-gray-500">Current Period</Label>
+                        <div className="text-sm font-medium text-gray-900">
+                          {format(new Date(profile.subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
+                          {format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <Label className="text-xs font-medium text-gray-500">Next Billing</Label>
+                        <div className="text-sm font-medium text-gray-900">
+                          {profile.subscription.cancelAtPeriodEnd
+                            ? 'Cancels at period end'
+                            : format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-                  <div className="mt-4">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-bold">
-                        ${discountedPrice.toFixed(2)}
+          {/* Coupon Code */}
+          {(!profile?.subscription || profile.subscription.plan === 'FREE') && (
+            <Card className="mb-8 border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  Have a coupon code?
+                </CardTitle>
+                <CardDescription>
+                  Enter your coupon code to get a discount on your subscription
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      onBlur={validateCoupon}
+                    />
+                  </div>
+                  <Button variant="outline" onClick={validateCoupon}>
+                    Apply
+                  </Button>
+                </div>
+                {couponDiscount && (
+                  <div className="mt-3 rounded-lg border border-green-200 bg-green-50 p-3">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Check className="h-4 w-4" />
+                      <span className="font-medium">
+                        {couponDiscount}% discount applied!
                       </span>
-                      <span className="text-gray-600">/{plan.interval}</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pricing Plans */}
+          <h3 className="text-xl font-bold text-gray-900 mb-6">Available Plans</h3>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {pricingPlans.map(plan => {
+              const isCurrentPlan = profile?.subscription?.plan === plan.id
+              const discountedPrice = calculateDiscountedPrice(plan.price)
+
+              return (
+                <Card
+                  key={plan.id}
+                  className={`relative border-0 shadow-lg hover:shadow-xl transition-all ${plan.popular ? 'ring-2 ring-purple-500' : ''
+                    } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
+                      <Badge className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white border-0">
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+
+                  {isCurrentPlan && (
+                    <div className="absolute -top-3 right-4">
+                      <Badge className="bg-green-500 text-white">
+                        Current Plan
+                      </Badge>
+                    </div>
+                  )}
+
+                  <CardHeader className="pb-4 text-center">
+                    <div className="mb-4 flex justify-center">
+                      <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${plan.id === 'FREE'
+                          ? 'from-gray-400 to-gray-500'
+                          : 'from-[#6366F1] to-[#8B5CF6]'
+                        } flex items-center justify-center shadow-lg`}>
+                        {plan.id === 'FREE' ? (
+                          <Zap className="h-8 w-8 text-white" />
+                        ) : (
+                          <Crown className="h-8 w-8 text-white" />
+                        )}
+                      </div>
                     </div>
 
-                    {couponDiscount && plan.price > 0 && (
-                      <div className="mt-1 text-sm text-gray-500">
-                        <span className="line-through">
-                          ${plan.price.toFixed(2)}
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <CardDescription>{plan.description}</CardDescription>
+
+                    <div className="mt-4">
+                      <div className="flex items-baseline justify-center gap-1">
+                        <span className="text-3xl font-bold">
+                          ${discountedPrice.toFixed(2)}
                         </span>
-                        <span className="ml-2 font-medium text-green-600">
-                          {couponDiscount}% off
-                        </span>
+                        <span className="text-gray-600">/{plan.interval}</span>
                       </div>
-                    )}
-                  </div>
-                </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    {plan.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 flex-shrink-0 text-green-500" />
-                        <span className="text-sm">{feature}</span>
-                      </div>
-                    ))}
+                      {couponDiscount && plan.price > 0 && (
+                        <div className="mt-1 text-sm text-gray-500">
+                          <span className="line-through">
+                            ${plan.price.toFixed(2)}
+                          </span>
+                          <span className="ml-2 font-medium text-green-600">
+                            {couponDiscount}% off
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardHeader>
 
-                    {plan.limitations?.map((limitation, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <X className="h-4 w-4 flex-shrink-0 text-gray-400" />
-                        <span className="text-sm text-gray-600">
-                          {limitation}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      {plan.features.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Check className="h-4 w-4 flex-shrink-0 text-green-500" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
 
-                  <div className="pt-4">
-                    {isCurrentPlan ? (
-                      <Button className="w-full" disabled>
-                        <Check className="mr-2 h-4 w-4" />
-                        Current Plan
-                      </Button>
-                    ) : plan.id === 'FREE' ? (
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        disabled={profile?.subscription?.plan === 'FREE'}
-                      >
-                        {profile?.subscription?.plan === 'FREE'
-                          ? 'Current Plan'
-                          : 'Downgrade'}
-                      </Button>
-                    ) : (
-                      <Button
-                        className="w-full"
-                        onClick={() =>
-                          createCheckoutSession(plan.id as 'MONTHLY' | 'YEARLY')
-                        }
-                        disabled={isProcessing}
-                      >
-                        {isProcessing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            {profile?.subscription?.plan === 'FREE'
-                              ? 'Upgrade'
-                              : 'Switch'}{' '}
-                            to {plan.name}
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                      {plan.limitations?.map((limitation, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <X className="h-4 w-4 flex-shrink-0 text-gray-400" />
+                          <span className="text-sm text-gray-600">
+                            {limitation}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
-        {/* FAQ or Additional Info */}
-        <Card className="mt-8 border-0 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50">
-          <CardContent className="p-8">
-            <div className="flex items-start gap-4">
-              <Shield className="h-12 w-12 text-purple-600 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Secure Billing with Stripe
-                </h3>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <h4 className="mb-2 font-medium text-gray-900">Payment & Security</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• Secure payments powered by Stripe</li>
-                      <li>• Cancel anytime, no hidden fees</li>
-                      <li>• 30-day money-back guarantee</li>
-                      <li>• Automatic billing on renewal date</li>
-                    </ul>
-                  </div>
+                    <div className="pt-4">
+                      {isCurrentPlan ? (
+                        <Button className="w-full" disabled>
+                          <Check className="mr-2 h-4 w-4" />
+                          Current Plan
+                        </Button>
+                      ) : plan.id === 'FREE' ? (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          disabled={profile?.subscription?.plan === 'FREE'}
+                        >
+                          {profile?.subscription?.plan === 'FREE'
+                            ? 'Current Plan'
+                            : 'Downgrade'}
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          onClick={() =>
+                            createCheckoutSession(plan.id as 'MONTHLY' | 'YEARLY')
+                          }
+                          disabled={isProcessing}
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              {profile?.subscription?.plan === 'FREE'
+                                ? 'Upgrade'
+                                : 'Switch'}{' '}
+                              to {plan.name}
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
 
-                  <div>
-                    <h4 className="mb-2 font-medium text-gray-900">Need Help?</h4>
-                    <ul className="space-y-1 text-sm text-gray-600">
-                      <li>• Contact support for billing questions</li>
-                      <li>• View detailed invoices in billing portal</li>
-                      <li>• Update payment methods anytime</li>
-                      <li>• Download receipts for tax purposes</li>
-                    </ul>
+          {/* FAQ or Additional Info */}
+          <Card className="mt-8 border-0 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50">
+            <CardContent className="p-8">
+              <div className="flex items-start gap-4">
+                <Shield className="h-12 w-12 text-purple-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Secure Billing with Stripe
+                  </h3>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                      <h4 className="mb-2 font-medium text-gray-900">Payment & Security</h4>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li>• Secure payments powered by Stripe</li>
+                        <li>• Cancel anytime, no hidden fees</li>
+                        <li>• 30-day money-back guarantee</li>
+                        <li>• Automatic billing on renewal date</li>
+                      </ul>
+                    </div>
+
+                    <div>
+                      <h4 className="mb-2 font-medium text-gray-900">Need Help?</h4>
+                      <ul className="space-y-1 text-sm text-gray-600">
+                        <li>• Contact support for billing questions</li>
+                        <li>• View detailed invoices in billing portal</li>
+                        <li>• Update payment methods anytime</li>
+                        <li>• Download receipts for tax purposes</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -35,12 +35,11 @@ export function ToolCard({ tool, onBrowseClick, onCreateClick }: ToolCardProps) 
   const Icon = tool.icon
 
   return (
-    <Card 
-      className={`group relative overflow-hidden rounded-2xl p-2 border-0 shadow-md transition-all duration-300 flex flex-col ${
-        tool.isActive 
-          ? `hover:-translate-y-1 hover:border-${tool.color} hover:shadow-lg` 
+    <Card
+      className={`group relative overflow-hidden rounded-2xl p-2 border-0 shadow-md transition-all duration-300 flex flex-col ${tool.isActive
+          ? `hover:-translate-y-1 hover:border-${tool.color} hover:shadow-lg`
           : 'opacity-75'
-      }`}
+        }`}
     >
       {/* Background Icon */}
       <div className="absolute -right-3 top-0 h-32 w-32 -translate-y-4 translate-x-4 transform opacity-5 transition-all duration-500 group-hover:opacity-10">
@@ -58,7 +57,7 @@ export function ToolCard({ tool, onBrowseClick, onCreateClick }: ToolCardProps) 
                 {tool.name}
               </CardTitle>
               {tool.badge && (
-                <Badge 
+                <Badge
                   variant={tool.badge.variant}
                   className="text-xs"
                 >

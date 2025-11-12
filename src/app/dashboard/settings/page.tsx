@@ -20,7 +20,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Sidebar } from '@/components/dashboard/Sidebar'
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { Bell, Globe, Shield, Trash2, Users, User, Lock, Palette, Save, AlertTriangle } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -130,7 +129,6 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen bg-[#E8EAF6]">
-        <Sidebar />
         <div className="ml-32 flex-1">
           <DashboardHeader title="Settings" subtitle="Manage your account and preferences" />
           <div className="flex h-64 items-center justify-center">
@@ -146,7 +144,6 @@ export default function SettingsPage() {
 
   return (
     <div className="flex min-h-screen bg-[#E8EAF6]">
-      <Sidebar />
       <div className="ml-32 flex-1">
         <DashboardHeader title="Settings" subtitle="Manage your account and preferences" />
 
@@ -231,52 +228,52 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Email Notifications</Label>
-                  <p className="text-sm text-gray-500">
-                    Receive notifications via email
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.email}
-                  onCheckedChange={checked =>
-                    updateSettings('notifications.email', checked)
-                  }
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Email Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive notifications via email
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.email}
+                      onCheckedChange={checked =>
+                        updateSettings('notifications.email', checked)
+                      }
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Push Notifications</Label>
-                  <p className="text-sm text-gray-500">
-                    Receive push notifications in browser
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.push}
-                  onCheckedChange={checked =>
-                    updateSettings('notifications.push', checked)
-                  }
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Push Notifications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive push notifications in browser
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.push}
+                      onCheckedChange={checked =>
+                        updateSettings('notifications.push', checked)
+                      }
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Marketing Communications</Label>
-                  <p className="text-sm text-gray-500">
-                    Receive updates about new features and offers
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.notifications.marketing}
-                  onCheckedChange={checked =>
-                    updateSettings('notifications.marketing', checked)
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Marketing Communications</Label>
+                      <p className="text-sm text-gray-500">
+                        Receive updates about new features and offers
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.notifications.marketing}
+                      onCheckedChange={checked =>
+                        updateSettings('notifications.marketing', checked)
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Privacy Settings */}
               <Card className="border-0 shadow-lg">
@@ -292,55 +289,55 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="profileVisibility">Profile Visibility</Label>
-                <Select
-                  value={settings.privacy.profileVisibility}
-                  onValueChange={value =>
-                    updateSettings('privacy.profileVisibility', value)
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="profileVisibility">Profile Visibility</Label>
+                    <Select
+                      value={settings.privacy.profileVisibility}
+                      onValueChange={value =>
+                        updateSettings('privacy.profileVisibility', value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Show Email in Profile</Label>
-                  <p className="text-sm text-gray-500">
-                    Make your email visible to other users
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.privacy.showEmail}
-                  onCheckedChange={checked =>
-                    updateSettings('privacy.showEmail', checked)
-                  }
-                />
-              </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Show Email in Profile</Label>
+                      <p className="text-sm text-gray-500">
+                        Make your email visible to other users
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.privacy.showEmail}
+                      onCheckedChange={checked =>
+                        updateSettings('privacy.showEmail', checked)
+                      }
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Show Phone in Profile</Label>
-                  <p className="text-sm text-gray-500">
-                    Make your phone number visible to other users
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.privacy.showPhone}
-                  onCheckedChange={checked =>
-                    updateSettings('privacy.showPhone', checked)
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Show Phone in Profile</Label>
+                      <p className="text-sm text-gray-500">
+                        Make your phone number visible to other users
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.privacy.showPhone}
+                      onCheckedChange={checked =>
+                        updateSettings('privacy.showPhone', checked)
+                      }
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Language & Region */}
               <Card className="border-0 shadow-lg">
@@ -356,57 +353,57 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                <Select
-                  value={settings.language}
-                  onValueChange={value => updateSettings('language', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="de">Deutsch</SelectItem>
-                    <SelectItem value="zh">中文</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Select
+                      value={settings.language}
+                      onValueChange={value => updateSettings('language', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                        <SelectItem value="fr">Français</SelectItem>
+                        <SelectItem value="de">Deutsch</SelectItem>
+                        <SelectItem value="zh">中文</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="timezone">Timezone</Label>
-                <Select
-                  value={settings.timezone}
-                  onValueChange={value => updateSettings('timezone', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="UTC">UTC</SelectItem>
-                    <SelectItem value="America/New_York">
-                      Eastern Time
-                    </SelectItem>
-                    <SelectItem value="America/Chicago">
-                      Central Time
-                    </SelectItem>
-                    <SelectItem value="America/Denver">
-                      Mountain Time
-                    </SelectItem>
-                    <SelectItem value="America/Los_Angeles">
-                      Pacific Time
-                    </SelectItem>
-                    <SelectItem value="Europe/London">London</SelectItem>
-                    <SelectItem value="Europe/Paris">Paris</SelectItem>
-                    <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                    <SelectItem value="Asia/Shanghai">Shanghai</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select
+                      value={settings.timezone}
+                      onValueChange={value => updateSettings('timezone', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="UTC">UTC</SelectItem>
+                        <SelectItem value="America/New_York">
+                          Eastern Time
+                        </SelectItem>
+                        <SelectItem value="America/Chicago">
+                          Central Time
+                        </SelectItem>
+                        <SelectItem value="America/Denver">
+                          Mountain Time
+                        </SelectItem>
+                        <SelectItem value="America/Los_Angeles">
+                          Pacific Time
+                        </SelectItem>
+                        <SelectItem value="Europe/London">London</SelectItem>
+                        <SelectItem value="Europe/Paris">Paris</SelectItem>
+                        <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                        <SelectItem value="Asia/Shanghai">Shanghai</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Appearance */}
               <Card className="border-0 shadow-lg">
@@ -520,8 +517,8 @@ export default function SettingsPage() {
                 <Button variant="outline" onClick={() => window.location.reload()}>
                   Cancel
                 </Button>
-                <Button 
-                  onClick={handleSaveSettings} 
+                <Button
+                  onClick={handleSaveSettings}
                   disabled={saving}
                   className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#5558E3] hover:to-[#7C3AED]"
                 >
