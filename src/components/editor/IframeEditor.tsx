@@ -74,6 +74,10 @@ type PaletteElementType =
     goPrev: () => void
     goNext: () => void
   }) => void
+  // Optional catalogue id when embedding in a page view
+  catalogueId?: string
+  // Disable auto-saving when used for a public preview or read-only mode
+  autoSave?: boolean
 }
 
 /**
