@@ -287,9 +287,8 @@ const HelpSupportPage = () => {
                         </h3>
                       </div>
                       <ChevronRight
-                        className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${
-                          expandedFAQ === faq.id ? 'rotate-90' : ''
-                        }`}
+                        className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${expandedFAQ === faq.id ? 'rotate-90' : ''
+                          }`}
                       />
                     </button>
                     {expandedFAQ === faq.id && (
