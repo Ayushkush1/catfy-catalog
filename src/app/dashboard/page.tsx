@@ -59,7 +59,6 @@ import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
 import Head from 'next/head'
 
-
 // Framer Motion variants for hero staggered animations
 const heroContainerVariants = {
   hidden: { opacity: 0 },
@@ -81,7 +80,6 @@ const heroButtonVariants = {
   hidden: { opacity: 0, y: 10 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 }
-
 
 interface Catalogue {
   id: string
@@ -309,7 +307,8 @@ export default function DashboardPage() {
     document.head.appendChild(link2)
 
     const link3 = document.createElement('link')
-    link3.href = 'https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Caveat:wght@400..700&display=swap'
+    link3.href =
+      'https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Caveat:wght@400..700&display=swap'
     link3.rel = 'stylesheet'
     document.head.appendChild(link3)
 
@@ -377,8 +376,9 @@ export default function DashboardPage() {
 
         // Get recent items (last 6 updated catalogues)
         const recent = cataloguesData.catalogues
-          .sort((a: Catalogue, b: Catalogue) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+          .sort(
+            (a: Catalogue, b: Catalogue) =>
+              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
           )
           .slice(0, 6)
           .map((cat: Catalogue) => ({
@@ -588,46 +588,75 @@ export default function DashboardPage() {
         <DashboardHeader />
 
         <div className="px-8 pb-10 pt-5">
-
-
           {/* Branding Intro Section with Top Cards */}
           {stats && (
             <div className="mb-6">
               {/* Hero / Branding Intro (first view for new users) */}
-              <div className="mb-8 relative">
+              <div className="relative mb-8">
                 <div className="rounded-[3rem] shadow-lg">
-                  <div className="rounded-[3rem] bg-gradient-to-br from-[#6366F1] to-[#2D1B69] p-10 py-[5.5rem] text-white relative">
+                  <div className="relative rounded-[3rem] bg-gradient-to-br from-[#6366F1] to-[#2D1B69] p-10 py-[5.5rem] text-white">
                     <motion.div
-                      className="flex flex-col md:flex-row items-center gap-6"
+                      className="flex flex-col items-center gap-6 md:flex-row"
                       variants={heroContainerVariants}
                       initial="hidden"
                       animate="show"
                     >
-                      <motion.div className="flex-1 space-y-2" variants={heroItemVariants}>
-                        <motion.h1 className={`-pl-2 text-2xl md:text-[3rem] font-bold leading-[50px]`} variants={heroItemVariants}>
-                          Build Smarter,<br /> Faster with <i className='font-light'>CATFY</i> <span className=" text-xl font-semibold -pl-2"> ( AI powered builder ) </span>
+                      <motion.div
+                        className="flex-1 space-y-2"
+                        variants={heroItemVariants}
+                      >
+                        <motion.h1
+                          className={`-pl-2 text-2xl font-bold leading-[50px] md:text-[3rem]`}
+                          variants={heroItemVariants}
+                        >
+                          Build Smarter,
+                          <br /> Faster with <i className="font-light">
+                            CATFY
+                          </i>{' '}
+                          <span className=" -pl-2 text-xl font-semibold">
+                            {' '}
+                            ( AI powered builder ){' '}
+                          </span>
                         </motion.h1>
 
-                        <motion.p className={` pt-1 text-sm md:text-[1rem] text-white/90 max-w-2xl pb-5 leading-normal`} variants={heroItemVariants}>
-                          Craft beautiful, high-performing catalogues in minutes with CATFY’s AI-powered tools. Design, track analytics, and manage versions all in one seamless workspace.
+                        <motion.p
+                          className={` max-w-2xl pb-5 pt-1 text-sm leading-normal text-white/90 md:text-[1rem]`}
+                          variants={heroItemVariants}
+                        >
+                          Craft beautiful, high-performing catalogues in minutes
+                          with CATFY’s AI-powered tools. Design, track
+                          analytics, and manage versions all in one seamless
+                          workspace.
                         </motion.p>
-
-
                       </motion.div>
 
-                      <motion.div className="w-full md:w-1/3" variants={heroItemVariants}>
-                        <div className="relative w-full flex items-center justify-center">
+                      <motion.div
+                        className="w-full md:w-1/3"
+                        variants={heroItemVariants}
+                      >
+                        <div className="relative flex w-full items-center justify-center">
                           {/* floating decorative icons */}
                           <div className="absolute -right-2 -top-36 flex flex-col items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center animate-float" style={{ ['--rotation' as any]: '8deg' }}>
+                            <div
+                              className="animate-float flex h-10 w-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm"
+                              style={{ ['--rotation' as any]: '8deg' }}
+                            >
                               <Sparkles className="h-4 w-4 text-white/90" />
                             </div>
-                            <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center animate-float-reverse" style={{ ['--rotation' as any]: '-6deg' }}>
+                            <div
+                              className="animate-float-reverse flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10"
+                              style={{ ['--rotation' as any]: '-6deg' }}
+                            >
                               <Book className="h-5 w-5 text-white/90" />
                             </div>
                           </div>
 
-                          <motion.div className="absolute w-[460px] h-[470px] -top-[15.5rem] right-14" initial={{ scale: 0.98, rotate: -2 }} animate={{ scale: 1, rotate: 0 }} transition={{ delay: 0.2, duration: 0.8 }}>
+                          <motion.div
+                            className="absolute -top-[15.5rem] right-14 h-[470px] w-[460px]"
+                            initial={{ scale: 0.98, rotate: -2 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.2, duration: 0.8 }}
+                          >
                             <Image
                               src="/assets/illustration 2.png"
                               alt="Catfy preview"
@@ -636,57 +665,80 @@ export default function DashboardPage() {
                               priority
                             />
                           </motion.div>
-
                         </div>
                       </motion.div>
                     </motion.div>
 
                     {/* Overlay Stat Cards */}
-                    <div className="absolute -bottom-20 left-0 right-0 grid grid-cols-1 gap-4 md:grid-cols-4 px-10">
+                    <div className="absolute -bottom-20 left-0 right-0 grid grid-cols-1 gap-4 px-10 md:grid-cols-4">
                       {/* Card 1 - Total Catalogues */}
-                      <div className="group rounded-2xl bg-white p-4 shadow-lg flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
+                      <div className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                         <div>
-                          <p className="text-sm text-gray-500">Total Catalogues</p>
-                          <p className="mt-1 text-2xl font-extrabold text-gray-900">{catalogueCount}</p>
-                          <p className="mt-0.5 text-xs text-gray-400">Active projects</p>
+                          <p className="text-sm text-gray-500">
+                            Total Catalogues
+                          </p>
+                          <p className="mt-1 text-2xl font-extrabold text-gray-900">
+                            {catalogueCount}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            Active projects
+                          </p>
                         </div>
-                        <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#f1b363] to-[#cc7d2f] text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-[#f1b363] to-[#cc7d2f] text-white shadow-md transition-transform duration-300 group-hover:scale-110">
                           <Book className="h-6 w-6" />
                         </div>
                       </div>
 
                       {/* Card 2 - Total Products */}
-                      <div className="group rounded-2xl bg-white p-4 shadow-lg flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
+                      <div className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                         <div>
-                          <p className="text-sm text-gray-500">Total Products</p>
-                          <p className="mt-1 text-2xl font-extrabold text-gray-900">{productCount}</p>
-                          <p className="mt-0.5 text-xs text-gray-400">Across catalogues</p>
+                          <p className="text-sm text-gray-500">
+                            Total Products
+                          </p>
+                          <p className="mt-1 text-2xl font-extrabold text-gray-900">
+                            {productCount}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            Across catalogues
+                          </p>
                         </div>
-                        <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-400 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-400 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
                           <Package className="h-6 w-6" />
                         </div>
                       </div>
 
                       {/* Card 3 - Recent Updates */}
-                      <div className="group rounded-2xl bg-white p-4 shadow-lg flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
+                      <div className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                         <div>
-                          <p className="text-sm text-gray-500">Recent Updates</p>
-                          <p className="mt-1 text-2xl font-extrabold text-gray-900">{recentItems.length}</p>
-                          <p className="mt-0.5 text-xs text-gray-400">Last 7 days</p>
+                          <p className="text-sm text-gray-500">
+                            Recent Updates
+                          </p>
+                          <p className="mt-1 text-2xl font-extrabold text-gray-900">
+                            {recentItems.length}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            Last 7 days
+                          </p>
                         </div>
-                        <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-red-400 to-pink-400 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-red-400 to-pink-400 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
                           <Clock className="h-6 w-6" />
                         </div>
                       </div>
 
                       {/* Card 4 - Platform Tools */}
-                      <div className="group rounded-2xl bg-white p-4 shadow-lg flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer">
+                      <div className="group flex cursor-pointer items-center justify-between rounded-2xl bg-white p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                         <div>
-                          <p className="text-sm text-gray-500">Platform Tools</p>
-                          <p className="mt-1 text-2xl font-extrabold text-gray-900">{stats?.activeTools || 2}</p>
-                          <p className="mt-0.5 text-xs text-gray-400">More coming soon</p>
+                          <p className="text-sm text-gray-500">
+                            Platform Tools
+                          </p>
+                          <p className="mt-1 text-2xl font-extrabold text-gray-900">
+                            {stats?.activeTools || 2}
+                          </p>
+                          <p className="mt-0.5 text-xs text-gray-400">
+                            More coming soon
+                          </p>
                         </div>
-                        <div className="h-14 w-14 rounded-xl flex items-center justify-center bg-gradient-to-br from-purple-400 to-indigo-500 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-400 to-indigo-500 text-white shadow-md transition-transform duration-300 group-hover:scale-110">
                           <Zap className="h-6 w-6" />
                         </div>
                       </div>
@@ -705,16 +757,26 @@ export default function DashboardPage() {
             style={{ outline: 'none' }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Available Tools</h2>
-
+              <h2 className="text-lg font-semibold text-gray-900">
+                Available Tools
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {(() => {
                 const q = toolSearch.trim()
                 const matches = (text: string) => text.toLowerCase().includes(q)
-                const showCatalogue = !q || matches('catalogue') || matches('catalogue builder') || matches('ai-powered') || matches('catalogues')
-                const showPdf = !q || matches('pdf') || matches('pdf editor') || matches('documents')
+                const showCatalogue =
+                  !q ||
+                  matches('catalogue') ||
+                  matches('catalogue builder') ||
+                  matches('ai-powered') ||
+                  matches('catalogues')
+                const showPdf =
+                  !q ||
+                  matches('pdf') ||
+                  matches('pdf editor') ||
+                  matches('documents')
 
                 if (!showCatalogue && !showPdf) {
                   return (
@@ -723,8 +785,12 @@ export default function DashboardPage() {
                         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
                           <BarChart3 className="h-6 w-6 text-gray-400" />
                         </div>
-                        <p className="text-lg font-semibold text-gray-900">No tools match “{toolSearch}”</p>
-                        <p className="text-sm text-gray-500">Try different keywords like “catalogue” or “pdf”</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          No tools match “{toolSearch}”
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Try different keywords like “catalogue” or “pdf”
+                        </p>
                       </div>
                     </Card>
                   )
@@ -734,10 +800,10 @@ export default function DashboardPage() {
                   <>
                     {showCatalogue && (
                       <Card
-                        className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                        className="group relative cursor-pointer overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
                         onClick={() => setShowCataloguesModal(true)}
                       >
-                        <div className="absolute right-0 top-0 h-40 w-40 translate-x-12 -translate-y-12 transform opacity-10">
+                        <div className="absolute right-0 top-0 h-40 w-40 -translate-y-12 translate-x-12 transform opacity-10">
                           <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-400 to-purple-600" />
                         </div>
                         <CardContent className="relative p-8">
@@ -750,18 +816,27 @@ export default function DashboardPage() {
                             </Badge>
                           </div>
 
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">Catalogue Builder</h3>
+                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                            Catalogue Builder
+                          </h3>
                           <p className="mb-4 text-sm text-gray-600">
-                            Create beautiful, professional product catalogues with AI-powered descriptions and stunning templates.
+                            Create beautiful, professional product catalogues
+                            with AI-powered descriptions and stunning templates.
                           </p>
 
                           <div className="mb-6 grid grid-cols-2 gap-3">
                             <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">{catalogueCount}</p>
-                              <p className="text-xs text-gray-600">Catalogues</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                {catalogueCount}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                Catalogues
+                              </p>
                             </div>
                             <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">{productCount}</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                {productCount}
+                              </p>
                               <p className="text-xs text-gray-600">Products</p>
                             </div>
                           </div>
@@ -782,8 +857,8 @@ export default function DashboardPage() {
                           </div>
 
                           <Button
-                            className="mt-6 w-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d] shadow-md hover:shadow-lg transition-all duration-200"
-                            onClick={(e) => {
+                            className="mt-6 w-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white shadow-md transition-all duration-200 hover:from-[#5558E3] hover:to-[#1e0f4d] hover:shadow-lg"
+                            onClick={e => {
                               e.stopPropagation()
                               setShowCataloguesModal(true)
                             }}
@@ -797,7 +872,7 @@ export default function DashboardPage() {
 
                     {showPdf && (
                       <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
-                        <div className="absolute right-0 top-0 h-40 w-40 translate-x-12 -translate-y-12 transform opacity-10">
+                        <div className="absolute right-0 top-0 h-40 w-40 -translate-y-12 translate-x-12 transform opacity-10">
                           <div className="h-full w-full rounded-full bg-gradient-to-br from-emerald-400 to-teal-600" />
                         </div>
                         <CardContent className="relative p-8">
@@ -810,18 +885,25 @@ export default function DashboardPage() {
                             </Badge>
                           </div>
 
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">PDF Editor</h3>
+                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
+                            PDF Editor
+                          </h3>
                           <p className="mb-4 text-sm text-gray-600">
-                            Professional PDF editing with advanced features for creating, editing, and managing documents.
+                            Professional PDF editing with advanced features for
+                            creating, editing, and managing documents.
                           </p>
 
                           <div className="mb-6 grid grid-cols-2 gap-3">
                             <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">0</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                0
+                              </p>
                               <p className="text-xs text-gray-600">Documents</p>
                             </div>
                             <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">0</p>
+                              <p className="text-2xl font-bold text-gray-900">
+                                0
+                              </p>
                               <p className="text-xs text-gray-600">Templates</p>
                             </div>
                           </div>
@@ -842,7 +924,7 @@ export default function DashboardPage() {
                           </div>
 
                           <Button
-                            className="mt-6 w-full bg-gray-200 text-gray-500 hover:bg-gray-200 cursor-not-allowed"
+                            className="mt-6 w-full cursor-not-allowed bg-gray-200 text-gray-500 hover:bg-gray-200"
                             disabled
                           >
                             Coming Soon
@@ -857,14 +939,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Invoices Section - Main Content */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 px-10 pt-7">
+          <div className="grid grid-cols-1 gap-6 px-10 pt-7 lg:grid-cols-3">
             {/* Left: Large Purple Card with Progress */}
-            <div className="lg:col-span-1 pt-2 ">
-
-              <h2 className="text-lg font-semibold text-gray-900">Total Projects</h2>
+            <div className="pt-2 lg:col-span-1 ">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Total Projects
+              </h2>
 
               {/* Smaller Stat Cards Below */}
-              <div className="mt-4 grid grid-cols-1 gap-4 bg-white p-4 rounded-3xl">
+              <div className="mt-4 grid grid-cols-1 gap-4 rounded-3xl bg-white p-4">
                 <Card className="rounded-2xl border-0 bg-gray-50 shadow-sm hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-5">
                     <div className="flex items-center gap-3">
@@ -884,7 +967,7 @@ export default function DashboardPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-3xl border-0 bg-gray-50 hover:shadow-md shadow-sm">
+                <Card className="rounded-3xl border-0 bg-gray-50 shadow-sm hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-5">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50">
@@ -892,9 +975,7 @@ export default function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">PDF Documents</p>
-                        <h4 className="text-xl font-bold text-gray-900">
-                          0
-                        </h4>
+                        <h4 className="text-xl font-bold text-gray-900">0</h4>
                       </div>
                     </div>
                     <div className="relative h-10 w-10">
@@ -930,12 +1011,16 @@ export default function DashboardPage() {
 
             {/* Right: Chart and Activity */}
             <div className="lg:col-span-2">
-
-
               {/* History Section */}
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-900">Recent Work</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowCataloguesModal(true)}>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Recent Work
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCataloguesModal(true)}
+                >
                   View All <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
@@ -945,9 +1030,10 @@ export default function DashboardPage() {
                 <Card className="rounded-3xl border-0 bg-white shadow-lg">
                   <CardContent className="p-6">
                     <div className="space-y-3">
-                      {recentItems.slice(0, 3).map((item) => {
+                      {recentItems.slice(0, 3).map(item => {
                         const catalogue = catalogues.find(c => c.id === item.id)
-                        const toolIcon = item.type === 'CATALOGUE' ? Book : FileText
+                        const toolIcon =
+                          item.type === 'CATALOGUE' ? Book : FileText
                         const ToolIcon = toolIcon
 
                         return (
@@ -966,43 +1052,70 @@ export default function DashboardPage() {
                                 'from-sky-400 to-indigo-400',
                               ]
                               // Use split('') instead of spread to support older TS targets and use unsigned hash
-                              const hash = item.id.split('').reduce((h, c) => ((h * 31 + c.charCodeAt(0)) >>> 0), 0)
+                              const hash = item.id
+                                .split('')
+                                .reduce(
+                                  (h, c) => (h * 31 + c.charCodeAt(0)) >>> 0,
+                                  0
+                                )
                               const cls = colors[hash % colors.length]
 
                               return (
-                                <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${cls} shadow-md`}>
+                                <div
+                                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${cls} shadow-md`}
+                                >
                                   <ToolIcon className="h-6 w-6 text-white" />
                                 </div>
                               )
                             })()}
-                            <div className="flex-1 min-w-0">
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
-                                <p className="font-semibold text-gray-900 truncate">{item.name}</p>
-                                <Badge variant="outline" className="text-xs h-5 px-1.5">
-                                  {item.type === 'CATALOGUE' ? 'Catalogue' : 'PDF'}
+                                <p className="truncate font-semibold text-gray-900">
+                                  {item.name}
+                                </p>
+                                <Badge
+                                  variant="outline"
+                                  className="h-5 px-1.5 text-xs"
+                                >
+                                  {item.type === 'CATALOGUE'
+                                    ? 'Catalogue'
+                                    : 'PDF'}
                                 </Badge>
                               </div>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="mt-1 flex items-center gap-2">
                                 <p className="text-xs text-gray-500">
-                                  Updated {formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true })}
+                                  Updated{' '}
+                                  {formatDistanceToNow(
+                                    new Date(item.updatedAt),
+                                    { addSuffix: true }
+                                  )}
                                 </p>
                                 {catalogue && catalogue.theme && (
                                   <>
-                                    <span className="text-xs text-gray-400">•</span>
-                                    <span className="text-xs text-gray-500 capitalize">{catalogue.theme}</span>
+                                    <span className="text-xs text-gray-400">
+                                      •
+                                    </span>
+                                    <span className="text-xs capitalize text-gray-500">
+                                      {catalogue.theme}
+                                    </span>
                                   </>
                                 )}
                               </div>
                             </div>
                             <div className="hidden items-center gap-6 md:flex">
                               <div className="text-center">
-                                <p className="text-sm font-semibold text-gray-900">{item.productCount || 0}</p>
+                                <p className="text-sm font-semibold text-gray-900">
+                                  {item.productCount || 0}
+                                </p>
                                 <p className="text-xs text-gray-500">Items</p>
                               </div>
-                              <Badge className={`rounded-full px-3 py-1 text-xs font-semibold ${catalogue?.isPublic
-                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                }`}>
+                              <Badge
+                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                  catalogue?.isPublic
+                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                }`}
+                              >
                                 {catalogue?.isPublic ? 'Public' : 'Private'}
                               </Badge>
                             </div>
@@ -1020,12 +1133,16 @@ export default function DashboardPage() {
                       <FolderOpen className="h-8 w-8 text-gray-400" />
                     </div>
                     <div>
-                      <p className="text-lg font-semibold text-gray-900">No projects yet</p>
-                      <p className="text-sm text-gray-500 mt-1">Start creating with our tools</p>
+                      <p className="text-lg font-semibold text-gray-900">
+                        No projects yet
+                      </p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Start creating with our tools
+                      </p>
                     </div>
                     <Button
                       onClick={() => setShowCataloguesModal(true)}
-                      className="mt-2 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d] shadow-md hover:shadow-lg transition-all duration-200"
+                      className="mt-2 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white shadow-md transition-all duration-200 hover:from-[#5558E3] hover:to-[#1e0f4d] hover:shadow-lg"
                     >
                       Get Started
                     </Button>
@@ -1034,8 +1151,6 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-
-
 
           {/* Catalogues Modal */}
           <CataloguesModal
@@ -1055,4 +1170,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

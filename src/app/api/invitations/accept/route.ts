@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       // Get user's profile to check all possible emails
       const userProfile = await prisma.profile.findUnique({
         where: { id: user.id },
-        select: { email: true }
+        select: { email: true },
       })
 
       const profileEmail = userProfile?.email.toLowerCase() || ''
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'This invitation was sent to a different email address',
-            details: `Invitation sent to: ${invitation.email}. You are logged in as: ${userEmail || profileEmail}`
+            details: `Invitation sent to: ${invitation.email}. You are logged in as: ${userEmail || profileEmail}`,
           },
           { status: 403 }
         )

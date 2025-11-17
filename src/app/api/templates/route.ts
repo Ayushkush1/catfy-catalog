@@ -61,9 +61,9 @@ function adaptToTemplateConfig(t: TemplateWithContents) {
       isEditorTemplate: true,
       ...(isMulti
         ? {
-          isMultiPageTemplate: true,
-          multiPageData: latestContent?.data || [],
-        }
+            isMultiPageTemplate: true,
+            multiPageData: latestContent?.data || [],
+          }
         : { editorData: latestContent?.data || {} }),
     },
     createdAt: t.createdAt,

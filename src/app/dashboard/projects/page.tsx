@@ -46,7 +46,6 @@ import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
 import Head from 'next/head'
 import { SubscriptionPlan } from '@prisma/client'
 
-
 interface Catalogue {
   id: string
   name: string
@@ -101,7 +100,9 @@ export default function ProjectsPage() {
   const [catalogues, setCatalogues] = useState<Catalogue[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null
+  )
   const [activeTab, setActiveTab] = useState('projects')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -372,15 +373,22 @@ export default function ProjectsPage() {
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
       <div className="ml-24 flex-1">
-        <DashboardHeader title="My Projects" subtitle="Manage your catalogue projects and templates" />
+        <DashboardHeader
+          title="My Projects"
+          subtitle="Manage your catalogue projects and templates"
+        />
 
         <div className="px-8 pb-10 pt-5">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="flex items-center justify-between p-2 h-14 bg-white rounded-2xl shadow-sm mb-8 w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="mb-8 flex h-14 w-full items-center justify-between rounded-2xl bg-white p-2 shadow-sm">
               <div className="flex items-center gap-3">
                 <TabsTrigger
                   value="projects"
-                  className="flex items-center gap-2 px-10 py-2.5 rounded-2xl text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
+                  className="flex items-center gap-2 rounded-2xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
                 >
                   <FolderOpen className="h-4 w-4" />
                   <span>My Projects</span>
@@ -388,7 +396,7 @@ export default function ProjectsPage() {
 
                 <TabsTrigger
                   value="templates"
-                  className="flex items-center gap-2 px-10 py-2.5 rounded-2xl text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
+                  className="flex items-center gap-2 rounded-2xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
                 >
                   <Palette className="h-4 w-4" />
                   <span>Templates</span>
@@ -399,7 +407,7 @@ export default function ProjectsPage() {
                 <Button
                   size="sm"
                   className="ml-4 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation()
                     if (canCreateCatalogue()) {
                       setSelectedTemplate(null)
@@ -415,54 +423,57 @@ export default function ProjectsPage() {
               </div>
             </TabsList>
 
-
             <TabsContent value="projects" className="mt-0">
               {/* Projects Grid */}
               <div className="mb-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Your Projects</h2>
-                    <p className="text-sm text-gray-600 mt-1">Manage and create your catalogue projects</p>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Your Projects
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Manage and create your catalogue projects
+                    </p>
                   </div>
                 </div>
 
                 {catalogues.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {catalogues.map((catalogue) => (
+                    {catalogues.map(catalogue => (
                       <Card
                         key={catalogue.id}
-                        className="group relative overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl cursor-pointer"
+                        className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
                         onClick={() => router.push(`/editor/${catalogue.id}`)}
                       >
-                        <div className="h-36 md:h-40 lg:h-44 bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                        <div className="relative h-36 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 md:h-40 lg:h-44">
                           <iframe
                             src={`/preview/${catalogue.id}`}
-                            className="w-full h-full border-0"
+                            className="h-full w-full border-0"
                             style={{
                               width: '400%',
                               height: '400%',
                               transform: 'scale(0.25)',
                               transformOrigin: 'top left',
                               opacity: 1,
-                              transition: 'opacity 0.3s ease-in-out'
+                              transition: 'opacity 0.3s ease-in-out',
                             }}
                             title={`Preview of ${catalogue.name}`}
                           />
-                          <div className="absolute top-3 right-3">
+                          <div className="absolute right-3 top-3">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-8 w-8 p-0 bg-white/80 backdrop-blur-sm hover:bg-white"
-                                  onClick={(e) => e.stopPropagation()}
+                                  className="h-8 w-8 bg-white/80 p-0 backdrop-blur-sm hover:bg-white"
+                                  onClick={e => e.stopPropagation()}
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuItem
-                                  onClick={(e) => {
+                                  onClick={e => {
                                     e.stopPropagation()
                                     router.push(`/editor/${catalogue.id}`)
                                   }}
@@ -471,7 +482,7 @@ export default function ProjectsPage() {
                                   Edit Project
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={(e) => {
+                                  onClick={e => {
                                     e.stopPropagation()
                                     shareCatalogue(catalogue)
                                   }}
@@ -482,7 +493,7 @@ export default function ProjectsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={(e) => {
+                                  onClick={e => {
                                     e.stopPropagation()
                                     deleteCatalogue(catalogue.id)
                                   }}
@@ -497,18 +508,24 @@ export default function ProjectsPage() {
                         </div>
 
                         <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 truncate mb-1">{catalogue.name}</h3>
+                          <div className="mb-3 flex items-start justify-between">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="mb-1 truncate font-semibold text-gray-900">
+                                {catalogue.name}
+                              </h3>
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs capitalize">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs capitalize"
+                                >
                                   {catalogue.theme}
                                 </Badge>
                                 <Badge
-                                  className={`text-xs ${catalogue.isPublic
+                                  className={`text-xs ${
+                                    catalogue.isPublic
                                       ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                                       : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                  }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
@@ -517,21 +534,29 @@ export default function ProjectsPage() {
                           </div>
 
                           {catalogue.description && (
-                            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                            <p className="mb-4 line-clamp-2 text-sm text-gray-600">
                               {catalogue.description}
                             </p>
                           )}
 
-                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                            <span>{catalogue._count?.products || 0} products</span>
-                            <span>Updated {formatDistanceToNow(new Date(catalogue.updatedAt), { addSuffix: true })}</span>
+                          <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
+                            <span>
+                              {catalogue._count?.products || 0} products
+                            </span>
+                            <span>
+                              Updated{' '}
+                              {formatDistanceToNow(
+                                new Date(catalogue.updatedAt),
+                                { addSuffix: true }
+                              )}
+                            </span>
                           </div>
 
                           <div className="flex gap-2">
                             <Button
                               size="sm"
                               className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation()
                                 router.push(`/editor/${catalogue.id}`)
                               }}
@@ -542,7 +567,7 @@ export default function ProjectsPage() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation()
                                 router.push(`/preview/${catalogue.id}`)
                               }}
@@ -562,8 +587,13 @@ export default function ProjectsPage() {
                         <FolderOpen className="h-8 w-8 text-gray-400" />
                       </div>
                       <div>
-                        <p className="text-lg font-semibold text-gray-900">No projects yet</p>
-                        <p className="text-sm text-gray-500 mt-1">Choose a template above to create your first catalogue project</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          No projects yet
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          Choose a template above to create your first catalogue
+                          project
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -574,16 +604,20 @@ export default function ProjectsPage() {
             <TabsContent value="templates" className="mt-0">
               {/* Templates Section */}
               <div className="mb-8">
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 flex items-center justify-between">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Available Templates</h2>
-                    <p className="text-sm text-gray-600 mt-1">Choose from professional templates to start your project</p>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      Available Templates
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Choose from professional templates to start your project
+                    </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {templates
-                    .filter((template) => {
+                    .filter(template => {
                       // Filter out test templates - add template IDs or names to exclude here
                       const testTemplateIds: string[] = [
                         // example: 'test-template-id'
@@ -594,10 +628,12 @@ export default function ProjectsPage() {
                         'Test Template',
                       ]
 
-                      return !testTemplateIds.includes(template.id) &&
+                      return (
+                        !testTemplateIds.includes(template.id) &&
                         !testTemplateNames.includes(template.name)
+                      )
                     })
-                    .map((template) => {
+                    .map(template => {
                       const getTemplateDisplayName = (template: Template) => {
                         // Map template IDs to user-friendly names
                         const nameMap: Record<string, string> = {
@@ -613,11 +649,16 @@ export default function ProjectsPage() {
                       const getTemplateDescription = (template: Template) => {
                         // Provide better descriptions for real templates
                         const descMap: Record<string, string> = {
-                          'furniture-catalog': 'Professional furniture catalogue with modern design',
-                          'fashion-catalogue': 'Elegant fashion catalogue showcasing clothing collections',
-                          'skincare-catalogue': 'Beautiful skincare product catalogue with clean aesthetics',
-                          'fmcg-catalogue': 'Comprehensive FMCG product catalogue for retail',
-                          'home-decor-catalogue': 'Stunning home decor catalogue with lifestyle imagery',
+                          'furniture-catalog':
+                            'Professional furniture catalogue with modern design',
+                          'fashion-catalogue':
+                            'Elegant fashion catalogue showcasing clothing collections',
+                          'skincare-catalogue':
+                            'Beautiful skincare product catalogue with clean aesthetics',
+                          'fmcg-catalogue':
+                            'Comprehensive FMCG product catalogue for retail',
+                          'home-decor-catalogue':
+                            'Stunning home decor catalogue with lifestyle imagery',
                         }
                         return descMap[template.id] || template.description
                       }
@@ -625,16 +666,16 @@ export default function ProjectsPage() {
                       return (
                         <Card
                           key={template.id}
-                          className="group border overflow-hidden hover:shadow-xl transition-all duration-200"
+                          className="group overflow-hidden border transition-all duration-200 hover:shadow-xl"
                         >
                           <CardContent className="p-0">
                             {/* Template Preview */}
-                            <div className="relative h-48 w-full bg-gradient-to-br from-gray-100 via-gray-50 to-white overflow-hidden">
+                            <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-gray-100 via-gray-50 to-white">
                               {template.previewImage ? (
                                 <img
                                   src={template.previewImage}
                                   alt={template.name}
-                                  className="w-full h-full object-cover"
+                                  className="h-full w-full object-cover"
                                 />
                               ) : (
                                 <div className="absolute inset-0 flex items-center justify-center">
@@ -644,8 +685,8 @@ export default function ProjectsPage() {
 
                               {/* Premium Badge */}
                               {template.isPremium && (
-                                <div className="absolute top-3 right-3">
-                                  <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-lg">
+                                <div className="absolute right-3 top-3">
+                                  <Badge className="border-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
                                     <Crown className="mr-1 h-3 w-3" />
                                     Premium
                                   </Badge>
@@ -654,19 +695,19 @@ export default function ProjectsPage() {
 
                               {/* Category Badge */}
                               {template.category && (
-                                <div className="absolute top-3 left-3">
-                                  <Badge className="bg-white/90 text-gray-900 shadow-md capitalize">
+                                <div className="absolute left-3 top-3">
+                                  <Badge className="bg-white/90 capitalize text-gray-900 shadow-md">
                                     {template.category}
                                   </Badge>
                                 </div>
                               )}
 
                               {/* Hover Overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                                 <div className="absolute bottom-4 left-0 right-0 px-4">
                                   <Button
                                     onClick={() => createFromTemplate(template)}
-                                    className="w-fit flex mx-auto px-4 bg-white text-gray-900 hover:bg-gray-100 shadow-xl text-xs font-semibold"
+                                    className="mx-auto flex w-fit bg-white px-4 text-xs font-semibold text-gray-900 shadow-xl hover:bg-gray-100"
                                     size="xs"
                                   >
                                     <Plus className="mr-2 h-3 w-3" />
@@ -677,22 +718,29 @@ export default function ProjectsPage() {
                             </div>
 
                             {/* Info */}
-                            <div className="p-4 bg-white">
-                              <h3 className="font-semibold text-gray-900 mb-1 text-sm line-clamp-1">
+                            <div className="bg-white p-4">
+                              <h3 className="mb-1 line-clamp-1 text-sm font-semibold text-gray-900">
                                 {getTemplateDisplayName(template)}
                               </h3>
-                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                              <p className="mb-2 line-clamp-2 text-xs text-gray-600">
                                 {getTemplateDescription(template)}
                               </p>
-                              {template.features && template.features.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {template.features.slice(0, 3).map((feature, idx) => (
-                                    <Badge key={idx} variant="outline" className="text-xs px-2 py-0">
-                                      {feature}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                              {template.features &&
+                                template.features.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {template.features
+                                      .slice(0, 3)
+                                      .map((feature, idx) => (
+                                        <Badge
+                                          key={idx}
+                                          variant="outline"
+                                          className="px-2 py-0 text-xs"
+                                        >
+                                          {feature}
+                                        </Badge>
+                                      ))}
+                                  </div>
+                                )}
                             </div>
                           </CardContent>
                         </Card>

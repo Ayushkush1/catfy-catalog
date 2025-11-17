@@ -104,7 +104,10 @@ export async function PATCH(
       // Enforce limit of 3 members
       if (memberIds.length > 3) {
         return NextResponse.json(
-          { error: 'You can only share premium access with up to 3 team members' },
+          {
+            error:
+              'You can only share premium access with up to 3 team members',
+          },
           { status: 400 }
         )
       }

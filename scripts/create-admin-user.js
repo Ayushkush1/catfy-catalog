@@ -14,8 +14,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 })
 
 async function createAdminUser() {
@@ -29,7 +29,7 @@ async function createAdminUser() {
     const { data, error } = await supabase.auth.admin.createUser({
       email: adminEmail,
       password: adminPassword,
-      email_confirm: true
+      email_confirm: true,
     })
 
     if (error) {
@@ -43,7 +43,6 @@ async function createAdminUser() {
     console.log('✅ Admin user created successfully:', data.user.id)
     console.log('📧 Email:', adminEmail)
     console.log('🔑 Password:', adminPassword)
-    
   } catch (error) {
     console.error('❌ Error creating admin user:', error.message)
     process.exit(1)

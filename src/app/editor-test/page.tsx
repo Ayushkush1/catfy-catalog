@@ -39,7 +39,7 @@ const template = {
             <div class="subtitle">{{product.description}}</div>
           </div>
         </div>
-      `
+      `,
     },
     {
       id: 'details',
@@ -66,15 +66,15 @@ const template = {
             </div>
           </div>
         </div>
-      `
-    }
-  ]
+      `,
+    },
+  ],
 }
 
 export default function Page() {
   return (
     <div className="h-screen">
-      <div className="h-16 border-b flex items-center px-4 justify-between">
+      <div className="flex h-16 items-center justify-between border-b px-4">
         <div className="font-semibold">User Editor · {template.name}</div>
         <div className="text-sm text-gray-500">Engine: {template.engine}</div>
       </div>

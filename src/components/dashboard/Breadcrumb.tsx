@@ -21,7 +21,7 @@ export function Breadcrumb({ variant = 'dark' }: BreadcrumbProps) {
   const generateBreadcrumbs = (): BreadcrumbItem[] => {
     const paths = pathname.split('/').filter(Boolean)
     const breadcrumbs: BreadcrumbItem[] = [
-      { label: 'Home', href: '/dashboard', icon: Home }
+      { label: 'Home', href: '/dashboard', icon: Home },
     ]
 
     let currentPath = ''
@@ -52,12 +52,17 @@ export function Breadcrumb({ variant = 'dark' }: BreadcrumbProps) {
   if (pathname === '/dashboard') return null
 
   const textColorClass = variant === 'light' ? 'text-white/70' : 'text-gray-600'
-  const activeTextColorClass = variant === 'light' ? 'text-white' : 'text-gray-900'
-  const hoverColorClass = variant === 'light' ? 'hover:text-white' : 'hover:text-[#6366F1]'
-  const separatorColorClass = variant === 'light' ? 'text-white/50' : 'text-gray-400'
+  const activeTextColorClass =
+    variant === 'light' ? 'text-white' : 'text-gray-900'
+  const hoverColorClass =
+    variant === 'light' ? 'hover:text-white' : 'hover:text-[#6366F1]'
+  const separatorColorClass =
+    variant === 'light' ? 'text-white/50' : 'text-gray-400'
 
   return (
-    <nav className={`flex items-center space-x-1 text-sm ${textColorClass} mb-4`}>
+    <nav
+      className={`flex items-center space-x-1 text-sm ${textColorClass} mb-4`}
+    >
       {breadcrumbs.map((crumb, index) => {
         const isLast = index === breadcrumbs.length - 1
         const Icon = crumb.icon
@@ -68,7 +73,9 @@ export function Breadcrumb({ variant = 'dark' }: BreadcrumbProps) {
               <ChevronRight className={`h-4 w-4 ${separatorColorClass}`} />
             )}
             {isLast ? (
-              <span className={`flex items-center gap-1 font-medium ${activeTextColorClass}`}>
+              <span
+                className={`flex items-center gap-1 font-medium ${activeTextColorClass}`}
+              >
                 {Icon && <Icon className="h-4 w-4" />}
                 {crumb.label}
               </span>

@@ -26,15 +26,15 @@ const tools: Tool[] = [
     name: 'Product Catalogues',
     icon: Book,
     href: '/dashboard/catalogue',
-    isActive: true
+    isActive: true,
   },
   {
     id: 'pdf-editor',
     name: 'PDF Editor',
     icon: FileText,
     href: '/dashboard/pdf-editor',
-    isActive: false
-  }
+    isActive: false,
+  },
 ]
 
 export function ToolSwitcher() {
@@ -77,11 +77,7 @@ export function ToolSwitcher() {
         {tools.map(tool => {
           const Icon = tool.icon
           return (
-            <DropdownMenuItem
-              key={tool.id}
-              asChild
-              disabled={!tool.isActive}
-            >
+            <DropdownMenuItem key={tool.id} asChild disabled={!tool.isActive}>
               <Link
                 href={tool.href}
                 className={`cursor-pointer ${!tool.isActive ? 'opacity-50' : ''}`}

@@ -7,34 +7,42 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 interface SubscriptionContextType {
   currentPlan: SubscriptionPlan
-  planFeatures: typeof PLAN_FEATURES[SubscriptionPlan]
+  planFeatures: (typeof PLAN_FEATURES)[SubscriptionPlan]
   isLoading: boolean
-  
+
   // Usage tracking
   usage: {
     catalogues: number
     monthlyExports: number
   }
-  
+
   // Limit checking functions
   canCreateCatalogue: () => boolean
   canAddProduct: (catalogueId: string) => Promise<boolean>
   canAddCategory: (catalogueId: string) => Promise<boolean>
   canExport: () => boolean
   hasFeatureAccess: (feature: string) => boolean
-  
+
   // Upgrade functions
   getUpgradeUrl: () => string
   showUpgradeModal: (feature: string) => void
-  
+
   // Refresh subscription data
   refreshSubscription: () => Promise<void>
 }
 
-const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined)
+const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
+  undefined
+)
 
-export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>(SubscriptionPlan.FREE)
+export function SubscriptionProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>(
+    SubscriptionPlan.FREE
+  )
   const [usage, setUsage] = useState({ catalogues: 0, monthlyExports: 0 })
   const [isLoading, setIsLoading] = useState(true)
   const supabase = createClientComponentClient()
@@ -45,9 +53,11 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
   const fetchSubscriptionData = async () => {
     try {
       setIsLoading(true)
-      
+
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) return
 
       // Fetch user's subscription from your API
@@ -70,7 +80,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (isLoading) {
       return true
     }
-    
+
     if (planFeatures.maxCatalogues === -1) return true
     return usage.catalogues < planFeatures.maxCatalogues
   }
@@ -81,11 +91,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (isLoading) {
       return true
     }
-    
+
     if (planFeatures.maxProductsPerCatalogue === -1) return true
-    
+
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/products/count`)
+      const response = await fetch(
+        `/api/catalogues/${catalogueId}/products/count`
+      )
       if (response.ok) {
         const { count } = await response.json()
         return count < planFeatures.maxProductsPerCatalogue
@@ -102,11 +114,13 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     if (isLoading) {
       return true
     }
-    
+
     if (planFeatures.maxCategories === -1) return true
-    
+
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/categories/count`)
+      const response = await fetch(
+        `/api/catalogues/${catalogueId}/categories/count`
+      )
       if (response.ok) {
         const { count } = await response.json()
         return count < planFeatures.maxCategories
@@ -174,7 +188,9 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
 export function useSubscription() {
   const context = useContext(SubscriptionContext)
   if (context === undefined) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider')
+    throw new Error(
+      'useSubscription must be used within a SubscriptionProvider'
+    )
   }
   return context
 }

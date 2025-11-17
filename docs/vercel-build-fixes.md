@@ -9,6 +9,7 @@ This document outlines the fixes implemented to resolve Vercel build errors rela
 **Problem**: The codebase was using non-null assertions (`!`) when accessing environment variables, which can cause build failures if the variables are undefined.
 
 **Files affected**:
+
 - `src/lib/supabase/client.ts`
 - `src/lib/supabase/server.ts`
 - `src/middleware.ts`
@@ -194,6 +195,7 @@ After implementing these fixes:
 4. Consider setting up automated tests that validate environment configuration
 
 For additional help, refer to:
+
 - [Vercel Environment Variables Documentation](https://vercel.com/docs/concepts/projects/environment-variables)
 - [Supabase Documentation](https://supabase.com/docs)
 - [Next.js Environment Variables Guide](https://nextjs.org/docs/basic-features/environment-variables)

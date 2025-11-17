@@ -87,10 +87,10 @@ const handleSave = async (updates: any) => {
 return (
   <div>
     {/* Your existing editor UI */}
-    
+
     {/* Active users card (bottom-right corner) */}
     <ActiveUsersCard users={activeUsers} isTracking={isTracking} />
-    
+
     {/* Version conflict dialog */}
     <VersionConflictDialog
       open={showConflictDialog}
@@ -128,17 +128,20 @@ return (
 ## 🧪 Test It Out
 
 ### Test Version Conflicts:
+
 1. Open catalogue in two browser tabs
 2. Make changes in Tab 1, save
 3. Make different changes in Tab 2, save
 4. Tab 2 shows conflict dialog ✅
 
 ### Test Real-time Notifications:
+
 1. Open catalogue in two browser tabs
 2. Add a product in Tab 1
 3. Tab 2 shows toast notification ✅
 
 ### Test Presence Tracking:
+
 1. Open catalogue in Tab 1 (User A)
 2. Open same catalogue in Tab 2 (User B)
 3. Both tabs show active users card ✅
@@ -149,10 +152,12 @@ return (
 ## 📦 What Was Installed
 
 ### Database Changes:
+
 - Added `version` field to `catalogues` table
 - Migration: `20251108000000_add_version_to_catalogues`
 
 ### New Files:
+
 1. `src/hooks/useCatalogueRealtime.ts` - Real-time subscriptions
 2. `src/hooks/useCataloguePresence.ts` - Presence tracking
 3. `src/components/editor/VersionConflictDialog.tsx` - Conflict UI
@@ -160,6 +165,7 @@ return (
 5. `src/app/api/catalogues/[id]/version/route.ts` - Version check endpoint
 
 ### Modified Files:
+
 1. `src/app/api/catalogues/[id]/route.ts` - Added version checking
 2. `prisma/schema.prisma` - Added version field
 
@@ -168,6 +174,7 @@ return (
 ## 🎯 API Changes
 
 ### GET /api/catalogues/[id]
+
 ```json
 {
   "catalogue": {
@@ -180,16 +187,19 @@ return (
 ```
 
 ### PUT /api/catalogues/[id]
+
 **Request:**
+
 ```json
 {
   "name": "...",
-  "version": 1,  // ← Required for conflict detection
-  "forceUpdate": false  // ← Optional: skip version check
+  "version": 1, // ← Required for conflict detection
+  "forceUpdate": false // ← Optional: skip version check
 }
 ```
 
 **Success Response (200):**
+
 ```json
 {
   "catalogue": {
@@ -200,6 +210,7 @@ return (
 ```
 
 **Conflict Response (409):**
+
 ```json
 {
   "error": "Version conflict",
@@ -210,7 +221,9 @@ return (
 ```
 
 ### GET /api/catalogues/[id]/version
+
 **Response:**
+
 ```json
 {
   "version": 2,
@@ -241,7 +254,7 @@ setCurrentSection('settings')
 ```typescript
 const { lastUpdate } = useCatalogueRealtime({
   catalogueId,
-  onUpdate: (update) => {
+  onUpdate: update => {
     if (update.type === 'product') {
       // Reload products list
       refetchProducts()
@@ -277,21 +290,25 @@ toast({
 ## ❓ Troubleshooting
 
 **Q: Real-time notifications not showing?**
+
 - Check Supabase replication is enabled
 - Verify Supabase credentials in `.env`
 - Check browser console for WebSocket errors
 
 **Q: Version conflicts not detected?**
+
 - Ensure `version` field is included in save requests
 - Check API response includes updated version
 - Verify database has version column
 
 **Q: Active users not showing?**
+
 - Ensure `currentUser` prop is provided
 - Check presence is enabled (`enabled: true`)
 - Wait 2-3 seconds for presence sync
 
 **Q: TypeScript errors about 'version'?**
+
 - Run `npx prisma generate` to refresh types
 - Restart VS Code or TypeScript server
 - Types will auto-fix after reload
@@ -303,6 +320,7 @@ toast({
 You now have enterprise-grade collaborative editing features! 🎉
 
 **Next Steps:**
+
 1. Test the features
 2. Enable Supabase replication
 3. Integrate into your catalogue editor

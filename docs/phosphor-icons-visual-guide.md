@@ -29,47 +29,63 @@ Phosphor Icons supports 6 different weights to match your UI's visual style:
 ## Recommended Usage by Context
 
 ### Regular Weight
+
 **Use for**: Default UI elements, body content, general interface
+
 ```tsx
 <Settings size={20} weight="regular" />
 <File size={20} weight="regular" />
 <User size={20} weight="regular" />
 ```
 
-### Bold Weight  
+### Bold Weight
+
 **Use for**: Selected states, active items, emphasized actions
+
 ```tsx
 // Selected layer in layers panel
-{isSelected && <Square size={16} weight="bold" />}
+{
+  isSelected && <Square size={16} weight="bold" />
+}
 
 // Active tab
-{isActive && <Folder size={24} weight="bold" />}
+{
+  isActive && <Folder size={24} weight="bold" />
+}
 
 // Primary action buttons
-<Plus size={24} weight="bold" />
+;<Plus size={24} weight="bold" />
 ```
 
 ### Fill Weight
+
 **Use for**: High-emphasis states, toggle on, favorites
+
 ```tsx
 // Favorited item
-{isFavorited && <Star size={20} weight="fill" />}
+{
+  isFavorited && <Star size={20} weight="fill" />
+}
 
 // Toggle enabled
-{isEnabled && <CheckCircle size={24} weight="fill" />}
+{
+  isEnabled && <CheckCircle size={24} weight="fill" />
+}
 
 // Notification badge
-<Bell size={20} weight="fill" />
+;<Bell size={20} weight="fill" />
 ```
 
 ## UI Patterns in Catfy Editor
 
 ### Layer Panel Icons (Regular Weight)
+
 Clean, readable element type indicators:
+
 ```tsx
 const getElementIcon = (tagName: string) => {
   const iconProps = { size: 16, weight: 'regular' as const }
-  
+
   if (tagName === 'img') return <Image {...iconProps} />
   if (tagName === 'button') return <SquaresFour {...iconProps} />
   // ... etc
@@ -77,13 +93,17 @@ const getElementIcon = (tagName: string) => {
 ```
 
 ### Icons Panel (Weight Selector)
+
 Users can choose their preferred icon style:
+
 - **Regular**: Clean, professional look
 - **Bold**: More prominent, easier to identify
 - **Fill**: Solid shapes, modern aesthetic
 
 ### Hover States
+
 Transition between weights for interactive feedback:
+
 ```tsx
 // Default state
 <Icon weight="regular" />
@@ -96,14 +116,14 @@ Transition between weights for interactive feedback:
 
 ### Icon Sizes by Context
 
-| Context | Size | Example Usage |
-|---------|------|---------------|
-| Small UI elements | 12-14px | Inline indicators, badges |
-| List items | 16px | Layer panel, file lists |
-| Buttons | 20-24px | Toolbar buttons, actions |
-| Tab navigation | 24-28px | Left sidebar tabs |
-| Headers | 32-40px | Section headers, empty states |
-| Hero elements | 48-64px | Onboarding, large CTAs |
+| Context           | Size    | Example Usage                 |
+| ----------------- | ------- | ----------------------------- |
+| Small UI elements | 12-14px | Inline indicators, badges     |
+| List items        | 16px    | Layer panel, file lists       |
+| Buttons           | 20-24px | Toolbar buttons, actions      |
+| Tab navigation    | 24-28px | Left sidebar tabs             |
+| Headers           | 32-40px | Section headers, empty states |
+| Hero elements     | 48-64px | Onboarding, large CTAs        |
 
 ### Implementation Examples
 
@@ -121,7 +141,9 @@ Transition between weights for interactive feedback:
 ## Color Strategy
 
 ### Using currentColor (Recommended)
+
 Icons inherit text color from parent:
+
 ```tsx
 <IconContext.Provider value={{ color: 'currentColor' }}>
   <div className="text-blue-600">
@@ -131,12 +153,14 @@ Icons inherit text color from parent:
 ```
 
 ### Custom Colors
+
 Override when needed:
+
 ```tsx
 // Success state
 <CheckCircle color="#10b981" weight="fill" />
 
-// Error state  
+// Error state
 <XCircle color="#ef4444" weight="fill" />
 
 // Warning
@@ -144,6 +168,7 @@ Override when needed:
 ```
 
 ### Semantic Colors
+
 ```tsx
 // Primary action
 <button className="text-blue-600">
@@ -164,6 +189,7 @@ Override when needed:
 ## State Indicators
 
 ### Selected vs Unselected
+
 ```tsx
 // Layer panel item
 <div className={isSelected ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}>
@@ -173,26 +199,31 @@ Override when needed:
 ```
 
 ### Active vs Inactive
+
 ```tsx
 // Tab navigation
-<button className={isActive ? 'text-blue-600 bg-blue-50' : 'text-gray-600'}>
+<button className={isActive ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}>
   <Icon size={24} weight={isActive ? 'fill' : 'regular'} />
 </button>
 ```
 
 ### Enabled vs Disabled
+
 ```tsx
 // Feature toggle
-{isEnabled ? (
-  <ToggleRight size={24} weight="fill" className="text-green-500" />
-) : (
-  <ToggleLeft size={24} weight="regular" className="text-gray-400" />
-)}
+{
+  isEnabled ? (
+    <ToggleRight size={24} weight="fill" className="text-green-500" />
+  ) : (
+    <ToggleLeft size={24} weight="regular" className="text-gray-400" />
+  )
+}
 ```
 
 ## Animation & Transitions
 
 ### Smooth Weight Transitions
+
 ```css
 .icon-transition {
   transition: all 200ms ease-in-out;
@@ -201,8 +232,8 @@ Override when needed:
 
 ```tsx
 <div className="group">
-  <Heart 
-    size={24} 
+  <Heart
+    size={24}
     weight={isHovered ? 'fill' : 'regular'}
     className="transition-all duration-200 group-hover:scale-110"
   />
@@ -210,8 +241,9 @@ Override when needed:
 ```
 
 ### Color Transitions
+
 ```tsx
-<Icon 
+<Icon
   size={20}
   className="text-gray-600 transition-colors duration-200 hover:text-blue-600"
 />
@@ -220,19 +252,25 @@ Override when needed:
 ## Accessibility
 
 ### Size Contrast
+
 Ensure icons are large enough to be clearly visible:
+
 - **Minimum**: 16px for UI elements
 - **Recommended**: 20-24px for interactive elements
 - **Touch targets**: 44px minimum (iOS), 48px (Material Design)
 
 ### Color Contrast
+
 Follow WCAG guidelines:
+
 - **Normal text**: 4.5:1 contrast ratio
 - **Large text/icons**: 3:1 contrast ratio
 - Use bold weight for better visibility at smaller sizes
 
 ### Semantic Meaning
+
 Don't rely on color alone:
+
 ```tsx
 // ❌ Bad - color only
 <Heart color="red" />
@@ -247,7 +285,9 @@ Don't rely on color alone:
 ## Performance Tips
 
 ### Tree-Shaking
+
 Import only what you need:
+
 ```tsx
 // ✅ Good - only bundles used icons
 import { Heart, Star, User } from '@phosphor-icons/react'
@@ -257,7 +297,9 @@ import * as PhosphorIcons from '@phosphor-icons/react'
 ```
 
 ### Icon Context
+
 Set defaults once, use everywhere:
+
 ```tsx
 // Set at root level
 <IconContext.Provider value={{ size: 20, weight: 'regular' }}>
@@ -271,6 +313,7 @@ Set defaults once, use everywhere:
 ## Quick Reference: Most Used Icons
 
 ### Navigation
+
 - `House` - Home
 - `CaretLeft/Right` - Navigation arrows
 - `List` - Menu
@@ -278,6 +321,7 @@ Set defaults once, use everywhere:
 - `MagnifyingGlass` - Search
 
 ### Actions
+
 - `Plus` - Add
 - `Minus` - Remove
 - `Trash` - Delete
@@ -285,6 +329,7 @@ Set defaults once, use everywhere:
 - `Check` - Confirm
 
 ### Content
+
 - `Image` - Images
 - `TextT` - Text
 - `VideoCamera` - Video
@@ -292,6 +337,7 @@ Set defaults once, use everywhere:
 - `Folder` - Folders
 
 ### Social
+
 - `Heart` - Favorite/Like
 - `Star` - Rating/Featured
 - `ShareNetwork` - Share
@@ -299,6 +345,7 @@ Set defaults once, use everywhere:
 - `Users` - People
 
 ### Status
+
 - `CheckCircle` - Success
 - `XCircle` - Error
 - `Warning` - Warning

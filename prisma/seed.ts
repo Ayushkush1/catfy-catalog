@@ -1,4 +1,10 @@
-import { PrismaClient, AccountType, CouponType, BillingCycle, CatalogueStatus } from '@prisma/client'
+import {
+  PrismaClient,
+  AccountType,
+  CouponType,
+  BillingCycle,
+  CatalogueStatus,
+} from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -15,7 +21,8 @@ async function main() {
     create: {
       code: 'FIRST100',
       name: 'First 100 Customers',
-      description: 'Special discount for our first 100 customers - 50% off yearly plans',
+      description:
+        'Special discount for our first 100 customers - 50% off yearly plans',
       type: CouponType.PERCENTAGE,
       value: 50.0,
       currency: 'USD',
@@ -75,7 +82,10 @@ async function main() {
     },
   })
 
-  console.log('✅ Created additional coupons:', [welcomeCoupon.code, fixedCoupon.code])
+  console.log('✅ Created additional coupons:', [
+    welcomeCoupon.code,
+    fixedCoupon.code,
+  ])
 
   // Skip sample data creation in production
   console.log('ℹ️ Skipping sample catalogue and product creation')
@@ -334,7 +344,7 @@ main()
   .then(async () => {
     await prisma.$disconnect()
   })
-  .catch(async (e) => {
+  .catch(async e => {
     console.error('❌ Seed failed:', e)
     await prisma.$disconnect()
     process.exit(1)

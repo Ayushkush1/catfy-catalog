@@ -129,7 +129,8 @@ export default function AcceptInvitationPage() {
       router.push(`/catalogue/${invitation.catalogue.id}/edit`)
     } catch (error) {
       console.error('Error accepting invitation:', error)
-      const errorMsg = error instanceof Error ? error.message : 'Failed to accept invitation'
+      const errorMsg =
+        error instanceof Error ? error.message : 'Failed to accept invitation'
       setError(errorMsg)
       toast.error(errorMsg)
     } finally {
@@ -363,23 +364,27 @@ export default function AcceptInvitationPage() {
           </div>
 
           {/* Email mismatch warning */}
-          {user?.email && user.email.toLowerCase() !== invitation.invitation.email.toLowerCase() && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Email Mismatch:</strong> This invitation was sent to{' '}
-                <strong>{invitation.invitation.email}</strong>, but you are logged in as{' '}
-                <strong>{user.email}</strong>. Please sign in with the correct email address or contact the sender.
-              </AlertDescription>
-            </Alert>
-          )}
+          {user?.email &&
+            user.email.toLowerCase() !==
+              invitation.invitation.email.toLowerCase() && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Email Mismatch:</strong> This invitation was sent to{' '}
+                  <strong>{invitation.invitation.email}</strong>, but you are
+                  logged in as <strong>{user.email}</strong>. Please sign in
+                  with the correct email address or contact the sender.
+                </AlertDescription>
+              </Alert>
+            )}
 
           <div className="space-y-2">
             <Button
               onClick={handleAcceptInvitation}
               disabled={
                 isAccepting ||
-                (user?.email?.toLowerCase() !== invitation.invitation.email.toLowerCase())
+                user?.email?.toLowerCase() !==
+                  invitation.invitation.email.toLowerCase()
               }
               className="w-full"
             >
@@ -395,9 +400,11 @@ export default function AcceptInvitationPage() {
                 </>
               )}
             </Button>
-            {user?.email?.toLowerCase() !== invitation.invitation.email.toLowerCase() && (
-              <p className="text-xs text-center text-muted-foreground">
-                Button disabled due to email mismatch. Please sign in with {invitation.invitation.email}
+            {user?.email?.toLowerCase() !==
+              invitation.invitation.email.toLowerCase() && (
+              <p className="text-center text-xs text-muted-foreground">
+                Button disabled due to email mismatch. Please sign in with{' '}
+                {invitation.invitation.email}
               </p>
             )}
             <Link href="/">

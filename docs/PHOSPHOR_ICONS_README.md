@@ -13,11 +13,13 @@ npm install @phosphor-icons/react
 ## 🎯 Quick Usage
 
 ### Import Icons
+
 ```tsx
 import { Heart, Star, User, Settings } from '@phosphor-icons/react'
 ```
 
 ### Basic Usage
+
 ```tsx
 <Heart size={24} />
 <Star size={20} weight="fill" />
@@ -26,21 +28,22 @@ import { Heart, Star, User, Settings } from '@phosphor-icons/react'
 
 ## 🎨 Icon Properties
 
-| Property | Type | Options | Default | Description |
-|----------|------|---------|---------|-------------|
-| `size` | number | Any px value | 20 | Icon size in pixels |
-| `weight` | string | thin, light, regular, bold, fill, duotone | regular | Icon stroke weight |
-| `color` | string | Any CSS color | currentColor | Icon color |
-| `className` | string | Any CSS classes | - | Additional styling |
+| Property    | Type   | Options                                   | Default      | Description         |
+| ----------- | ------ | ----------------------------------------- | ------------ | ------------------- |
+| `size`      | number | Any px value                              | 20           | Icon size in pixels |
+| `weight`    | string | thin, light, regular, bold, fill, duotone | regular      | Icon stroke weight  |
+| `color`     | string | Any CSS color                             | currentColor | Icon color          |
+| `className` | string | Any CSS classes                           | -            | Additional styling  |
 
 ## 💡 Common Patterns
 
 ### Like Button
+
 ```tsx
 const [isLiked, setIsLiked] = useState(false)
 
-<Heart 
-  size={24} 
+<Heart
+  size={24}
   weight={isLiked ? 'fill' : 'regular'}
   className={isLiked ? 'text-red-500' : 'text-gray-400'}
   onClick={() => setIsLiked(!isLiked)}
@@ -48,18 +51,20 @@ const [isLiked, setIsLiked] = useState(false)
 ```
 
 ### Button with Icon
+
 ```tsx
-<button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg">
+<button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white">
   <Plus size={20} weight="bold" />
   <span>Add Item</span>
 </button>
 ```
 
 ### Icon with Badge
+
 ```tsx
 <div className="relative">
   <Bell size={24} />
-  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
     3
   </span>
 </div>
@@ -84,43 +89,49 @@ const [isLiked, setIsLiked] = useState(false)
 Already configured in your editor:
 
 ```tsx
-<IconContext.Provider value={{ 
-  size: 20, 
-  weight: 'regular', 
-  color: 'currentColor' 
-}}>
+<IconContext.Provider
+  value={{
+    size: 20,
+    weight: 'regular',
+    color: 'currentColor',
+  }}
+>
   {/* All icons inherit these defaults */}
-  <Heart />  {/* size=20, weight=regular */}
+  <Heart /> {/* size=20, weight=regular */}
 </IconContext.Provider>
 ```
 
 ## 🎨 Weight Visual Guide
 
-| Weight | Use Case | Example |
-|--------|----------|---------|
-| **thin** | Minimal, delicate | Backgrounds, large icons |
-| **light** | Subtle, clean | Secondary actions |
-| **regular** | Default, balanced | Most UI elements |
-| **bold** | Emphasis, selected | Active states, primary |
-| **fill** | Solid, high emphasis | Favorites, toggles on |
-| **duotone** | Two-tone, modern | Special features |
+| Weight      | Use Case             | Example                  |
+| ----------- | -------------------- | ------------------------ |
+| **thin**    | Minimal, delicate    | Backgrounds, large icons |
+| **light**   | Subtle, clean        | Secondary actions        |
+| **regular** | Default, balanced    | Most UI elements         |
+| **bold**    | Emphasis, selected   | Active states, primary   |
+| **fill**    | Solid, high emphasis | Favorites, toggles on    |
+| **duotone** | Two-tone, modern     | Special features         |
 
 ## 📚 Where to Find Icons
 
 ### 1. Icons Panel in Editor
+
 - Click "Icons" tab in left sidebar
 - Search or browse categories
 - Select weight (Regular/Bold/Fill)
 - Click to add to canvas
 
 ### 2. Phosphor Website
+
 - Visit: https://phosphoricons.com/
 - Browse 6000+ icons
 - Copy icon name
 - Import and use
 
 ### 3. Examples Component
+
 Check `src/components/examples/PhosphorIconsExamples.tsx` for:
+
 - 10 complete examples
 - Interactive demos
 - Common patterns
@@ -129,12 +140,14 @@ Check `src/components/examples/PhosphorIconsExamples.tsx` for:
 ## 🔍 Finding the Right Icon
 
 ### Search Tips
+
 - Be descriptive: "shopping" finds ShoppingCart, ShoppingBag
 - Try synonyms: "delete" → try Trash, X, Minus
 - Browse categories in Icons Panel
 - Check Phosphor website for visual search
 
 ### Icon Name Patterns
+
 - **Actions**: Plus, Minus, X, Check, Trash
 - **Objects**: Heart, Star, ShoppingCart, User
 - **Navigation**: ArrowRight, CaretDown, House
@@ -144,18 +157,21 @@ Check `src/components/examples/PhosphorIconsExamples.tsx` for:
 ## 🛠️ Customization
 
 ### Override Size
+
 ```tsx
 <Heart size={32} />  {/* Larger */}
 <Star size={12} />   {/* Smaller */}
 ```
 
 ### Override Weight
+
 ```tsx
 <User weight="bold" />   {/* Heavier */}
 <Gear weight="light" />  {/* Lighter */}
 ```
 
 ### Override Color
+
 ```tsx
 <Heart color="#ff0000" />
 <Star className="text-yellow-500" />
@@ -164,6 +180,7 @@ Check `src/components/examples/PhosphorIconsExamples.tsx` for:
 ## 🎯 Best Practices
 
 ### ✅ Do's
+
 - Use named imports for tree-shaking
 - Set defaults with IconContext
 - Use semantic icon names
@@ -171,6 +188,7 @@ Check `src/components/examples/PhosphorIconsExamples.tsx` for:
 - Use `currentColor` for flexibility
 
 ### ❌ Don'ts
+
 - Avoid `import *` in production
 - Don't use Tailwind h-/w- for sizing (use `size` prop)
 - Don't hardcode colors everywhere
@@ -203,15 +221,19 @@ const iconSize = useBreakpoint({
 ## ❓ Troubleshooting
 
 ### Icon not found?
+
 → Check correct name at phosphoricons.com (case-sensitive)
 
 ### Icon too small/large?
+
 → Use `size` prop, not className for sizing
 
 ### Color not working?
+
 → Use valid CSS color or Tailwind class
 
 ### Weight not changing?
+
 → Check spelling: thin, light, regular, bold, fill, duotone
 
 ## 💡 Pro Tips

@@ -9,17 +9,20 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ## 📋 What's Been Done
 
 ### ✅ 1. Optimistic Locking
+
 - Database version field added
 - API checks version before saving
 - Conflict dialog shows when version mismatch
 - **Status:** Fully integrated ✓
 
 ### ✅ 2. Real-time Notifications
+
 - Toast notifications when others make changes
 - Subscribes to catalogue/category/product updates
 - **Status:** Fully integrated ✓
 
 ### ✅ 3. Presence Tracking
+
 - Active users card (bottom-right)
 - Shows who's editing what section
 - Green pulse for online status
@@ -30,6 +33,7 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ## 🔧 Integration Summary
 
 ### State Added:
+
 ```typescript
 ✓ catalogueVersion - Tracks current version
 ✓ showConflictDialog - Controls conflict dialog
@@ -39,12 +43,14 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ```
 
 ### Hooks Integrated:
+
 ```typescript
 ✓ useCatalogueRealtime() - Real-time subscriptions
 ✓ useCataloguePresence() - Presence tracking
 ```
 
 ### Functions Updated:
+
 ```typescript
 ✓ fetchCatalogue() - Stores version & user
 ✓ saveCatalogue() - Checks version, handles conflicts
@@ -52,6 +58,7 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ```
 
 ### Components Added:
+
 ```typescript
 ✓ <ActiveUsersCard /> - Shows active users
 ✓ <VersionConflictDialog /> - Handles conflicts
@@ -64,6 +71,7 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ### Step 1: Enable Supabase Real-time
 
 **Go to Supabase Dashboard:**
+
 1. Database → Replication
 2. Enable for:
    - ✅ `catalogues`
@@ -75,6 +83,7 @@ Your catalogue editor (`/catalogue/[id]/edit`) now has **enterprise-grade collab
 ### Step 2: Test It Out
 
 **Test Version Conflicts:**
+
 ```bash
 # Browser A
 Open: http://localhost:3000/catalogue/[id]/edit
@@ -87,12 +96,14 @@ Make changes → Save
 ```
 
 **Test Real-time:**
+
 ```bash
 # Browser A: Add a product → Save
 # Browser B: ✅ Toast notification appears
 ```
 
 **Test Presence:**
+
 ```bash
 # Browser A: Login as User 1
 # Browser B: Login as User 2
@@ -105,6 +116,7 @@ Make changes → Save
 ## 📊 Files Changed
 
 ### Created (9 files):
+
 1. `src/hooks/useCatalogueRealtime.ts`
 2. `src/hooks/useCataloguePresence.ts`
 3. `src/components/editor/VersionConflictDialog.tsx`
@@ -116,6 +128,7 @@ Make changes → Save
 9. `docs/QUICK_START_COLLABORATIVE_EDITING.md`
 
 ### Modified (3 files):
+
 1. `prisma/schema.prisma` - Added version field
 2. `src/app/api/catalogues/[id]/route.ts` - Version checking
 3. `src/app/catalogue/[id]/edit/page.tsx` - **Full integration** ✓

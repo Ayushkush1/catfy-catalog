@@ -5,6 +5,7 @@ This directory contains a modular template system for the CraftJS editor that pr
 ## 🏗️ Architecture
 
 ### Directory Structure
+
 ```
 templates/
 ├── catalog/                 # Catalog-specific templates
@@ -28,21 +29,25 @@ templates/
 ## 🚀 Features
 
 ### 1. **Modular Organization**
+
 - Each template is stored in its own file
 - Templates are organized by category (catalog, landing, etc.)
 - Easy to locate and modify specific templates
 
 ### 2. **Easy Extensibility**
+
 - Simple process to add new templates
 - Straightforward category creation
 - Template builder utilities for consistency
 
 ### 3. **Simple Management**
+
 - Easy addition of new templates
 - Straightforward removal of outdated templates
 - Centralized registry system
 
 ### 4. **Consistency**
+
 - Template builder utilities ensure consistent structure
 - Standardized template creation process
 - Type safety with TypeScript
@@ -52,20 +57,20 @@ templates/
 ### Using Existing Templates
 
 ```typescript
-import { 
-  getAllModularTemplates, 
+import {
+  getAllModularTemplates,
   getTemplatesByCategory,
-  getTemplateById 
-} from '@/components/editor/templates';
+  getTemplateById,
+} from '@/components/editor/templates'
 
 // Get all templates
-const allTemplates = getAllModularTemplates();
+const allTemplates = getAllModularTemplates()
 
 // Get templates by category
-const catalogTemplates = getTemplatesByCategory('catalog');
+const catalogTemplates = getTemplatesByCategory('catalog')
 
 // Get specific template
-const furnitureTemplate = getTemplateById('furniture-catalog');
+const furnitureTemplate = getTemplateById('furniture-catalog')
 ```
 
 ### Creating a New Template
@@ -73,13 +78,13 @@ const furnitureTemplate = getTemplateById('furniture-catalog');
 1. **Create the template file** (e.g., `catalog/electronics-catalog.ts`):
 
 ```typescript
-import { Template } from '../types';
-import { 
-  createTemplate, 
-  createContainer, 
-  createHeading, 
-  createText 
-} from '../utils/template-builder';
+import { Template } from '../types'
+import {
+  createTemplate,
+  createContainer,
+  createHeading,
+  createText,
+} from '../utils/template-builder'
 
 export const electronicsCatalogTemplate: Template = createTemplate()
   .setId('electronics-catalog')
@@ -88,53 +93,64 @@ export const electronicsCatalogTemplate: Template = createTemplate()
   .setCategory('catalog')
   .addTags('electronics', 'products', 'modern')
   .setData({
-    "ROOT": {
-      ...createContainer('ROOT', {
-        padding: 0,
-        backgroundColor: "#ffffff"
-      }, "Electronics Catalog", ["hero-section"])
+    ROOT: {
+      ...createContainer(
+        'ROOT',
+        {
+          padding: 0,
+          backgroundColor: '#ffffff',
+        },
+        'Electronics Catalog',
+        ['hero-section']
+      ),
     },
-    "hero-section": {
-      ...createContainer('hero-section', {
-        padding: 80,
-        backgroundColor: "#1a1a1a",
-        textAlign: "center"
-      }, "Hero Section", ["hero-title"], "ROOT")
+    'hero-section': {
+      ...createContainer(
+        'hero-section',
+        {
+          padding: 80,
+          backgroundColor: '#1a1a1a',
+          textAlign: 'center',
+        },
+        'Hero Section',
+        ['hero-title'],
+        'ROOT'
+      ),
     },
-    "hero-title": {
+    'hero-title': {
       ...createHeading(
-        "Latest Electronics",
+        'Latest Electronics',
         1,
         {
           fontSize: 48,
-          color: "#ffffff",
-          marginBottom: 20
+          color: '#ffffff',
+          marginBottom: 20,
         },
-        "Hero Title",
-        "hero-section"
-      )
-    }
+        'Hero Title',
+        'hero-section'
+      ),
+    },
   })
-  .build();
+  .build()
 ```
 
 2. **Export from category index** (`catalog/index.ts`):
 
 ```typescript
-export { furnitureCatalogTemplate } from './furniture-catalog';
-export { electronicsCatalogTemplate } from './electronics-catalog'; // Add this line
+export { furnitureCatalogTemplate } from './furniture-catalog'
+export { electronicsCatalogTemplate } from './electronics-catalog' // Add this line
 ```
 
 3. **Register in ModularTemplates.ts**:
 
 ```typescript
-import { electronicsCatalogTemplate } from './catalog';
+import { electronicsCatalogTemplate } from './catalog'
 
 const modularTemplates: Template[] = [
   furnitureCatalogTemplate,
   electronicsCatalogTemplate, // Add this line
   // ... other templates
-];
+]
 ```
 
 ### Adding a New Category
@@ -149,15 +165,15 @@ const modularTemplates: Template[] = [
 The template builder provides helper functions for consistent template creation:
 
 ```typescript
-import { 
+import {
   createTemplate,
   createContainer,
   createHeading,
   createText,
   createImage,
   createButton,
-  createGrid
-} from '../utils/template-builder';
+  createGrid,
+} from '../utils/template-builder'
 
 // Create a template
 const myTemplate = createTemplate()
@@ -169,15 +185,15 @@ const myTemplate = createTemplate()
   .setData({
     // CraftJS data structure
   })
-  .build();
+  .build()
 
 // Create common elements
-const container = createContainer('container-id', { padding: 20 });
-const heading = createHeading('My Heading', 1, { fontSize: 32 });
-const text = createText('My text content', { fontSize: 16 });
-const image = createImage('/path/to/image.jpg', 'Alt text');
-const button = createButton('Click me', { backgroundColor: '#blue' });
-const grid = createGrid(3, { gap: 20 });
+const container = createContainer('container-id', { padding: 20 })
+const heading = createHeading('My Heading', 1, { fontSize: 32 })
+const text = createText('My text content', { fontSize: 16 })
+const image = createImage('/path/to/image.jpg', 'Alt text')
+const button = createButton('Click me', { backgroundColor: '#blue' })
+const grid = createGrid(3, { gap: 20 })
 ```
 
 ## 🔧 Registry System
@@ -185,19 +201,19 @@ const grid = createGrid(3, { gap: 20 });
 The template registry provides centralized management:
 
 ```typescript
-import { templateRegistry } from '@/components/editor/templates';
+import { templateRegistry } from '@/components/editor/templates'
 
 // Register a template
-templateRegistry.register(myTemplate);
+templateRegistry.register(myTemplate)
 
 // Get templates by category
-const catalogTemplates = templateRegistry.getTemplatesByCategory('catalog');
+const catalogTemplates = templateRegistry.getTemplatesByCategory('catalog')
 
 // Search templates
-const searchResults = templateRegistry.searchTemplates('furniture');
+const searchResults = templateRegistry.searchTemplates('furniture')
 
 // Remove a template
-templateRegistry.unregister('template-id');
+templateRegistry.unregister('template-id')
 ```
 
 ## 🔄 Migration from Legacy System

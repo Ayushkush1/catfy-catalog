@@ -1,20 +1,23 @@
 # Migration Guide: From Custom SVG to Phosphor Icons
 
 ## Overview
+
 This guide helps you migrate from hardcoded SVG icons to Phosphor Icons in your components.
 
 ## Before & After
 
 ### Before (Custom SVG)
+
 ```tsx
 const icon = (
   <svg viewBox="0 0 24 24" fill="currentColor">
-    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
   </svg>
 )
 ```
 
 ### After (Phosphor Icons)
+
 ```tsx
 import { Heart } from '@phosphor-icons/react'
 
@@ -24,12 +27,14 @@ const icon = <Heart size={24} weight="regular" />
 ## Step-by-Step Migration
 
 ### Step 1: Import Phosphor Icons
+
 ```tsx
 // Add at the top of your file
 import { Heart, Star, User, Settings } from '@phosphor-icons/react'
 ```
 
 ### Step 2: Replace SVG with Icon Component
+
 ```tsx
 // Before
 <svg className="h-6 w-6" viewBox="0 0 24 24">
@@ -41,27 +46,29 @@ import { Heart, Star, User, Settings } from '@phosphor-icons/react'
 ```
 
 ### Step 3: Map Icon Names
+
 Common icon mappings from generic names to Phosphor:
 
-| Old Name | Phosphor Icon | Import |
-|----------|---------------|--------|
-| menu | List | `import { List } from '@phosphor-icons/react'` |
-| close/cross | X | `import { X } from '@phosphor-icons/react'` |
-| check/tick | Check | `import { Check } from '@phosphor-icons/react'` |
-| settings/gear | Gear | `import { Gear } from '@phosphor-icons/react'` |
-| search | MagnifyingGlass | `import { MagnifyingGlass } from '@phosphor-icons/react'` |
-| plus/add | Plus | `import { Plus } from '@phosphor-icons/react'` |
-| trash/delete | Trash | `import { Trash } from '@phosphor-icons/react'` |
-| edit/pencil | PencilLine | `import { PencilLine } from '@phosphor-icons/react'` |
-| image/picture | Image | `import { Image } from '@phosphor-icons/react'` |
-| user/profile | User | `import { User } from '@phosphor-icons/react'` |
-| home | House | `import { House } from '@phosphor-icons/react'` |
-| folder | Folder | `import { Folder } from '@phosphor-icons/react'` |
-| file | File | `import { File } from '@phosphor-icons/react'` |
-| video | VideoCamera | `import { VideoCamera } from '@phosphor-icons/react'` |
-| arrow-right | ArrowRight | `import { ArrowRight } from '@phosphor-icons/react'` |
+| Old Name      | Phosphor Icon   | Import                                                    |
+| ------------- | --------------- | --------------------------------------------------------- |
+| menu          | List            | `import { List } from '@phosphor-icons/react'`            |
+| close/cross   | X               | `import { X } from '@phosphor-icons/react'`               |
+| check/tick    | Check           | `import { Check } from '@phosphor-icons/react'`           |
+| settings/gear | Gear            | `import { Gear } from '@phosphor-icons/react'`            |
+| search        | MagnifyingGlass | `import { MagnifyingGlass } from '@phosphor-icons/react'` |
+| plus/add      | Plus            | `import { Plus } from '@phosphor-icons/react'`            |
+| trash/delete  | Trash           | `import { Trash } from '@phosphor-icons/react'`           |
+| edit/pencil   | PencilLine      | `import { PencilLine } from '@phosphor-icons/react'`      |
+| image/picture | Image           | `import { Image } from '@phosphor-icons/react'`           |
+| user/profile  | User            | `import { User } from '@phosphor-icons/react'`            |
+| home          | House           | `import { House } from '@phosphor-icons/react'`           |
+| folder        | Folder          | `import { Folder } from '@phosphor-icons/react'`          |
+| file          | File            | `import { File } from '@phosphor-icons/react'`            |
+| video         | VideoCamera     | `import { VideoCamera } from '@phosphor-icons/react'`     |
+| arrow-right   | ArrowRight      | `import { ArrowRight } from '@phosphor-icons/react'`      |
 
 ### Step 4: Convert className to Props
+
 ```tsx
 // Before
 <svg className="h-6 w-6 text-blue-600">
@@ -69,8 +76,8 @@ Common icon mappings from generic names to Phosphor:
 </svg>
 
 // After
-<Heart 
-  size={24} 
+<Heart
+  size={24}
   className="text-blue-600"
 />
 ```
@@ -78,6 +85,7 @@ Common icon mappings from generic names to Phosphor:
 ## Common Patterns
 
 ### Pattern 1: Conditional Icons
+
 ```tsx
 // Before
 {isLiked ? (
@@ -91,6 +99,7 @@ Common icon mappings from generic names to Phosphor:
 ```
 
 ### Pattern 2: Icon with State
+
 ```tsx
 // Before
 <svg className={isActive ? 'text-blue-600' : 'text-gray-400'}>
@@ -98,13 +107,14 @@ Common icon mappings from generic names to Phosphor:
 </svg>
 
 // After
-<Heart 
+<Heart
   weight={isActive ? 'bold' : 'regular'}
   className={isActive ? 'text-blue-600' : 'text-gray-400'}
 />
 ```
 
 ### Pattern 3: Icon Button
+
 ```tsx
 // Before
 <button className="p-2 hover:bg-gray-100">
@@ -120,6 +130,7 @@ Common icon mappings from generic names to Phosphor:
 ```
 
 ### Pattern 4: Icon in Array/Map
+
 ```tsx
 // Before
 const icons = {
@@ -143,22 +154,32 @@ const IconComponent = icons.heart
 ## Finding the Right Icon
 
 ### Method 1: Browse the Website
+
 Visit [phosphoricons.com](https://phosphoricons.com/) and search by keyword
 
 ### Method 2: Search in VS Code
+
 With TypeScript autocomplete:
+
 ```tsx
-import { /* Type to search */ } from '@phosphor-icons/react'
+import {} from /* Type to search */ '@phosphor-icons/react'
 //         ^ Autocomplete will show all available icons
 ```
 
 ### Method 3: Common Categories
+
 ```tsx
 // Text & Typography
 import { TextT, TextHOne, TextAlignLeft, Quotes } from '@phosphor-icons/react'
 
 // Layout
-import { Square, Rectangle, Circle, SquaresFour, Rows } from '@phosphor-icons/react'
+import {
+  Square,
+  Rectangle,
+  Circle,
+  SquaresFour,
+  Rows,
+} from '@phosphor-icons/react'
 
 // Media
 import { Image, VideoCamera, Camera, FilmStrip } from '@phosphor-icons/react'
@@ -167,31 +188,44 @@ import { Image, VideoCamera, Camera, FilmStrip } from '@phosphor-icons/react'
 import { Plus, Minus, X, Check, Trash, PencilLine } from '@phosphor-icons/react'
 
 // Navigation
-import { ArrowLeft, ArrowRight, CaretDown, House, List } from '@phosphor-icons/react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  CaretDown,
+  House,
+  List,
+} from '@phosphor-icons/react'
 
 // Business
-import { Briefcase, ChartBar, CurrencyDollar, ShoppingCart } from '@phosphor-icons/react'
+import {
+  Briefcase,
+  ChartBar,
+  CurrencyDollar,
+  ShoppingCart,
+} from '@phosphor-icons/react'
 ```
 
 ## Advanced: Dynamic Icons
 
 ### Loading Icons Dynamically
+
 ```tsx
 import * as PhosphorIcons from '@phosphor-icons/react'
 
 function DynamicIcon({ iconName, ...props }: { iconName: string }) {
   const Icon = PhosphorIcons[iconName as keyof typeof PhosphorIcons]
-  
+
   if (!Icon) return null
-  
+
   return <Icon {...props} />
 }
 
 // Usage
-<DynamicIcon iconName="Heart" size={24} weight="fill" />
+;<DynamicIcon iconName="Heart" size={24} weight="fill" />
 ```
 
 ### Icon Registry
+
 ```tsx
 import { Heart, Star, User, Settings } from '@phosphor-icons/react'
 
@@ -210,12 +244,13 @@ function RegistryIcon({ name, ...props }: { name: IconName }) {
 }
 
 // Usage
-<RegistryIcon name="favorite" size={20} weight="fill" />
+;<RegistryIcon name="favorite" size={20} weight="fill" />
 ```
 
 ## Troubleshooting
 
 ### Icon Not Found
+
 ```tsx
 // ❌ Error: Property 'MyIcon' does not exist
 import { MyIcon } from '@phosphor-icons/react'
@@ -225,6 +260,7 @@ import { MyIcon } from '@phosphor-icons/react'
 ```
 
 ### Wrong Size
+
 ```tsx
 // ❌ Icon too small/large
 <Heart className="h-6 w-6" />  // Tailwind classes don't work
@@ -234,6 +270,7 @@ import { MyIcon } from '@phosphor-icons/react'
 ```
 
 ### Color Not Applying
+
 ```tsx
 // ❌ Color not showing
 <Heart color="blue" />
@@ -244,6 +281,7 @@ import { MyIcon } from '@phosphor-icons/react'
 ```
 
 ### Weight Not Changing
+
 ```tsx
 // ❌ Typo in weight
 <Heart weight="filled" />  // Invalid

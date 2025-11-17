@@ -131,7 +131,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
   const [isUpdatingPlanSharing, setIsUpdatingPlanSharing] = useState(false)
-  const [selectedMembersForSharing, setSelectedMembersForSharing] = useState<string[]>([])
+  const [selectedMembersForSharing, setSelectedMembersForSharing] = useState<
+    string[]
+  >([])
   const [showPlanSharingDialog, setShowPlanSharingDialog] = useState(false)
   const { currentPlan } = useSubscription()
   const canInvite = true // All plans support team collaboration with unlimited members
@@ -158,7 +160,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
             const apiActivityLog = data.activityLog || []
             if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
-              const owner = (data.team || []).find((m: TeamMember) => m.role === 'OWNER')
+              const owner = (data.team || []).find(
+                (m: TeamMember) => m.role === 'OWNER'
+              )
               if (owner) {
                 setActivityLog([
                   {
@@ -167,8 +171,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     performedBy: owner.id,
                     performedByName: owner.fullName || owner.email,
                     timestamp: new Date().toISOString(),
-                    details: 'Team collaboration started'
-                  }
+                    details: 'Team collaboration started',
+                  },
                 ])
               }
             } else {
@@ -177,26 +181,35 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
             setIsLoading(false)
 
-              // revalidate in background
-              ; (async () => {
-                try {
-                  const response = await fetch(`/api/catalogues/${catalogueId}/team`)
-                  if (response.ok) {
-                    const fresh = await response.json()
-                    setTeam(fresh.team || [])
-                    setPendingInvitations(fresh.pendingInvitations || [])
-                    const freshMembersWithAccess = (fresh.team || [])
-                      .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
-                      .map((m: any) => m.id)
-                    setSelectedMembersForSharing(freshMembersWithAccess)
-                    const freshActivity = fresh.activityLog || []
-                    setActivityLog(freshActivity.length ? freshActivity : [])
-                    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), data: fresh })) } catch (e) { }
-                  }
-                } catch (e) {
-                  // ignore
+            // revalidate in background
+            ;(async () => {
+              try {
+                const response = await fetch(
+                  `/api/catalogues/${catalogueId}/team`
+                )
+                if (response.ok) {
+                  const fresh = await response.json()
+                  setTeam(fresh.team || [])
+                  setPendingInvitations(fresh.pendingInvitations || [])
+                  const freshMembersWithAccess = (fresh.team || [])
+                    .filter(
+                      (m: any) => m.role === 'MEMBER' && m.hasPremiumAccess
+                    )
+                    .map((m: any) => m.id)
+                  setSelectedMembersForSharing(freshMembersWithAccess)
+                  const freshActivity = fresh.activityLog || []
+                  setActivityLog(freshActivity.length ? freshActivity : [])
+                  try {
+                    sessionStorage.setItem(
+                      CACHE_KEY,
+                      JSON.stringify({ _ts: Date.now(), data: fresh })
+                    )
+                  } catch (e) {}
                 }
-              })()
+              } catch (e) {
+                // ignore
+              }
+            })()
 
             return
           }
@@ -221,7 +234,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
       const apiActivityLog = data.activityLog || []
       if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
-        const owner = (data.team || []).find((m: TeamMember) => m.role === 'OWNER')
+        const owner = (data.team || []).find(
+          (m: TeamMember) => m.role === 'OWNER'
+        )
         if (owner) {
           setActivityLog([
             {
@@ -230,15 +245,20 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               performedBy: owner.id,
               performedByName: owner.fullName || owner.email,
               timestamp: new Date().toISOString(),
-              details: 'Team collaboration started'
-            }
+              details: 'Team collaboration started',
+            },
           ])
         }
       } else {
         setActivityLog(apiActivityLog)
       }
 
-      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), data })) } catch (e) { }
+      try {
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({ _ts: Date.now(), data })
+        )
+      } catch (e) {}
     } catch (error) {
       console.error('Error loading team data:', error)
       toast.error('Failed to load team data')
@@ -248,7 +268,10 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   }
 
   // Update member permission
-  const updateMemberPermission = async (memberId: string, permission: 'ADMIN' | 'EDITOR' | 'VIEWER') => {
+  const updateMemberPermission = async (
+    memberId: string,
+    permission: 'ADMIN' | 'EDITOR' | 'VIEWER'
+  ) => {
     try {
       const member = team.find(m => m.id === memberId)
       const response = await fetch(
@@ -275,12 +298,14 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         targetUser: memberId,
         targetUserName: member?.fullName || member?.email || 'Team member',
         timestamp: new Date().toISOString(),
-        details: `Permission level updated to ${permission}`
+        details: `Permission level updated to ${permission}`,
       }
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Permission updated successfully')
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating permission:', error)
@@ -289,7 +314,10 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   }
 
   // Update member responsibility
-  const updateMemberResponsibility = async (memberId: string, responsibility: string) => {
+  const updateMemberResponsibility = async (
+    memberId: string,
+    responsibility: string
+  ) => {
     try {
       const member = team.find(m => m.id === memberId)
       const response = await fetch(
@@ -316,14 +344,16 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         targetUser: memberId,
         targetUserName: member?.fullName || member?.email || 'Team member',
         timestamp: new Date().toISOString(),
-        details: responsibility
+        details: responsibility,
       }
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Responsibility updated successfully')
       setShowEditDialog(false)
       setEditingMember(null)
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating responsibility:', error)
@@ -334,7 +364,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   // Load plan sharing settings
   const loadPlanSharingSettings = async () => {
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`)
+      const response = await fetch(
+        `/api/catalogues/${catalogueId}/plan-sharing`
+      )
       if (!response.ok) throw new Error('Failed to load plan sharing settings')
       const data = await response.json()
       setIsPlanSharingEnabled(data.planSharingEnabled || false)
@@ -347,16 +379,19 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const togglePlanSharing = async (enabled: boolean, memberIds?: string[]) => {
     setIsUpdatingPlanSharing(true)
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          enabled,
-          memberIds: memberIds || selectedMembersForSharing
-        }),
-      })
+      const response = await fetch(
+        `/api/catalogues/${catalogueId}/plan-sharing`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            enabled,
+            memberIds: memberIds || selectedMembersForSharing,
+          }),
+        }
+      )
 
       if (!response.ok) {
         throw new Error('Failed to update plan sharing settings')
@@ -373,7 +408,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         timestamp: new Date().toISOString(),
         details: enabled
           ? `Team members now have access to ${currentPlan} plan features`
-          : 'Team members no longer have access to premium features'
+          : 'Team members no longer have access to premium features',
       }
       setActivityLog(prev => [newActivity, ...prev])
 
@@ -382,7 +417,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           ? 'Plan sharing enabled! Team members now have access to your plan features.'
           : 'Plan sharing disabled.'
       )
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
     } catch (error) {
       console.error('Error updating plan sharing:', error)
       toast.error('Failed to update plan sharing settings')
@@ -455,14 +492,16 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         performedByName: 'You',
         targetUserName: email,
         timestamp: new Date().toISOString(),
-        details: `Invitation sent to ${email}`
+        details: `Invitation sent to ${email}`,
       }
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Invitation sent successfully!')
       setInviteEmail('')
       setShowInviteDialog(false)
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error sending invitation:', error)
@@ -497,12 +536,14 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         targetUser: memberId,
         targetUserName: member?.fullName || member?.email || 'Team member',
         timestamp: new Date().toISOString(),
-        details: `Removed ${member?.fullName || member?.email} from team`
+        details: `Removed ${member?.fullName || member?.email} from team`,
       }
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Team member removed successfully')
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error removing team member:', error)
@@ -523,7 +564,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       }
 
       toast.success('Invitation cancelled successfully')
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error cancelling invitation:', error)
@@ -550,7 +593,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       }
 
       toast.success('Invitation resent successfully!')
-      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
+      try {
+        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error resending invitation:', error)
@@ -611,7 +656,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user) {
         setCurrentUserId(user.id)
       }
@@ -670,13 +717,19 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 <Users className="h-5 w-5" />
                 Team Management
                 {isActualOwner && (
-                  <Badge variant="secondary" className="ml-2 bg-purple-600 text-white hover:text-white hover:bg-purple-600">
-                    <Crown className="h-3 w-3 mr-1" />
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 bg-purple-600 text-white hover:bg-purple-600 hover:text-white"
+                  >
+                    <Crown className="mr-1 h-3 w-3" />
                     You are the Owner
                   </Badge>
                 )}
                 {!isActualOwner && currentUserMember && (
-                  <Badge variant="secondary" className="ml-2 bg-blue-600 text-white hover:text-white hover:bg-blue-600">
+                  <Badge
+                    variant="secondary"
+                    className="ml-2 bg-blue-600 text-white hover:bg-blue-600 hover:text-white"
+                  >
                     Team Member
                   </Badge>
                 )}
@@ -706,63 +759,75 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         <CardContent className="space-y-6">
           {/* Info for non-owners */}
           {!isActualOwner && currentUserMember && (
-            <Alert className="bg-blue-50 border-blue-200">
+            <Alert className="border-blue-200 bg-blue-50">
               <Users className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                You are a team member of this catalogue. Only the owner can invite or remove team members.
+                You are a team member of this catalogue. Only the owner can
+                invite or remove team members.
               </AlertDescription>
             </Alert>
           )}
 
           {/* Tabs for Team Members and Activity Log */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-gray-100 to-gray-50 p-1 rounded-xl">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-2 rounded-xl bg-gradient-to-r from-gray-100 to-gray-50 p-1">
               <TabsTrigger
                 value="members"
-                className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-md"
               >
                 <Users className="h-4 w-4" />
                 <span className="font-medium">Team Members</span>
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
-                className="flex items-center gap-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all"
+                className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-md"
               >
                 <Activity className="h-4 w-4" />
                 <span className="font-medium">Activity Log</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="members" className="space-y-6 mt-8">
+            <TabsContent value="members" className="mt-8 space-y-6">
               {/* Premium Access Notice for Team Members */}
               {!isActualOwner && isPlanSharingEnabled && (
-                <Alert className="bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 border-2 border-purple-300 shadow-lg">
+                <Alert className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-lg">
                   <div className="flex items-start gap-4">
-                    <div className="flex-shrink-0 mt-0.5">
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center shadow-md">
+                    <div className="mt-0.5 flex-shrink-0">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 shadow-md">
                         <Sparkles className="h-5 w-5 text-white" />
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-base font-bold text-purple-900 mb-2">
+                      <h4 className="mb-2 text-base font-bold text-purple-900">
                         🎉 You have Premium Access!
                       </h4>
-                      <AlertDescription className="text-sm text-purple-800 space-y-2">
+                      <AlertDescription className="space-y-2 text-sm text-purple-800">
                         <p className="font-medium">
-                          The catalogue owner has shared their premium plan benefits with you for this catalogue.
+                          The catalogue owner has shared their premium plan
+                          benefits with you for this catalogue.
                         </p>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
                             <Sparkles className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">AI Features</span>
+                            <span className="text-xs font-semibold text-purple-900">
+                              AI Features
+                            </span>
                           </div>
-                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
                             <FileEdit className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">Premium Export</span>
+                            <span className="text-xs font-semibold text-purple-900">
+                              Premium Export
+                            </span>
                           </div>
-                          <div className="flex items-center gap-2 bg-white/60 rounded-lg p-2 border border-purple-200">
+                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
                             <Settings className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">Premium Templates</span>
+                            <span className="text-xs font-semibold text-purple-900">
+                              Premium Templates
+                            </span>
                           </div>
                         </div>
                       </AlertDescription>
@@ -773,11 +838,11 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
               {/* Team Members */}
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <div className="h-8 w-1 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+                <div className="mb-6 flex items-center justify-between">
+                  <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+                    <div className="h-8 w-1 rounded-full bg-gradient-to-b from-blue-600 to-purple-600"></div>
                     Team Members
-                    <span className="ml-2 px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                    <span className="ml-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                       {team.length}
                     </span>
                   </h3>
@@ -788,36 +853,41 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     return (
                       <div
                         key={member.id}
-                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${isCurrentUser
-                          ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-sm'
-                          : member.role === 'OWNER'
-                            ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-300 shadow-sm'
-                            : 'bg-white border-gray-200 hover:border-gray-300'
-                          }`}
+                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${
+                          isCurrentUser
+                            ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm'
+                            : member.role === 'OWNER'
+                              ? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 shadow-sm'
+                              : 'border-gray-200 bg-white hover:border-gray-300'
+                        }`}
                       >
                         <div className="flex items-center space-x-4">
                           <div className="relative">
-                            <Avatar className={`h-12 w-12 ${isCurrentUser ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}>
-                              <AvatarImage src={member.avatarUrl || undefined} />
+                            <Avatar
+                              className={`h-12 w-12 ${isCurrentUser ? 'ring-2 ring-blue-500 ring-offset-2' : ''}`}
+                            >
+                              <AvatarImage
+                                src={member.avatarUrl || undefined}
+                              />
                               <AvatarFallback className="text-base font-semibold">
                                 {getMemberInitials(member)}
                               </AvatarFallback>
                             </Avatar>
                             {member.role === 'OWNER' && (
-                              <div className="absolute -top-1 -right-1 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full p-1">
+                              <div className="absolute -right-1 -top-1 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 p-1">
                                 <Crown className="h-3 w-3 text-white" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <p className="font-semibold text-gray-900 text-base">
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                              <p className="text-base font-semibold text-gray-900">
                                 {getMemberDisplayName(member)}
                               </p>
                               {member.role === 'OWNER' && (
                                 <Badge
                                   variant="secondary"
-                                  className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-sm"
+                                  className="flex items-center gap-1 border-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm"
                                 >
                                   <Crown className="h-3 w-3" />
                                   Owner
@@ -826,7 +896,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               {isCurrentUser && (
                                 <Badge
                                   variant="default"
-                                  className="flex items-center gap-1 bg-gradient-to-r from-blue-600 to-indigo-600 border-0 shadow-sm"
+                                  className="flex items-center gap-1 border-0 bg-gradient-to-r from-blue-600 to-indigo-600 shadow-sm"
                                 >
                                   You
                                 </Badge>
@@ -834,12 +904,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               {member.permission && (
                                 <Badge
                                   variant="outline"
-                                  className={`flex items-center gap-1 font-medium ${member.permission === 'ADMIN'
-                                    ? 'border-blue-500 text-blue-700 bg-blue-50'
-                                    : member.permission === 'EDITOR'
-                                      ? 'border-green-500 text-green-700 bg-green-50'
-                                      : 'border-gray-400 text-gray-700 bg-gray-50'
-                                    }`}
+                                  className={`flex items-center gap-1 font-medium ${
+                                    member.permission === 'ADMIN'
+                                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                      : member.permission === 'EDITOR'
+                                        ? 'border-green-500 bg-green-50 text-green-700'
+                                        : 'border-gray-400 bg-gray-50 text-gray-700'
+                                  }`}
                                 >
                                   {member.permission === 'ADMIN' ? (
                                     <Shield className="h-3 w-3" />
@@ -851,30 +922,35 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                   {member.permission}
                                 </Badge>
                               )}
-                              {isPlanSharingEnabled && member.role === 'MEMBER' && currentPlan !== 'FREE' && (
-                                <Badge
-                                  variant="outline"
-                                  className="flex items-center gap-1 font-medium border-purple-500 text-purple-700 bg-gradient-to-r from-purple-50 to-pink-50 shadow-sm"
-                                >
-                                  <Sparkles className="h-3 w-3" />
-                                  Premium Access
-                                </Badge>
-                              )}
+                              {isPlanSharingEnabled &&
+                                member.role === 'MEMBER' &&
+                                currentPlan !== 'FREE' && (
+                                  <Badge
+                                    variant="outline"
+                                    className="flex items-center gap-1 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 font-medium text-purple-700 shadow-sm"
+                                  >
+                                    <Sparkles className="h-3 w-3" />
+                                    Premium Access
+                                  </Badge>
+                                )}
                             </div>
-                            <p className="text-sm text-gray-600 font-medium">{member.email}</p>
+                            <p className="text-sm font-medium text-gray-600">
+                              {member.email}
+                            </p>
                             {member.responsibility && (
                               <div className="mt-2 flex items-start gap-2">
                                 <div className="mt-0.5 h-4 w-4 text-gray-400">
                                   <Edit2 className="h-3.5 w-3.5" />
                                 </div>
-                                <p className="text-sm text-gray-600 italic">
+                                <p className="text-sm italic text-gray-600">
                                   {member.responsibility}
                                 </p>
                               </div>
                             )}
-                            <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                            <p className="mt-2 flex items-center gap-1 text-xs text-gray-500">
                               <Clock className="h-3 w-3" />
-                              Joined {new Date(member.joinedAt).toLocaleDateString()}
+                              Joined{' '}
+                              {new Date(member.joinedAt).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -884,7 +960,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="opacity-0 transition-opacity group-hover:opacity-100"
                               >
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
@@ -903,7 +979,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => removeMember(member.id)}
-                                className="text-red-600 focus:text-red-600 cursor-pointer"
+                                className="cursor-pointer text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Remove from team
@@ -922,12 +998,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 <>
                   <Separator className="my-8" />
                   <div>
-                    <div className="flex items-center gap-2 mb-6">
-                      <div className="h-8 w-1 bg-gradient-to-b from-yellow-500 to-orange-500 rounded-full"></div>
+                    <div className="mb-6 flex items-center gap-2">
+                      <div className="h-8 w-1 rounded-full bg-gradient-to-b from-yellow-500 to-orange-500"></div>
                       <h3 className="text-xl font-semibold text-gray-900">
                         Pending Invitations
                       </h3>
-                      <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-full">
+                      <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700">
                         {pendingInvitations.length}
                       </span>
                     </div>
@@ -935,23 +1011,31 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                       {pendingInvitations.map(invitation => (
                         <div
                           key={invitation.id}
-                          className="group flex items-center justify-between rounded-xl border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-5 transition-all hover:shadow-lg hover:border-yellow-300"
+                          className="group flex items-center justify-between rounded-xl border-2 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50 p-5 transition-all hover:border-yellow-300 hover:shadow-lg"
                         >
                           <div className="flex items-center space-x-4">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 shadow-md">
                               <Mail className="h-6 w-6 text-white" />
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900 text-base">{invitation.email}</p>
-                              <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                              <p className="text-base font-semibold text-gray-900">
+                                {invitation.email}
+                              </p>
+                              <div className="mt-1 flex items-center gap-3 text-sm text-gray-600">
                                 <span className="flex items-center gap-1">
                                   <Send className="h-3.5 w-3.5" />
-                                  Invited {new Date(invitation.createdAt).toLocaleDateString()}
+                                  Invited{' '}
+                                  {new Date(
+                                    invitation.createdAt
+                                  ).toLocaleDateString()}
                                 </span>
                                 <span className="text-gray-400">•</span>
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
-                                  Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+                                  Expires{' '}
+                                  {new Date(
+                                    invitation.expiresAt
+                                  ).toLocaleDateString()}
                                 </span>
                               </div>
                             </div>
@@ -962,7 +1046,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => copyInvitationLink(invitation)}
-                                className="border-blue-300 text-blue-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-400 transition-colors"
+                                className="border-blue-300 text-blue-600 transition-colors hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700"
                               >
                                 <Copy className="mr-2 h-4 w-4" />
                                 Copy Link
@@ -984,7 +1068,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                     Resend Invitation
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => cancelInvitation(invitation.id)}
+                                    onClick={() =>
+                                      cancelInvitation(invitation.id)
+                                    }
                                     className="text-red-600 focus:text-red-600"
                                   >
                                     <XCircle className="mr-2 h-4 w-4" />
@@ -1002,13 +1088,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               )}
               {/* Compact Plan Sharing Card - At Bottom for Owners */}
               {isActualOwner && currentPlan !== 'FREE' && (
-                <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <Card className="mt-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Shield className="h-4 w-4 text-blue-600" />
                         <div>
-                          <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            Plan Sharing
+                          </p>
                           <p className="text-xs text-gray-600">
                             {selectedMembersForSharing.length > 0
                               ? `${selectedMembersForSharing.length}/3 members selected`
@@ -1023,7 +1111,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                           onClick={() => setShowPlanSharingDialog(true)}
                           className="h-8 text-xs"
                         >
-                          <UserCog className="h-3 w-3 mr-1" />
+                          <UserCog className="mr-1 h-3 w-3" />
                           Manage
                         </Button>
                       </div>
@@ -1035,13 +1123,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
             {/* Activity Log Tab */}
             <TabsContent value="activity" className="mt-8">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="h-8 w-1 bg-gradient-to-b from-green-500 to-teal-500 rounded-full"></div>
+              <div className="mb-6 flex items-center gap-2">
+                <div className="h-8 w-1 rounded-full bg-gradient-to-b from-green-500 to-teal-500"></div>
                 <h3 className="text-xl font-semibold text-gray-900">
                   Activity Timeline
                 </h3>
                 {activityLog.length > 0 && (
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 text-sm font-medium rounded-full">
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                     {activityLog.length}
                   </span>
                 )}
@@ -1049,38 +1137,47 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
               <div className="space-y-4">
                 {activityLog.length === 0 ? (
-                  <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-200 mb-4">
+                  <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 py-16 text-center">
+                    <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-200">
                       <Activity className="h-8 w-8 text-gray-400" />
                     </div>
-                    <p className="text-gray-600 font-medium text-lg">No activity recorded yet</p>
-                    <p className="text-gray-500 text-sm mt-2">Team actions will appear here</p>
+                    <p className="text-lg font-medium text-gray-600">
+                      No activity recorded yet
+                    </p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Team actions will appear here
+                    </p>
                   </div>
                 ) : (
                   <div className="relative">
                     {/* Timeline line */}
-                    <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200"></div>
+                    <div className="absolute bottom-0 left-6 top-0 w-0.5 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200"></div>
 
                     <div className="space-y-6">
                       {activityLog.map((log, index) => (
                         <div
                           key={index}
-                          className="relative flex items-start gap-4 group"
+                          className="group relative flex items-start gap-4"
                         >
                           {/* Icon */}
-                          <div className={`relative z-10 flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-transform group-hover:scale-110 ${log.action.includes('permission')
-                            ? 'bg-gradient-to-br from-blue-500 to-blue-600'
-                            : log.action.includes('responsibility')
-                              ? 'bg-gradient-to-br from-green-500 to-green-600'
-                              : log.action.includes('Invited') || log.action.includes('added')
-                                ? 'bg-gradient-to-br from-purple-500 to-purple-600'
-                                : 'bg-gradient-to-br from-red-500 to-red-600'
-                            }`}>
+                          <div
+                            className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110 ${
+                              log.action.includes('permission')
+                                ? 'bg-gradient-to-br from-blue-500 to-blue-600'
+                                : log.action.includes('responsibility')
+                                  ? 'bg-gradient-to-br from-green-500 to-green-600'
+                                  : log.action.includes('Invited') ||
+                                      log.action.includes('added')
+                                    ? 'bg-gradient-to-br from-purple-500 to-purple-600'
+                                    : 'bg-gradient-to-br from-red-500 to-red-600'
+                            }`}
+                          >
                             {log.action.includes('permission') ? (
                               <Shield className="h-5 w-5 text-white" />
                             ) : log.action.includes('responsibility') ? (
                               <Edit2 className="h-5 w-5 text-white" />
-                            ) : log.action.includes('Invited') || log.action.includes('added') ? (
+                            ) : log.action.includes('Invited') ||
+                              log.action.includes('added') ? (
                               <UserPlus className="h-5 w-5 text-white" />
                             ) : (
                               <UserMinus className="h-5 w-5 text-white" />
@@ -1088,13 +1185,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                           </div>
 
                           {/* Content */}
-                          <div className="flex-1 bg-white rounded-xl border-2 border-gray-200 p-5 shadow-sm transition-all group-hover:shadow-md group-hover:border-gray-300">
+                          <div className="flex-1 rounded-xl border-2 border-gray-200 bg-white p-5 shadow-sm transition-all group-hover:border-gray-300 group-hover:shadow-md">
                             <div className="flex items-start justify-between gap-4">
                               <div className="flex-1">
-                                <p className="font-semibold text-gray-900 text-base mb-1">
+                                <p className="mb-1 text-base font-semibold text-gray-900">
                                   {log.action}
                                 </p>
-                                <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                                <div className="mb-2 flex items-center gap-2 text-sm text-gray-600">
                                   <span className="font-medium text-gray-700">
                                     {log.performedByName}
                                   </span>
@@ -1108,8 +1205,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                   )}
                                 </div>
                                 {log.details && (
-                                  <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                    <p className="text-sm text-gray-700 italic">
+                                  <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                                    <p className="text-sm italic text-gray-700">
                                       {log.details}
                                     </p>
                                   </div>
@@ -1117,11 +1214,14 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               </div>
 
                               <div className="flex flex-col items-end gap-1">
-                                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500">
                                   {new Date(log.timestamp).toLocaleDateString()}
                                 </span>
                                 <span className="text-xs text-gray-400">
-                                  {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(log.timestamp).toLocaleTimeString(
+                                    [],
+                                    { hour: '2-digit', minute: '2-digit' }
+                                  )}
                                 </span>
                               </div>
                             </div>
@@ -1134,13 +1234,14 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               </div>
             </TabsContent>
           </Tabs>
-
-
         </CardContent>
       </Card>
 
       {/* Plan Sharing Dialog */}
-      <Dialog open={showPlanSharingDialog} onOpenChange={setShowPlanSharingDialog}>
+      <Dialog
+        open={showPlanSharingDialog}
+        onOpenChange={setShowPlanSharingDialog}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1148,47 +1249,57 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               Share Plan Benefits
             </DialogTitle>
             <DialogDescription>
-              Select up to 3 team members who can access your {currentPlan} plan features
+              Select up to 3 team members who can access your {currentPlan} plan
+              features
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             {selectedMembersForSharing.length >= 3 && (
-              <Alert className="bg-amber-50 border-amber-200">
+              <Alert className="border-amber-200 bg-amber-50">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
                 <AlertDescription className="text-sm text-amber-900">
-                  Maximum limit reached. You can share premium access with up to 3 team members.
+                  Maximum limit reached. You can share premium access with up to
+                  3 team members.
                 </AlertDescription>
               </Alert>
             )}
-            <div className="max-h-96 overflow-y-auto space-y-3">
+            <div className="max-h-96 space-y-3 overflow-y-auto">
               {team
                 .filter(member => member.role === 'MEMBER')
                 .map(member => {
-                  const isSelected = selectedMembersForSharing.includes(member.id)
-                  const canSelect = isSelected || selectedMembersForSharing.length < 3
+                  const isSelected = selectedMembersForSharing.includes(
+                    member.id
+                  )
+                  const canSelect =
+                    isSelected || selectedMembersForSharing.length < 3
 
                   return (
                     <div
                       key={member.id}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
-                        }`}
+                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
+                        !canSelect
+                          ? 'cursor-not-allowed opacity-50'
+                          : 'hover:bg-gray-50'
+                      }`}
                     >
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex flex-1 items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={member.avatarUrl || undefined} />
                           <AvatarFallback className="text-xs">
                             {getMemberInitials(member)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-gray-900">
                             {getMemberDisplayName(member)}
                           </p>
-                          <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                          <p className="truncate text-xs text-gray-500">
+                            {member.email}
+                          </p>
                         </div>
                       </div>
                       <Button
-                        variant={isSelected ? "default" : "outline"}
+                        variant={isSelected ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => {
                           setSelectedMembersForSharing(prev =>
@@ -1202,7 +1313,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                       >
                         {isSelected ? (
                           <>
-                            <CheckCircle className="h-3 w-3 mr-1" />
+                            <CheckCircle className="mr-1 h-3 w-3" />
                             Shared
                           </>
                         ) : (
@@ -1213,8 +1324,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   )
                 })}
               {team.filter(member => member.role === 'MEMBER').length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <div className="py-8 text-center text-gray-500">
+                  <Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
                   <p className="text-sm">No team members yet</p>
                 </div>
               )}
@@ -1237,7 +1348,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             >
               {isUpdatingPlanSharing ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
@@ -1381,15 +1492,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   onChange={e =>
                     setEditingMember({
                       ...editingMember,
-                      responsibility: e.target.value
+                      responsibility: e.target.value,
                     })
                   }
                   placeholder="e.g., Product Photography, Content Writing, Quality Control"
                   rows={3}
                   className="resize-none"
                 />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Describe this member's role and responsibilities
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Describe this member&apos;s role and responsibilities
                 </p>
               </div>
             </div>

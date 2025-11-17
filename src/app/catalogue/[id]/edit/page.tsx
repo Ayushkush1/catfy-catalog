@@ -189,7 +189,8 @@ export default function EditCataloguePage() {
   const [smartSortEnabled, setSmartSortEnabled] = useState(false)
   const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
   const [isOwner, setIsOwner] = useState(false)
-  const [currentUserHasPremiumAccess, setCurrentUserHasPremiumAccess] = useState(false)
+  const [currentUserHasPremiumAccess, setCurrentUserHasPremiumAccess] =
+    useState(false)
 
   // Collaborative editing state
   const [catalogueVersion, setCatalogueVersion] = useState<number>(1)
@@ -826,7 +827,9 @@ export default function EditCataloguePage() {
       setCatalogueVersion(data.catalogue.version || 1)
 
       // Check if current user is owner
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       const userIsOwner = data.catalogue.profileId === user?.id
       setIsOwner(userIsOwner)
 
@@ -834,7 +837,10 @@ export default function EditCataloguePage() {
       if (user && data.catalogue.profile) {
         setCurrentUser({
           userId: user.id,
-          fullName: data.catalogue.profile.fullName || data.catalogue.profile.email || 'User',
+          fullName:
+            data.catalogue.profile.fullName ||
+            data.catalogue.profile.email ||
+            'User',
           email: data.catalogue.profile.email || user.email || '',
         })
       }
@@ -842,11 +848,17 @@ export default function EditCataloguePage() {
       // Check plan sharing status and user's premium access
       if (!userIsOwner) {
         try {
-          const teamResponse = await fetch(`/api/catalogues/${catalogueId}/team`)
+          const teamResponse = await fetch(
+            `/api/catalogues/${catalogueId}/team`
+          )
           if (teamResponse.ok) {
             const teamData = await teamResponse.json()
-            const currentMember = teamData.team.find((m: any) => m.id === user?.id)
-            setCurrentUserHasPremiumAccess(currentMember?.hasPremiumAccess || false)
+            const currentMember = teamData.team.find(
+              (m: any) => m.id === user?.id
+            )
+            setCurrentUserHasPremiumAccess(
+              currentMember?.hasPremiumAccess || false
+            )
           }
         } catch (err) {
           console.log('Could not check team member status')
@@ -855,7 +867,9 @@ export default function EditCataloguePage() {
 
       // Check plan sharing status
       try {
-        const planResponse = await fetch(`/api/catalogues/${catalogueId}/plan-sharing`)
+        const planResponse = await fetch(
+          `/api/catalogues/${catalogueId}/plan-sharing`
+        )
         if (planResponse.ok) {
           const planData = await planResponse.json()
           setIsPlanSharingEnabled(planData.planSharingEnabled || false)
@@ -1267,16 +1281,16 @@ export default function EditCataloguePage() {
     return (
       <>
         {/* Header skeleton */}
-        <div className="pl-20 bg-[#E8EAF6]">
+        <div className="bg-[#E8EAF6] pl-20">
           <Header title="Edit Catalogue" showGradientBanner={true} />
         </div>
 
         {/* Page layout skeleton */}
-        <div className="-mt-6 pl-28 min-h-screen bg-[#E8EAF6]">
+        <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-28">
           <div className="flex">
             {/* Left Sidebar skeleton */}
             <div className="min-h-screen w-64 bg-white">
-              <div className="p-4 space-y-1">
+              <div className="space-y-1 p-4">
                 <Skeleton className="mb-4 h-9 w-full rounded-lg" />
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-11 w-full rounded-lg" />
@@ -1286,7 +1300,7 @@ export default function EditCataloguePage() {
 
             {/* Main Content skeleton */}
             <div className="mr-8 flex flex-1 bg-gray-50">
-              <div className="flex-1 p-6 space-y-6">
+              <div className="flex-1 space-y-6 p-6">
                 {/* Stats cards */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, i) => (
@@ -1300,7 +1314,7 @@ export default function EditCataloguePage() {
                     <div className="rounded-lg bg-white p-6">
                       <div className="mb-6 flex items-center justify-between">
                         <div>
-                          <Skeleton className="h-6 w-40 mb-2" />
+                          <Skeleton className="mb-2 h-6 w-40" />
                           <Skeleton className="h-3 w-48" />
                         </div>
                         <Skeleton className="h-8 w-32" />
@@ -1317,7 +1331,7 @@ export default function EditCataloguePage() {
                   <div className="col-span-1">
                     <div className="px-1">
                       <div className="mb-6">
-                        <Skeleton className="h-6 w-32 mb-2" />
+                        <Skeleton className="mb-2 h-6 w-32" />
                         <Skeleton className="h-3 w-40" />
                       </div>
                       <div className="space-y-3">
@@ -1356,15 +1370,18 @@ export default function EditCataloguePage() {
 
   return (
     <>
-      <div className="pl-24 bg-[#E8EAF6]">
+      <div className="bg-[#E8EAF6] pl-24">
         <Header
           title="Edit Catalogue"
           catalogueName={catalogue.name}
-          lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          lastUpdated={new Date(catalogue.updatedAt).toLocaleDateString(
+            'en-US',
+            {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            }
+          )}
           showGradientBanner={true}
           onPreview={handlePreview}
           onSave={saveCatalogue}
@@ -1374,7 +1391,7 @@ export default function EditCataloguePage() {
           isTrackingPresence={isTracking}
         />
       </div>
-      <div className="-mt-6 pl-32 min-h-screen bg-[#E8EAF6]">
+      <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-32">
         {/* Main Layout Container */}
         <div className="flex">
           {/* Left Sidebar */}
@@ -1382,17 +1399,16 @@ export default function EditCataloguePage() {
             {/* Navigation */}
             <nav className="p-4">
               <div className="space-y-2">
-
-
                 <button
                   onClick={() => {
                     setActiveTab('overview')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'overview'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Eye className="mr-3 h-4 w-4" />
                   Overview
@@ -1403,18 +1419,20 @@ export default function EditCataloguePage() {
                     setActiveTab('categories')
                     setCurrentSection('categories')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'categories'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <FolderOpen className="mr-3 h-4 w-4" />
                   Categories
                   <span
-                    className={`ml-auto rounded-full px-2 py-1 text-xs ${activeTab === 'categories'
-                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                      : 'bg-gray-200 text-gray-600'
-                      }`}
+                    className={`ml-auto rounded-full px-2 py-1 text-xs ${
+                      activeTab === 'categories'
+                        ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
                   >
                     {catalogue.categories.length}
                   </span>
@@ -1425,10 +1443,11 @@ export default function EditCataloguePage() {
                     setActiveTab('products')
                     setCurrentSection('products')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'products'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Package className="mr-3 h-4 w-4" />
                   Products
@@ -1442,10 +1461,11 @@ export default function EditCataloguePage() {
                     setActiveTab('theme')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'theme'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
                   Template
@@ -1456,10 +1476,11 @@ export default function EditCataloguePage() {
                     setActiveTab('team')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'team'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Users className="mr-3 h-4 w-4" />
                   Team
@@ -1467,10 +1488,11 @@ export default function EditCataloguePage() {
 
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 hover:scale-105 transition-transform duration-200'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'settings'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Settings className="mr-3 h-4 w-4" />
                   Settings
@@ -2180,7 +2202,7 @@ export default function EditCataloguePage() {
                                 <div className="flex items-center justify-between">
                                   <div className="text-xl font-bold text-gray-900">
                                     {product.priceDisplay === 'show' &&
-                                      product.price ? (
+                                    product.price ? (
                                       `$${Number(product.price).toFixed(2)}`
                                     ) : product.priceDisplay === 'contact' ? (
                                       <span className="text-base font-medium text-blue-600">
@@ -2201,8 +2223,8 @@ export default function EditCataloguePage() {
                                   <Badge variant="outline" className="text-xs">
                                     {product.categoryId
                                       ? catalogue.categories.find(
-                                        c => c.id === product.categoryId
-                                      )?.name || 'Unknown'
+                                          c => c.id === product.categoryId
+                                        )?.name || 'Unknown'
                                       : 'Uncategorized'}
                                   </Badge>
                                 </div>
@@ -2320,8 +2342,8 @@ export default function EditCataloguePage() {
 
       {/* Category Dialog */}
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
-        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
-          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
             <DialogTitle className="text-2xl font-bold text-white">
               {editingCategory ? 'Edit Category' : 'Add Category'}
             </DialogTitle>
@@ -2332,9 +2354,14 @@ export default function EditCataloguePage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label htmlFor="categoryName" className="text-base font-semibold text-gray-900">Category Name</Label>
+              <Label
+                htmlFor="categoryName"
+                className="text-base font-semibold text-gray-900"
+              >
+                Category Name
+              </Label>
               <Input
                 id="categoryName"
                 value={categoryForm.name}
@@ -2347,7 +2374,12 @@ export default function EditCataloguePage() {
             </div>
 
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label htmlFor="categoryDescription" className="text-base font-semibold text-gray-900">Description</Label>
+              <Label
+                htmlFor="categoryDescription"
+                className="text-base font-semibold text-gray-900"
+              >
+                Description
+              </Label>
               <Textarea
                 id="categoryDescription"
                 value={categoryForm.description}
@@ -2383,8 +2415,8 @@ export default function EditCataloguePage() {
 
       {/* Product Dialog */}
       <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
-        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
-          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
             <DialogTitle className="text-2xl font-bold text-white">
               {editingProduct ? 'Edit Product' : 'Add Product'}
             </DialogTitle>
@@ -2395,10 +2427,15 @@ export default function EditCataloguePage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
             {/* Product Name */}
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label htmlFor="productName" className="text-base font-semibold text-gray-900">Product Name</Label>
+              <Label
+                htmlFor="productName"
+                className="text-base font-semibold text-gray-900"
+              >
+                Product Name
+              </Label>
               <Input
                 id="productName"
                 value={productForm.name}
@@ -2412,7 +2449,12 @@ export default function EditCataloguePage() {
 
             {/* Product Description with AI */}
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label htmlFor="productDescription" className="text-base font-semibold text-gray-900">Description</Label>
+              <Label
+                htmlFor="productDescription"
+                className="text-base font-semibold text-gray-900"
+              >
+                Description
+              </Label>
               <div className="mt-2 space-y-2">
                 <Textarea
                   id="productDescription"
@@ -2563,7 +2605,12 @@ export default function EditCataloguePage() {
 
             {/* Tags */}
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label htmlFor="productTags" className="text-base font-semibold text-gray-900">Tags</Label>
+              <Label
+                htmlFor="productTags"
+                className="text-base font-semibold text-gray-900"
+              >
+                Tags
+              </Label>
               <Input
                 id="productTags"
                 value={productForm.tags?.join(', ') || ''}
@@ -2581,10 +2628,17 @@ export default function EditCataloguePage() {
 
             {/* Price Information */}
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <h4 className="mb-4 text-base font-semibold text-gray-900">Price Information</h4>
+              <h4 className="mb-4 text-base font-semibold text-gray-900">
+                Price Information
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="productPrice" className="text-sm font-semibold text-gray-900">Price</Label>
+                  <Label
+                    htmlFor="productPrice"
+                    className="text-sm font-semibold text-gray-900"
+                  >
+                    Price
+                  </Label>
                   <Input
                     id="productPrice"
                     type="number"
@@ -2601,7 +2655,12 @@ export default function EditCataloguePage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="productPriceDisplay" className="text-sm font-semibold text-gray-900">Price Display</Label>
+                  <Label
+                    htmlFor="productPriceDisplay"
+                    className="text-sm font-semibold text-gray-900"
+                  >
+                    Price Display
+                  </Label>
                   <Select
                     value={productForm.priceDisplay}
                     onValueChange={(value: 'show' | 'hide' | 'contact') =>
@@ -2623,10 +2682,17 @@ export default function EditCataloguePage() {
 
             {/* Category & Status */}
             <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <h4 className="mb-4 text-base font-semibold text-gray-900">Category & Status</h4>
+              <h4 className="mb-4 text-base font-semibold text-gray-900">
+                Category & Status
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="productCategory" className="text-sm font-semibold text-gray-900">Category</Label>
+                  <Label
+                    htmlFor="productCategory"
+                    className="text-sm font-semibold text-gray-900"
+                  >
+                    Category
+                  </Label>
                   <div className="mt-2 flex items-center gap-2">
                     <Select
                       value={productForm.categoryId}
@@ -2706,7 +2772,9 @@ export default function EditCataloguePage() {
                 </div>
 
                 <div>
-                  <Label className="text-sm font-semibold text-gray-900 mb-2 block">Product Status</Label>
+                  <Label className="mb-2 block text-sm font-semibold text-gray-900">
+                    Product Status
+                  </Label>
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="productActive"
@@ -2715,7 +2783,9 @@ export default function EditCataloguePage() {
                         setProductForm(prev => ({ ...prev, isActive: checked }))
                       }
                     />
-                    <Label htmlFor="productActive" className="font-normal">Active</Label>
+                    <Label htmlFor="productActive" className="font-normal">
+                      Active
+                    </Label>
                   </div>
                 </div>
               </div>
@@ -2741,18 +2811,22 @@ export default function EditCataloguePage() {
 
       {/* Edit Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent className="max-h-[90vh] max-w-2xl p-0 overflow-hidden flex flex-col">
-          <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white shrink-0">
-            <DialogTitle className="text-2xl font-bold">Catalogue Settings</DialogTitle>
+        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
+            <DialogTitle className="text-2xl font-bold">
+              Catalogue Settings
+            </DialogTitle>
             <DialogDescription className="text-white/80">
               Configure display and visibility settings for your catalogue
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
             {/* Display Settings */}
             <div className="rounded-lg border bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">Display Settings</h3>
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
+                Display Settings
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -2769,15 +2843,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showPrices: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showPrices: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -2802,15 +2876,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showCategories: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showCategories: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -2819,7 +2893,9 @@ export default function EditCataloguePage() {
 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-base font-medium">Allow Search</Label>
+                    <Label className="text-base font-medium">
+                      Allow Search
+                    </Label>
                     <p className="text-sm text-gray-600">
                       Enable search functionality
                     </p>
@@ -2832,15 +2908,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                allowSearch: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  allowSearch: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -2865,15 +2941,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showProductCodes: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showProductCodes: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -2884,7 +2960,9 @@ export default function EditCataloguePage() {
 
             {/* Visibility Settings */}
             <div className="rounded-lg border bg-white p-5 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">Visibility Settings</h3>
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
+                Visibility Settings
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -3007,7 +3085,9 @@ export default function EditCataloguePage() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col overflow-hidden p-0">
           <DialogHeader className="border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
-            <DialogTitle className="text-2xl font-bold">Edit Catalogue Details</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
+              Edit Catalogue Details
+            </DialogTitle>
             <DialogDescription className="text-white/80">
               Update your catalogue branding and information
             </DialogDescription>
@@ -3019,38 +3099,55 @@ export default function EditCataloguePage() {
             <div className="w-64 border-r bg-gray-50 p-4">
               <div className="sticky top-0 space-y-2">
                 <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Form Sections</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    Form Sections
+                  </p>
                 </div>
 
-                <a href="#basic-info" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                <a
+                  href="#basic-info"
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm"
+                >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                     <span className="text-xs font-bold">1</span>
                   </div>
                   <span>Basic Info</span>
                 </a>
 
-                <a href="#media-assets" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                <a
+                  href="#media-assets"
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm"
+                >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
                     <span className="text-xs font-bold">2</span>
                   </div>
                   <span>Media & Assets</span>
                 </a>
 
-                <a href="#company-info" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                <a
+                  href="#company-info"
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm"
+                >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100 text-green-600">
                     <span className="text-xs font-bold">3</span>
                   </div>
                   <span>Company Info</span>
                 </a>
 
-                <a href="#contact-details" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                <a
+                  href="#contact-details"
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm"
+                >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-orange-600">
                     <span className="text-xs font-bold">4</span>
                   </div>
                   <span>Contact Details</span>
                 </a>
 
-                <a href="#social-media" className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm">
+                <a
+                  href="#social-media"
+                  className="flex items-center gap-3 rounded-lg p-3 text-sm font-medium transition-colors hover:bg-white hover:shadow-sm"
+                >
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pink-100 text-pink-600">
                     <span className="text-xs font-bold">5</span>
                   </div>
@@ -3069,14 +3166,21 @@ export default function EditCataloguePage() {
                       <span className="text-lg font-bold">1</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Basic Information</h3>
-                      <p className="text-sm text-gray-500">Essential details about your catalogue</p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Basic Information
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Essential details about your catalogue
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div>
-                      <Label htmlFor="catalogueName" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="catalogueName"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Catalogue Name <span className="text-red-500">*</span>
                       </Label>
                       <Input
@@ -3093,7 +3197,10 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="catalogueDescription" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="catalogueDescription"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Description
                       </Label>
                       <Textarea
@@ -3101,7 +3208,9 @@ export default function EditCataloguePage() {
                         value={catalogue?.description || ''}
                         onChange={e =>
                           setCatalogue(prev =>
-                            prev ? { ...prev, description: e.target.value } : null
+                            prev
+                              ? { ...prev, description: e.target.value }
+                              : null
                           )
                         }
                         placeholder="Describe your catalogue and what makes it special..."
@@ -3112,7 +3221,10 @@ export default function EditCataloguePage() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="catalogueTagline" className="text-sm font-semibold text-gray-700">
+                        <Label
+                          htmlFor="catalogueTagline"
+                          className="text-sm font-semibold text-gray-700"
+                        >
                           Tagline
                         </Label>
                         <Input
@@ -3129,7 +3241,10 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="catalogueYear" className="text-sm font-semibold text-gray-700">
+                        <Label
+                          htmlFor="catalogueYear"
+                          className="text-sm font-semibold text-gray-700"
+                        >
                           Catalogue Year
                         </Label>
                         <Input
@@ -3137,7 +3252,9 @@ export default function EditCataloguePage() {
                           value={(catalogue as any)?.year || ''}
                           onChange={e =>
                             setCatalogue(prev =>
-                              prev ? ({ ...prev, year: e.target.value } as any) : null
+                              prev
+                                ? ({ ...prev, year: e.target.value } as any)
+                                : null
                             )
                           }
                           placeholder="2025"
@@ -3147,7 +3264,10 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="catalogueQuote" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="catalogueQuote"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Quote
                       </Label>
                       <Textarea
@@ -3182,7 +3302,9 @@ export default function EditCataloguePage() {
                           onUpload={files => {
                             if (files.length > 0) {
                               setCatalogue(prev =>
-                                prev ? { ...prev, introImage: files[0].url } : null
+                                prev
+                                  ? { ...prev, introImage: files[0].url }
+                                  : null
                               )
                             }
                           }}
@@ -3229,8 +3351,12 @@ export default function EditCataloguePage() {
                       <span className="text-lg font-bold">2</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Media & Assets</h3>
-                      <p className="text-sm text-gray-500">Upload logos and cover images</p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Media & Assets
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Upload logos and cover images
+                      </p>
                     </div>
                   </div>
 
@@ -3256,21 +3382,23 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          logoUrl: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            logoUrl: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
                             }}
                             onError={error => {
-                              setErrorWithAutoDismiss(`Logo upload failed: ${error}`)
+                              setErrorWithAutoDismiss(
+                                `Logo upload failed: ${error}`
+                              )
                             }}
                             className="mt-2"
                           />
@@ -3292,15 +3420,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          logoUrl: '',
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            logoUrl: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3332,15 +3460,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          coverImageUrl: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            coverImageUrl: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3370,15 +3498,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          coverImageUrl: '',
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            coverImageUrl: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3400,32 +3528,41 @@ export default function EditCataloguePage() {
                       <span className="text-lg font-bold">3</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Company Information</h3>
-                      <p className="text-sm text-gray-500">Tell us about your company</p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Company Information
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Tell us about your company
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div>
-                      <Label htmlFor="companyName" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="companyName"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Company Name
                       </Label>
                       <Input
                         id="companyName"
-                        value={catalogue?.settings?.companyInfo?.companyName || ''}
+                        value={
+                          catalogue?.settings?.companyInfo?.companyName || ''
+                        }
                         onChange={e =>
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  companyInfo: {
-                                    ...(prev.settings?.companyInfo || {}),
-                                    companyName: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    companyInfo: {
+                                      ...(prev.settings?.companyInfo || {}),
+                                      companyName: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -3435,27 +3572,31 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="companyDescription" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="companyDescription"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Company Description
                       </Label>
                       <Textarea
                         id="companyDescription"
                         value={
-                          catalogue?.settings?.companyInfo?.companyDescription || ''
+                          catalogue?.settings?.companyInfo
+                            ?.companyDescription || ''
                         }
                         onChange={e =>
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  companyInfo: {
-                                    ...(prev.settings?.companyInfo || {}),
-                                    companyDescription: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    companyInfo: {
+                                      ...(prev.settings?.companyInfo || {}),
+                                      companyDescription: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -3474,32 +3615,44 @@ export default function EditCataloguePage() {
                       <span className="text-lg font-bold">4</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Contact Details</h3>
-                      <p className="text-sm text-gray-500">How customers can reach you</p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Contact Details
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        How customers can reach you
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div>
-                        <Label htmlFor="contactEmail" className="text-sm font-semibold text-gray-700">Email</Label>
+                        <Label
+                          htmlFor="contactEmail"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Email
+                        </Label>
                         <Input
                           id="contactEmail"
                           type="email"
-                          value={catalogue?.settings?.contactDetails?.email || ''}
+                          value={
+                            catalogue?.settings?.contactDetails?.email || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails || {}),
-                                      email: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        email: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3509,23 +3662,31 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="contactPhone" className="text-sm font-semibold text-gray-700">Phone</Label>
+                        <Label
+                          htmlFor="contactPhone"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Phone
+                        </Label>
                         <Input
                           id="contactPhone"
-                          value={catalogue?.settings?.contactDetails?.phone || ''}
+                          value={
+                            catalogue?.settings?.contactDetails?.phone || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails || {}),
-                                      phone: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        phone: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3535,23 +3696,31 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="contactWebsite" className="text-sm font-semibold text-gray-700">Website</Label>
+                        <Label
+                          htmlFor="contactWebsite"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Website
+                        </Label>
                         <Input
                           id="contactWebsite"
-                          value={catalogue?.settings?.contactDetails?.website || ''}
+                          value={
+                            catalogue?.settings?.contactDetails?.website || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails || {}),
-                                      website: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        website: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3562,26 +3731,31 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="contactAddress" className="text-sm font-semibold text-gray-700">Address</Label>
+                      <Label
+                        htmlFor="contactAddress"
+                        className="text-sm font-semibold text-gray-700"
+                      >
+                        Address
+                      </Label>
                       <Input
                         id="contactAddress"
                         value={
-                          (catalogue?.settings as any)?.contactDetails?.address ||
-                          ''
+                          (catalogue?.settings as any)?.contactDetails
+                            ?.address || ''
                         }
                         onChange={e =>
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  contactDetails: {
-                                    ...(prev.settings as any)?.contactDetails,
-                                    address: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)?.contactDetails,
+                                      address: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -3591,7 +3765,10 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div>
-                      <Label htmlFor="contactDescription" className="text-sm font-semibold text-gray-700">
+                      <Label
+                        htmlFor="contactDescription"
+                        className="text-sm font-semibold text-gray-700"
+                      >
                         Contact Page Description
                       </Label>
                       <Textarea
@@ -3603,12 +3780,12 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  contactDescription: e.target.value,
-                                },
-                              }
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDescription: e.target.value,
+                                  },
+                                }
                               : null
                           )
                         }
@@ -3619,13 +3796,19 @@ export default function EditCataloguePage() {
                     </div>
 
                     <div className="space-y-4">
-                      <h4 className="text-sm font-semibold text-gray-700">Contact Page Customization</h4>
+                      <h4 className="text-sm font-semibold text-gray-700">
+                        Contact Page Customization
+                      </h4>
 
                       <div>
-                        <Label htmlFor="contactImage" className="text-sm font-medium text-gray-600">
+                        <Label
+                          htmlFor="contactImage"
+                          className="text-sm font-medium text-gray-600"
+                        >
                           Contact Image
                         </Label>
-                        {!(catalogue?.settings as any)?.contactDetails?.contactImage ? (
+                        {!(catalogue?.settings as any)?.contactDetails
+                          ?.contactImage ? (
                           <FileUpload
                             uploadType="catalogue"
                             catalogueId={catalogueId}
@@ -3641,15 +3824,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...(prev.settings || {}),
-                                        contactDetails: {
-                                          ...(prev.settings as any)?.contactDetails,
-                                          contactImage: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...(prev.settings || {}),
+                                          contactDetails: {
+                                            ...(prev.settings as any)
+                                              ?.contactDetails,
+                                            contactImage: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3679,15 +3863,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...(prev.settings || {}),
-                                        contactDetails: {
-                                          ...(prev.settings as any)?.contactDetails,
-                                          contactImage: '',
+                                        ...prev,
+                                        settings: {
+                                          ...(prev.settings || {}),
+                                          contactDetails: {
+                                            ...(prev.settings as any)
+                                              ?.contactDetails,
+                                            contactImage: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3699,7 +3884,12 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="contactQuote" className="text-sm font-medium text-gray-600">Contact Quote</Label>
+                        <Label
+                          htmlFor="contactQuote"
+                          className="text-sm font-medium text-gray-600"
+                        >
+                          Contact Quote
+                        </Label>
                         <Textarea
                           id="contactQuote"
                           value={
@@ -3710,15 +3900,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)?.contactDetails,
-                                      contactQuote: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings as any)
+                                          ?.contactDetails,
+                                        contactQuote: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3729,7 +3920,12 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="contactQuoteBy" className="text-sm font-medium text-gray-600">Quote Attribution</Label>
+                        <Label
+                          htmlFor="contactQuoteBy"
+                          className="text-sm font-medium text-gray-600"
+                        >
+                          Quote Attribution
+                        </Label>
                         <Input
                           id="contactQuoteBy"
                           value={
@@ -3740,15 +3936,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)?.contactDetails,
-                                      contactQuoteBy: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings as any)
+                                          ?.contactDetails,
+                                        contactQuoteBy: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3767,31 +3964,42 @@ export default function EditCataloguePage() {
                       <span className="text-lg font-bold">5</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">Social Media</h3>
-                      <p className="text-sm text-gray-500">Connect your social profiles</p>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        Social Media
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        Connect your social profiles
+                      </p>
                     </div>
                   </div>
 
                   <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <Label htmlFor="socialFacebook" className="text-sm font-semibold text-gray-700">Facebook</Label>
+                        <Label
+                          htmlFor="socialFacebook"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Facebook
+                        </Label>
                         <Input
                           id="socialFacebook"
-                          value={catalogue?.settings?.socialMedia?.facebook || ''}
+                          value={
+                            catalogue?.settings?.socialMedia?.facebook || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      facebook: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        facebook: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3801,23 +4009,30 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="socialTwitter" className="text-sm font-semibold text-gray-700">Twitter</Label>
+                        <Label
+                          htmlFor="socialTwitter"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Twitter
+                        </Label>
                         <Input
                           id="socialTwitter"
-                          value={catalogue?.settings?.socialMedia?.twitter || ''}
+                          value={
+                            catalogue?.settings?.socialMedia?.twitter || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      twitter: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        twitter: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3827,23 +4042,30 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="socialInstagram" className="text-sm font-semibold text-gray-700">Instagram</Label>
+                        <Label
+                          htmlFor="socialInstagram"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          Instagram
+                        </Label>
                         <Input
                           id="socialInstagram"
-                          value={catalogue?.settings?.socialMedia?.instagram || ''}
+                          value={
+                            catalogue?.settings?.socialMedia?.instagram || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      instagram: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        instagram: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3853,23 +4075,30 @@ export default function EditCataloguePage() {
                       </div>
 
                       <div>
-                        <Label htmlFor="socialLinkedin" className="text-sm font-semibold text-gray-700">LinkedIn</Label>
+                        <Label
+                          htmlFor="socialLinkedin"
+                          className="text-sm font-semibold text-gray-700"
+                        >
+                          LinkedIn
+                        </Label>
                         <Input
                           id="socialLinkedin"
-                          value={catalogue?.settings?.socialMedia?.linkedin || ''}
+                          value={
+                            catalogue?.settings?.socialMedia?.linkedin || ''
+                          }
                           onChange={e =>
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      linkedin: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        linkedin: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }

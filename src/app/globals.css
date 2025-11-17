@@ -25,8 +25,6 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
   }
-
-
 }
 
 @layer base {
@@ -71,38 +69,39 @@
     margin: 0 !important;
     padding: 0 !important;
   }
-  
-  html, body {
+
+  html,
+  body {
     width: 100% !important;
     height: 100% !important;
     overflow: visible !important;
   }
-  
+
   * {
     box-sizing: border-box !important;
   }
-  
+
   .no-print {
     display: none !important;
   }
-  
+
   .print-break-before {
     page-break-before: always;
   }
-  
+
   .print-break-after {
     page-break-after: always;
   }
-  
+
   .print-break-inside-avoid {
     page-break-inside: avoid;
   }
-  
+
   /* Remove any wrapper padding/margins for PDF */
-  [style*="padding"] {
+  [style*='padding'] {
     padding: 0 !important;
   }
-  
+
   /* Ensure full width for preview containers */
   .preview-container {
     width: 100% !important;
@@ -113,9 +112,9 @@
     box-shadow: none !important;
     border-radius: 0 !important;
   }
-  
+
   /* Remove viewport styling wrapper padding */
-  div[style*="padding"] {
+  div[style*='padding'] {
     padding: 0 !important;
   }
 }
@@ -146,7 +145,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

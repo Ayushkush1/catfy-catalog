@@ -207,7 +207,7 @@ services:
   app:
     build: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/catfy
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -231,7 +231,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
 volumes:
   postgres_data:
@@ -260,26 +260,28 @@ npm install -g pm2
 
 ```javascript
 module.exports = {
-  apps: [{
-    name: 'catfy',
-    script: 'npm',
-    args: 'start',
-    cwd: '/path/to/catfy',
-    env: {
-      NODE_ENV: 'production',
-      PORT: 3000,
-      DATABASE_URL: 'postgresql://username:password@localhost:5432/catfy',
-      // Add other environment variables
+  apps: [
+    {
+      name: 'catfy',
+      script: 'npm',
+      args: 'start',
+      cwd: '/path/to/catfy',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+        DATABASE_URL: 'postgresql://username:password@localhost:5432/catfy',
+        // Add other environment variables
+      },
+      instances: 'max',
+      exec_mode: 'cluster',
+      watch: false,
+      max_memory_restart: '1G',
+      error_file: './logs/err.log',
+      out_file: './logs/out.log',
+      log_file: './logs/combined.log',
+      time: true,
     },
-    instances: 'max',
-    exec_mode: 'cluster',
-    watch: false,
-    max_memory_restart: '1G',
-    error_file: './logs/err.log',
-    out_file: './logs/out.log',
-    log_file: './logs/combined.log',
-    time: true
-  }]
+  ],
 }
 ```
 
@@ -420,15 +422,16 @@ tar -czf files_backup_$(date +%Y%m%d).tar.gz public/uploads/
 ### Performance Optimization
 
 1. **Enable Caching**
+
    ```javascript
    // next.config.js
    module.exports = {
      experimental: {
-       serverComponentsExternalPackages: ['@prisma/client']
+       serverComponentsExternalPackages: ['@prisma/client'],
      },
      images: {
-       domains: ['your-supabase-url.supabase.co']
-     }
+       domains: ['your-supabase-url.supabase.co'],
+     },
    }
    ```
 
@@ -457,6 +460,7 @@ tar -czf files_backup_$(date +%Y%m%d).tar.gz public/uploads/
 ## Support
 
 For deployment issues:
+
 - Check the [troubleshooting guide](../README.md#troubleshooting)
 - Open an issue on GitHub
 - Contact support at support@catfy.com

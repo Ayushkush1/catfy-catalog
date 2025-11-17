@@ -5,6 +5,7 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 ## Features
 
 ### Core Features
+
 - 🏪 **Multi-tenant Catalogue Management** - Create and manage multiple product catalogues with unlimited products
 - 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile devices
 - 🎨 **Advanced Theme Customization** - Multiple pre-built themes with extensive customization options
@@ -18,6 +19,7 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 - 🔧 **Admin Dashboard** - Comprehensive admin panel for user and platform management
 
 ### Advanced Customization
+
 - 🎨 **Style Customizer** - Real-time visual customization with color picker, typography, and spacing controls
 - 🖌️ **Font Customization** - Choose from multiple font families with size and weight controls
 - 📐 **Layout Controls** - Adjust padding, margins, gaps, and spacing for perfect layouts
@@ -25,6 +27,7 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 - 🌈 **Color Management** - Comprehensive color customization for all UI elements
 
 ### Business Features
+
 - 💼 **Multi-tier Subscriptions** - Free, Standard, Professional, and Business plans
 - 🏢 **Business Account Support** - Enhanced features for business users
 - 📈 **Usage Analytics** - Track subscription usage and limits
@@ -32,6 +35,7 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 - 📧 **Email Integration** - Automated notifications and team invitations
 
 ### Technical Features
+
 - ⚡ **Server-Side Rendering** - Fast page loads with Next.js 14 App Router
 - 🔐 **Secure Authentication** - Supabase Auth with role-based access control
 - 🗄️ **Database** - PostgreSQL with Prisma ORM and optimized queries
@@ -80,7 +84,7 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database (or Supabase account)
 - Stripe account (for payments)
 - Git
@@ -88,59 +92,66 @@ A modern, full-stack digital catalogue platform built with Next.js, TypeScript, 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/catfy.git
    cd catfy
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install --legacy-peer-deps
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Fill in your environment variables:
+
    ```env
    # Database
    DATABASE_URL="postgresql://username:password@localhost:5432/catfy?schema=public"
-   
+
    # Supabase
    NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
    NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
    SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
-   
+
    # Stripe
    STRIPE_SECRET_KEY="sk_test_..."
    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
    STRIPE_WEBHOOK_SECRET="whsec_..."
-   
+
    # App Configuration
    NEXT_PUBLIC_APP_URL="http://localhost:3000"
    NEXTAUTH_SECRET="your-nextauth-secret"
    ```
 
 4. **Set up the database**
+
    ```bash
    # Generate Prisma client
    npx prisma generate
-   
+
    # Run migrations
    npx prisma migrate dev
-   
+
    # Seed the database
    npm run db:seed
    ```
 
 5. **Install Playwright browsers**
+
    ```bash
    npx playwright install
    ```
 
 6. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -220,6 +231,7 @@ catfy/
 The API provides comprehensive endpoints organized into the following categories:
 
 ### Authentication & User Management
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User authentication
 - `GET /api/auth/session` - Session validation
@@ -227,6 +239,7 @@ The API provides comprehensive endpoints organized into the following categories
 - `GET /api/user/subscription` - Get subscription status
 
 ### Catalogue Management
+
 - `GET /api/catalogues` - List user catalogues
 - `POST /api/catalogues` - Create new catalogue
 - `GET /api/catalogues/[id]` - Get catalogue details
@@ -235,6 +248,7 @@ The API provides comprehensive endpoints organized into the following categories
 - `POST /api/catalogues/[id]/duplicate` - Duplicate catalogue
 
 ### Product Management
+
 - `GET /api/catalogues/[id]/products` - List catalogue products
 - `POST /api/catalogues/[id]/products` - Add product to catalogue
 - `PUT /api/products/[id]` - Update product details
@@ -242,40 +256,47 @@ The API provides comprehensive endpoints organized into the following categories
 - `POST /api/products/[id]/upload-image` - Upload product image
 
 ### Template & Theming
+
 - `GET /api/templates` - List available templates
 - `GET /api/themes` - List available themes
 - `PUT /api/catalogues/[id]/theme` - Update catalogue theme
 - `POST /api/catalogues/[id]/customize` - Apply custom styling
 
 ### Team Collaboration
+
 - `GET /api/catalogues/[id]/team` - List team members
 - `POST /api/catalogues/[id]/invite` - Invite team member
 - `PUT /api/team/[id]/role` - Update member role
 - `DELETE /api/team/[id]` - Remove team member
 
 ### Subscription & Billing
+
 - `GET /api/subscription/plans` - List subscription plans
 - `POST /api/subscription/checkout` - Create checkout session
 - `POST /api/subscription/upgrade` - Upgrade subscription
 - `GET /api/billing/history` - Get billing history
 
 ### Analytics & Reporting
+
 - `GET /api/analytics/overview` - Dashboard analytics
 - `GET /api/analytics/catalogues/[id]` - Catalogue-specific metrics
 - `POST /api/analytics/track` - Track user events
 
 ### Admin (Admin users only)
+
 - `GET /api/admin/stats` - System statistics
 - `GET /api/admin/users` - List all users
 - `GET /api/admin/catalogues` - List all catalogues
 - `PUT /api/admin/users/[id]` - Update user status
 
 ### Export & Generation
+
 - `POST /api/catalogues/[id]/generate-pdf` - Generate PDF catalogue
 - `GET /api/catalogues/[id]/preview` - Get catalogue preview
 - `POST /api/catalogues/[id]/export` - Export catalogue data
 
 ### AI Features
+
 - `POST /api/ai/generate-description` - AI product descriptions
 - `POST /api/ai/smart-sort` - Smart product sorting
 - `POST /api/ai/suggest-tags` - AI tag suggestions
@@ -287,18 +308,20 @@ For detailed API documentation with request/response schemas, see [docs/api.md](
 ### Development Workflow
 
 1. **Start the development server**
+
    ```bash
    npm run dev
    ```
 
 2. **Run in development mode with database**
+
    ```bash
    # Start database (if using Docker)
    docker-compose up -d postgres
-   
+
    # Run migrations
    npx prisma migrate dev
-   
+
    # Start the app
    npm run dev
    ```
@@ -408,11 +431,13 @@ npm run type-check
 ### Manual Deployment
 
 1. **Build the application**
+
    ```bash
    npm run build
    ```
 
 2. **Set up production database**
+
    ```bash
    npx prisma migrate deploy
    npx prisma db seed
@@ -425,18 +450,18 @@ npm run type-check
 
 ## Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Yes |
-| `STRIPE_SECRET_KEY` | Stripe secret key | Yes |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | Yes |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook secret | Yes |
-| `NEXT_PUBLIC_APP_URL` | Application URL | Yes |
-| `NEXTAUTH_SECRET` | NextAuth secret | Yes |
-| `PLAYWRIGHT_HEADLESS` | Run Playwright in headless mode | No |
+| Variable                             | Description                     | Required |
+| ------------------------------------ | ------------------------------- | -------- |
+| `DATABASE_URL`                       | PostgreSQL connection string    | Yes      |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Supabase project URL            | Yes      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Supabase anonymous key          | Yes      |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Supabase service role key       | Yes      |
+| `STRIPE_SECRET_KEY`                  | Stripe secret key               | Yes      |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key          | Yes      |
+| `STRIPE_WEBHOOK_SECRET`              | Stripe webhook secret           | Yes      |
+| `NEXT_PUBLIC_APP_URL`                | Application URL                 | Yes      |
+| `NEXTAUTH_SECRET`                    | NextAuth secret                 | Yes      |
+| `PLAYWRIGHT_HEADLESS`                | Run Playwright in headless mode | No       |
 
 ### Production Environment Setup
 

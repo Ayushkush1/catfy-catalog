@@ -449,14 +449,14 @@ export function StyleCustomizer({
         if (newContent.catalogue) {
           newContent.catalogue.name = editValues.name
         } else {
-          ; (newContent as any).name = editValues.name
+          ;(newContent as any).name = editValues.name
         }
         break
       case 'description':
         if (newContent.catalogue) {
           newContent.catalogue.description = editValues.description
         } else {
-          ; (newContent as any).description = editValues.description
+          ;(newContent as any).description = editValues.description
         }
         break
       case 'companyName':
@@ -577,13 +577,13 @@ export function StyleCustomizer({
         }
         break
       case 'newCollectionTitle':
-        ; (newContent as any).newCollection = {
+        ;(newContent as any).newCollection = {
           ...(newContent as any).newCollection,
           title: editValues.newCollectionTitle,
         }
         break
       case 'newCollectionDescription':
-        ; (newContent as any).newCollection = {
+        ;(newContent as any).newCollection = {
           ...(newContent as any).newCollection,
           description: editValues.newCollectionDescription,
         }
@@ -1132,7 +1132,7 @@ export function StyleCustomizer({
                     <SelectValue>
                       {getFontDisplayName(
                         fontCustomization.fontFamily?.title ||
-                        'Inter, sans-serif'
+                          'Inter, sans-serif'
                       )}
                     </SelectValue>
                   </SelectTrigger>
@@ -1164,7 +1164,7 @@ export function StyleCustomizer({
                     <SelectValue>
                       {getFontDisplayName(
                         fontCustomization.fontFamily?.companyName ||
-                        'Inter, sans-serif'
+                          'Inter, sans-serif'
                       )}
                     </SelectValue>
                   </SelectTrigger>
@@ -1195,7 +1195,7 @@ export function StyleCustomizer({
                     <SelectValue>
                       {getFontDisplayName(
                         fontCustomization.fontFamily?.price ||
-                        'Inter, sans-serif'
+                          'Inter, sans-serif'
                       )}
                     </SelectValue>
                   </SelectTrigger>
@@ -1229,7 +1229,7 @@ export function StyleCustomizer({
                     <SelectValue>
                       {getFontDisplayName(
                         fontCustomization.fontFamily?.productDescription ||
-                        'Inter, sans-serif'
+                          'Inter, sans-serif'
                       )}
                     </SelectValue>
                   </SelectTrigger>
@@ -1261,7 +1261,7 @@ export function StyleCustomizer({
                     <SelectValue>
                       {getFontDisplayName(
                         fontCustomization.fontFamily?.description ||
-                        'Inter, sans-serif'
+                          'Inter, sans-serif'
                       )}
                     </SelectValue>
                   </SelectTrigger>
@@ -1435,7 +1435,7 @@ export function StyleCustomizer({
                     value={[
                       parseInt(
                         fontCustomization.fontWeight?.productDescription ||
-                        '400'
+                          '400'
                       ),
                     ]}
                     onValueChange={([value]) =>
@@ -1684,12 +1684,12 @@ export function StyleCustomizer({
                           Product Description
                         </Label>
                         {editingField ===
-                          `product-description-${product.id}` ? (
+                        `product-description-${product.id}` ? (
                           <div className="flex gap-2">
                             <textarea
                               value={
                                 editValues[
-                                `product-description-${product.id}`
+                                  `product-description-${product.id}`
                                 ] || ''
                               }
                               onChange={e =>

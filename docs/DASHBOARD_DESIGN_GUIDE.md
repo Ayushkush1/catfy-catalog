@@ -3,6 +3,7 @@
 ## Color Palette
 
 ### Primary Colors
+
 ```
 Purple Gradient: from-[#2D1B69] to-[#6366F1]
 Background: #F7F8FC (light gray-blue)
@@ -10,6 +11,7 @@ Card Background: #FFFFFF
 ```
 
 ### Accent Colors
+
 ```
 Blue Stats:    #2784e0 (with gradient to #43d8a9)
 Emerald:       #10B981 (success indicators)
@@ -18,6 +20,7 @@ Purple Accent: #8B5CF6 (highlights)
 ```
 
 ### Text Colors
+
 ```
 Headings: text-gray-900 (#111827)
 Body:     text-gray-600 (#4B5563)
@@ -27,6 +30,7 @@ Muted:    text-gray-500 (#6B7280)
 ## Component Styles
 
 ### Sidebar
+
 ```tsx
 - Width: 264px (w-64)
 - Position: fixed left
@@ -39,6 +43,7 @@ Muted:    text-gray-500 (#6B7280)
 ```
 
 ### Stats Cards
+
 ```tsx
 - Border Radius: rounded-3xl
 - Shadow: shadow-lg
@@ -50,6 +55,7 @@ Muted:    text-gray-500 (#6B7280)
 ```
 
 ### Quick Action Buttons
+
 ```tsx
 - Border Radius: rounded-2xl
 - Padding: py-6
@@ -60,6 +66,7 @@ Muted:    text-gray-500 (#6B7280)
 ```
 
 ### Activity Graph
+
 ```tsx
 - Bar: rounded-t-xl
 - Gradient: from-[#6366F1] to-[#8B5CF6]
@@ -71,23 +78,27 @@ Muted:    text-gray-500 (#6B7280)
 ## Layout Grid
 
 ### Main Container
+
 ```tsx
-className="flex min-h-screen bg-[#F7F8FC]"
+className = 'flex min-h-screen bg-[#F7F8FC]'
 ```
 
 ### Content Area (with Sidebar)
+
 ```tsx
-className="ml-64 flex-1"
+className = 'ml-64 flex-1'
 ```
 
 ### Stats Grid
+
 ```tsx
-className="grid grid-cols-1 gap-6 md:grid-cols-4"
+className = 'grid grid-cols-1 gap-6 md:grid-cols-4'
 ```
 
 ### Main Content Grid
+
 ```tsx
-className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+className = 'grid grid-cols-1 gap-6 lg:grid-cols-3'
 // Left: lg:col-span-2 (66%)
 // Right: 1 column (33%)
 ```
@@ -95,16 +106,19 @@ className="grid grid-cols-1 gap-6 lg:grid-cols-3"
 ## Animation Classes
 
 ### Hover Lift
+
 ```css
 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg
 ```
 
 ### Hover Glow
+
 ```css
 transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5
 ```
 
 ### Icon Scale
+
 ```css
 transition-transform duration-300 group-hover:scale-110
 ```
@@ -121,6 +135,7 @@ Stats card padding: p-5
 ## Typography
 
 ### Headings
+
 ```
 H1: text-3xl font-bold
 H2: text-xl font-bold
@@ -128,6 +143,7 @@ H3: text-lg font-semibold
 ```
 
 ### Body
+
 ```
 Large: text-sm
 Regular: text-xs
@@ -147,18 +163,23 @@ Tiny: h-3 w-3
 ## Badge Styles
 
 ### Percentage Badge
+
 ```tsx
-className="bg-blue-100 text-xs text-blue-700 hover:bg-blue-100"
+className = 'bg-blue-100 text-xs text-blue-700 hover:bg-blue-100'
 ```
 
 ### Coming Soon
+
 ```tsx
-className="rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700"
+className =
+  'rounded-full px-2 py-0.5 text-xs font-semibold bg-amber-100 text-amber-700'
 ```
 
 ### Plan Badge
+
 ```tsx
-className="border-amber-200 bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-700"
+className =
+  'border-amber-200 bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-700'
 ```
 
 ## Shadow Layers
@@ -184,12 +205,14 @@ Full:    rounded-full
 ## Gradient Patterns
 
 ### Primary Gradient
+
 ```tsx
 bg-gradient-to-r from-[#2D1B69] to-[#6366F1]
 bg-gradient-to-br from-[#2D1B69] to-[#6366F1]
 ```
 
 ### Stats Gradients
+
 ```tsx
 // Blue-Purple
 bg-gradient-to-br from-blue-100 to-purple-100
@@ -197,7 +220,7 @@ bg-gradient-to-br from-blue-100 to-purple-100
 // Emerald-Teal
 bg-gradient-to-br from-emerald-100 to-teal-100
 
-// Amber-Orange  
+// Amber-Orange
 bg-gradient-to-br from-amber-100 to-orange-100
 
 // Purple-Pink
@@ -205,6 +228,7 @@ bg-gradient-to-br from-purple-100 to-pink-100
 ```
 
 ### Icon Backgrounds
+
 ```tsx
 bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3]
 ```
@@ -221,9 +245,10 @@ Wide: xl: (> 1280px)
 ## Usage Examples
 
 ### Create a Stat Card
+
 ```tsx
 <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-  <div className="absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 transform">
+  <div className="absolute right-0 top-0 h-32 w-32 -translate-y-8 translate-x-8 transform">
     <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20"></div>
   </div>
   <CardContent className="relative p-6">
@@ -243,6 +268,7 @@ Wide: xl: (> 1280px)
 ```
 
 ### Create a Sidebar Item
+
 ```tsx
 <Link
   href={href}

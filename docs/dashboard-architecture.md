@@ -1,11 +1,13 @@
 # Dashboard Architecture
 
 ## Overview
+
 The dashboard has been restructured into a main hub dashboard and tool-specific dashboards to provide better organization and user experience.
 
 ## Structure
 
 ### Main Dashboard (`/dashboard`)
+
 - **Purpose**: Central hub showing all available tools
 - **Features**:
   - Welcome section with user greeting
@@ -15,9 +17,11 @@ The dashboard has been restructured into a main hub dashboard and tool-specific 
   - First-time user onboarding guide
 
 ### Tool-Specific Dashboards
+
 Each tool has its own dedicated dashboard showing tool-specific features and content.
 
 #### Catalogue Dashboard (`/dashboard/catalogue`)
+
 - **Purpose**: Manage product catalogues
 - **Features**:
   - Catalogue-specific stats (catalogues, products, views, exports)
@@ -41,23 +45,27 @@ Login → Main Dashboard (/dashboard)
 ## Components
 
 ### Breadcrumb (`/components/dashboard/Breadcrumb.tsx`)
+
 - Shows navigation path
 - Supports light/dark variants
 - Auto-hides on main dashboard
 
 ### ToolCard (`/components/dashboard/ToolCard.tsx`)
+
 - Displays tool information
 - Shows stats and features
 - Handles active/inactive states
 - "Coming Soon" support
 
 ### OnboardingGuide (`/components/dashboard/OnboardingGuide.tsx`)
+
 - First-time user tour
 - 3-step introduction
 - Skippable
 - Stored in localStorage
 
 ### ToolSwitcher (`/components/dashboard/ToolSwitcher.tsx`)
+
 - Quick tool switching dropdown
 - Shows current active tool
 - Links back to main dashboard
@@ -65,20 +73,24 @@ Login → Main Dashboard (/dashboard)
 ## User Experience
 
 ### First-Time Users
+
 1. Login → Onboarding guide appears
 2. 3-step tour of the platform
 3. Tool selection from main dashboard
 4. Start creating
 
 ### Returning Users
+
 1. Login → Main dashboard with recent activity
 2. Quick access to last used tool
 3. Or select different tool
 
 ## Future Tools
+
 To add a new tool:
 
 1. **Add Tool Definition** in `/dashboard/page.tsx`:
+
 ```typescript
 {
   id: 'new-tool',
@@ -100,6 +112,7 @@ To add a new tool:
 2. **Create Tool Dashboard** at `/app/dashboard/{tool}/page.tsx`
 
 3. **Update ToolSwitcher** in `/components/dashboard/ToolSwitcher.tsx`:
+
 ```typescript
 {
   id: 'new-tool',

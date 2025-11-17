@@ -251,7 +251,10 @@ export default function BillingPage() {
     return (
       <div className="flex min-h-screen bg-[#E8EAF6]">
         <div className="ml-32 flex-1">
-          <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
+          <DashboardHeader
+            title="Billing & Plans"
+            subtitle="Manage your subscription and billing information"
+          />
           <div className="p-8">
             <div className="space-y-6">
               <Skeleton className="h-48 w-full rounded-xl" />
@@ -270,9 +273,11 @@ export default function BillingPage() {
   return (
     <div className="flex min-h-screen bg-[#E8EAF6]">
       <div className="ml-32 flex-1">
-        <DashboardHeader title="Billing & Plans" subtitle="Manage your subscription and billing information" />
+        <DashboardHeader
+          title="Billing & Plans"
+          subtitle="Manage your subscription and billing information"
+        />
         <div className="p-8">
-
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
@@ -282,14 +287,17 @@ export default function BillingPage() {
 
           {/* Current Subscription */}
           {profile?.subscription && (
-            <Card className="border-0 shadow-lg mb-8 bg-gradient-to-br from-purple-50 to-blue-50">
+            <Card className="mb-8 border-0 bg-gradient-to-br from-purple-50 to-blue-50 shadow-lg">
               <CardContent className="p-8">
-                <div className="flex items-start justify-between mb-6">
+                <div className="mb-6 flex items-start justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${profile.subscription.plan === 'FREE'
-                        ? 'from-gray-400 to-gray-500'
-                        : 'from-[#6366F1] to-[#8B5CF6]'
-                      } flex items-center justify-center shadow-lg`}>
+                    <div
+                      className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
+                        profile.subscription.plan === 'FREE'
+                          ? 'from-gray-400 to-gray-500'
+                          : 'from-[#6366F1] to-[#8B5CF6]'
+                      } flex items-center justify-center shadow-lg`}
+                    >
                       {profile.subscription.plan === 'FREE' ? (
                         <Zap className="h-8 w-8 text-white" />
                       ) : (
@@ -297,7 +305,7 @@ export default function BillingPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                      <h3 className="mb-1 text-2xl font-bold text-gray-900">
                         {profile.subscription.plan === 'FREE'
                           ? 'Free Plan'
                           : profile.subscription.plan === 'MONTHLY'
@@ -311,13 +319,19 @@ export default function BillingPage() {
                               ? 'default'
                               : 'destructive'
                           }
-                          className={profile.subscription.status === 'ACTIVE' ? 'bg-green-500' : ''}
+                          className={
+                            profile.subscription.status === 'ACTIVE'
+                              ? 'bg-green-500'
+                              : ''
+                          }
                         >
                           {profile.subscription.status}
                         </Badge>
                         {profile.subscription.plan !== 'FREE' && (
                           <span className="text-sm text-gray-600">
-                            {profile.subscription.plan === 'MONTHLY' ? '$9.99/month' : '$99.99/year'}
+                            {profile.subscription.plan === 'MONTHLY'
+                              ? '$9.99/month'
+                              : '$99.99/year'}
                           </span>
                         )}
                       </div>
@@ -342,26 +356,39 @@ export default function BillingPage() {
                 </div>
 
                 {profile.subscription.plan !== 'FREE' && (
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 bg-white rounded-lg p-4">
+                  <div className="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 md:grid-cols-2">
                     <div className="flex items-center gap-3">
                       <Calendar className="h-5 w-5 text-purple-600" />
                       <div>
-                        <Label className="text-xs font-medium text-gray-500">Current Period</Label>
+                        <Label className="text-xs font-medium text-gray-500">
+                          Current Period
+                        </Label>
                         <div className="text-sm font-medium text-gray-900">
-                          {format(new Date(profile.subscription.currentPeriodStart), 'MMM d, yyyy')} -{' '}
-                          {format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')}
+                          {format(
+                            new Date(profile.subscription.currentPeriodStart),
+                            'MMM d, yyyy'
+                          )}{' '}
+                          -{' '}
+                          {format(
+                            new Date(profile.subscription.currentPeriodEnd),
+                            'MMM d, yyyy'
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Sparkles className="h-5 w-5 text-purple-600" />
                       <div>
-                        <Label className="text-xs font-medium text-gray-500">Next Billing</Label>
+                        <Label className="text-xs font-medium text-gray-500">
+                          Next Billing
+                        </Label>
                         <div className="text-sm font-medium text-gray-900">
                           {profile.subscription.cancelAtPeriodEnd
                             ? 'Cancels at period end'
-                            : format(new Date(profile.subscription.currentPeriodEnd), 'MMM d, yyyy')
-                          }
+                            : format(
+                                new Date(profile.subscription.currentPeriodEnd),
+                                'MMM d, yyyy'
+                              )}
                         </div>
                       </div>
                     </div>
@@ -389,7 +416,9 @@ export default function BillingPage() {
                     <Input
                       placeholder="Enter coupon code"
                       value={couponCode}
-                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      onChange={e =>
+                        setCouponCode(e.target.value.toUpperCase())
+                      }
                       onBlur={validateCoupon}
                     />
                   </div>
@@ -412,7 +441,9 @@ export default function BillingPage() {
           )}
 
           {/* Pricing Plans */}
-          <h3 className="text-xl font-bold text-gray-900 mb-6">Available Plans</h3>
+          <h3 className="mb-6 text-xl font-bold text-gray-900">
+            Available Plans
+          </h3>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {pricingPlans.map(plan => {
               const isCurrentPlan = profile?.subscription?.plan === plan.id
@@ -421,12 +452,13 @@ export default function BillingPage() {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative border-0 shadow-lg hover:shadow-xl transition-all ${plan.popular ? 'ring-2 ring-purple-500' : ''
-                    } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
+                  className={`relative border-0 shadow-lg transition-all hover:shadow-xl ${
+                    plan.popular ? 'ring-2 ring-purple-500' : ''
+                  } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
                 >
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 transform">
-                      <Badge className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white border-0">
+                      <Badge className="border-0 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white">
                         Most Popular
                       </Badge>
                     </div>
@@ -442,10 +474,13 @@ export default function BillingPage() {
 
                   <CardHeader className="pb-4 text-center">
                     <div className="mb-4 flex justify-center">
-                      <div className={`h-16 w-16 rounded-xl bg-gradient-to-br ${plan.id === 'FREE'
-                          ? 'from-gray-400 to-gray-500'
-                          : 'from-[#6366F1] to-[#8B5CF6]'
-                        } flex items-center justify-center shadow-lg`}>
+                      <div
+                        className={`h-16 w-16 rounded-xl bg-gradient-to-br ${
+                          plan.id === 'FREE'
+                            ? 'from-gray-400 to-gray-500'
+                            : 'from-[#6366F1] to-[#8B5CF6]'
+                        } flex items-center justify-center shadow-lg`}
+                      >
                         {plan.id === 'FREE' ? (
                           <Zap className="h-8 w-8 text-white" />
                         ) : (
@@ -517,7 +552,9 @@ export default function BillingPage() {
                         <Button
                           className="w-full"
                           onClick={() =>
-                            createCheckoutSession(plan.id as 'MONTHLY' | 'YEARLY')
+                            createCheckoutSession(
+                              plan.id as 'MONTHLY' | 'YEARLY'
+                            )
                           }
                           disabled={isProcessing}
                         >
@@ -544,17 +581,19 @@ export default function BillingPage() {
           </div>
 
           {/* FAQ or Additional Info */}
-          <Card className="mt-8 border-0 shadow-lg bg-gradient-to-br from-blue-50 to-purple-50">
+          <Card className="mt-8 border-0 bg-gradient-to-br from-blue-50 to-purple-50 shadow-lg">
             <CardContent className="p-8">
               <div className="flex items-start gap-4">
-                <Shield className="h-12 w-12 text-purple-600 flex-shrink-0" />
+                <Shield className="h-12 w-12 flex-shrink-0 text-purple-600" />
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-900">
                     Secure Billing with Stripe
                   </h3>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                      <h4 className="mb-2 font-medium text-gray-900">Payment & Security</h4>
+                      <h4 className="mb-2 font-medium text-gray-900">
+                        Payment & Security
+                      </h4>
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li>• Secure payments powered by Stripe</li>
                         <li>• Cancel anytime, no hidden fees</li>
@@ -564,7 +603,9 @@ export default function BillingPage() {
                     </div>
 
                     <div>
-                      <h4 className="mb-2 font-medium text-gray-900">Need Help?</h4>
+                      <h4 className="mb-2 font-medium text-gray-900">
+                        Need Help?
+                      </h4>
                       <ul className="space-y-1 text-sm text-gray-600">
                         <li>• Contact support for billing questions</li>
                         <li>• View detailed invoices in billing portal</li>

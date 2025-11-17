@@ -43,7 +43,10 @@ interface DashboardHeaderProps {
   subtitle?: string
 }
 
-export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) {
+export function DashboardHeader({
+  title,
+  subtitle,
+}: DashboardHeaderProps = {}) {
   const [search, setSearch] = useState('')
   const searchDebounceRef = useRef<number | null>(null)
   const [user, setUser] = useState<any>(null)
@@ -68,29 +71,42 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
               setIsAdmin(parsed.isAdmin || false)
               setProfile(parsed.profile || null)
               setIsLoading(false)
-                // background refresh
-                ; (async () => {
-                  try {
-                    const {
-                      data: { user },
-                    } = await supabase.auth.getUser()
-                    const adminStatus = await isClientAdmin()
-                    const response = await fetch('/api/auth/profile')
-                    if (response.ok) {
-                      const data = await response.json()
-                      if (adminStatus) {
-                        setProfile({ ...data.profile, subscriptionPlan: 'BUSINESS' })
-                      } else {
-                        setProfile(data.profile)
-                      }
-                      setIsAdmin(adminStatus)
-                      setUser(user)
-                      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), isAdmin: adminStatus, profile: data.profile || null, user })) } catch (e) { }
+              // background refresh
+              ;(async () => {
+                try {
+                  const {
+                    data: { user },
+                  } = await supabase.auth.getUser()
+                  const adminStatus = await isClientAdmin()
+                  const response = await fetch('/api/auth/profile')
+                  if (response.ok) {
+                    const data = await response.json()
+                    if (adminStatus) {
+                      setProfile({
+                        ...data.profile,
+                        subscriptionPlan: 'BUSINESS',
+                      })
+                    } else {
+                      setProfile(data.profile)
                     }
-                  } catch (e) {
-                    /* ignore */
+                    setIsAdmin(adminStatus)
+                    setUser(user)
+                    try {
+                      sessionStorage.setItem(
+                        CACHE_KEY,
+                        JSON.stringify({
+                          _ts: Date.now(),
+                          isAdmin: adminStatus,
+                          profile: data.profile || null,
+                          user,
+                        })
+                      )
+                    } catch (e) {}
                   }
-                })()
+                } catch (e) {
+                  /* ignore */
+                }
+              })()
               return
             }
           }
@@ -116,7 +132,17 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
             } else {
               setProfile(data.profile)
             }
-            try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), isAdmin: adminStatus, profile: data.profile || null, user })) } catch (e) { }
+            try {
+              sessionStorage.setItem(
+                CACHE_KEY,
+                JSON.stringify({
+                  _ts: Date.now(),
+                  isAdmin: adminStatus,
+                  profile: data.profile || null,
+                  user,
+                })
+              )
+            } catch (e) {}
           }
         }
       } catch (error) {
@@ -136,14 +162,17 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
     }
     searchDebounceRef.current = window.setTimeout(() => {
       try {
-        window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: search } }))
+        window.dispatchEvent(
+          new CustomEvent('dashboard:search', { detail: { query: search } })
+        )
       } catch (e) {
         // ignore
       }
     }, 300)
 
     return () => {
-      if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
+      if (searchDebounceRef.current)
+        window.clearTimeout(searchDebounceRef.current)
     }
   }, [search])
 
@@ -235,7 +264,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
   }
 
   return (
-    <header className="bg-transparent border-none">
+    <header className="border-none bg-transparent">
       <div className="px-8 py-6">
         <div className="flex items-center justify-between">
           {/* Left Section - Title or Greeting */}
@@ -243,14 +272,18 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
             {title ? (
               <>
                 <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-                {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
+                {subtitle && (
+                  <p className="text-sm text-gray-600">{subtitle}</p>
+                )}
               </>
             ) : (
               <>
                 <h1 className="text-2xl font-bold text-gray-900">
                   {getGreeting()}, {profile?.fullName?.split(' ')[0] || 'David'}
                 </h1>
-                <p className="text-sm text-gray-600">Your weekly creative update</p>
+                <p className="text-sm text-gray-600">
+                  Your weekly creative update
+                </p>
               </>
             )}
           </div>
@@ -263,21 +296,29 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
               <Input
                 type="search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => {
                   if (e.key === 'Enter') {
                     // immediate dispatch for in-page filtering (no URL navigation)
-                    if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
+                    if (searchDebounceRef.current)
+                      window.clearTimeout(searchDebounceRef.current)
                     try {
-                      window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: search } }))
-                    } catch (err) { }
+                      window.dispatchEvent(
+                        new CustomEvent('dashboard:search', {
+                          detail: { query: search },
+                        })
+                      )
+                    } catch (err) {}
                     // scroll to tools section on Enter so results are visible
                     try {
                       const el = document.getElementById('tools-section')
                       if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                          // ensure focus for screen readers
-                          ; (el as HTMLElement).focus()
+                        el.scrollIntoView({
+                          behavior: 'smooth',
+                          block: 'start',
+                        })
+                        // ensure focus for screen readers
+                        ;(el as HTMLElement).focus()
 
                         // rely on smooth scroll + focus; no temporary highlight
                       }
@@ -287,7 +328,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
                   }
                 }}
                 placeholder="Search here"
-                className="w-64 rounded-lg border-gray-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-purple-300 focus:ring-purple-300"
+                className="w-64 rounded-lg border-gray-200 bg-white py-2 pl-10 pr-4 text-sm focus:border-purple-300 focus:ring-purple-300"
                 aria-label="Search catalogues"
               />
               {search ? (
@@ -295,13 +336,16 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
                   onClick={() => {
                     setSearch('')
                     try {
-                      window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: '' } }))
-                    } catch (err) { }
+                      window.dispatchEvent(
+                        new CustomEvent('dashboard:search', {
+                          detail: { query: '' },
+                        })
+                      )
+                    } catch (err) {}
                   }}
                   className="absolute right-10 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:text-gray-700"
                   aria-label="Clear search"
-                >
-                </button>
+                ></button>
               ) : null}
             </div>
 
@@ -314,8 +358,6 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
             </Button>
-
-
 
             {/* Profile Dropdown */}
             <DropdownMenu>
@@ -360,9 +402,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
                         <div className="mt-1 flex items-center space-x-1">
                           <Crown className="h-3 w-3 text-purple-600" />
                           <span className="text-xs font-medium text-purple-600">
-                            {profile.subscriptionPlan
-                              .charAt(0)
-                              .toUpperCase() +
+                            {profile.subscriptionPlan.charAt(0).toUpperCase() +
                               profile.subscriptionPlan.slice(1)}{' '}
                             Plan
                           </span>

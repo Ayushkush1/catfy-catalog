@@ -199,7 +199,7 @@ export function UnifiedTemplateSelector({
               alt={template.name}
               className="h-full w-full object-cover"
               onError={e => {
-                ; (e.target as HTMLImageElement).src =
+                ;(e.target as HTMLImageElement).src =
                   '/templates/default-preview.svg'
               }}
             />
@@ -314,7 +314,7 @@ export function UnifiedTemplateSelector({
                 placeholder="Search templates..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-10 border-0 shadow-lg"
+                className="border-0 pl-10 shadow-lg"
               />
             </div>
           )}

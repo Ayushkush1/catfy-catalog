@@ -52,6 +52,7 @@ POST /api/auth/signup
 ```
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -63,6 +64,7 @@ POST /api/auth/signup
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -86,6 +88,7 @@ POST /api/auth/signin
 ```
 
 **Request Body:**
+
 ```json
 {
   "email": "user@example.com",
@@ -100,6 +103,7 @@ POST /api/auth/signout
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -113,6 +117,7 @@ GET /api/profile
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -142,6 +147,7 @@ PUT /api/profile
 ```
 
 **Request Body:**
+
 ```json
 {
   "firstName": "John",
@@ -164,12 +170,14 @@ GET /api/catalogues
 ```
 
 **Query Parameters:**
+
 - `page` (optional): Page number (default: 1)
 - `limit` (optional): Items per page (default: 10)
 - `search` (optional): Search term
 - `status` (optional): Filter by status (DRAFT, PUBLISHED)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -204,6 +212,7 @@ POST /api/catalogues
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "My New Catalogue",
@@ -228,6 +237,7 @@ GET /api/catalogues/{id}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -297,6 +307,7 @@ POST /api/catalogues/{catalogueId}/products
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "Product Name",
@@ -346,6 +357,7 @@ POST /api/catalogues/{catalogueId}/categories
 ```
 
 **Request Body:**
+
 ```json
 {
   "name": "Category Name",
@@ -375,12 +387,14 @@ POST /api/upload
 ```
 
 **Request:** Multipart form data
+
 - `files`: File(s) to upload
 - `type`: Upload type ("catalogue", "product", "profile")
 - `catalogueId` (optional): Catalogue ID for catalogue/product uploads
 - `productId` (optional): Product ID for product uploads
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -406,6 +420,7 @@ DELETE /api/upload
 ```
 
 **Request Body:**
+
 ```json
 {
   "fileId": "uuid"
@@ -421,6 +436,7 @@ POST /api/export/pdf
 ```
 
 **Request Body:**
+
 ```json
 {
   "catalogueId": "uuid",
@@ -436,6 +452,7 @@ POST /api/export/pdf
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -454,6 +471,7 @@ GET /api/export/pdf/{exportId}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -484,6 +502,7 @@ POST /api/coupons/validate
 ```
 
 **Request Body:**
+
 ```json
 {
   "code": "FIRST100",
@@ -493,6 +512,7 @@ POST /api/coupons/validate
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -521,6 +541,7 @@ POST /api/coupons/use
 ```
 
 **Request Body:**
+
 ```json
 {
   "couponId": "uuid",
@@ -543,6 +564,7 @@ POST /api/subscriptions/create
 ```
 
 **Request Body:**
+
 ```json
 {
   "priceId": "price_stripe_id",
@@ -571,6 +593,7 @@ POST /api/checkout/session
 ```
 
 **Request Body:**
+
 ```json
 {
   "priceId": "price_stripe_id",
@@ -581,6 +604,7 @@ POST /api/checkout/session
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -600,12 +624,14 @@ GET /api/analytics
 ```
 
 **Query Parameters:**
+
 - `startDate`: Start date (ISO string)
 - `endDate`: End date (ISO string)
 - `catalogueId` (optional): Filter by catalogue
 - `event` (optional): Filter by event type
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -647,16 +673,16 @@ Handles Stripe webhook events for subscription management.
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| `UNAUTHORIZED` | Invalid or missing authentication |
-| `FORBIDDEN` | Insufficient permissions |
-| `NOT_FOUND` | Resource not found |
-| `VALIDATION_ERROR` | Invalid request data |
-| `RATE_LIMITED` | Too many requests |
-| `INTERNAL_ERROR` | Server error |
-| `PAYMENT_REQUIRED` | Subscription required |
-| `QUOTA_EXCEEDED` | Usage quota exceeded |
+| Code               | Description                       |
+| ------------------ | --------------------------------- |
+| `UNAUTHORIZED`     | Invalid or missing authentication |
+| `FORBIDDEN`        | Insufficient permissions          |
+| `NOT_FOUND`        | Resource not found                |
+| `VALIDATION_ERROR` | Invalid request data              |
+| `RATE_LIMITED`     | Too many requests                 |
+| `INTERNAL_ERROR`   | Server error                      |
+| `PAYMENT_REQUIRED` | Subscription required             |
+| `QUOTA_EXCEEDED`   | Usage quota exceeded              |
 
 ## Rate Limiting
 
@@ -668,6 +694,7 @@ API endpoints are rate limited:
 - **General**: 100 requests per minute
 
 Rate limit headers:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 95
@@ -679,10 +706,12 @@ X-RateLimit-Reset: 1640995200
 List endpoints support pagination:
 
 **Query Parameters:**
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 10, max: 100)
 
 **Response:**
+
 ```json
 {
   "data": {
@@ -702,12 +731,14 @@ List endpoints support pagination:
 ## Filtering and Sorting
 
 **Query Parameters:**
+
 - `search`: Search term
 - `sortBy`: Field to sort by
 - `sortOrder`: `asc` or `desc`
 - `filter[field]`: Filter by field value
 
 **Example:**
+
 ```
 GET /api/catalogues?search=electronics&sortBy=createdAt&sortOrder=desc&filter[status]=PUBLISHED
 ```
@@ -727,14 +758,16 @@ const supabase = createClient(
 )
 
 // Get authenticated user
-const { data: { user } } = await supabase.auth.getUser()
+const {
+  data: { user },
+} = await supabase.auth.getUser()
 
 // Make API request
 const response = await fetch('/api/catalogues', {
   headers: {
-    'Authorization': `Bearer ${user?.access_token}`,
-    'Content-Type': 'application/json'
-  }
+    Authorization: `Bearer ${user?.access_token}`,
+    'Content-Type': 'application/json',
+  },
 })
 
 const data = await response.json()
@@ -752,14 +785,14 @@ class CatfyAPI:
             'Authorization': f'Bearer {token}',
             'Content-Type': 'application/json'
         }
-    
+
     def get_catalogues(self):
         response = requests.get(
             f'{self.base_url}/api/catalogues',
             headers=self.headers
         )
         return response.json()
-    
+
     def create_catalogue(self, data):
         response = requests.post(
             f'{self.base_url}/api/catalogues',
@@ -789,6 +822,7 @@ curl -X GET "http://localhost:3000/api/catalogues" \
 ## Support
 
 For API support:
+
 - Check the [troubleshooting guide](../README.md#troubleshooting)
 - Open an issue on GitHub
 - Contact API support at api-support@catfy.com

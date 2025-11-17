@@ -1,6 +1,7 @@
 # Plan Sharing Feature - User Guide
 
 ## Overview
+
 The Plan Sharing feature allows catalogue owners with premium subscriptions (Standard, Professional, or Business plans) to share their premium benefits with team members for specific catalogues.
 
 ## For Catalogue Owners
@@ -32,6 +33,7 @@ The Plan Sharing feature allows catalogue owners with premium subscriptions (Sta
 ### What Gets Shared?
 
 When plan sharing is enabled, team members get access to:
+
 - ✨ **AI Features**: AI-powered product descriptions and content generation
 - 📄 **Premium Export**: Advanced PDF export options
 - 🎨 **Premium Templates**: Access to all premium catalogue themes
@@ -69,6 +71,7 @@ When the owner enables plan sharing for you, you'll see:
 ### What Can You Do?
 
 With premium access enabled, you can:
+
 - ✅ Use AI to generate product descriptions
 - ✅ Access all premium catalogue templates
 - ✅ Export catalogues with premium formatting
@@ -79,6 +82,7 @@ With premium access enabled, you can:
 ### Visual Indicators
 
 **In Team Management Tab:**
+
 ```
 ┌──────────────────────────────────────────────────┐
 │ 🎉 You have Premium Access!                      │
@@ -91,6 +95,7 @@ With premium access enabled, you can:
 ```
 
 **In Member Card:**
+
 ```
 John Doe
 EDITOR | ✨ Premium Access
@@ -98,6 +103,7 @@ john@example.com
 ```
 
 **In Main Editor:**
+
 ```
 ┌──────────────────────────────────────────────────┐
 │ 🎉 Premium Access Enabled [Active]              │
@@ -112,17 +118,21 @@ john@example.com
 ## Technical Details
 
 ### Database Schema
+
 - New field: `planSharingEnabled` (Boolean) in Catalogue table
 - Default value: `false`
 - Catalogue-specific (not global)
 
 ### API Endpoints
+
 - `GET /api/catalogues/[id]/plan-sharing` - Get current sharing status
 - `PATCH /api/catalogues/[id]/plan-sharing` - Update sharing status
 - Both endpoints require owner authentication
 
 ### Activity Logging
+
 All plan sharing changes are tracked:
+
 - "Enabled plan sharing for team members"
 - "Disabled plan sharing for team members"
 - Visible in Activity Log tab with sparkles icon
@@ -130,16 +140,19 @@ All plan sharing changes are tracked:
 ## Troubleshooting
 
 ### I don't see the Plan Sharing card
+
 - Make sure you're the catalogue owner
 - Check that you have a premium plan (not FREE)
 - Refresh the page if you recently upgraded
 
 ### Team members can't see premium access
+
 - Verify plan sharing is enabled in the Team tab
 - Check that team members have refreshed their page
 - Ensure team members are viewing the correct catalogue
 
 ### Premium features not working for team members
+
 - Confirm plan sharing is still enabled
 - Check your subscription is active
 - Contact support if issues persist
@@ -171,6 +184,7 @@ A: No, only catalogue owners can enable plan sharing. Team members cannot re-sha
 ## Support
 
 For additional help or questions:
+
 - Check the Activity Log for sharing history
 - Review your team member permissions
 - Contact support at support@catfy.com

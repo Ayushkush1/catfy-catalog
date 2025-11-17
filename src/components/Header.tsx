@@ -105,7 +105,7 @@ export function Header({
             if (adminStatus) {
               setProfile({
                 ...data.profile,
-                subscriptionPlan: 'BUSINESS'
+                subscriptionPlan: 'BUSINESS',
               })
             } else {
               setProfile(data.profile)
@@ -185,7 +185,7 @@ export function Header({
 
   return (
     <>
-      <DashboardHeader/>
+      <DashboardHeader />
 
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
@@ -196,14 +196,16 @@ export function Header({
                 <div className="text-white">
                   <div className="mb-3 flex flex-col gap-2">
                     <div>
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="mb-2 flex items-center gap-3">
                         <h1 className="text-3xl font-bold">
                           {title || 'Edit Catalogue'}
                         </h1>
                         {hasPremiumAccess && (
-                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-300/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-1.5 rounded-full border border-purple-300/30 bg-gradient-to-r from-purple-500/20 to-pink-500/20 px-3 py-1 backdrop-blur-sm">
                             <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
-                            <span className="text-xs font-semibold text-white">Premium Access</span>
+                            <span className="text-xs font-semibold text-white">
+                              Premium Access
+                            </span>
                           </div>
                         )}
                       </div>
