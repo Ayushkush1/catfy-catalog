@@ -214,26 +214,23 @@ export default function LoginPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div
                     onClick={() => setAccountType('INDIVIDUAL')}
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                      accountType === 'INDIVIDUAL'
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'INDIVIDUAL'
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className={`flex h-6 w-6 items-center justify-center rounded ${
-                          accountType === 'INDIVIDUAL'
+                        className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'INDIVIDUAL'
                             ? 'bg-purple-100'
                             : 'bg-gray-100'
-                        }`}
+                          }`}
                       >
                         <User
-                          className={`h-3 w-3 ${
-                            accountType === 'INDIVIDUAL'
+                          className={`h-3 w-3 ${accountType === 'INDIVIDUAL'
                               ? 'text-purple-600'
                               : 'text-gray-600'
-                          }`}
+                            }`}
                         />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -264,26 +261,23 @@ export default function LoginPage() {
 
                   <div
                     onClick={() => setAccountType('BUSINESS')}
-                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${
-                      accountType === 'BUSINESS'
+                    className={`relative cursor-pointer rounded-lg border-2 p-2 transition-all ${accountType === 'BUSINESS'
                         ? 'border-purple-500 bg-purple-50'
                         : 'border-gray-200 hover:border-gray-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center space-x-2">
                       <div
-                        className={`flex h-6 w-6 items-center justify-center rounded ${
-                          accountType === 'BUSINESS'
+                        className={`flex h-6 w-6 items-center justify-center rounded ${accountType === 'BUSINESS'
                             ? 'bg-purple-100'
                             : 'bg-gray-100'
-                        }`}
+                          }`}
                       >
                         <svg
-                          className={`h-3 w-3 ${
-                            accountType === 'BUSINESS'
+                          className={`h-3 w-3 ${accountType === 'BUSINESS'
                               ? 'text-purple-600'
                               : 'text-gray-600'
-                          }`}
+                            }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >

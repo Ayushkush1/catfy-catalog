@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { Template, TemplateContent } from '@prisma/client'
+import { getAllTemplates } from '@/templates'
 
 export const runtime = 'nodejs'
 
@@ -72,18 +73,24 @@ function adaptToTemplateConfig(t: TemplateWithContents) {
 
 export async function GET(_req: NextRequest) {
   try {
-    if (!prisma.template) {
-      return NextResponse.json({ templates: [] })
+    // Get real templates from the template registry
+    const realTemplates = getAllTemplates()
+
+    // Also get published templates from database if available
+    let dbTemplates: ReturnType<typeof adaptToTemplateConfig>[] = []
+    if (prisma.template) {
+      const published = await prisma.template.findMany({
+        where: { status: 'PUBLISHED' },
+        include: { contents: { orderBy: { createdAt: 'desc' } } },
+        orderBy: { updatedAt: 'desc' },
+      })
+      dbTemplates = published.map(adaptToTemplateConfig)
     }
 
-    const published = await prisma.template.findMany({
-      where: { status: 'PUBLISHED' },
-      include: { contents: { orderBy: { createdAt: 'desc' } } },
-      orderBy: { updatedAt: 'desc' },
-    })
+    // Combine real templates with database templates
+    const allTemplates = [...realTemplates, ...dbTemplates]
 
-    const templates = published.map(adaptToTemplateConfig)
-    return NextResponse.json({ templates })
+    return NextResponse.json({ templates: allTemplates })
   } catch (error) {
     console.error('Public GET templates error:', error)
     return NextResponse.json(

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { signOut, isClientAdmin } from '@/lib/client-auth'
@@ -25,6 +25,7 @@ import {
   Search,
   Bell,
   Sparkles,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -43,6 +44,8 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) {
+  const [search, setSearch] = useState('')
+  const searchDebounceRef = useRef<number | null>(null)
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -52,31 +55,68 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
 
   useEffect(() => {
     const getUser = async () => {
+      const CACHE_KEY = 'catfy:headerProfile'
+      const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
       try {
+        // Try cache first so header can render instantly
+        try {
+          const raw = sessionStorage.getItem(CACHE_KEY)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
+              setUser(parsed.user || null)
+              setIsAdmin(parsed.isAdmin || false)
+              setProfile(parsed.profile || null)
+              setIsLoading(false)
+                // background refresh
+                ; (async () => {
+                  try {
+                    const {
+                      data: { user },
+                    } = await supabase.auth.getUser()
+                    const adminStatus = await isClientAdmin()
+                    const response = await fetch('/api/auth/profile')
+                    if (response.ok) {
+                      const data = await response.json()
+                      if (adminStatus) {
+                        setProfile({ ...data.profile, subscriptionPlan: 'BUSINESS' })
+                      } else {
+                        setProfile(data.profile)
+                      }
+                      setIsAdmin(adminStatus)
+                      setUser(user)
+                      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), isAdmin: adminStatus, profile: data.profile || null, user })) } catch (e) { }
+                    }
+                  } catch (e) {
+                    /* ignore */
+                  }
+                })()
+              return
+            }
+          }
+        } catch (e) {
+          // ignore cache read errors
+        }
+
+        // No fresh cache — fetch synchronously so we know auth state
         const {
           data: { user },
         } = await supabase.auth.getUser()
         setUser(user)
 
         if (user) {
-          // Check if user is admin
           const adminStatus = await isClientAdmin()
           setIsAdmin(adminStatus)
 
-          // Fetch user profile
           const response = await fetch('/api/auth/profile')
           if (response.ok) {
             const data = await response.json()
-
-            // If user is admin, set plan to BUSINESS (unlimited)
             if (adminStatus) {
-              setProfile({
-                ...data.profile,
-                subscriptionPlan: 'BUSINESS'
-              })
+              setProfile({ ...data.profile, subscriptionPlan: 'BUSINESS' })
             } else {
               setProfile(data.profile)
             }
+            try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), isAdmin: adminStatus, profile: data.profile || null, user })) } catch (e) { }
           }
         }
       } catch (error) {
@@ -88,6 +128,24 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
 
     getUser()
   }, [])
+
+  useEffect(() => {
+    // debounce live search dispatch (event-only; do not update URL)
+    if (searchDebounceRef.current) {
+      window.clearTimeout(searchDebounceRef.current)
+    }
+    searchDebounceRef.current = window.setTimeout(() => {
+      try {
+        window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: search } }))
+      } catch (e) {
+        // ignore
+      }
+    }, 300)
+
+    return () => {
+      if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
+    }
+  }, [search])
 
   const handleSignOut = async () => {
     try {
@@ -125,6 +183,40 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
     return 'Good Evening'
   }
 
+  // Smooth scroll helper with easing and offset (for fixed header)
+  const smoothScrollTo = (
+    target: HTMLElement,
+    offset = 120,
+    duration = 700
+  ) => {
+    const start = window.scrollY || window.pageYOffset
+    const rect = target.getBoundingClientRect()
+    const targetY = start + rect.top - offset
+    const startTime = performance.now()
+
+    const easeInOutQuad = (t: number) => {
+      return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+    }
+
+    const step = (now: number) => {
+      const elapsed = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = easeInOutQuad(progress)
+      window.scrollTo(0, Math.round(start + (targetY - start) * eased))
+      if (progress < 1) {
+        requestAnimationFrame(step)
+      } else {
+        try {
+          target.focus()
+        } catch (e) {
+          /* ignore focus errors */
+        }
+      }
+    }
+
+    requestAnimationFrame(step)
+  }
+
   if (isLoading) {
     return (
       <header className="bg-transparent">
@@ -150,12 +242,12 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
           <div className="flex flex-col">
             {title ? (
               <>
-                <h1 className="mb-1 text-2xl font-bold text-gray-900">{title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
                 {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
               </>
             ) : (
               <>
-                <h1 className="mb-1 text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900">
                   {getGreeting()}, {profile?.fullName?.split(' ')[0] || 'David'}
                 </h1>
                 <p className="text-sm text-gray-600">Your weekly creative update</p>
@@ -170,9 +262,47 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    // immediate dispatch for in-page filtering (no URL navigation)
+                    if (searchDebounceRef.current) window.clearTimeout(searchDebounceRef.current)
+                    try {
+                      window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: search } }))
+                    } catch (err) { }
+                    // scroll to tools section on Enter so results are visible
+                    try {
+                      const el = document.getElementById('tools-section')
+                      if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                          // ensure focus for screen readers
+                          ; (el as HTMLElement).focus()
+
+                        // rely on smooth scroll + focus; no temporary highlight
+                      }
+                    } catch (err) {
+                      // ignore if DOM not available
+                    }
+                  }
+                }}
                 placeholder="Search here"
                 className="w-64 rounded-lg border-gray-200 bg-white pl-10 pr-4 py-2 text-sm focus:border-purple-300 focus:ring-purple-300"
+                aria-label="Search catalogues"
               />
+              {search ? (
+                <button
+                  onClick={() => {
+                    setSearch('')
+                    try {
+                      window.dispatchEvent(new CustomEvent('dashboard:search', { detail: { query: '' } }))
+                    } catch (err) { }
+                  }}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:text-gray-700"
+                  aria-label="Clear search"
+                >
+                </button>
+              ) : null}
             </div>
 
             {/* Notifications */}
@@ -185,17 +315,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps = {}) 
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
             </Button>
 
-            {/* Settings */}
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="h-10 w-10 rounded-full p-0 text-gray-600 hover:bg-white hover:text-gray-900"
-            >
-              <Link href="/settings">
-                <Settings className="h-5 w-5" />
-              </Link>
-            </Button>
+
 
             {/* Profile Dropdown */}
             <DropdownMenu>

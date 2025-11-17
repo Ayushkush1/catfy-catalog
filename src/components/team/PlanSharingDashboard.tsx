@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
-import { Loader2, Sparkles, ShieldCheck, Users } from 'lucide-react'
+import { Loader2, Sparkles, ShieldCheck, Users, Mail, Crown, Trash2, Clock, Copy, Send, XCircle, CheckCircle, UserPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface TeamMemberLite {
@@ -91,7 +91,7 @@ export default function PlanSharingDashboard() {
   }, [defaultCatalogueId])
 
   const premiumRecipients = useMemo(
-    () => team.filter(t => t.role === 'MEMBER').slice(0, 3),
+    () => team.filter(t => t.role === 'MEMBER' && t.hasPremiumAccess).slice(0, 3),
     [team]
   )
 
@@ -99,10 +99,13 @@ export default function PlanSharingDashboard() {
     if (!defaultCatalogueId) return
     setSaving(true)
     try {
+      const selectedIds = premiumRecipients.length > 0
+        ? premiumRecipients.map(p => p.id)
+        : team.filter(t => t.role === 'MEMBER').slice(0, 3).map(t => t.id)
       const res = await fetch(`/api/catalogues/${defaultCatalogueId}/plan-sharing`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled: checked, memberIds: premiumRecipients.map(p => p.id) }),
+        body: JSON.stringify({ enabled: checked, memberIds: selectedIds }),
       })
       if (!res.ok) throw new Error('Failed to update plan sharing')
       setEnabled(checked)
@@ -148,7 +151,7 @@ export default function PlanSharingDashboard() {
         const d2 = await res2.json()
         setTeam(d2.team || [])
         setPendingInvitations(d2.pendingInvitations || [])
-      } catch {}
+      } catch { }
     } catch (e: any) {
       console.error(e)
       toast.error(e.message || 'Failed to invite')
@@ -231,160 +234,361 @@ export default function PlanSharingDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-[#6366F1] via-[#7C4DE8] to-[#8B5CF6] text-white rounded-t-xl">
+    <div className="space-y-6">
+      {/* Compact Header */}
+      <Card className="relative overflow-hidden rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+        <div className="absolute right-0 top-0 h-20 w-20 translate-x-10 -translate-y-10 transform opacity-10">
+          <div className="h-full w-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600" />
+        </div>
+        <CardContent className="relative p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <ShieldCheck className="h-5 w-5" /> Team Plan Sharing
-              </CardTitle>
-              <CardDescription className="text-indigo-50">
-                Share your premium features with your core team members.
-              </CardDescription>
+            <div className="flex items-center gap-4">
+              <div className="rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-3">
+                <ShieldCheck className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Team Plan Sharing</h1>
+                <p className="text-sm text-gray-500">Share premium features with your team</p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm">{enabled ? 'Enabled' : 'Disabled'}</span>
-              <Switch checked={enabled} disabled={saving || loading} onCheckedChange={togglePlan} />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          {loading ? (
-            <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin"/> Loading team...</div>
-          ) : (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="rounded-xl bg-white border p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><Users className="h-4 w-4"/> Members</div>
-                  <div className="text-2xl font-semibold mt-2">{team.filter(t => t.role === 'MEMBER').length}</div>
-                </div>
-                <div className="rounded-xl bg-white border p-4 shadow-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground"><Sparkles className="h-4 w-4"/> Eligible Premium</div>
-                  <div className="text-2xl font-semibold mt-2">{premiumRecipients.length}</div>
-                </div>
-                <div className="rounded-xl bg-white border p-4 shadow-sm">
-                  <div className="text-muted-foreground">Status</div>
-                  <div className="text-2xl font-semibold mt-2">{enabled ? 'Active' : 'Off'}</div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-600">Status</div>
+                <div className={`text-lg font-bold ${enabled ? 'text-emerald-600' : 'text-gray-500'}`}>
+                  {enabled ? 'Active' : 'Disabled'}
                 </div>
               </div>
+              <Switch
+                checked={enabled}
+                onCheckedChange={togglePlan}
+                disabled={saving || loading}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">Invite a team member</div>
-                <div className="flex items-center gap-2 max-w-lg">
-                  <Input
-                    placeholder="name@example.com"
-                    value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    disabled={loading || inviting}
-                  />
-                  <Button onClick={sendInvitation} disabled={inviting || loading || !defaultCatalogueId}>
-                    {inviting ? (<span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin"/>Sending</span>) : 'Invite'}
+      {loading ? (
+        <Card className="rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+          <CardContent className="flex items-center justify-center p-12">
+            <div className="flex items-center gap-3 text-gray-600">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <span className="text-lg">Loading team data...</span>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* Invite Section */}
+            <Card className="relative overflow-hidden rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+              <div className="absolute right-0 top-0 h-16 w-16 translate-x-8 -translate-y-8 transform opacity-10">
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600" />
+              </div>
+              <CardHeader className="relative pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-2">
+                    <UserPlus className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <span>Invite Team Member</span>
+                    <p className="text-sm font-normal text-gray-500 mt-1">Expand your creative team</p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative">
+                <div className="flex max-w-2xl gap-3">
+                  <div className="relative flex-1">
+                    <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <Input
+                      type="email"
+                      placeholder="name@example.com"
+                      value={inviteEmail}
+                      onChange={e => setInviteEmail(e.target.value)}
+                      disabled={loading || inviting}
+                      className="h-12 pl-12 rounded-2xl border-2 border-gray-200 bg-gray-50 focus:border-indigo-500 focus:bg-white"
+                    />
+                  </div>
+                  <Button
+                    onClick={sendInvitation}
+                    disabled={inviting || loading || !defaultCatalogueId}
+                    className="h-12 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    {inviting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span>Sending...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4 mr-2" />
+                        <span>Send Invite</span>
+                      </>
+                    )}
                   </Button>
                 </div>
 
-                <Separator />
+                <div className="mt-4 rounded-xl bg-indigo-50 p-4">
+                  <p className="text-sm text-indigo-700">
+                    💡 <strong>Pro Tip:</strong> Premium features will be automatically shared with up to 3 team members when enabled.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-                <div className="text-sm text-muted-foreground">Premium access will be shared with up to 3 members:</div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {/* Premium Recipients */}
+            <Card className="relative overflow-hidden rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+              <div className="absolute right-0 top-0 h-16 w-16 translate-x-8 -translate-y-8 transform opacity-10">
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-amber-500 to-orange-600" />
+              </div>
+              <CardHeader className="relative pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <div className="rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-2">
+                    <Crown className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <span>Premium Access</span>
+                    <p className="text-sm font-normal text-gray-500 mt-1">Up to 3 members receive premium benefits</p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   {premiumRecipients.map(m => (
-                    <div key={m.id} className="rounded-lg border p-3 text-sm flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{m.fullName || m.email}</div>
-                        <div className="text-muted-foreground">Member</div>
+                    <div
+                      key={m.id}
+                      className="group relative overflow-hidden rounded-2xl border-2 border-gray-100 bg-gradient-to-br from-white to-amber-50 p-4 transition-all hover:border-amber-300 hover:shadow-lg"
+                    >
+                      <div className="absolute right-0 top-0 h-16 w-16 translate-x-6 -translate-y-6 rounded-full bg-amber-200/30" />
+                      <div className="relative">
+                        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-lg font-bold text-white">
+                          {(m.fullName || m.email).charAt(0).toUpperCase()}
+                        </div>
+                        <div className="mb-1 font-semibold text-gray-900 text-sm">{m.fullName || m.email}</div>
+                        <div className="mb-3 text-xs text-gray-500">{m.email}</div>
+                        {enabled && (
+                          <div className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
+                            <Sparkles className="h-3 w-3" />
+                            Premium Active
+                          </div>
+                        )}
                       </div>
-                      {enabled && <span className="rounded bg-indigo-50 text-indigo-600 px-2 py-1 text-xs">Premium</span>}
                     </div>
                   ))}
                   {premiumRecipients.length === 0 && (
-                    <div className="text-sm text-muted-foreground">No team members found yet.</div>
+                    <div className="col-span-3 rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+                      <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+                      <p className="text-gray-500 text-sm">No team members found yet. Invite members to get started!</p>
+                    </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+           
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Team Members */}
+            <Card className="relative overflow-hidden rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+              <div className="absolute right-0 top-0 h-16 w-16 translate-x-8 -translate-y-8 transform opacity-10">
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-cyan-600" />
               </div>
-
-              <div className="text-xs text-muted-foreground">
-                Manage detailed roles, invites, and responsibilities in the catalogue’s Team tab.
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (!defaultCatalogueId) {
-                      toast.info('Create a catalogue to manage detailed team settings.')
-                      return
-                    }
-                    router.push(`/catalogue/${defaultCatalogueId}/edit`)
-                  }}
-                >
-                  Open Team settings
-                </Button>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">Team Members</h3>
-                  <span className="px-2 py-1 text-xs rounded bg-slate-100 text-slate-700">{team.length}</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <CardHeader className="relative pb-4">
+                <CardTitle className="flex items-center justify-between text-lg font-semibold text-gray-900">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 p-2">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <span>Team Members</span>
+                      <p className="text-sm font-normal text-gray-500 mt-1">{team.length} active members</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!defaultCatalogueId) {
+                        toast.info('Create a catalogue to manage detailed team settings.');
+                        return;
+                      }
+                      router.push(`/catalogue/${defaultCatalogueId}/edit`);
+                    }}
+                    className="rounded-xl border-2 border-gray-200 bg-white hover:border-gray-300"
+                  >
+                    Team Settings
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {team.map(member => (
-                    <div key={member.id} className="rounded-lg border p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{member.fullName || member.email}</div>
-                        <div className="text-xs text-muted-foreground">{member.email}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">{member.role === 'OWNER' ? 'Owner' : 'Member'}</span>
-                        {isOwner && member.role !== 'OWNER' && (
-                          <Button variant="outline" size="sm" onClick={() => removeMember(member.id)}>Remove</Button>
-                        )}
+                    <div
+                      key={member.id}
+                      className="group rounded-2xl border-2 border-gray-100 bg-white p-4 transition-all hover:border-blue-300 hover:shadow-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 text-sm font-bold text-white">
+                            {(member.fullName || member.email).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-gray-900 text-sm truncate">{member.fullName || member.email}</span>
+                              {member.role === 'OWNER' && (
+                                <Crown className="h-3 w-3 text-amber-500 flex-shrink-0" />
+                              )}
+                            </div>
+                            <div className="text-xs text-gray-500 truncate">{member.email}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${member.role === 'OWNER' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {member.role === 'OWNER' ? 'Owner' : 'Member'}
+                          </span>
+                          {isOwner && member.role !== 'OWNER' && (
+                            <button
+                              onClick={() => removeMember(member.id)}
+                              className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
                   {team.length === 0 && (
-                    <div className="text-sm text-muted-foreground">No members yet.</div>
+                    <div className="col-span-2 rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+                      <Users className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+                      <p className="text-gray-500 text-sm">No team members yet.</p>
+                    </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Pending Invitations */}
+            <Card className="relative overflow-hidden rounded-3xl border-0 bg-white/60 shadow-lg backdrop-blur">
+              <div className="absolute right-0 top-0 h-16 w-16 translate-x-8 -translate-y-8 transform opacity-10">
+                <div className="h-full w-full rounded-full bg-gradient-to-br from-purple-500 to-pink-600" />
               </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-semibold">Invitations</h3>
-                  <span className="px-2 py-1 text-xs rounded bg-slate-100 text-slate-700">{pendingInvitations.length}</span>
-                </div>
+              <CardHeader className="relative pb-4">
+                <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                  <div className="rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 p-2">
+                    <Clock className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <span>Pending Invitations</span>
+                    <p className="text-sm font-normal text-gray-500 mt-1">{pendingInvitations.length} awaiting response</p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="relative">
                 <div className="space-y-3">
                   {pendingInvitations.map(inv => (
-                    <div key={inv.id} className="rounded-lg border p-3 flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{inv.email}</div>
-                        <div className="text-xs text-muted-foreground">Status: {inv.status} • Expires {new Date(inv.expiresAt).toLocaleDateString()}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={() => copyInvitationLink(inv.id)}>Copy link</Button>
-                        {isOwner && (
-                          <>
-                            <Button variant="outline" size="sm" onClick={() => resendInvitation(inv.email)}>Resend</Button>
-                            <Button variant="destructive" size="sm" onClick={() => cancelInvitation(inv.id)}>Cancel</Button>
-                          </>
-                        )}
+                    <div
+                      key={inv.id}
+                      className="group rounded-2xl border-2 border-gray-100 bg-white p-4 transition-all hover:border-purple-300 hover:shadow-lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-400 to-pink-500">
+                            <Mail className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900 text-sm">{inv.email}</div>
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-700">
+                                <Clock className="h-3 w-3" />
+                                {inv.status}
+                              </span>
+                              <span>•</span>
+                              <span>Expires {new Date(inv.expiresAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyInvitationLink(inv.id)}
+                            className="rounded-lg border-gray-200 hover:border-gray-300 h-8 px-3"
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy Link
+                          </Button>
+                          {isOwner && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => resendInvitation(inv.email)}
+                                className="rounded-lg border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 h-8 px-3"
+                              >
+                                <Send className="h-3 w-3 mr-1" />
+                                Resend
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => cancelInvitation(inv.id)}
+                                className="rounded-lg h-8 px-3"
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Cancel
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
                   {pendingInvitations.length === 0 && (
-                    <div className="text-sm text-muted-foreground">No pending invitations.</div>
+                    <div className="rounded-2xl border-2 border-dashed border-gray-200 p-6 text-center">
+                      <CheckCircle className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+                      <p className="text-gray-500 text-sm">No pending invitations.</p>
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          </div>
+          
+        </div>
+        
+      )}
+       {/* Help Section */}
+            <Card className="rounded-3xl border-0 bg-gradient-to-br from-indigo-50 to-purple-50">
+              <CardContent className="p-8">
+                <div className="mx-auto max-w-3xl text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600">
+                    <ShieldCheck className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="mb-2 text-xl font-bold text-gray-900">Need Help Managing Your Team?</h3>
+                  <p className="mb-6 text-gray-600">
+                    Visit the Team tab in your catalogue settings for detailed role management, permissions, and collaboration features.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      if (!defaultCatalogueId) {
+                        toast.info('Create a catalogue to manage detailed team settings.');
+                        return;
+                      }
+                      router.push(`/catalogue/${defaultCatalogueId}/edit`);
+                    }}
+                    className="rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl"
+                  >
+                    Open Team Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
     </div>
   )
 }

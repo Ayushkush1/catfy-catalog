@@ -138,7 +138,74 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
   // Load team data
   const loadTeamData = async () => {
+    const CACHE_KEY = `catfy:team:${catalogueId}`
+    const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
+
     try {
+      // Try session cache first (stale-while-revalidate)
+      try {
+        const raw = sessionStorage.getItem(CACHE_KEY)
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
+            const data = parsed.data
+            setTeam(data.team || [])
+            setPendingInvitations(data.pendingInvitations || [])
+            const membersWithAccess = (data.team || [])
+              .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
+              .map((m: any) => m.id)
+            setSelectedMembersForSharing(membersWithAccess)
+
+            const apiActivityLog = data.activityLog || []
+            if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
+              const owner = (data.team || []).find((m: TeamMember) => m.role === 'OWNER')
+              if (owner) {
+                setActivityLog([
+                  {
+                    id: 'sample-1',
+                    action: 'Created catalogue',
+                    performedBy: owner.id,
+                    performedByName: owner.fullName || owner.email,
+                    timestamp: new Date().toISOString(),
+                    details: 'Team collaboration started'
+                  }
+                ])
+              }
+            } else {
+              setActivityLog(apiActivityLog)
+            }
+
+            setIsLoading(false)
+
+              // revalidate in background
+              ; (async () => {
+                try {
+                  const response = await fetch(`/api/catalogues/${catalogueId}/team`)
+                  if (response.ok) {
+                    const fresh = await response.json()
+                    setTeam(fresh.team || [])
+                    setPendingInvitations(fresh.pendingInvitations || [])
+                    const freshMembersWithAccess = (fresh.team || [])
+                      .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
+                      .map((m: any) => m.id)
+                    setSelectedMembersForSharing(freshMembersWithAccess)
+                    const freshActivity = fresh.activityLog || []
+                    setActivityLog(freshActivity.length ? freshActivity : [])
+                    try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), data: fresh })) } catch (e) { }
+                  }
+                } catch (e) {
+                  // ignore
+                }
+              })()
+
+            return
+          }
+        }
+      } catch (e) {
+        // ignore cache errors
+      }
+
+      // No fresh cache - fetch normally
       const response = await fetch(`/api/catalogues/${catalogueId}/team`)
       if (!response.ok) {
         throw new Error('Failed to load team data')
@@ -147,16 +214,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setTeam(data.team || [])
       setPendingInvitations(data.pendingInvitations || [])
 
-      // Load members who have premium access
       const membersWithAccess = (data.team || [])
         .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
         .map((m: any) => m.id)
       setSelectedMembersForSharing(membersWithAccess)
 
-      // Set activity log from API or use sample data if empty
       const apiActivityLog = data.activityLog || []
       if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
-        // Add sample activity log entry for demonstration
         const owner = (data.team || []).find((m: TeamMember) => m.role === 'OWNER')
         if (owner) {
           setActivityLog([
@@ -173,6 +237,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       } else {
         setActivityLog(apiActivityLog)
       }
+
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ _ts: Date.now(), data })) } catch (e) { }
     } catch (error) {
       console.error('Error loading team data:', error)
       toast.error('Failed to load team data')
@@ -214,6 +280,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Permission updated successfully')
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData()
     } catch (error) {
       console.error('Error updating permission:', error)
@@ -256,6 +323,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Responsibility updated successfully')
       setShowEditDialog(false)
       setEditingMember(null)
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData()
     } catch (error) {
       console.error('Error updating responsibility:', error)
@@ -314,6 +382,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           ? 'Plan sharing enabled! Team members now have access to your plan features.'
           : 'Plan sharing disabled.'
       )
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
     } catch (error) {
       console.error('Error updating plan sharing:', error)
       toast.error('Failed to update plan sharing settings')
@@ -393,6 +462,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Invitation sent successfully!')
       setInviteEmail('')
       setShowInviteDialog(false)
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error sending invitation:', error)
@@ -432,6 +502,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setActivityLog(prev => [newActivity, ...prev])
 
       toast.success('Team member removed successfully')
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error removing team member:', error)
@@ -452,6 +523,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       }
 
       toast.success('Invitation cancelled successfully')
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error cancelling invitation:', error)
@@ -478,6 +550,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       }
 
       toast.success('Invitation resent successfully!')
+      try { sessionStorage.removeItem(`catfy:team:${catalogueId}`) } catch (e) { }
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error resending invitation:', error)
@@ -928,36 +1001,36 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 </>
               )}
               {/* Compact Plan Sharing Card - At Bottom for Owners */}
-          {isActualOwner && currentPlan !== 'FREE' && (
-            <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-4 w-4 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
-                      <p className="text-xs text-gray-600">
-                        {selectedMembersForSharing.length > 0
-                          ? `${selectedMembersForSharing.length}/3 members selected`
-                          : 'Share with up to 3 members'}
-                      </p>
+              {isActualOwner && currentPlan !== 'FREE' && (
+                <Card className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Shield className="h-4 w-4 text-blue-600" />
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">Plan Sharing</p>
+                          <p className="text-xs text-gray-600">
+                            {selectedMembersForSharing.length > 0
+                              ? `${selectedMembersForSharing.length}/3 members selected`
+                              : 'Share with up to 3 members'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowPlanSharingDialog(true)}
+                          className="h-8 text-xs"
+                        >
+                          <UserCog className="h-3 w-3 mr-1" />
+                          Manage
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowPlanSharingDialog(true)}
-                      className="h-8 text-xs"
-                    >
-                      <UserCog className="h-3 w-3 mr-1" />
-                      Manage
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Activity Log Tab */}
@@ -1062,7 +1135,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </TabsContent>
           </Tabs>
 
-          
+
         </CardContent>
       </Card>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -10,6 +10,7 @@ import {
   CreditCard,
   HelpCircle,
   Settings,
+  FolderOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -17,7 +18,7 @@ import Image from 'next/image'
 interface SidebarItem {
   id: string
   label: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>
   href: string
   badge?: string
   isActive?: boolean
@@ -32,6 +33,13 @@ const sidebarItems: SidebarItem[] = [
     isActive: true
   },
   {
+    id: 'projects',
+    label: 'My Projects',
+    icon: FolderOpen,
+    href: '/dashboard/projects',
+    isActive: true
+  },
+  {
     id: 'analytics',
     label: 'Analytics',
     icon: BarChart3,
@@ -43,13 +51,6 @@ const sidebarItems: SidebarItem[] = [
     label: 'Team',
     icon: Users,
     href: '/dashboard/team',
-    isActive: true
-  },
-  {
-    id: 'billing',
-    label: 'Billing',
-    icon: CreditCard,
-    href: '/dashboard/billing',
     isActive: true
   },
   {
@@ -136,28 +137,58 @@ export function Sidebar() {
             }
           }
 
-          /* Icon hover animation */
-          .nav-link:hover .icon-hover {
-            animation: iconBounce 0.6s ease-in-out;
+          /* Lightweight, very smooth transitions for interactive states */
+          .nav-link {
+            transition: transform 420ms cubic-bezier(.16,.84,.3,1),
+                        box-shadow 420ms cubic-bezier(.16,.84,.3,1),
+                        background 380ms cubic-bezier(.16,.84,.3,1),
+                        color 260ms ease;
+            will-change: transform, box-shadow, background, color;
+            -webkit-font-smoothing: antialiased;
+            backface-visibility: hidden;
+            transform: translateZ(0);
           }
 
-          /* Active icon pulse */
+          /* Icon transition (hover / active) */
+          .nav-link .icon-active,
+          .nav-link .icon-hover,
+          .nav-link .icon-settings {
+            transition: transform 360ms cubic-bezier(.16,.84,.3,1), color 260ms ease, opacity 260ms ease;
+            transform-origin: center center;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+          }
+
+          /* Subtle, smooth pop for hover */
+          .nav-link:hover {
+            transform: translateY(-4px) scale(1.03);
+          }
+
+          .nav-link:hover .icon-hover {
+            transform: translateY(-2px) scale(1.12);
+            opacity: 0.98;
+          }
+
+          /* Active state: gentle lift + soft shadow */
           .nav-link-active {
-            animation: buttonGlow 2s ease-in-out infinite;
+            transform: translateY(-4px) scale(1.07);
+            box-shadow: 0 14px 36px rgba(99,102,241,0.16);
           }
 
           .nav-link-active .icon-active {
-            animation: iconPulse 2s ease-in-out infinite;
+            transform: translateY(-1px) scale(1.12) rotate(4deg);
+            color: #ffffff;
+            opacity: 1;
           }
 
-          /* Settings icon rotation */
+          /* Settings icon rotation on hover (subtle) */
           .nav-link:hover .icon-settings {
-            animation: iconRotate 0.6s ease-in-out;
+            transform: rotate(8deg) scale(1.06);
           }
 
-          /* Slide in animation */
+          /* Slide in animation (initial mount) */
           .nav-item {
-            animation: iconSlideIn 0.4s ease-out forwards;
+            animation: iconSlideIn 0.44s cubic-bezier(.16,.84,.3,1) forwards;
             opacity: 0;
           }
 
@@ -170,20 +201,20 @@ export function Sidebar() {
       </div>
 
       {/* Content */}
-      <div className="relative flex h-full flex-col items-center pb-4 pt-2 z-10">
+      <div className="relative flex h-full flex-col items-center pb-4 pt-1 z-10">
         {/* Logo */}
         <div className="mb-16">
           <Link href="/dashboard" className="group relative flex items-center justify-center">
-            <div className="relative flex flex-col h-16 w-16 items-center justify-center overflow-hidden">
+            <div className="relative flex flex-col h-20 w-20 items-center justify-center  overflow-hidden">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatFy Logo"
-                width={48}
-                height={48}
+                width={60}
+                height={60}
                 className="object-contain"
                 priority
               />
-              <p className='font-bold text-sm bg-gradient-to-r from-[#6366F1] to-[#2D1B69] bg-clip-text text-transparent'>CATFY</p>
+              <p className='font-bold text-xs bg-gradient-to-r from-[#6366F1] to-[#2D1B69] bg-clip-text text-transparent -mt-1.5'>CATFY</p>
             </div>
             {/* Tooltip */}
             <div className="pointer-events-none absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-sm text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
@@ -256,7 +287,8 @@ export function Sidebar() {
               href="/dashboard/settings"
               className={cn(
                 'nav-link group relative flex h-11 w-full items-center justify-center rounded-xl transition-all duration-300 ease-out',
-                pathname === '/settings'
+                // Use startsWith to correctly detect nested routes under /dashboard/settings
+                pathname?.startsWith('/dashboard/settings')
                   ? 'nav-link-active bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40 scale-105'
                   : 'bg-gray-100/80 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg hover:scale-110'
               )}
@@ -264,8 +296,8 @@ export function Sidebar() {
               <Settings
                 className={cn(
                   'transition-all duration-300 ease-out',
-                  pathname === '/settings'
-                    ? 'h-6 w-6 text-white icon-active'
+                  pathname?.startsWith('/dashboard/settings')
+                    ? 'h-6 w-6 text-white  icon-active'
                     : 'h-5 w-5 text-gray-700 icon-settings group-hover:text-[#6366F1]'
                 )}
                 strokeWidth={2}

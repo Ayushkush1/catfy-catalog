@@ -225,8 +225,8 @@ export function ThemeTemplatePreview({
                     >
                       <div className="truncate font-medium">{product.name}</div>
                       {(product.priceDisplay === 'show' && product.price) ||
-                      product.priceDisplay === 'contact' ||
-                      (!product.priceDisplay && product.price) ? (
+                        product.priceDisplay === 'contact' ||
+                        (!product.priceDisplay && product.price) ? (
                         <div
                           className="text-xs"
                           style={{ color: theme.colors.accent }}
@@ -434,9 +434,8 @@ export function ThemeTemplatePreview({
             <div className="mt-4 border-t pt-4">
               <div className="flex items-center gap-2">
                 <div
-                  className={`h-2 w-2 rounded-full ${
-                    state.isCompatible ? 'bg-green-500' : 'bg-red-500'
-                  }`}
+                  className={`h-2 w-2 rounded-full ${state.isCompatible ? 'bg-green-500' : 'bg-red-500'
+                    }`}
                 />
                 <span className="text-sm font-medium">
                   {state.isCompatible ? 'Compatible' : 'Incompatible'}
@@ -515,9 +514,8 @@ export function ThemeTemplatePreview({
               return (
                 <Card
                   key={`${theme.id}-${template.id}`}
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    !isCompatible ? 'border-red-200 opacity-60' : ''
-                  }`}
+                  className={`cursor-pointer transition-all hover:shadow-md ${!isCompatible ? 'border-red-200 opacity-60' : ''
+                    }`}
                   onClick={() =>
                     setState(prev => ({
                       ...prev,
