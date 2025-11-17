@@ -181,35 +181,35 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
             setIsLoading(false)
 
-              // revalidate in background
-              ; (async () => {
-                try {
-                  const response = await fetch(
-                    `/api/catalogues/${catalogueId}/team`
-                  )
-                  if (response.ok) {
-                    const fresh = await response.json()
-                    setTeam(fresh.team || [])
-                    setPendingInvitations(fresh.pendingInvitations || [])
-                    const freshMembersWithAccess = (fresh.team || [])
-                      .filter(
-                        (m: any) => m.role === 'MEMBER' && m.hasPremiumAccess
-                      )
-                      .map((m: any) => m.id)
-                    setSelectedMembersForSharing(freshMembersWithAccess)
-                    const freshActivity = fresh.activityLog || []
-                    setActivityLog(freshActivity.length ? freshActivity : [])
-                    try {
-                      sessionStorage.setItem(
-                        CACHE_KEY,
-                        JSON.stringify({ _ts: Date.now(), data: fresh })
-                      )
-                    } catch (e) { }
-                  }
-                } catch (e) {
-                  // ignore
+            // revalidate in background
+            ;(async () => {
+              try {
+                const response = await fetch(
+                  `/api/catalogues/${catalogueId}/team`
+                )
+                if (response.ok) {
+                  const fresh = await response.json()
+                  setTeam(fresh.team || [])
+                  setPendingInvitations(fresh.pendingInvitations || [])
+                  const freshMembersWithAccess = (fresh.team || [])
+                    .filter(
+                      (m: any) => m.role === 'MEMBER' && m.hasPremiumAccess
+                    )
+                    .map((m: any) => m.id)
+                  setSelectedMembersForSharing(freshMembersWithAccess)
+                  const freshActivity = fresh.activityLog || []
+                  setActivityLog(freshActivity.length ? freshActivity : [])
+                  try {
+                    sessionStorage.setItem(
+                      CACHE_KEY,
+                      JSON.stringify({ _ts: Date.now(), data: fresh })
+                    )
+                  } catch (e) {}
                 }
-              })()
+              } catch (e) {
+                // ignore
+              }
+            })()
 
             return
           }
@@ -258,7 +258,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           CACHE_KEY,
           JSON.stringify({ _ts: Date.now(), data })
         )
-      } catch (e) { }
+      } catch (e) {}
     } catch (error) {
       console.error('Error loading team data:', error)
       toast.error('Failed to load team data')
@@ -305,7 +305,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Permission updated successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating permission:', error)
@@ -353,7 +353,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setEditingMember(null)
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating responsibility:', error)
@@ -419,7 +419,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       )
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
     } catch (error) {
       console.error('Error updating plan sharing:', error)
       toast.error('Failed to update plan sharing settings')
@@ -501,7 +501,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setShowInviteDialog(false)
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error sending invitation:', error)
@@ -543,7 +543,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Team member removed successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error removing team member:', error)
@@ -566,7 +566,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Invitation cancelled successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error cancelling invitation:', error)
@@ -595,7 +595,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Invitation resent successfully!')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error resending invitation:', error)
@@ -853,12 +853,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     return (
                       <div
                         key={member.id}
-                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${isCurrentUser
+                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${
+                          isCurrentUser
                             ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm'
                             : member.role === 'OWNER'
                               ? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 shadow-sm'
                               : 'border-gray-200 bg-white hover:border-gray-300'
-                          }`}
+                        }`}
                       >
                         <div className="flex items-center space-x-4">
                           <div className="relative">
@@ -903,12 +904,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               {member.permission && (
                                 <Badge
                                   variant="outline"
-                                  className={`flex items-center gap-1 font-medium ${member.permission === 'ADMIN'
+                                  className={`flex items-center gap-1 font-medium ${
+                                    member.permission === 'ADMIN'
                                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                                       : member.permission === 'EDITOR'
                                         ? 'border-green-500 bg-green-50 text-green-700'
                                         : 'border-gray-400 bg-gray-50 text-gray-700'
-                                    }`}
+                                  }`}
                                 >
                                   {member.permission === 'ADMIN' ? (
                                     <Shield className="h-3 w-3" />
@@ -1159,15 +1161,16 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                         >
                           {/* Icon */}
                           <div
-                            className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110 ${log.action.includes('permission')
+                            className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110 ${
+                              log.action.includes('permission')
                                 ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                                 : log.action.includes('responsibility')
                                   ? 'bg-gradient-to-br from-green-500 to-green-600'
                                   : log.action.includes('Invited') ||
-                                    log.action.includes('added')
+                                      log.action.includes('added')
                                     ? 'bg-gradient-to-br from-purple-500 to-purple-600'
                                     : 'bg-gradient-to-br from-red-500 to-red-600'
-                              }`}
+                            }`}
                           >
                             {log.action.includes('permission') ? (
                               <Shield className="h-5 w-5 text-white" />
@@ -1273,10 +1276,11 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   return (
                     <div
                       key={member.id}
-                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${!canSelect
+                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
+                        !canSelect
                           ? 'cursor-not-allowed opacity-50'
                           : 'hover:bg-gray-50'
-                        }`}
+                      }`}
                     >
                       <div className="flex flex-1 items-center gap-3">
                         <Avatar className="h-8 w-8">
