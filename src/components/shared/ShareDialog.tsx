@@ -13,13 +13,17 @@ import { useState } from 'react'
 interface ShareDialogProps {
   shareUrl: string
   catalogueName: string
-  children: React.ReactNode
+  children?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export function ShareDialog({
   shareUrl,
   catalogueName,
   children,
+  open,
+  onOpenChange,
 }: ShareDialogProps) {
   const [copied, setCopied] = useState(false)
 
@@ -55,8 +59,8 @@ export function ShareDialog({
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">

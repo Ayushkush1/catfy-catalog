@@ -138,6 +138,8 @@ export default function DashboardPage() {
   const [filterType, setFilterType] = useState('all')
   const [error, setError] = useState('')
   const [showCataloguesModal, setShowCataloguesModal] = useState(false)
+  const [catalogueStickerError, setCatalogueStickerError] = useState(false)
+  const [pdfStickerError, setPdfStickerError] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -808,8 +810,20 @@ export default function DashboardPage() {
                         </div>
                         <CardContent className="relative p-8">
                           <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e3f163] to-[#a3772a] shadow-lg transition-transform duration-300 group-hover:scale-110">
-                              <Book className="h-7 w-7 text-white" />
+                            <div className="flex h-[70px] w-24 items-center rounded-full p-1 justify-center bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
+                              {catalogueStickerError ? (
+                                <Book className="h-7 w-7 text-white" />
+                              ) : (
+                                <Image
+                                  src="/assets/stickers/cataloguelogo.png"
+                                  alt="Catalogue Sticker"
+                                  width={100}
+                                  height={100}
+                                  className="h-14 w-14"
+                                  onError={() => setCatalogueStickerError(true)}
+                                  style={{ objectFit: 'contain' }}
+                                />
+                              )}
                             </div>
                             <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
                               Active
@@ -877,8 +891,20 @@ export default function DashboardPage() {
                         </div>
                         <CardContent className="relative p-8">
                           <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg transition-transform duration-300 group-hover:scale-110">
-                              <FileText className="h-7 w-7 text-white" />
+                            <div className="flex h-[70px] w-24 items-center rounded-full justify-center bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
+                              {pdfStickerError ? (
+                                <FileText className="h-7 w-7 text-white" />
+                              ) : (
+                                <Image
+                                  src="/assets/stickers/pdfwhite.png"
+                                  alt="PDF Sticker"
+                                  width={100}
+                                  height={100}
+                                  className="h-14 w-14"
+                                  onError={() => setPdfStickerError(true)}
+                                  style={{ objectFit: 'contain' }}
+                                />
+                              )}
                             </div>
                             <Badge className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100">
                               Coming Soon
@@ -939,15 +965,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Invoices Section - Main Content */}
-          <div className="grid grid-cols-1 gap-6 px-10 pt-7 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 px-10 pt-7 lg:grid-cols-3 lg:items-start">
             {/* Left: Large Purple Card with Progress */}
-            <div className="pt-2 lg:col-span-1 ">
+            <div className="pt-2 lg:col-span-1 lg:flex lg:flex-col lg:h-full">
               <h2 className="text-lg font-semibold text-gray-900">
                 Total Projects
               </h2>
 
               {/* Smaller Stat Cards Below */}
-              <div className="mt-4 grid grid-cols-1 gap-4 rounded-3xl bg-white p-4">
+              <div className="mt-4 grid grid-cols-1 gap-4 rounded-3xl bg-white p-4 lg:flex-1">
                 <Card className="rounded-2xl border-0 bg-gray-50 shadow-sm hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-5">
                     <div className="flex items-center gap-3">
@@ -1010,7 +1036,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Right: Chart and Activity */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 lg:flex lg:flex-col lg:h-full">
               {/* History Section */}
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -1025,107 +1051,149 @@ export default function DashboardPage() {
                 </Button>
               </div>
 
-              {/* Recent Activity List */}
+              {/* Recent Activity Cards Grid */}
               {recentItems.length > 0 ? (
-                <Card className="rounded-3xl border-0 bg-white shadow-lg">
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
-                      {recentItems.slice(0, 3).map(item => {
-                        const catalogue = catalogues.find(c => c.id === item.id)
-                        const toolIcon =
-                          item.type === 'CATALOGUE' ? Book : FileText
-                        const ToolIcon = toolIcon
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:flex-1">
+                  {recentItems.slice(0, 6).map(item => {
+                    const catalogue = catalogues.find(c => c.id === item.id)
+                    if (!catalogue) return null
 
-                        return (
-                          <div
-                            key={item.id}
-                            onClick={() => router.push(`/editor/${item.id}`)}
-                            className="group flex cursor-pointer items-center gap-4 rounded-2xl bg-gray-50 p-4 transition-all hover:bg-gray-100 hover:shadow-md"
-                          >
-                            {(() => {
-                              const colors = [
-                                'from-rose-500 to-fuchsia-500',
-                                'from-indigo-500 to-blue-500',
-                                'from-emerald-400 to-teal-500',
-                                'from-yellow-400 to-orange-500',
-                                'from-purple-500 to-pink-500',
-                                'from-sky-400 to-indigo-400',
-                              ]
-                              // Use split('') instead of spread to support older TS targets and use unsigned hash
-                              const hash = item.id
-                                .split('')
-                                .reduce(
-                                  (h, c) => (h * 31 + c.charCodeAt(0)) >>> 0,
-                                  0
-                                )
-                              const cls = colors[hash % colors.length]
-
-                              return (
-                                <div
-                                  className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${cls} shadow-md`}
+                    return (
+                      <Card
+                        key={item.id}
+                        className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
+                        onClick={() => router.push(`/catalogue/${item.id}/edit`)}
+                      >
+                        <div className="relative h-32 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                          <iframe
+                            src={`/preview/${catalogue.id}`}
+                            className="h-full w-full border-0"
+                            style={{
+                              width: '400%',
+                              height: '400%',
+                              transform: 'scale(0.25)',
+                              transformOrigin: 'top left',
+                              opacity: 1,
+                              transition: 'opacity 0.3s ease-in-out',
+                            }}
+                            title={`Preview of ${catalogue.name}`}
+                          />
+                          <div className="absolute right-2 top-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 bg-white/80 p-0 backdrop-blur-sm hover:bg-white"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <ToolIcon className="h-6 w-6 text-white" />
-                                </div>
-                              )
-                            })()}
+                                  <MoreVertical className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={(e: any) => {
+                                    e.stopPropagation()
+                                    router.push(`/catalogue/${catalogue.id}/edit`)
+                                  }}
+                                >
+                                  <Edit className="mr-2 h-3 w-3" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e: any) => {
+                                    e.stopPropagation()
+                                    if (!catalogue.isPublic) return
+                                    shareCatalogue(catalogue)
+                                  }}
+                                  disabled={!catalogue.isPublic}
+                                >
+                                  <Share2 className="mr-2 h-3 w-3" />
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={(e: any) => {
+                                    e.stopPropagation()
+                                    deleteCatalogue(catalogue.id)
+                                  }}
+                                  className="text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="mr-2 h-3 w-3" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+
+                        <CardContent className="p-3">
+                          <div className="mb-2 flex items-start justify-between">
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <p className="truncate font-semibold text-gray-900">
-                                  {item.name}
-                                </p>
+                              <h3 className="mb-1 truncate text-sm font-semibold text-gray-900">
+                                {catalogue.name}
+                              </h3>
+                              <div className="flex items-center gap-1">
                                 <Badge
                                   variant="outline"
-                                  className="h-5 px-1.5 text-xs"
+                                  className="text-xs capitalize"
                                 >
-                                  {item.type === 'CATALOGUE'
-                                    ? 'Catalogue'
-                                    : 'PDF'}
+                                  {catalogue.theme}
+                                </Badge>
+                                <Badge
+                                  className={`text-xs ${catalogue.isPublic
+                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                    }`}
+                                >
+                                  {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
                               </div>
-                              <div className="mt-1 flex items-center gap-2">
-                                <p className="text-xs text-gray-500">
-                                  Updated{' '}
-                                  {formatDistanceToNow(
-                                    new Date(item.updatedAt),
-                                    { addSuffix: true }
-                                  )}
-                                </p>
-                                {catalogue && catalogue.theme && (
-                                  <>
-                                    <span className="text-xs text-gray-400">
-                                      •
-                                    </span>
-                                    <span className="text-xs capitalize text-gray-500">
-                                      {catalogue.theme}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
                             </div>
-                            <div className="hidden items-center gap-6 md:flex">
-                              <div className="text-center">
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {item.productCount || 0}
-                                </p>
-                                <p className="text-xs text-gray-500">Items</p>
-                              </div>
-                              <Badge
-                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                  catalogue?.isPublic
-                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                }`}
-                              >
-                                {catalogue?.isPublic ? 'Public' : 'Private'}
-                              </Badge>
-                            </div>
-                            <ArrowRight className="h-5 w-5 text-gray-400 transition-transform group-hover:translate-x-1" />
                           </div>
-                        )
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
+
+                          <div className="mb-3 flex items-center justify-between text-xs text-gray-500">
+                            <span>
+                              {catalogue._count?.products || 0} products
+                            </span>
+                            <span>
+                              {formatDistanceToNow(
+                                new Date(catalogue.updatedAt),
+                                { addSuffix: true }
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-2 py-1 text-xs text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
+                              onClick={e => {
+                                e.stopPropagation()
+                                router.push(`/catalogue/${catalogue.id}/edit`)
+                              }}
+                            >
+                              <Edit className="mr-1 h-3 w-3" />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="px-2 py-1 text-xs"
+                              onClick={e => {
+                                e.stopPropagation()
+                                router.push(`/preview/${catalogue.id}`)
+                              }}
+                            >
+                              <Eye className="mr-1 h-3 w-3" />
+                              Preview
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
               ) : (
                 <Card className="rounded-3xl border-0 bg-white p-8 text-center shadow-lg">
                   <div className="flex flex-col items-center gap-3">

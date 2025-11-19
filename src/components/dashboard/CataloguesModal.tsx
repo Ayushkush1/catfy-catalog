@@ -44,6 +44,9 @@ import { formatDistanceToNow } from 'date-fns'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { getAllTemplates } from '@/templates'
+import { useSubscription } from '@/contexts/SubscriptionContext'
+import { UpgradePrompt } from '@/components/UpgradePrompt'
+import { isClientAdmin } from '@/lib/client-auth'
 
 interface Catalogue {
   id: string
@@ -117,6 +120,8 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
   }>({})
   const router = useRouter()
   const supabase = createClient()
+  const { canCreateCatalogue, currentPlan } = useSubscription()
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -157,6 +162,13 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
       } = await supabase.auth.getUser()
       if (!user) {
         toast.error('Please sign in to create a catalogue')
+        return
+      }
+
+      const admin = await isClientAdmin()
+      if (!admin && !canCreateCatalogue()) {
+        toast.error('You have reached the catalogue limit for your current plan.')
+        setShowUpgradePrompt(true)
         return
       }
 
@@ -207,8 +219,15 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
         return
       }
 
+      const admin = await isClientAdmin()
+      if (!admin && !canCreateCatalogue()) {
+        toast.error('You have reached the catalogue limit for your current plan.')
+        setShowUpgradePrompt(true)
+        return
+      }
+
       // Close modal and redirect to catalogue creation wizard with template
-      onOpenChange(false)
+     
       router.push(`/catalogue/new?template=${templateId}`)
     } catch (error) {
       console.error('Error:', error)
@@ -272,18 +291,16 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
               {/* Navigation Buttons */}
               <button
                 onClick={() => setActiveTab('catalogues')}
-                className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'catalogues'
+                className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 ${activeTab === 'catalogues'
                     ? 'bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white shadow-lg shadow-purple-500/30'
                     : 'text-gray-700 hover:bg-white hover:shadow-md'
-                }`}
+                  }`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
-                    activeTab === 'catalogues'
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all ${activeTab === 'catalogues'
                       ? 'bg-white/20'
                       : 'bg-gradient-to-br from-blue-50 to-purple-50 group-hover:from-blue-100 group-hover:to-purple-100'
-                  }`}
+                    }`}
                 >
                   <Book
                     className={`h-5 w-5 ${activeTab === 'catalogues' ? 'text-white' : 'text-[#6366F1]'}`}
@@ -305,18 +322,16 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
 
               <button
                 onClick={() => setActiveTab('templates')}
-                className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'templates'
+                className={`group flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200 ${activeTab === 'templates'
                     ? 'bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white shadow-lg shadow-purple-500/30'
                     : 'text-gray-700 hover:bg-white hover:shadow-md'
-                }`}
+                  }`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all ${
-                    activeTab === 'templates'
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all ${activeTab === 'templates'
                       ? 'bg-white/20'
                       : 'bg-gradient-to-br from-amber-50 to-orange-50 group-hover:from-amber-100 group-hover:to-orange-100'
-                  }`}
+                    }`}
                 >
                   <Layers
                     className={`h-5 w-5 ${activeTab === 'templates' ? 'text-white' : 'text-amber-600'}`}
@@ -549,8 +564,9 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
                                       <DropdownMenuItem
                                         onClick={e => {
                                           e.stopPropagation()
+                                          // Open the preview route in a new tab
                                           window.open(
-                                            `/view/${catalogue.id}`,
+                                            `/preview/${catalogue.id}`,
                                             '_blank'
                                           )
                                         }}
@@ -739,6 +755,14 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
             </div>
           </div>
         </div>
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => setShowUpgradePrompt(false)}
+          currentPlan={currentPlan}
+          feature="additional catalogues"
+          title="Catalogue limit reached"
+          description="Upgrade your plan to create more catalogues."
+        />
       </DialogContent>
     </Dialog>
   )

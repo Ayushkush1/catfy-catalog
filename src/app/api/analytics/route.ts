@@ -60,6 +60,12 @@ export async function GET(request: NextRequest) {
       0
     )
 
+    // Calculate total views from public catalogues
+    const totalViews = catalogues.reduce(
+      (sum, cat) => sum + (cat.viewCount || 0),
+      0
+    )
+
     // Get analytics events
     const analytics = await prisma.analytics.findMany({
       where: {
@@ -219,6 +225,7 @@ export async function GET(request: NextRequest) {
         archivedCatalogues,
         totalProducts,
         totalCategories,
+        totalViews,
         totalExports,
         completedExports,
         pendingExports,
@@ -237,11 +244,11 @@ export async function GET(request: NextRequest) {
       dailyActivity,
       subscription: subscription
         ? {
-            plan: subscription.plan,
-            status: subscription.status,
-            billingCycle: subscription.billingCycle,
-            currentPeriodEnd: subscription.currentPeriodEnd,
-          }
+          plan: subscription.plan,
+          status: subscription.status,
+          billingCycle: subscription.billingCycle,
+          currentPeriodEnd: subscription.currentPeriodEnd,
+        }
         : null,
     })
   } catch (error) {

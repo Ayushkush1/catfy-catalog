@@ -47,22 +47,22 @@ export default function AnalyticsPage() {
             if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
               setAnalyticsData(parsed.data)
               setLoading(false)
-              // revalidate in background
-              ;(async () => {
-                try {
-                  const response = await fetch('/api/analytics')
-                  if (response.ok) {
-                    const fresh = await response.json()
-                    setAnalyticsData(fresh)
-                    try {
-                      sessionStorage.setItem(
-                        CACHE_KEY,
-                        JSON.stringify({ _ts: Date.now(), data: fresh })
-                      )
-                    } catch (e) {}
-                  }
-                } catch (e) {}
-              })()
+                // revalidate in background
+                ; (async () => {
+                  try {
+                    const response = await fetch('/api/analytics')
+                    if (response.ok) {
+                      const fresh = await response.json()
+                      setAnalyticsData(fresh)
+                      try {
+                        sessionStorage.setItem(
+                          CACHE_KEY,
+                          JSON.stringify({ _ts: Date.now(), data: fresh })
+                        )
+                      } catch (e) { }
+                    }
+                  } catch (e) { }
+                })()
               return
             }
           }
@@ -79,7 +79,7 @@ export default function AnalyticsPage() {
               CACHE_KEY,
               JSON.stringify({ _ts: Date.now(), data })
             )
-          } catch (e) {}
+          } catch (e) { }
         }
       } catch (error) {
         console.error('Error fetching analytics:', error)
@@ -133,46 +133,47 @@ export default function AnalyticsPage() {
 
   const stats = analyticsData
     ? [
-        {
-          title: 'Total Catalogues',
-          value: analyticsData.overview?.totalCatalogues?.toString() || '0',
-          change: `${(analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? '+' : ''}${analyticsData.growth?.catalogueGrowth ?? 0}%`,
-          trend:
-            (analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? 'up' : 'down',
-          icon: FolderOpen,
-          color: 'from-purple-500 to-pink-500',
-          subtitle: `${analyticsData.overview?.publishedCatalogues ?? 0} published`,
-        },
-        {
-          title: 'Total Products',
-          value: analyticsData.overview?.totalProducts?.toString() || '0',
-          change: `${analyticsData.events?.PRODUCT_ADDED ?? 0} added`,
-          trend: 'up',
-          icon: LayoutTemplate,
-          color: 'from-green-500 to-emerald-500',
-          subtitle: `Across ${analyticsData.overview?.totalCatalogues ?? 0} catalogues`,
-        },
-        {
-          title: 'Templates Used',
-          value: analyticsData.overview?.userTemplates?.toString() || '0',
-          change: `${analyticsData.overview?.availableTemplates ?? 0} available`,
-          trend: 'up',
-          icon: Paintbrush,
-          color: 'from-blue-500 to-cyan-500',
-          subtitle: 'Custom templates',
-        },
-      ]
+      {
+        title: 'Total Catalogues',
+        value: analyticsData.overview?.totalCatalogues?.toString() || '0',
+        change: `${(analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? '+' : ''}${analyticsData.growth?.catalogueGrowth ?? 0}%`,
+        trend:
+          (analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? 'up' : 'down',
+        icon: FolderOpen,
+        color: 'from-purple-500 to-pink-500',
+        subtitle: `${analyticsData.overview?.publishedCatalogues ?? 0} published`,
+      },
+
+      {
+        title: 'Public Views',
+        value: analyticsData.overview?.totalViews?.toString() || '0',
+        change: 'Total views',
+        trend: 'up',
+        icon: Eye,
+        color: 'from-blue-500 to-cyan-500',
+        subtitle: 'From public URLs',
+      },
+      {
+        title: 'Templates Used',
+        value: analyticsData.overview?.userTemplates?.toString() || '0',
+        change: `${analyticsData.overview?.availableTemplates ?? 0} available`,
+        trend: 'up',
+        icon: Paintbrush,
+        color: 'from-orange-500 to-red-500',
+        subtitle: 'Custom templates',
+      },
+    ]
     : []
 
   const workspaceProgress = analyticsData?.overview
     ? Math.min(
-        Math.round(
-          ((analyticsData.overview.publishedCatalogues ?? 0) /
-            (analyticsData.overview.totalCatalogues ?? 1)) *
-            100
-        ),
+      Math.round(
+        ((analyticsData.overview.publishedCatalogues ?? 0) /
+          (analyticsData.overview.totalCatalogues ?? 1)) *
         100
-      )
+      ),
+      100
+    )
     : 0
 
   // catalogue visibility counts
@@ -341,8 +342,8 @@ export default function AnalyticsPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Left column */}
             <div className="space-y-6 lg:col-span-2">
-              {/* Stats Grid (3 items) */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              {/* Stats Grid (4 items) */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {stats.map(stat => {
                   const Icon = stat.icon
                   return (
@@ -535,12 +536,12 @@ export default function AnalyticsPage() {
                           <span className="text-lg font-bold text-blue-600">
                             {(analyticsData.overview?.totalExports ?? 0) > 0
                               ? Math.round(
-                                  ((analyticsData.overview?.completedExports ??
-                                    0) /
-                                    (analyticsData.overview?.totalExports ??
-                                      1)) *
-                                    100
-                                )
+                                ((analyticsData.overview?.completedExports ??
+                                  0) /
+                                  (analyticsData.overview?.totalExports ??
+                                    1)) *
+                                100
+                              )
                               : 0}
                             %
                           </span>

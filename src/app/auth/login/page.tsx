@@ -100,7 +100,7 @@ export default function LoginPage() {
         <div className="relative z-10 flex h-screen flex-col justify-center px-40 text-white">
           {/* Logo */}
           <div className="mb-6">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-white/20">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatalogueAI Logo"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUser, getUserProfile } from '@/lib/auth'
+import { getUser, getUserProfile, isAdmin } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { AccountType } from '@prisma/client'
 import { z } from 'zod'
@@ -345,8 +345,9 @@ export async function POST(request: NextRequest) {
       where: { profileId: profile.id },
     })
 
-    // Free tier: 1 catalogue, Paid: unlimited
-    if (!activeSubscription && catalogueCount >= 1) {
+    // Free tier: 1 catalogue, Paid: unlimited. Admin bypasses limit.
+    const admin = await isAdmin()
+    if (!admin && !activeSubscription && catalogueCount >= 1) {
       return NextResponse.json(
         { error: 'Upgrade to create more catalogues' },
         { status: 403 }

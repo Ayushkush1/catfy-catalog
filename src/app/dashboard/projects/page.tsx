@@ -39,10 +39,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Poppins } from 'next/font/google'
 import { toast } from 'sonner'
+import { isClientAdmin } from '@/lib/client-auth'
 import { formatDistanceToNow, format } from 'date-fns'
 import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
+import { ShareDialog } from '@/components/shared/ShareDialog'
 import Head from 'next/head'
 import { SubscriptionPlan } from '@prisma/client'
 
@@ -255,6 +257,28 @@ export default function ProjectsPage() {
     }
   }, [])
 
+  const handleCreateCatalogue = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        toast.error('Please sign in to create a catalogue')
+        return
+      }
+      const admin = await isClientAdmin()
+      if (!admin && !canCreateCatalogue()) {
+        toast.error('You have reached the catalogue limit for your current plan.')
+        setShowUpgradePrompt(true)
+        return
+      }
+      router.push('/catalogue/new')
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Failed to navigate to catalogue creation')
+    }
+  }
+
   const loadProjectsData = async () => {
     try {
       setIsLoading(true)
@@ -344,6 +368,9 @@ export default function ProjectsPage() {
 
   const { canCreateCatalogue } = useSubscription()
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [shareDialogOpen, setShareDialogOpen] = useState(false)
+  const [shareDialogUrl, setShareDialogUrl] = useState('')
+  const [shareDialogName, setShareDialogName] = useState('')
 
   if (isLoading) {
     return (
@@ -384,38 +411,32 @@ export default function ProjectsPage() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="mb-8 flex h-14 w-full items-center justify-between rounded-2xl bg-white p-2 shadow-sm">
-              <div className="flex items-center gap-3">
-                <TabsTrigger
-                  value="projects"
-                  className="flex items-center gap-2 rounded-2xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <FolderOpen className="h-4 w-4" />
-                  <span>My Projects</span>
-                </TabsTrigger>
+            <TabsList className="mb-8 flex h-12 w-full items-center justify-between bg-transparent">
+              <div className="rounded-2xl bg-white p-1.5 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <TabsTrigger
+                    value="projects"
+                    className="flex items-center gap-2 rounded-xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                    <span>My Projects</span>
+                  </TabsTrigger>
 
-                <TabsTrigger
-                  value="templates"
-                  className="flex items-center gap-2 rounded-2xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
-                >
-                  <Palette className="h-4 w-4" />
-                  <span>Templates</span>
-                </TabsTrigger>
+                  <TabsTrigger
+                    value="templates"
+                    className="flex items-center gap-2 rounded-xl px-10 py-2.5 text-sm font-medium data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#6366F1] data-[state=active]:to-[#2D1B69] data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    <Palette className="h-4 w-4" />
+                    <span>Templates</span>
+                  </TabsTrigger>
+                </div>
               </div>
 
               <div className="flex items-center">
                 <Button
                   size="sm"
-                  className="ml-4 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
-                  onClick={e => {
-                    e.stopPropagation()
-                    if (canCreateCatalogue()) {
-                      setSelectedTemplate(null)
-                      setShowCataloguesModal(true)
-                    } else {
-                      setShowUpgradePrompt(true)
-                    }
-                  }}
+                  className="ml-4 h-10 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-4 pr-5 text-white shadow-md hover:from-[#5558E3] hover:to-[#1e0f4d]"
+                  onClick={handleCreateCatalogue}
                 >
                   <Plus className="mr-2 h-5 w-4" />
                   New Catalogue
@@ -443,7 +464,9 @@ export default function ProjectsPage() {
                       <Card
                         key={catalogue.id}
                         className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
-                        onClick={() => router.push(`/editor/${catalogue.id}`)}
+                        onClick={() =>
+                          router.push(`/catalogue/${catalogue.id}/edit`)
+                        }
                       >
                         <div className="relative h-36 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 md:h-40 lg:h-44">
                           <iframe
@@ -473,18 +496,23 @@ export default function ProjectsPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuItem
-                                  onClick={e => {
+                                  onClick={(e: any) => {
                                     e.stopPropagation()
-                                    router.push(`/editor/${catalogue.id}`)
+                                    router.push(
+                                      `/catalogue/${catalogue.id}/edit`
+                                    )
                                   }}
                                 >
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit Project
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={e => {
+                                  onClick={(e: any) => {
                                     e.stopPropagation()
-                                    shareCatalogue(catalogue)
+                                    if (!catalogue.isPublic) return
+                                    setShareDialogUrl(`${typeof window !== 'undefined' ? window.location.origin : ''}/preview/${catalogue.id}`)
+                                    setShareDialogName(catalogue.name)
+                                    setShareDialogOpen(true)
                                   }}
                                   disabled={!catalogue.isPublic}
                                 >
@@ -493,7 +521,7 @@ export default function ProjectsPage() {
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
-                                  onClick={e => {
+                                  onClick={(e: any) => {
                                     e.stopPropagation()
                                     deleteCatalogue(catalogue.id)
                                   }}
@@ -521,11 +549,10 @@ export default function ProjectsPage() {
                                   {catalogue.theme}
                                 </Badge>
                                 <Badge
-                                  className={`text-xs ${
-                                    catalogue.isPublic
+                                  className={`text-xs ${catalogue.isPublic
                                       ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                                       : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                  }`}
+                                    }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
@@ -558,7 +585,7 @@ export default function ProjectsPage() {
                               className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
                               onClick={e => {
                                 e.stopPropagation()
-                                router.push(`/editor/${catalogue.id}`)
+                                router.push(`/catalogue/${catalogue.id}/edit`)
                               }}
                             >
                               <Edit className="mr-2 h-4 w-4" />
@@ -755,6 +782,14 @@ export default function ProjectsPage() {
           <CataloguesModal
             open={showCataloguesModal}
             onOpenChange={setShowCataloguesModal}
+          />
+
+          {/* Share Dialog (controlled) */}
+          <ShareDialog
+            open={shareDialogOpen}
+            onOpenChange={setShareDialogOpen}
+            shareUrl={shareDialogUrl}
+            catalogueName={shareDialogName}
           />
 
           {/* Upgrade Prompt Modal */}

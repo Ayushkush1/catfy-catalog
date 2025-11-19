@@ -73,6 +73,7 @@ import {
   Sparkles,
   Trash2,
   Users,
+  X,
   Zap,
 } from 'lucide-react'
 import Link from 'next/link'
@@ -170,16 +171,17 @@ export default function EditCataloguePage() {
   })
   const [showProductDialog, setShowProductDialog] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [productForm, setProductForm] = useState({
-    name: '',
-    description: '',
-    price: 0,
-    priceDisplay: 'show' as 'show' | 'hide' | 'contact',
-    categoryId: '',
-    isActive: true,
-    imageUrl: '',
-    tags: [] as string[],
-  })
+  const [productForms, setProductForms] = useState<Array<{
+    id: string
+    name: string
+    description: string
+    price: number
+    priceDisplay: 'show' | 'hide' | 'contact'
+    categoryId: string
+    isActive: boolean
+    imageUrl: string
+    tags: string[]
+  }>>([])
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
@@ -191,6 +193,10 @@ export default function EditCataloguePage() {
   const [isOwner, setIsOwner] = useState(false)
   const [currentUserHasPremiumAccess, setCurrentUserHasPremiumAccess] =
     useState(false)
+
+  // New category creation state
+  const [isCreatingNewCategory, setIsCreatingNewCategory] = useState<Record<number, boolean>>({})
+  const [newCategoryForm, setNewCategoryForm] = useState<Record<number, { name: string; description: string }>>({})
 
   // Collaborative editing state
   const [catalogueVersion, setCatalogueVersion] = useState<number>(1)
@@ -984,18 +990,60 @@ export default function EditCataloguePage() {
     }
 
     setEditingProduct(product || null)
-    setProductForm({
-      name: product?.name || '',
-      description: product?.description || '',
-      price: product?.price || 0,
-      priceDisplay:
-        (product?.priceDisplay as 'show' | 'hide' | 'contact') || 'show',
-      categoryId: product?.categoryId || '',
-      isActive: product?.isActive ?? true,
-      imageUrl: product?.imageUrl || '',
-      tags: product?.tags || [],
-    })
+    if (product) {
+      // Editing a single product - initialize with one form
+      setProductForms([{
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        priceDisplay: (product.priceDisplay as 'show' | 'hide' | 'contact') || 'show',
+        categoryId: product.categoryId,
+        isActive: product.isActive ?? true,
+        imageUrl: product.imageUrl || '',
+        tags: product.tags || [],
+      }])
+    } else {
+      // Adding new products - start with one empty form
+      setProductForms([{
+        id: `temp-${Date.now()}`,
+        name: '',
+        description: '',
+        price: 0,
+        priceDisplay: 'show' as 'show' | 'hide' | 'contact',
+        categoryId: '',
+        isActive: true,
+        imageUrl: '',
+        tags: [],
+      }])
+    }
     setShowProductDialog(true)
+  }
+
+  const addAnotherProduct = () => {
+    setProductForms(prev => [...prev, {
+      id: `temp-${Date.now()}-${prev.length}`,
+      name: '',
+      description: '',
+      price: 0,
+      priceDisplay: 'show' as 'show' | 'hide' | 'contact',
+      categoryId: '',
+      isActive: true,
+      imageUrl: '',
+      tags: [],
+    }])
+  }
+
+  const removeProductForm = (index: number) => {
+    if (productForms.length > 1) {
+      setProductForms(prev => prev.filter((_, i) => i !== index))
+    }
+  }
+
+  const updateProductForm = (index: number, updates: Partial<typeof productForms[0]>) => {
+    setProductForms(prev => prev.map((form, i) =>
+      i === index ? { ...form, ...updates } : form
+    ))
   }
 
   const saveCategory = async () => {
@@ -1040,140 +1088,123 @@ export default function EditCataloguePage() {
     }
   }
 
-  const saveProduct = async () => {
-    if (!productForm.name.trim()) {
-      toast.error('Product name is required')
+  const createNewCategory = async (index: number) => {
+    const form = newCategoryForm[index]
+    if (!form?.name.trim()) {
+      toast.error('Category name is required')
       return
     }
 
     try {
-      const url = editingProduct
-        ? `/api/catalogues/${catalogueId}/products/${editingProduct.id}`
-        : `/api/catalogues/${catalogueId}/products`
-
-      const method = editingProduct ? 'PUT' : 'POST'
-
-      const productData: any = {
-        name: productForm.name,
-        description: productForm.description,
-        price: Number(productForm.price),
-        priceDisplay: productForm.priceDisplay,
-        isActive: productForm.isActive,
-        imageUrl: productForm.imageUrl || undefined,
-        tags: productForm.tags,
-      }
-
-      // Only include categoryId if it's not empty
-      if (productForm.categoryId && productForm.categoryId.trim() !== '') {
-        productData.categoryId = productForm.categoryId
-      }
-
-      console.log('Saving product with data:', productData)
-      console.log('Product form state:', productForm)
-
-      const response = await fetch(url, {
-        method,
+      const response = await fetch(`/api/catalogues/${catalogueId}/categories`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(productData),
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description,
+        }),
       })
-
-      console.log('Response status:', response.status)
 
       if (!response.ok) {
         const errorData = await response.json()
-        console.log('Error response:', errorData)
-        throw new Error(errorData.error || 'Failed to save product')
+        throw new Error(errorData.error || 'Failed to create category')
       }
 
-      const responseData = await response.json()
-      console.log('Success response data:', responseData)
+      const newCategory = await response.json()
+
+      toast.success('Category created successfully!')
+
+      // Update the product form with the new category
+      updateProductForm(index, { categoryId: newCategory.category.id })
+
+      // Reset the new category form
+      setNewCategoryForm(prev => ({ ...prev, [index]: { name: '', description: '' } }))
+      setIsCreatingNewCategory(prev => ({ ...prev, [index]: false }))
+
+      // Refresh catalogue data
+      await fetchCatalogue()
+    } catch (error: any) {
+      console.error('Error creating category:', error)
+      toast.error(error.message || 'Failed to create category')
+    }
+  }
+
+  const saveProduct = async () => {
+    // Validate that at least one product has a name
+    const validProducts = productForms.filter(form => form.name.trim())
+    if (validProducts.length === 0) {
+      toast.error('At least one product must have a name')
+      return
+    }
+
+    try {
+      // Save each product individually
+      const savePromises = validProducts.map(async (productForm) => {
+        const isEditing = editingProduct && productForm.id === editingProduct.id
+        const url = isEditing
+          ? `/api/catalogues/${catalogueId}/products/${editingProduct.id}`
+          : `/api/catalogues/${catalogueId}/products`
+
+        const method = isEditing ? 'PUT' : 'POST'
+
+        const productData: any = {
+          name: productForm.name,
+          description: productForm.description,
+          price: Number(productForm.price),
+          priceDisplay: productForm.priceDisplay,
+          isActive: productForm.isActive,
+          imageUrl: productForm.imageUrl || undefined,
+          tags: productForm.tags,
+        }
+
+        // Only include categoryId if it's not empty
+        if (productForm.categoryId && productForm.categoryId.trim() !== '') {
+          productData.categoryId = productForm.categoryId
+        }
+
+        console.log('Saving product with data:', productData)
+        console.log('Product form state:', productForm)
+
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(productData),
+        })
+
+        console.log('Response status:', response.status)
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          console.log('Error response:', errorData)
+          throw new Error(errorData.error || 'Failed to save product')
+        }
+
+        const responseData = await response.json()
+        console.log('Success response data:', responseData)
+        return responseData
+      })
+
+      // Wait for all products to be saved
+      await Promise.all(savePromises)
 
       toast.success(
-        `Product ${editingProduct ? 'updated' : 'created'} successfully!`
+        `Successfully saved ${validProducts.length} product${validProducts.length > 1 ? 's' : ''}!`
       )
       setShowProductDialog(false)
-      setProductForm({
-        name: '',
-        description: '',
-        price: 0,
-        priceDisplay: 'show' as 'show' | 'hide' | 'contact',
-        categoryId: '',
-        isActive: true,
-        imageUrl: '',
-        tags: [],
-      })
+      setProductForms([])
       setEditingProduct(null)
       await fetchCatalogue()
     } catch (error: any) {
-      console.error('Error saving product:', error)
-      toast.error(error.message || 'Failed to save product')
+      console.error('Error saving products:', error)
+      toast.error(error.message || 'Failed to save products')
     }
   }
 
-  // AI Features
-  const handleGenerateDescription = async (product: Product) => {
-    setIsGeneratingDescription(true)
-
-    try {
-      const response = await fetch('/api/ai/description', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: `${product.name} ${product.tags || ''}`,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success && data.description) {
-        setProductForm(prev => ({ ...prev, description: data.description }))
-        toast.success('AI description generated successfully!')
-      } else {
-        throw new Error(data.error || 'Failed to generate description')
-      }
-    } catch (error) {
-      console.error('AI Generation Error:', error)
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Failed to generate description'
-      )
-    } finally {
-      setIsGeneratingDescription(false)
-    }
-  }
-
-  const handleSuggestCategory = async (product: Product) => {
-    try {
-      const response = await fetch('/api/ai/category', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          text: `${product.name} ${product.description || ''}`,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success && data.category) {
-        setProductForm(prev => ({ ...prev, categoryId: data.category.id }))
-        toast.success('AI category suggestion applied!')
-      } else {
-        throw new Error(data.error || 'Failed to suggest category')
-      }
-    } catch (error) {
-      console.error('AI Suggestion Error:', error)
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to suggest category'
-      )
-    }
-  }
+  // AI helpers moved inline into per-form controls in the product dialog.
 
   const toggleSmartSort = () => {
     setSmartSortEnabled(!smartSortEnabled)
@@ -1280,16 +1311,13 @@ export default function EditCataloguePage() {
   if (isLoading) {
     return (
       <>
-        {/* Header skeleton */}
-        <div className="bg-[#E8EAF6] pl-20">
+        <div className="bg-[#E8EAF6] pl-24">
           <Header title="Edit Catalogue" showGradientBanner={true} />
         </div>
 
-        {/* Page layout skeleton */}
-        <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-28">
+        <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-32">
           <div className="flex">
-            {/* Left Sidebar skeleton */}
-            <div className="min-h-screen w-64 bg-white">
+            <div className="min-h-screen w-64 bg-white pt-4">
               <div className="space-y-1 p-4">
                 <Skeleton className="mb-4 h-9 w-full rounded-lg" />
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -1298,7 +1326,6 @@ export default function EditCataloguePage() {
               </div>
             </div>
 
-            {/* Main Content skeleton */}
             <div className="mr-8 flex flex-1 bg-gray-50">
               <div className="flex-1 space-y-6 p-6">
                 {/* Stats cards */}
@@ -1308,7 +1335,6 @@ export default function EditCataloguePage() {
                   ))}
                 </div>
 
-                {/* Recent Categories Section */}
                 <div className="grid grid-cols-5 gap-6">
                   <div className="col-span-4">
                     <div className="rounded-lg bg-white p-6">
@@ -1321,13 +1347,12 @@ export default function EditCataloguePage() {
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {Array.from({ length: 3 }).map((_, i) => (
-                          <Skeleton key={i} className="h-64 rounded-2xl" />
+                          <Skeleton key={i} className="h-48 rounded-lg" />
                         ))}
                       </div>
                     </div>
                   </div>
 
-                  {/* Quick Actions skeleton */}
                   <div className="col-span-1">
                     <div className="px-1">
                       <div className="mb-6">
@@ -1404,55 +1429,52 @@ export default function EditCataloguePage() {
                     setActiveTab('overview')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'overview'
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
                       ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Eye className="mr-3 h-4 w-4" />
                   Overview
                 </button>
 
-                <button
-                  onClick={() => {
-                    setActiveTab('categories')
-                    setCurrentSection('categories')
-                  }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'categories'
-                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <FolderOpen className="mr-3 h-4 w-4" />
-                  Categories
-                  <span
-                    className={`ml-auto rounded-full px-2 py-1 text-xs ${
-                      activeTab === 'categories'
-                        ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}
-                  >
-                    {catalogue.categories.length}
-                  </span>
-                </button>
+
 
                 <button
                   onClick={() => {
                     setActiveTab('products')
                     setCurrentSection('products')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'products'
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
                       ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Package className="mr-3 h-4 w-4" />
                   Products
                   <span className="ml-auto rounded-full bg-gray-200 px-2 py-1 text-xs text-gray-600">
                     {catalogue.products.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('categories')
+                    setCurrentSection('categories')
+                  }}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                >
+                  <FolderOpen className="mr-3 h-4 w-4" />
+                  Categories
+                  <span
+                    className={`ml-auto rounded-full px-2 py-1 text-xs ${activeTab === 'categories'
+                        ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                        : 'bg-gray-200 text-gray-600'
+                      }`}
+                  >
+                    {catalogue.categories.length}
                   </span>
                 </button>
 
@@ -1461,11 +1483,10 @@ export default function EditCataloguePage() {
                     setActiveTab('theme')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'theme'
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
                       ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
                   Template
@@ -1476,11 +1497,10 @@ export default function EditCataloguePage() {
                     setActiveTab('team')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'team'
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
                       ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Users className="mr-3 h-4 w-4" />
                   Team
@@ -1488,11 +1508,10 @@ export default function EditCataloguePage() {
 
                 <button
                   onClick={() => setActiveTab('settings')}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
-                    activeTab === 'settings'
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'settings'
                       ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
                       : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <Settings className="mr-3 h-4 w-4" />
                   Settings
@@ -1615,185 +1634,203 @@ export default function EditCataloguePage() {
                       </Card>
                     </div>
 
-                    {/* Recent Categories and Quick Actions Layout */}
-                    <div className="grid grid-cols-5 gap-6">
-                      {/* Recent Categories - Left Column (2/3) */}
+                    {/* Recent Products and Quick Actions Layout */}
+                    <div className="grid grid-cols-5 gap-6  ">
+                      {/* Recent Products - Left Column (2/3) */}
                       <div className="col-span-4">
                         <div className="rounded-lg bg-white p-6">
                           <div className="mb-6 flex items-center justify-between">
                             <div>
                               <h3 className="text-lg font-semibold text-[#1A1B41]">
-                                Recent Categories
+                                Recent Products
                               </h3>
                               <p className="text-xs text-gray-500">
-                                Showing 3 of {catalogue.categories.length}{' '}
-                                categories
+                                Showing 3 of {catalogue.products.length}{' '}
+                                products
                               </p>
                             </div>
                             <Button
-                              variant="outline"
                               size="xs"
-                              className="border-[#301F70]/20 text-[#301F70] hover:bg-[#301F70]/10"
-                              onClick={() => setActiveTab('categories')}
+                              className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] py-2 px-4 text-white"
+                              onClick={() => openProductDialog()}
                             >
-                              Advanced Search
+                              <Plus className="mr-2 h-4 w-4" />
+                              Add Product
                             </Button>
                           </div>
 
-                          {catalogue.categories.length === 0 ? (
+                          {catalogue.products.length === 0 ? (
                             <div className="py-8 text-center">
-                              <FolderOpen className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                              <Package className="mx-auto mb-4 h-12 w-12 text-gray-400" />
                               <h3 className="mb-2 text-lg font-medium text-gray-900">
-                                No categories yet
+                                No products yet
                               </h3>
                               <p className="mb-4 text-gray-600">
-                                Create your first category to organize your
-                                products
+                                Add your first product to start building your
+                                catalogue
                               </p>
                               <Button
-                                onClick={() => openCategoryDialog()}
+                                onClick={() => openProductDialog()}
                                 className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white"
                               >
                                 <Plus className="mr-2 h-4 w-4" />
-                                Create Category
+                                Add Product
                               </Button>
                             </div>
                           ) : (
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                              {catalogue.categories
+                              {catalogue.products
                                 .slice(0, 3)
-                                .map(category => {
-                                  const categoryProducts =
-                                    catalogue.products.filter(
-                                      p => p.categoryId === category.id
-                                    )
-                                  const previewImage = categoryProducts.find(
-                                    p => p.imageUrl
-                                  )?.imageUrl
+                                .map(product => (
+                                  <div
+                                    key={product.id}
+                                    className="group cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+                                    style={{
+                                      transitionProperty:
+                                        'box-shadow, transform, opacity',
+                                      transitionTimingFunction:
+                                        'cubic-bezier(0.4, 0, 0.2, 1)',
+                                    }}
+                                    onClick={() => openProductDialog(product)}
+                                  >
+                                    <div className="relative h-32 bg-gray-100">
+                                      {product.imageUrl ? (
+                                        <img
+                                          src={product.imageUrl}
+                                          alt={product.name}
+                                          className="h-full w-full object-cover"
+                                          onError={e => {
+                                            e.currentTarget.style.display = 'none'
+                                            const nextElement = e.currentTarget
+                                              .nextElementSibling as HTMLElement
+                                            if (nextElement) {
+                                              nextElement.style.display = 'flex'
+                                            }
+                                          }}
+                                        />
+                                      ) : null}
 
-                                  return (
-                                    <div
-                                      key={category.id}
-                                      className="group relative transform-gpu cursor-pointer overflow-hidden rounded-2xl border border-gray-200/60 bg-gradient-to-br from-white via-white to-gray-50/50 shadow-md backdrop-blur-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:shadow-[#301F70]/10"
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        openCategoryDialog(category)
-                                      }}
-                                      style={{
-                                        backgroundImage:
-                                          'radial-gradient(circle at top right, rgba(48, 31, 112, 0.03), transparent 50%)',
-                                      }}
-                                    >
-                                      {/* Animated Background Effects */}
-                                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#301F70]/5 to-[#A2E8DD]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-
-                                      {/* Category Image Section - Reduced height */}
-                                      <div className="relative h-32 overflow-hidden rounded-t-2xl bg-gradient-to-br from-gray-50 to-gray-100/80">
-                                        {previewImage ? (
-                                          <>
-                                            <img
-                                              src={previewImage}
-                                              alt={category.name}
-                                              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                                            />
-                                            {/* Image overlay gradient */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                                          </>
-                                        ) : (
-                                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#779CAB]/20 via-[#A2E8DD]/15 to-[#301F70]/10 transition-all duration-500 group-hover:from-[#301F70]/15 group-hover:via-[#A2E8DD]/20 group-hover:to-[#779CAB]/15">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/50 bg-white/90 shadow-lg backdrop-blur-sm transition-all duration-300 group-hover:scale-110">
-                                              <Package className="h-7 w-7 text-[#1A1B41] transition-colors duration-300 group-hover:text-[#301F70]" />
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        {/* Compact Badge */}
-                                        <div className="absolute left-2 top-2">
-                                          <Badge
-                                            variant="secondary"
-                                            className="rounded-full bg-white/60 px-2 py-0.5   text-[10px] text-xs font-medium text-[#1A1B41] shadow-md backdrop-blur-md transition-all duration-300"
-                                          >
-                                            Public
-                                          </Badge>
+                                      <div
+                                        className={`absolute inset-0 flex items-center justify-center bg-gray-100 ${product.imageUrl ? 'hidden' : 'flex'}`}
+                                      >
+                                        <div className="text-center text-gray-400">
+                                          <Package className="mx-auto mb-1 h-8 w-8" />
+                                          <p className="text-xs">No Image</p>
                                         </div>
                                       </div>
 
-                                      {/* Compact Category Info */}
-                                      <div className="relative z-10 p-4">
-                                        <div className="mb-3">
-                                          <h4 className="mb-2 line-clamp-1 text-sm font-semibold text-[#1A1B41] transition-colors duration-300 group-hover:text-[#301F70]">
-                                            {category.name}
-                                          </h4>
+                                      {/* Hover Action Buttons */}
+                                      <div className="absolute right-2 top-2 flex translate-y-1 transform gap-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+                                        <button
+                                          onClick={e => {
+                                            e.stopPropagation()
+                                            openProductDialog(product)
+                                          }}
+                                          className="group/btn flex h-7 w-7 items-center justify-center rounded-lg border border-white/60 bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-[#301F70] hover:text-white"
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                          onClick={e => {
+                                            e.stopPropagation()
+                                            handleDeleteProduct(product.id)
+                                          }}
+                                          className="group/btn flex h-7 w-7 items-center justify-center rounded-lg border border-white/60 bg-white/95 shadow-lg backdrop-blur-sm transition-all duration-200 hover:bg-red-500 hover:text-white"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
 
-                                          {/* Compact stats */}
-                                          <div className="mb-3 flex items-center gap-2">
-                                            <div className="h-2 w-2 rounded-full bg-[#A2E8DD] transition-colors duration-300 group-hover:bg-[#301F70]" />
-                                            <p className="text-xs font-medium text-gray-600 transition-colors duration-300 group-hover:text-gray-700">
-                                              {category._count.products}{' '}
-                                              {category._count.products === 1
-                                                ? 'Product'
-                                                : 'Products'}
-                                            </p>
-                                          </div>
+                                      <div className="absolute left-2 top-2">
+                                        <Badge
+                                          variant={
+                                            product.isActive ? 'default' : 'secondary'
+                                          }
+                                          className="bg-white/90 text-gray-800 text-xs px-2 py-0.5"
+                                        >
+                                          {product.isActive
+                                            ? 'Available'
+                                            : 'Unavailable'}
+                                        </Badge>
+                                      </div>
+                                    </div>
+
+                                    <div className="p-3">
+                                      <div className="space-y-2">
+                                        <div>
+                                          <h3 className="text-sm font-semibold text-gray-900 transition-colors group-hover:text-blue-600 line-clamp-1">
+                                            {product.name}
+                                          </h3>
+                                          <p className="text-xs text-gray-600 line-clamp-2 leading-tight">
+                                            {product.description ||
+                                              'No description available'}
+                                          </p>
                                         </div>
 
-                                        {/* Compact Product Thumbnails */}
-                                        {categoryProducts.length > 0 && (
-                                          <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                                                Featured
-                                              </p>
-                                            </div>
-                                            <div className="flex gap-1.5">
-                                              {categoryProducts
-                                                .slice(0, 3)
-                                                .map((product, index) => (
-                                                  <div
-                                                    key={product.id}
-                                                    className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200/60 shadow-sm"
-                                                  >
-                                                    {product.imageUrl ? (
-                                                      <img
-                                                        src={product.imageUrl}
-                                                        alt={product.name}
-                                                        className="h-full w-full object-cover"
-                                                      />
-                                                    ) : (
-                                                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50">
-                                                        <Package className="h-3 w-3 text-gray-400" />
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                ))}
-                                              {categoryProducts.length > 3 && (
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200/60 bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm">
-                                                  <span className="text-xs font-medium text-gray-600">
-                                                    +
-                                                    {categoryProducts.length -
-                                                      3}
-                                                  </span>
-                                                </div>
-                                              )}
-                                            </div>
+                                        <div className="flex items-center justify-between">
+                                          <div className="text-sm font-bold text-gray-900">
+                                            {product.priceDisplay === 'show' &&
+                                              product.price ? (
+                                              `$${Number(product.price).toFixed(2)}`
+                                            ) : product.priceDisplay === 'contact' ? (
+                                              <span className="text-xs font-medium text-blue-600">
+                                                Contact for Price
+                                              </span>
+                                            ) : (
+                                              <span className="text-xs font-medium text-gray-500">
+                                                Price Hidden
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                                            {product.categoryId
+                                              ? catalogue.categories.find(
+                                                c => c.id === product.categoryId
+                                              )?.name || 'Unknown'
+                                              : 'Uncategorized'}
+                                          </Badge>
+                                        </div>
+
+                                        {product.tags && product.tags.length > 0 && (
+                                          <div className="flex flex-wrap gap-1">
+                                            {product.tags
+                                              .slice(0, 2)
+                                              .map((tag, index) => (
+                                                <Badge
+                                                  key={index}
+                                                  variant="secondary"
+                                                  className="px-1.5 py-0.5 text-xs"
+                                                >
+                                                  {tag}
+                                                </Badge>
+                                              ))}
+                                            {product.tags.length > 2 && (
+                                              <Badge
+                                                variant="secondary"
+                                                className="px-1.5 py-0.5 text-xs"
+                                              >
+                                                +{product.tags.length - 2}
+                                              </Badge>
+                                            )}
                                           </div>
                                         )}
 
-                                        {/* Compact footer - only show on hover */}
-                                        <div className="mt-3 border-t border-gray-100/80 opacity-0 transition-all duration-300 group-hover:opacity-100">
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-xs text-gray-500">
+                                        {/* Compact hover footer */}
+                                        <div className="mt-2 opacity-0 transition-all duration-300 group-hover:opacity-100">
+                                          <div className="flex items-center justify-between text-xs">
+                                            <span className="text-gray-500">
                                               Click to edit
                                             </span>
-                                            <div className="text-xs font-medium text-[#301F70]">
-                                              Edit Category
-                                            </div>
+                                            <span className="font-medium text-[#301F70]">
+                                              Edit Product
+                                            </span>
                                           </div>
                                         </div>
                                       </div>
                                     </div>
-                                  )
-                                })}
+                                  </div>
+                                ))}
                             </div>
                           )}
                         </div>
@@ -1807,28 +1844,11 @@ export default function EditCataloguePage() {
                               Quick Actions
                             </h3>
                             <p className="text-xs text-gray-500">
-                              Tasks for managing your catalogue
+                              Manage your catalogues
                             </p>
                           </div>
                           <div className="space-y-3">
-                            <div
-                              onClick={() => openCategoryDialog()}
-                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 p-4 transition-all duration-200 hover:border-[#301F70]/50 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] p-2 transition-all duration-200 group-hover:from-[#301F70] group-hover:to-[#1A1B41]">
-                                  <Plus className="h-4 w-4 text-white" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-semibold text-[#1A1B41]">
-                                    Add Category
-                                  </p>
-                                  <p className="text-xs text-gray-600">
-                                    Organize products
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
+
 
                             <div
                               onClick={() => openProductDialog()}
@@ -1844,6 +1864,24 @@ export default function EditCataloguePage() {
                                   </p>
                                   <p className="text-xs text-gray-600">
                                     Expand catalogue
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              onClick={() => openCategoryDialog()}
+                              className="group cursor-pointer rounded-lg border-2 border-dashed border-[#779CAB]/30 bg-gradient-to-br from-[#779CAB]/5 to-[#A2E8DD]/10 p-4 transition-all duration-200 hover:border-[#301F70]/50 hover:from-[#301F70]/5 hover:to-[#1A1B41]/10"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="rounded-lg bg-gradient-to-r from-[#43d8a9] to-[#2784e0d3] p-2 transition-all duration-200 group-hover:from-[#301F70] group-hover:to-[#1A1B41]">
+                                  <Plus className="h-4 w-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-[#1A1B41]">
+                                    Add Category
+                                  </p>
+                                  <p className="text-xs text-gray-600">
+                                    Organize products
                                   </p>
                                 </div>
                               </div>
@@ -2202,7 +2240,7 @@ export default function EditCataloguePage() {
                                 <div className="flex items-center justify-between">
                                   <div className="text-xl font-bold text-gray-900">
                                     {product.priceDisplay === 'show' &&
-                                    product.price ? (
+                                      product.price ? (
                                       `$${Number(product.price).toFixed(2)}`
                                     ) : product.priceDisplay === 'contact' ? (
                                       <span className="text-base font-medium text-blue-600">
@@ -2223,8 +2261,8 @@ export default function EditCataloguePage() {
                                   <Badge variant="outline" className="text-xs">
                                     {product.categoryId
                                       ? catalogue.categories.find(
-                                          c => c.id === product.categoryId
-                                        )?.name || 'Unknown'
+                                        c => c.id === product.categoryId
+                                      )?.name || 'Unknown'
                                       : 'Uncategorized'}
                                   </Badge>
                                 </div>
@@ -2418,378 +2456,458 @@ export default function EditCataloguePage() {
         <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden p-0">
           <DialogHeader className="shrink-0 border-b bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-6 py-5 text-white">
             <DialogTitle className="text-2xl font-bold text-white">
-              {editingProduct ? 'Edit Product' : 'Add Product'}
+              {editingProduct ? 'Edit Product' : 'Add Products'}
             </DialogTitle>
             <DialogDescription className="text-white/80">
               {editingProduct
                 ? 'Update product information'
-                : 'Add a new product to your catalogue'}
+                : `Add multiple products to your catalogue (${productForms.length} product${productForms.length > 1 ? 's' : ''})`}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
-            {/* Product Name */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label
-                htmlFor="productName"
-                className="text-base font-semibold text-gray-900"
-              >
-                Product Name
-              </Label>
-              <Input
-                id="productName"
-                value={productForm.name}
-                onChange={e =>
-                  setProductForm(prev => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="Enter product name"
-                className="mt-2 h-11"
-              />
-            </div>
-
-            {/* Product Description with AI */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label
-                htmlFor="productDescription"
-                className="text-base font-semibold text-gray-900"
-              >
-                Description
-              </Label>
-              <div className="mt-2 space-y-2">
-                <Textarea
-                  id="productDescription"
-                  value={productForm.description}
-                  onChange={e =>
-                    setProductForm(prev => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter product description"
-                  rows={3}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="xs"
-                  className="w-fit border-blue-400/20 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-xs text-blue-600"
-                  disabled={isGeneratingDescription || !productForm.name.trim()}
-                  onClick={async () => {
-                    if (!productForm.name.trim()) {
-                      toast.error('Please enter a product name first')
-                      return
-                    }
-
-                    setIsGeneratingDescription(true)
-
-                    try {
-                      const category = catalogue?.categories.find(
-                        cat => cat.id === productForm.categoryId
-                      )
-
-                      const response = await fetch('/api/ai/description', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                          productName: productForm.name,
-                          category: category?.name,
-                          tags: productForm.tags,
-                          price:
-                            productForm.price > 0
-                              ? productForm.price
-                              : undefined,
-                        }),
-                      })
-
-                      if (!response.ok) {
-                        throw new Error(
-                          `Failed to generate description: ${response.status}`
-                        )
-                      }
-
-                      const data = await response.json()
-
-                      if (data.success && data.description) {
-                        setProductForm(prev => ({
-                          ...prev,
-                          description: data.description,
-                        }))
-                        toast.success('AI description generated successfully!')
-                      } else {
-                        throw new Error(
-                          data.error || 'Failed to generate description'
-                        )
-                      }
-                    } catch (error) {
-                      console.error('AI Generation Error:', error)
-                      toast.error(
-                        error instanceof Error
-                          ? error.message
-                          : 'Failed to generate description'
-                      )
-                    } finally {
-                      setIsGeneratingDescription(false)
-                    }
-                  }}
-                >
-                  {isGeneratingDescription ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-1 h-3 w-3" /> AI Generate
-                    </>
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-4">
+            {productForms.map((productForm, index) => (
+              <div key={productForm.id} className="space-y-4 rounded-lg border bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Product {index + 1}
+                  </h3>
+                  {productForms.length > 1 && !editingProduct && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeProductForm(index)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   )}
-                </Button>
-              </div>
-            </div>
-
-            {/* Product Image */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label className="text-base font-semibold text-gray-900">
-                Product Image
-              </Label>
-              {!productForm.imageUrl ? (
-                <FileUpload
-                  uploadType="product"
-                  catalogueId={catalogueId}
-                  productId={editingProduct?.id}
-                  maxFiles={1}
-                  accept={[
-                    'image/jpeg',
-                    'image/jpg',
-                    'image/png',
-                    'image/webp',
-                  ]}
-                  onUpload={files => {
-                    if (files.length > 0) {
-                      setProductForm(prev => ({
-                        ...prev,
-                        imageUrl: files[0].url,
-                      }))
-                    }
-                  }}
-                  onError={error => {
-                    setErrorWithAutoDismiss(
-                      `Product image upload failed: ${error}`
-                    )
-                  }}
-                  className="mt-2"
-                />
-              ) : (
-                <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
-                  <p className="mb-2 text-sm text-gray-600">Current image:</p>
-                  <img
-                    src={productForm.imageUrl}
-                    alt="Product Image"
-                    className="h-20 w-20 rounded border object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setProductForm(prev => ({ ...prev, imageUrl: '' }))
-                    }
-                    className="text-xs"
-                  >
-                    Change Image
-                  </Button>
                 </div>
-              )}
-            </div>
 
-            {/* Tags */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <Label
-                htmlFor="productTags"
-                className="text-base font-semibold text-gray-900"
-              >
-                Tags
-              </Label>
-              <Input
-                id="productTags"
-                value={productForm.tags?.join(', ') || ''}
-                onChange={e => {
-                  const tagsArray = e.target.value
-                    .split(',')
-                    .map(tag => tag.trim())
-                    .filter(tag => tag.length > 0)
-                  setProductForm(prev => ({ ...prev, tags: tagsArray }))
-                }}
-                placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
-                className="mt-2 h-11"
-              />
-            </div>
-
-            {/* Price Information */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <h4 className="mb-4 text-base font-semibold text-gray-900">
-                Price Information
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
+                {/* Product Name */}
                 <div>
                   <Label
-                    htmlFor="productPrice"
-                    className="text-sm font-semibold text-gray-900"
+                    htmlFor={`productName-${index}`}
+                    className="text-base font-semibold text-gray-900"
                   >
-                    Price
+                    Product Name *
                   </Label>
                   <Input
-                    id="productPrice"
-                    type="number"
-                    value={productForm.price}
-                    onChange={e =>
-                      setProductForm(prev => ({
-                        ...prev,
-                        price: parseFloat(e.target.value) || 0,
-                      }))
-                    }
-                    placeholder="0.00"
+                    id={`productName-${index}`}
+                    value={productForm.name}
+                    onChange={e => updateProductForm(index, { name: e.target.value })}
+                    placeholder="Enter product name"
                     className="mt-2 h-11"
                   />
                 </div>
 
+                {/* Product Description with AI */}
                 <div>
                   <Label
-                    htmlFor="productPriceDisplay"
-                    className="text-sm font-semibold text-gray-900"
+                    htmlFor={`productDescription-${index}`}
+                    className="text-base font-semibold text-gray-900"
                   >
-                    Price Display
+                    Description
                   </Label>
-                  <Select
-                    value={productForm.priceDisplay}
-                    onValueChange={(value: 'show' | 'hide' | 'contact') =>
-                      setProductForm(prev => ({ ...prev, priceDisplay: value }))
-                    }
-                  >
-                    <SelectTrigger className="mt-2 h-11">
-                      <SelectValue placeholder="Select price display" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="show">Show Price</SelectItem>
-                      <SelectItem value="hide">Hide Price</SelectItem>
-                      <SelectItem value="contact">Contact for Price</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-
-            {/* Category & Status */}
-            <div className="rounded-lg border bg-white p-4 shadow-sm">
-              <h4 className="mb-4 text-base font-semibold text-gray-900">
-                Category & Status
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label
-                    htmlFor="productCategory"
-                    className="text-sm font-semibold text-gray-900"
-                  >
-                    Category
-                  </Label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <Select
-                      value={productForm.categoryId}
-                      onValueChange={value =>
-                        setProductForm(prev => ({ ...prev, categoryId: value }))
-                      }
-                    >
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {catalogue.categories.map(category => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="mt-2 space-y-2">
+                    <Textarea
+                      id={`productDescription-${index}`}
+                      value={productForm.description}
+                      onChange={e => updateProductForm(index, { description: e.target.value })}
+                      placeholder="Enter product description"
+                      rows={3}
+                    />
                     <Button
                       type="button"
                       variant="outline"
                       size="xs"
-                      className="border-blue-400/20 bg-blue-500/10 text-xs text-blue-600"
-                      disabled={!productForm.name || !productForm.description}
+                      className="w-fit border-blue-400/20 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-xs text-blue-600"
+                      disabled={isGeneratingDescription || !productForm.name.trim()}
                       onClick={async () => {
+                        if (!productForm.name.trim()) {
+                          toast.error('Please enter a product name first')
+                          return
+                        }
+
+                        setIsGeneratingDescription(true)
+
                         try {
-                          const response = await fetch('/api/ai/category', {
+                          const category = catalogue?.categories.find(
+                            cat => cat.id === productForm.categoryId
+                          )
+
+                          const response = await fetch('/api/ai/description', {
                             method: 'POST',
                             headers: {
                               'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                              text: `${productForm.name} ${productForm.description}`,
-                              existingCategories: catalogue.categories,
+                              productName: productForm.name,
+                              category: category?.name,
+                              tags: productForm.tags,
+                              price: productForm.price > 0 ? productForm.price : undefined,
                             }),
                           })
 
+                          if (!response.ok) {
+                            throw new Error(`Failed to generate description: ${response.status}`)
+                          }
+
                           const data = await response.json()
 
-                          if (data.success && data.category) {
-                            setProductForm(prev => ({
-                              ...prev,
-                              categoryId: data.category.id,
-                            }))
-                            toast.success('Category suggested successfully!')
+                          if (data.success && data.description) {
+                            updateProductForm(index, { description: data.description })
+                            toast.success('AI description generated successfully!')
                           } else {
-                            throw new Error(
-                              data.error || 'Failed to suggest category'
-                            )
+                            throw new Error(data.error || 'Failed to generate description')
                           }
                         } catch (error) {
-                          console.error('AI Category Suggestion Error:', error)
-                          toast.error(
-                            error instanceof Error
-                              ? error.message
-                              : 'Failed to suggest category'
-                          )
+                          console.error('AI Generation Error:', error)
+                          toast.error(error instanceof Error ? error.message : 'Failed to generate description')
+                        } finally {
+                          setIsGeneratingDescription(false)
                         }
                       }}
                     >
                       {isGeneratingDescription ? (
                         <>
                           <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          Suggesting...
+                          Generating...
                         </>
                       ) : (
                         <>
-                          <Sparkles className="mr-1 h-3 w-3" /> Suggest Category
+                          <Sparkles className="mr-1 h-3 w-3" /> AI Generate
                         </>
                       )}
                     </Button>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Enter product name and description first for better category
-                    suggestions
-                  </p>
                 </div>
 
+                {/* Product Image */}
                 <div>
-                  <Label className="mb-2 block text-sm font-semibold text-gray-900">
-                    Product Status
+                  <Label className="text-base font-semibold text-gray-900">
+                    Product Image
                   </Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="productActive"
-                      checked={productForm.isActive}
-                      onCheckedChange={checked =>
-                        setProductForm(prev => ({ ...prev, isActive: checked }))
-                      }
+                  {!productForm.imageUrl ? (
+                    <FileUpload
+                      uploadType="product"
+                      catalogueId={catalogueId}
+                      productId={editingProduct?.id}
+                      maxFiles={1}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      onUpload={files => {
+                        if (files.length > 0) {
+                          updateProductForm(index, { imageUrl: files[0].url })
+                        }
+                      }}
+                      onError={error => {
+                        setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
+                      }}
+                      className="mt-2"
                     />
-                    <Label htmlFor="productActive" className="font-normal">
-                      Active
-                    </Label>
+                  ) : (
+                    <div className="mt-3 space-y-2 rounded-lg bg-gray-50 p-3">
+                      <p className="mb-2 text-sm text-gray-600">Current image:</p>
+                      <img
+                        src={productForm.imageUrl}
+                        alt="Product Image"
+                        className="h-20 w-20 rounded border object-cover"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateProductForm(index, { imageUrl: '' })}
+                        className="text-xs"
+                      >
+                        Change Image
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <Label
+                    htmlFor={`productTags-${index}`}
+                    className="text-base font-semibold text-gray-900"
+                  >
+                    Tags
+                  </Label>
+                  <Input
+                    id={`productTags-${index}`}
+                    value={productForm.tags?.join(', ') || ''}
+                    onChange={e => {
+                      const tagsArray = e.target.value
+                        .split(',')
+                        .map(tag => tag.trim())
+                        .filter(tag => tag.length > 0)
+                      updateProductForm(index, { tags: tagsArray })
+                    }}
+                    placeholder="Enter tags separated by commas (e.g., electronics, gadgets, premium)"
+                    className="mt-2 h-11"
+                  />
+                </div>
+
+                {/* Price Information */}
+                <div>
+                  <h4 className="mb-4 text-base font-semibold text-gray-900">
+                    Price Information
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor={`productPrice-${index}`}
+                        className="text-sm font-semibold text-gray-900"
+                      >
+                        Price
+                      </Label>
+                      <Input
+                        id={`productPrice-${index}`}
+                        type="number"
+                        value={productForm.price}
+                        onChange={e => updateProductForm(index, { price: parseFloat(e.target.value) || 0 })}
+                        placeholder="0.00"
+                        className="mt-2 h-11"
+                      />
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor={`productPriceDisplay-${index}`}
+                        className="text-sm font-semibold text-gray-900"
+                      >
+                        Price Display
+                      </Label>
+                      <Select
+                        value={productForm.priceDisplay}
+                        onValueChange={(value: 'show' | 'hide' | 'contact') =>
+                          updateProductForm(index, { priceDisplay: value })
+                        }
+                      >
+                        <SelectTrigger className="mt-2 h-11">
+                          <SelectValue placeholder="Select price display" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="show">Show Price</SelectItem>
+                          <SelectItem value="hide">Hide Price</SelectItem>
+                          <SelectItem value="contact">Contact for Price</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Category & Status */}
+                <div>
+                  <h4 className="mb-4 text-base font-semibold text-gray-900">
+                    Category & Status
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label
+                        htmlFor={`productCategory-${index}`}
+                        className="text-sm font-semibold text-gray-900"
+                      >
+                        Category
+                      </Label>
+                      <div className="mt-2 space-y-3">
+                        {!isCreatingNewCategory[index] ? (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={productForm.categoryId || 'no-category'}
+                              onValueChange={(value) => {
+                                if (value === 'create-new') {
+                                  setIsCreatingNewCategory(prev => ({ ...prev, [index]: true }))
+                                  setNewCategoryForm(prev => ({ ...prev, [index]: { name: '', description: '' } }))
+                                } else if (value === 'no-category') {
+                                  updateProductForm(index, { categoryId: '' })
+                                } else {
+                                  updateProductForm(index, { categoryId: value })
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Select category" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="no-category">
+                                  <div className="flex items-center gap-2 text-gray-500">
+                                    <Package className="h-4 w-4" />
+                                    No Category
+                                  </div>
+                                </SelectItem>
+                                {catalogue.categories.map(category => (
+                                  <SelectItem key={category.id} value={category.id}>
+                                    {category.name}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="create-new" className="border-t mt-1 pt-2">
+                                  <div className="flex items-center gap-2 text-blue-600">
+                                    <Plus className="h-4 w-4" />
+                                    Create New Category
+                                  </div>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="xs"
+                              className="border-blue-400/20 bg-blue-500/10 text-xs text-blue-600"
+                              disabled={!productForm.name || !productForm.description}
+                              onClick={async () => {
+                                try {
+                                  const response = await fetch('/api/ai/category', {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({
+                                      text: `${productForm.name} ${productForm.description}`,
+                                      existingCategories: catalogue.categories,
+                                    }),
+                                  })
+
+                                  const data = await response.json()
+
+                                  if (data.success && data.category) {
+                                    updateProductForm(index, { categoryId: data.category.id })
+                                    toast.success('Category suggested successfully!')
+                                  } else {
+                                    throw new Error(data.error || 'Failed to suggest category')
+                                  }
+                                } catch (error) {
+                                  console.error('AI Category Suggestion Error:', error)
+                                  toast.error(error instanceof Error ? error.message : 'Failed to suggest category')
+                                }
+                              }}
+                            >
+                              {isGeneratingDescription ? (
+                                <>
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  Suggesting...
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="mr-1 h-3 w-3" /> Suggest Category
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="space-y-3 p-4 border rounded-lg bg-blue-50/50">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-semibold text-gray-900">Create New Category</h4>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setIsCreatingNewCategory(prev => ({ ...prev, [index]: false }))
+                                  setNewCategoryForm(prev => ({ ...prev, [index]: { name: '', description: '' } }))
+                                }}
+                                className="text-gray-500 hover:text-gray-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div>
+                              <Label htmlFor={`newCategoryName-${index}`} className="text-xs text-gray-600">
+                                Category Name *
+                              </Label>
+                              <Input
+                                id={`newCategoryName-${index}`}
+                                value={newCategoryForm[index]?.name || ''}
+                                onChange={(e) => setNewCategoryForm(prev => ({
+                                  ...prev,
+                                  [index]: { ...prev[index], name: e.target.value }
+                                }))}
+                                placeholder="Enter category name"
+                                className="mt-1 h-9"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`newCategoryDescription-${index}`} className="text-xs text-gray-600">
+                                Description (Optional)
+                              </Label>
+                              <Input
+                                id={`newCategoryDescription-${index}`}
+                                value={newCategoryForm[index]?.description || ''}
+                                onChange={(e) => setNewCategoryForm(prev => ({
+                                  ...prev,
+                                  [index]: { ...prev[index], description: e.target.value }
+                                }))}
+                                placeholder="Enter category description"
+                                className="mt-1 h-9"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                onClick={() => createNewCategory(index)}
+                                disabled={!newCategoryForm[index]?.name.trim()}
+                                className="bg-blue-600 hover:bg-blue-700 text-white"
+                              >
+                                <Plus className="mr-1 h-3 w-3" />
+                                Create Category
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setIsCreatingNewCategory(prev => ({ ...prev, [index]: false }))
+                                  setNewCategoryForm(prev => ({ ...prev, [index]: { name: '', description: '' } }))
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        Enter product name and description first for better category suggestions
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label className="mb-2 block text-sm font-semibold text-gray-900">
+                        Product Status
+                      </Label>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id={`productActive-${index}`}
+                          checked={productForm.isActive}
+                          onCheckedChange={checked => updateProductForm(index, { isActive: checked })}
+                        />
+                        <Label htmlFor={`productActive-${index}`} className="font-normal">
+                          Active
+                        </Label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ))}
+
+            {/* Add Another Product Button */}
+            {!editingProduct && (
+              <div className="flex justify-center">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addAnotherProduct}
+                  className="border-dashed border-2 border-[#6366F1]/30 bg-[#6366F1]/5 hover:bg-[#6366F1]/10 text-[#6366F1] hover:text-[#6366F1]"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Another Product
+                </Button>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
@@ -2803,7 +2921,7 @@ export default function EditCataloguePage() {
               className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
               onClick={saveProduct}
             >
-              {editingProduct ? 'Update' : 'Add'} Product
+              {editingProduct ? 'Update' : 'Add'} Product{productForms.length > 1 ? 's' : ''}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2843,15 +2961,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                displaySettings: {
-                                  ...prev.settings?.displaySettings,
-                                  showPrices: checked,
-                                },
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showPrices: checked,
                               },
-                            }
+                            },
+                          }
                           : null
                       )
                     }
@@ -2876,15 +2994,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                displaySettings: {
-                                  ...prev.settings?.displaySettings,
-                                  showCategories: checked,
-                                },
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showCategories: checked,
                               },
-                            }
+                            },
+                          }
                           : null
                       )
                     }
@@ -2908,15 +3026,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                displaySettings: {
-                                  ...prev.settings?.displaySettings,
-                                  allowSearch: checked,
-                                },
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                allowSearch: checked,
                               },
-                            }
+                            },
+                          }
                           : null
                       )
                     }
@@ -2941,15 +3059,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                              ...prev,
-                              settings: {
-                                ...prev.settings,
-                                displaySettings: {
-                                  ...prev.settings?.displaySettings,
-                                  showProductCodes: checked,
-                                },
+                            ...prev,
+                            settings: {
+                              ...prev.settings,
+                              displaySettings: {
+                                ...prev.settings?.displaySettings,
+                                showProductCodes: checked,
                               },
-                            }
+                            },
+                          }
                           : null
                       )
                     }
@@ -3382,15 +3500,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...prev.settings,
-                                          mediaAssets: {
-                                            ...prev.settings?.mediaAssets,
-                                            logoUrl: files[0].url,
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          logoUrl: files[0].url,
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3420,15 +3538,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...prev.settings,
-                                          mediaAssets: {
-                                            ...prev.settings?.mediaAssets,
-                                            logoUrl: '',
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          logoUrl: '',
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3460,15 +3578,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...prev.settings,
-                                          mediaAssets: {
-                                            ...prev.settings?.mediaAssets,
-                                            coverImageUrl: files[0].url,
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          coverImageUrl: files[0].url,
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3498,15 +3616,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...prev.settings,
-                                          mediaAssets: {
-                                            ...prev.settings?.mediaAssets,
-                                            coverImageUrl: '',
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...prev.settings,
+                                        mediaAssets: {
+                                          ...prev.settings?.mediaAssets,
+                                          coverImageUrl: '',
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3554,15 +3672,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    companyInfo: {
-                                      ...(prev.settings?.companyInfo || {}),
-                                      companyName: e.target.value,
-                                    },
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  companyInfo: {
+                                    ...(prev.settings?.companyInfo || {}),
+                                    companyName: e.target.value,
                                   },
-                                }
+                                },
+                              }
                               : null
                           )
                         }
@@ -3588,15 +3706,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    companyInfo: {
-                                      ...(prev.settings?.companyInfo || {}),
-                                      companyDescription: e.target.value,
-                                    },
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  companyInfo: {
+                                    ...(prev.settings?.companyInfo || {}),
+                                    companyDescription: e.target.value,
                                   },
-                                }
+                                },
+                              }
                               : null
                           )
                         }
@@ -3643,16 +3761,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      contactDetails: {
-                                        ...(prev.settings?.contactDetails ||
-                                          {}),
-                                        email: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings?.contactDetails ||
+                                        {}),
+                                      email: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -3677,16 +3795,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      contactDetails: {
-                                        ...(prev.settings?.contactDetails ||
-                                          {}),
-                                        phone: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings?.contactDetails ||
+                                        {}),
+                                      phone: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -3711,16 +3829,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      contactDetails: {
-                                        ...(prev.settings?.contactDetails ||
-                                          {}),
-                                        website: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings?.contactDetails ||
+                                        {}),
+                                      website: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -3747,15 +3865,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)?.contactDetails,
-                                      address: e.target.value,
-                                    },
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  contactDetails: {
+                                    ...(prev.settings as any)?.contactDetails,
+                                    address: e.target.value,
                                   },
-                                }
+                                },
+                              }
                               : null
                           )
                         }
@@ -3780,12 +3898,12 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDescription: e.target.value,
-                                  },
-                                }
+                                ...prev,
+                                settings: {
+                                  ...(prev.settings || {}),
+                                  contactDescription: e.target.value,
+                                },
+                              }
                               : null
                           )
                         }
@@ -3824,16 +3942,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...(prev.settings || {}),
-                                          contactDetails: {
-                                            ...(prev.settings as any)
-                                              ?.contactDetails,
-                                            contactImage: files[0].url,
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...(prev.settings || {}),
+                                        contactDetails: {
+                                          ...(prev.settings as any)
+                                            ?.contactDetails,
+                                          contactImage: files[0].url,
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3863,16 +3981,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                        ...prev,
-                                        settings: {
-                                          ...(prev.settings || {}),
-                                          contactDetails: {
-                                            ...(prev.settings as any)
-                                              ?.contactDetails,
-                                            contactImage: '',
-                                          },
+                                      ...prev,
+                                      settings: {
+                                        ...(prev.settings || {}),
+                                        contactDetails: {
+                                          ...(prev.settings as any)
+                                            ?.contactDetails,
+                                          contactImage: '',
                                         },
-                                      }
+                                      },
+                                    }
                                     : null
                                 )
                               }
@@ -3900,16 +4018,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      contactDetails: {
-                                        ...(prev.settings as any)
-                                          ?.contactDetails,
-                                        contactQuote: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)
+                                        ?.contactDetails,
+                                      contactQuote: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -3936,16 +4054,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      contactDetails: {
-                                        ...(prev.settings as any)
-                                          ?.contactDetails,
-                                        contactQuoteBy: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)
+                                        ?.contactDetails,
+                                      contactQuoteBy: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -3991,15 +4109,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      socialMedia: {
-                                        ...(prev.settings?.socialMedia || {}),
-                                        facebook: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      facebook: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -4024,15 +4142,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      socialMedia: {
-                                        ...(prev.settings?.socialMedia || {}),
-                                        twitter: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      twitter: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -4057,15 +4175,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      socialMedia: {
-                                        ...(prev.settings?.socialMedia || {}),
-                                        instagram: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      instagram: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }
@@ -4090,15 +4208,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                    ...prev,
-                                    settings: {
-                                      ...(prev.settings || {}),
-                                      socialMedia: {
-                                        ...(prev.settings?.socialMedia || {}),
-                                        linkedin: e.target.value,
-                                      },
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    socialMedia: {
+                                      ...(prev.settings?.socialMedia || {}),
+                                      linkedin: e.target.value,
                                     },
-                                  }
+                                  },
+                                }
                                 : null
                             )
                           }

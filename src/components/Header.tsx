@@ -38,6 +38,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import Image from 'next/image'
 import { DashboardHeader } from './dashboard/DashboardHeader'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface HeaderProps {
   title?: string
@@ -163,19 +164,43 @@ export function Header({
 
   if (isLoading) {
     return (
-      <header className="border-b border-gray-200 bg-white">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {showBackButton && (
-                <div className="h-8 w-8 animate-pulse rounded bg-gray-200" />
-              )}
-              <div className="h-6 w-32 animate-pulse rounded bg-gray-200" />
+      <>
+        <header className="border-b border-gray-200 bg-[#E8EAF6]">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                {showBackButton && (
+                  <div className="h-8 w-8 animate-pulse rounded bg-gray-300" />
+                )}
+                <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
+              </div>
+              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
             </div>
-            <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200" />
           </div>
-        </div>
-      </header>
+        </header>
+
+        {showGradientBanner && (
+          <div className="bg-[#E8EAF6] pt-2">
+            <div className="mx-8 h-40 rounded-t-[3rem] px-8 pt-8">
+              <div className="container mx-auto">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-3">
+                    <Skeleton className="h-8 w-48" />
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-40" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-28" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
     )
   }
 
