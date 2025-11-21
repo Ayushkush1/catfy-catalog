@@ -810,7 +810,7 @@ export default function DashboardPage() {
                         </div>
                         <CardContent className="relative p-8">
                           <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-[70px] w-24 items-center rounded-full p-1 justify-center bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
+                            <div className="flex h-[70px] w-24 items-center justify-center rounded-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] p-1 transition-transform duration-300 group-hover:scale-110">
                               {catalogueStickerError ? (
                                 <Book className="h-7 w-7 text-white" />
                               ) : (
@@ -891,7 +891,7 @@ export default function DashboardPage() {
                         </div>
                         <CardContent className="relative p-8">
                           <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-[70px] w-24 items-center rounded-full justify-center bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
+                            <div className="flex h-[70px] w-24 items-center justify-center rounded-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
                               {pdfStickerError ? (
                                 <FileText className="h-7 w-7 text-white" />
                               ) : (
@@ -967,7 +967,7 @@ export default function DashboardPage() {
           {/* Invoices Section - Main Content */}
           <div className="grid grid-cols-1 gap-6 px-10 pt-7 lg:grid-cols-3 lg:items-start">
             {/* Left: Large Purple Card with Progress */}
-            <div className="pt-2 lg:col-span-1 lg:flex lg:flex-col lg:h-full">
+            <div className="pt-2 lg:col-span-1 lg:flex lg:h-full lg:flex-col">
               <h2 className="text-lg font-semibold text-gray-900">
                 Total Projects
               </h2>
@@ -1036,7 +1036,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Right: Chart and Activity */}
-            <div className="lg:col-span-2 lg:flex lg:flex-col lg:h-full">
+            <div className="lg:col-span-2 lg:flex lg:h-full lg:flex-col">
               {/* History Section */}
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
@@ -1053,7 +1053,7 @@ export default function DashboardPage() {
 
               {/* Recent Activity Cards Grid */}
               {recentItems.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:flex-1">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:flex-1 lg:grid-cols-3">
                   {recentItems.slice(0, 6).map(item => {
                     const catalogue = catalogues.find(c => c.id === item.id)
                     if (!catalogue) return null
@@ -1062,7 +1062,9 @@ export default function DashboardPage() {
                       <Card
                         key={item.id}
                         className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
-                        onClick={() => router.push(`/catalogue/${item.id}/edit`)}
+                        onClick={() =>
+                          router.push(`/catalogue/${item.id}/edit`)
+                        }
                       >
                         <div className="relative h-32 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                           <iframe
@@ -1094,7 +1096,9 @@ export default function DashboardPage() {
                                 <DropdownMenuItem
                                   onClick={(e: any) => {
                                     e.stopPropagation()
-                                    router.push(`/catalogue/${catalogue.id}/edit`)
+                                    router.push(
+                                      `/catalogue/${catalogue.id}/edit`
+                                    )
                                   }}
                                 >
                                   <Edit className="mr-2 h-3 w-3" />
@@ -1141,10 +1145,11 @@ export default function DashboardPage() {
                                   {catalogue.theme}
                                 </Badge>
                                 <Badge
-                                  className={`text-xs ${catalogue.isPublic
+                                  className={`text-xs ${
+                                    catalogue.isPublic
                                       ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                                       : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                  }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>

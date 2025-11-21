@@ -294,7 +294,9 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
       } else {
         const errorData = await response.json()
         if (response.status === 403) {
-          toast.error('You have reached the catalogue limit for your current plan.')
+          toast.error(
+            'You have reached the catalogue limit for your current plan.'
+          )
           setShowUpgradePrompt(true)
         } else {
           toast.error(errorData.error || 'Failed to create catalogue')
@@ -326,36 +328,43 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
       {/* Content */}
       <div className="container mx-auto px-4 pb-8">
         {/* Progress Bar inside content for responsiveness */}
-        <div className="w-full max-w-8xl  bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-20 rounded-t-2xl pt-6 pb-2">
-          <div className="flex items-center justify-between pt-4 px-20">
+        <div className="max-w-8xl w-full  rounded-t-2xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-20 pb-2 pt-6">
+          <div className="flex items-center justify-between px-20 pt-4">
             {[
               { step: 1, label: 'Design', icon: Layout },
               { step: 2, label: 'Plan', icon: Settings },
               { step: 3, label: 'Branding', icon: Palette },
               { step: 4, label: 'Settings', icon: Globe },
             ].map(({ step, label, icon: Icon }) => (
-              <div key={step} className="flex flex-col items-center flex-1">
-                <div className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 ${step < currentStep
-                  ? 'bg-white text-[#6366F1] shadow-lg scale-110 border-2 border-[#FFFFFF]'
-                  : step === currentStep
-                    ? 'bg-gray-200 text-[#2D1B69] shadow-lg ring-4 ring-[#6366F1]/20 scale-110 border-2 border-white'
-                    : 'bg-[#2D1B69] text-white border border-gray-500 opacity-70'
-                  }`}>
+              <div key={step} className="flex flex-1 flex-col items-center">
+                <div
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${
+                    step < currentStep
+                      ? 'scale-110 border-2 border-[#FFFFFF] bg-white text-[#6366F1] shadow-lg'
+                      : step === currentStep
+                        ? 'scale-110 border-2 border-white bg-gray-200 text-[#2D1B69] shadow-lg ring-4 ring-[#6366F1]/20'
+                        : 'border border-gray-500 bg-[#2D1B69] text-white opacity-70'
+                  }`}
+                >
                   {step < currentStep ? (
-                    <CheckCircle className="w-5 h-5" />
+                    <CheckCircle className="h-5 w-5" />
                   ) : (
-                    <Icon className="w-4 h-4" />
+                    <Icon className="h-4 w-4" />
                   )}
                 </div>
-                <span className={`mt-2 text-xs font-medium transition-colors duration-300 ${currentStep >= step ? 'text-white' : 'text-white opacity-80'}`}>{label}</span>
+                <span
+                  className={`mt-2 text-xs font-medium transition-colors duration-300 ${currentStep >= step ? 'text-white' : 'text-white opacity-80'}`}
+                >
+                  {label}
+                </span>
               </div>
             ))}
           </div>
           {/* Progress Line */}
-          <div className="relative h-3 mx-20 mt-2 pb-5">
-            <div className="absolute top-1 left-0 right-0 h-1 bg-[#A2E8DD]/30 rounded-full"></div>
+          <div className="relative mx-20 mt-2 h-3 pb-5">
+            <div className="absolute left-0 right-0 top-1 h-1 rounded-full bg-[#A2E8DD]/30"></div>
             <div
-              className="absolute top-1 left-0 h-1 bg-white rounded-full transition-all duration-700 ease-out"
+              className="absolute left-0 top-1 h-1 rounded-full bg-white transition-all duration-700 ease-out"
               style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
             ></div>
           </div>
@@ -380,17 +389,13 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           </Alert>
         )}
 
-
-
         {/* Enhanced Step Content */}
         <div className="max-w-8xl">
           {currentStep === 1 && (
             <div className="space-y-6">
               {/* Template Selection Card */}
-              <Card className="rounded-b-2xl px-32 pt-4 pb-10 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
-
+              <Card className="rounded-b-2xl bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardContent className="p-6">
-
                   <TemplateThemeWorkflow
                     userProfile={profile}
                     initialTemplateId={data.templateId}
@@ -409,22 +414,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 2 && (
             <div className="space-y-6">
               {/* Basic Information Card */}
-              <Card className="rounded-b-2xl  px-32 pt-4 pb-10 border border-gray-200/60 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-b-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
                       <Settings className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-[#1A1B41]">Basic Information</CardTitle>
-                      <CardDescription className="text-gray-600">Tell us about your catalogue</CardDescription>
+                      <CardTitle className="text-xl text-[#1A1B41]">
+                        Basic Information
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Tell us about your catalogue
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-semibold text-[#1A1B41]">
+                      <Label
+                        htmlFor="name"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
                         Catalogue Name *
                       </Label>
                       <Input
@@ -432,13 +444,16 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         value={data.name}
                         onChange={e => updateData('name', e.target.value)}
                         placeholder="My Amazing Catalogue"
-                        className="h-11 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                        className="h-11 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="year" className="text-sm font-semibold text-[#1A1B41]">
+                      <Label
+                        htmlFor="year"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
                         Catalogue Year
                       </Label>
                       <Input
@@ -446,13 +461,16 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         value={data.year}
                         onChange={e => updateData('year', e.target.value)}
                         placeholder="2025"
-                        className="h-11 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                        className="h-11 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-sm font-semibold text-[#1A1B41]">
+                    <Label
+                      htmlFor="description"
+                      className="text-sm font-semibold text-[#1A1B41]"
+                    >
                       Description
                     </Label>
                     <Textarea
@@ -461,13 +479,16 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       onChange={e => updateData('description', e.target.value)}
                       placeholder="Brief description of your catalogue..."
                       rows={3}
-                      className="border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200 resize-none"
+                      className="resize-none border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="tagline" className="text-sm font-semibold text-[#1A1B41]">
+                      <Label
+                        htmlFor="tagline"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
                         Tagline
                       </Label>
                       <Input
@@ -475,12 +496,15 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         value={data.tagline}
                         onChange={e => updateData('tagline', e.target.value)}
                         placeholder="Quality products for everyone"
-                        className="h-11 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                        className="h-11 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="quote" className="text-sm font-semibold text-[#1A1B41]">
+                      <Label
+                        htmlFor="quote"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
                         Inspirational Quote
                       </Label>
                       <Input
@@ -488,7 +512,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         value={data.quote}
                         onChange={e => updateData('quote', e.target.value)}
                         placeholder="Quality is not an act, it is a habit"
-                        className="h-11 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                        className="h-11 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                       />
                     </div>
                   </div>
@@ -500,37 +524,51 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 3 && (
             <div className="space-y-6">
               {/* Company & Branding */}
-              <Card className="rounded-b-2xl px-32 pt-4 pb-10 border border-gray-200/60 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-b-2xl border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
                       <Palette className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-[#1A1B41]">Company & Branding</CardTitle>
-                      <CardDescription className="text-gray-600">Company details and brand assets</CardDescription>
+                      <CardTitle className="text-xl text-[#1A1B41]">
+                        Company & Branding
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Company details and brand assets
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Company Information Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Company Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Company Details
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="companyName" className="text-sm font-semibold text-[#1A1B41]">
+                        <Label
+                          htmlFor="companyName"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
                           Company Name
                         </Label>
                         <Input
                           id="companyName"
                           value={data.companyName || ''}
-                          onChange={e => updateData('companyName', e.target.value)}
+                          onChange={e =>
+                            updateData('companyName', e.target.value)
+                          }
                           placeholder="Your Company Ltd."
-                          className="h-10 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                          className="h-10 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="website" className="text-sm font-semibold text-[#1A1B41]">
+                        <Label
+                          htmlFor="website"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
                           Website
                         </Label>
                         <Input
@@ -538,34 +576,43 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           value={data.website || ''}
                           onChange={e => updateData('website', e.target.value)}
                           placeholder="https://yourcompany.com"
-                          className="h-10 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200"
+                          className="h-10 border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="companyDescription" className="text-sm font-semibold text-[#1A1B41]">
+                      <Label
+                        htmlFor="companyDescription"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
                         Company Description
                       </Label>
                       <Textarea
                         id="companyDescription"
                         value={data.companyDescription || ''}
-                        onChange={e => updateData('companyDescription', e.target.value)}
+                        onChange={e =>
+                          updateData('companyDescription', e.target.value)
+                        }
                         placeholder="Tell customers about your company..."
                         rows={2}
-                        className="border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 transition-all duration-200 resize-none"
+                        className="resize-none border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                       />
                     </div>
                   </div>
 
                   {/* Brand Assets Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Brand Assets</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Brand Assets
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       {/* Logo */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-[#1A1B41]">Company Logo</Label>
+                        <Label className="text-sm font-semibold text-[#1A1B41]">
+                          Company Logo
+                        </Label>
                         {!data.logoUrl ? (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#6366F1] transition-colors cursor-pointer">
+                          <div className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 transition-colors hover:border-[#6366F1]">
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
@@ -575,14 +622,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                                 }
                               }}
                               maxFiles={1}
-                              accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                              accept={[
+                                'image/jpeg',
+                                'image/jpg',
+                                'image/png',
+                                'image/webp',
+                              ]}
                               className="w-full"
                             />
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <img src={data.logoUrl} alt="Logo" className="w-full h-20 object-cover rounded-lg border" />
-                            <Button type="button" variant="outline" size="sm" onClick={() => updateData('logoUrl', '')} className="w-full">
+                            <img
+                              src={data.logoUrl}
+                              alt="Logo"
+                              className="h-20 w-full rounded-lg border object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateData('logoUrl', '')}
+                              className="w-full"
+                            >
                               Change Logo
                             </Button>
                           </div>
@@ -591,9 +653,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
                       {/* Cover Image */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-[#1A1B41]">Cover Image</Label>
+                        <Label className="text-sm font-semibold text-[#1A1B41]">
+                          Cover Image
+                        </Label>
                         {!data.coverImageUrl ? (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#6366F1] transition-colors cursor-pointer">
+                          <div className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 transition-colors hover:border-[#6366F1]">
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
@@ -603,14 +667,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                                 }
                               }}
                               maxFiles={1}
-                              accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                              accept={[
+                                'image/jpeg',
+                                'image/jpg',
+                                'image/png',
+                                'image/webp',
+                              ]}
                               className="w-full"
                             />
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <img src={data.coverImageUrl} alt="Cover" className="w-full h-20 object-cover rounded-lg border" />
-                            <Button type="button" variant="outline" size="sm" onClick={() => updateData('coverImageUrl', '')} className="w-full">
+                            <img
+                              src={data.coverImageUrl}
+                              alt="Cover"
+                              className="h-20 w-full rounded-lg border object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateData('coverImageUrl', '')}
+                              className="w-full"
+                            >
                               Change Cover
                             </Button>
                           </div>
@@ -619,9 +698,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
                       {/* Intro Image */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-semibold text-[#1A1B41]">Intro Image</Label>
+                        <Label className="text-sm font-semibold text-[#1A1B41]">
+                          Intro Image
+                        </Label>
                         {!data.introImage ? (
-                          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#6366F1] transition-colors cursor-pointer">
+                          <div className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-4 transition-colors hover:border-[#6366F1]">
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
@@ -631,14 +712,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                                 }
                               }}
                               maxFiles={1}
-                              accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                              accept={[
+                                'image/jpeg',
+                                'image/jpg',
+                                'image/png',
+                                'image/webp',
+                              ]}
                               className="w-full"
                             />
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            <img src={data.introImage} alt="Intro" className="w-full h-20 object-cover rounded-lg border" />
-                            <Button type="button" variant="outline" size="sm" onClick={() => updateData('introImage', '')} className="w-full">
+                            <img
+                              src={data.introImage}
+                              alt="Intro"
+                              className="h-20 w-full rounded-lg border object-cover"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateData('introImage', '')}
+                              className="w-full"
+                            >
                               Change Intro
                             </Button>
                           </div>
@@ -650,44 +746,92 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               </Card>
 
               {/* Contact & Social */}
-              <Card className="rounded-2xl px-32 pt-4 pb-10 border border-gray-200/60 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-2xl border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
                       <Mail className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-[#1A1B41]">Contact & Social</CardTitle>
-                      <CardDescription className="text-gray-600">Contact information and social media profiles</CardDescription>
+                      <CardTitle className="text-xl text-[#1A1B41]">
+                        Contact & Social
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Contact information and social media profiles
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Contact Details Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Contact Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Contact Details
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-semibold text-[#1A1B41]">Email</Label>
-                        <Input id="email" type="email" value={data.email || ''} onChange={e => updateData('email', e.target.value)} placeholder="hello@company.com" className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20" />
+                        <Label
+                          htmlFor="email"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          Email
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={data.email || ''}
+                          onChange={e => updateData('email', e.target.value)}
+                          placeholder="hello@company.com"
+                          className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone" className="text-sm font-semibold text-[#1A1B41]">Phone</Label>
-                        <Input id="phone" value={data.phone || ''} onChange={e => updateData('phone', e.target.value)} placeholder="+1 (555) 123-4567" className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20" />
+                        <Label
+                          htmlFor="phone"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          Phone
+                        </Label>
+                        <Input
+                          id="phone"
+                          value={data.phone || ''}
+                          onChange={e => updateData('phone', e.target.value)}
+                          placeholder="+1 (555) 123-4567"
+                          className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="address" className="text-sm font-semibold text-[#1A1B41]">Address</Label>
-                      <Textarea id="address" value={data.address || ''} onChange={e => updateData('address', e.target.value)} placeholder="123 Main St, City, State" rows={2} className="border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 resize-none" />
+                      <Label
+                        htmlFor="address"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
+                        Address
+                      </Label>
+                      <Textarea
+                        id="address"
+                        value={data.address || ''}
+                        onChange={e => updateData('address', e.target.value)}
+                        placeholder="123 Main St, City, State"
+                        rows={2}
+                        className="resize-none border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                      />
                     </div>
                   </div>
 
                   {/* Social Media Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Social Media</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Social Media
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="facebook" className="text-sm font-semibold text-[#1A1B41]">Facebook</Label>
+                        <Label
+                          htmlFor="facebook"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          Facebook
+                        </Label>
                         <Input
                           id="facebook"
                           value={data.facebook || ''}
@@ -697,7 +841,12 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="twitter" className="text-sm font-semibold text-[#1A1B41]">Twitter</Label>
+                        <Label
+                          htmlFor="twitter"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          Twitter
+                        </Label>
                         <Input
                           id="twitter"
                           value={data.twitter || ''}
@@ -707,17 +856,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="instagram" className="text-sm font-semibold text-[#1A1B41]">Instagram</Label>
+                        <Label
+                          htmlFor="instagram"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          Instagram
+                        </Label>
                         <Input
                           id="instagram"
                           value={data.instagram || ''}
-                          onChange={e => updateData('instagram', e.target.value)}
+                          onChange={e =>
+                            updateData('instagram', e.target.value)
+                          }
                           placeholder="instagram.com/yourhandle"
                           className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="linkedin" className="text-sm font-semibold text-[#1A1B41]">LinkedIn</Label>
+                        <Label
+                          htmlFor="linkedin"
+                          className="text-sm font-semibold text-[#1A1B41]"
+                        >
+                          LinkedIn
+                        </Label>
                         <Input
                           id="linkedin"
                           value={data.linkedin || ''}
@@ -732,38 +893,85 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               </Card>
 
               {/* Contact Page Details */}
-              <Card className="rounded-2xl  px-32 pt-4 pb-10 border border-gray-200/60 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
                       <FileText className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-[#1A1B41]">Contact Page Content</CardTitle>
-                      <CardDescription className="text-gray-600">Additional content for your contact page</CardDescription>
+                      <CardTitle className="text-xl text-[#1A1B41]">
+                        Contact Page Content
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Additional content for your contact page
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="contactDescription" className="text-sm font-semibold text-[#1A1B41]">Page Description</Label>
-                      <Textarea id="contactDescription" value={data.contactDescription || ''} onChange={e => updateData('contactDescription', e.target.value)} placeholder="Welcome message or description..." rows={2} className="border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 resize-none" />
+                      <Label
+                        htmlFor="contactDescription"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
+                        Page Description
+                      </Label>
+                      <Textarea
+                        id="contactDescription"
+                        value={data.contactDescription || ''}
+                        onChange={e =>
+                          updateData('contactDescription', e.target.value)
+                        }
+                        placeholder="Welcome message or description..."
+                        rows={2}
+                        className="resize-none border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="contactQuote" className="text-sm font-semibold text-[#1A1B41]">Quote</Label>
-                      <Textarea id="contactQuote" value={data.contactQuote || ''} onChange={e => updateData('contactQuote', e.target.value)} placeholder="An inspiring quote..." rows={2} className="border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20 resize-none" />
+                      <Label
+                        htmlFor="contactQuote"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
+                        Quote
+                      </Label>
+                      <Textarea
+                        id="contactQuote"
+                        value={data.contactQuote || ''}
+                        onChange={e =>
+                          updateData('contactQuote', e.target.value)
+                        }
+                        placeholder="An inspiring quote..."
+                        rows={2}
+                        className="resize-none border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                      />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="contactQuoteBy" className="text-sm font-semibold text-[#1A1B41]">Quote Attribution</Label>
-                      <Input id="contactQuoteBy" value={data.contactQuoteBy || ''} onChange={e => updateData('contactQuoteBy', e.target.value)} placeholder="- Author Name" className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20" />
+                      <Label
+                        htmlFor="contactQuoteBy"
+                        className="text-sm font-semibold text-[#1A1B41]"
+                      >
+                        Quote Attribution
+                      </Label>
+                      <Input
+                        id="contactQuoteBy"
+                        value={data.contactQuoteBy || ''}
+                        onChange={e =>
+                          updateData('contactQuoteBy', e.target.value)
+                        }
+                        placeholder="- Author Name"
+                        className="h-9 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold text-[#1A1B41]">Contact Image</Label>
+                      <Label className="text-sm font-semibold text-[#1A1B41]">
+                        Contact Image
+                      </Label>
                       {!data.contactImage ? (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 hover:border-[#6366F1] transition-colors cursor-pointer">
+                        <div className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-3 transition-colors hover:border-[#6366F1]">
                           <FileUpload
                             uploadType="catalogue"
                             catalogueId={data.id || 'temp'}
@@ -773,14 +981,29 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                               }
                             }}
                             maxFiles={1}
-                            accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                            accept={[
+                              'image/jpeg',
+                              'image/jpg',
+                              'image/png',
+                              'image/webp',
+                            ]}
                             className="w-full"
                           />
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <img src={data.contactImage} alt="Contact" className="w-full h-16 object-cover rounded-lg border" />
-                          <Button type="button" variant="outline" size="sm" onClick={() => updateData('contactImage', '')} className="w-full">
+                          <img
+                            src={data.contactImage}
+                            alt="Contact"
+                            className="h-16 w-full rounded-lg border object-cover"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => updateData('contactImage', '')}
+                            className="w-full"
+                          >
                             Change
                           </Button>
                         </div>
@@ -795,67 +1018,97 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 4 && (
             <div className="space-y-6">
               {/* Settings & Visibility */}
-              <Card className="rounded-b-2xl  px-32 pt-4 pb-10 border border-gray-200/60 bg-white/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300">
+              <Card className="rounded-b-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
                       <Globe className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl text-[#1A1B41]">Settings & Visibility</CardTitle>
-                      <CardDescription className="text-gray-600">Configure display options and access control</CardDescription>
+                      <CardTitle className="text-xl text-[#1A1B41]">
+                        Settings & Visibility
+                      </CardTitle>
+                      <CardDescription className="text-gray-600">
+                        Configure display options and access control
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Display Settings Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Display Settings</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#6366F1]/30 transition-colors">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Display Settings
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#6366F1]/30">
                         <div className="space-y-1">
-                          <Label className="text-sm font-semibold text-[#1A1B41]">Show Prices</Label>
-                          <p className="text-xs text-gray-600">Display product prices</p>
+                          <Label className="text-sm font-semibold text-[#1A1B41]">
+                            Show Prices
+                          </Label>
+                          <p className="text-xs text-gray-600">
+                            Display product prices
+                          </p>
                         </div>
                         <Switch
                           checked={data.showPrices}
-                          onCheckedChange={checked => updateData('showPrices', checked)}
+                          onCheckedChange={checked =>
+                            updateData('showPrices', checked)
+                          }
                           className="data-[state=checked]:bg-[#6366F1]"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#6366F1]/30 transition-colors">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#6366F1]/30">
                         <div className="space-y-1">
-                          <Label className="text-sm font-semibold text-[#1A1B41]">Show Categories</Label>
-                          <p className="text-xs text-gray-600">Group products by categories</p>
+                          <Label className="text-sm font-semibold text-[#1A1B41]">
+                            Show Categories
+                          </Label>
+                          <p className="text-xs text-gray-600">
+                            Group products by categories
+                          </p>
                         </div>
                         <Switch
                           checked={data.showCategories}
-                          onCheckedChange={checked => updateData('showCategories', checked)}
+                          onCheckedChange={checked =>
+                            updateData('showCategories', checked)
+                          }
                           className="data-[state=checked]:bg-[#6366F1]"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#6366F1]/30 transition-colors">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#6366F1]/30">
                         <div className="space-y-1">
-                          <Label className="text-sm font-semibold text-[#1A1B41]">Allow Search</Label>
-                          <p className="text-xs text-gray-600">Enable search functionality</p>
+                          <Label className="text-sm font-semibold text-[#1A1B41]">
+                            Allow Search
+                          </Label>
+                          <p className="text-xs text-gray-600">
+                            Enable search functionality
+                          </p>
                         </div>
                         <Switch
                           checked={data.allowSearch}
-                          onCheckedChange={checked => updateData('allowSearch', checked)}
+                          onCheckedChange={checked =>
+                            updateData('allowSearch', checked)
+                          }
                           className="data-[state=checked]:bg-[#6366F1]"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-[#6366F1]/30 transition-colors">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 transition-colors hover:border-[#6366F1]/30">
                         <div className="space-y-1">
-                          <Label className="text-sm font-semibold text-[#1A1B41]">Show Product Codes</Label>
-                          <p className="text-xs text-gray-600">Display SKU or product codes</p>
+                          <Label className="text-sm font-semibold text-[#1A1B41]">
+                            Show Product Codes
+                          </Label>
+                          <p className="text-xs text-gray-600">
+                            Display SKU or product codes
+                          </p>
                         </div>
                         <Switch
                           checked={data.showProductCodes}
-                          onCheckedChange={checked => updateData('showProductCodes', checked)}
+                          onCheckedChange={checked =>
+                            updateData('showProductCodes', checked)
+                          }
                           className="data-[state=checked]:bg-[#6366F1]"
                         />
                       </div>
@@ -864,45 +1117,57 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
 
                   {/* Visibility Settings Section */}
                   <div className="space-y-4">
-                    <h4 className="text-lg font-semibold text-[#1A1B41] border-b border-gray-200 pb-2">Visibility & Access</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="border-b border-gray-200 pb-2 text-lg font-semibold text-[#1A1B41]">
+                      Visibility & Access
+                    </h4>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${!data.isPublic
-                          ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
-                          : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                          }`}
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
+                          !data.isPublic
+                            ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
+                            : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
+                        }`}
                         onClick={() => updateData('isPublic', false)}
                       >
                         <div className="flex items-center gap-3">
                           <Lock className="h-6 w-6 text-[#6366F1]" />
                           <div>
-                            <h4 className="font-semibold text-[#1A1B41]">Private</h4>
-                            <p className="text-sm text-gray-600">Only you can access</p>
+                            <h4 className="font-semibold text-[#1A1B41]">
+                              Private
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              Only you can access
+                            </p>
                           </div>
                         </div>
                         {!data.isPublic && (
-                          <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6366F1] shadow-lg">
+                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6366F1] shadow-lg">
                             <Check className="h-3 w-3 text-white" />
                           </div>
                         )}
                       </div>
 
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${data.isPublic
-                          ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
-                          : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                          }`}
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
+                          data.isPublic
+                            ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
+                            : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
+                        }`}
                         onClick={() => updateData('isPublic', true)}
                       >
                         <div className="flex items-center gap-3">
                           <Globe className="h-6 w-6 text-[#6366F1]" />
                           <div>
-                            <h4 className="font-semibold text-[#1A1B41]">Public</h4>
-                            <p className="text-sm text-gray-600">Anyone with link can view</p>
+                            <h4 className="font-semibold text-[#1A1B41]">
+                              Public
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              Anyone with link can view
+                            </p>
                           </div>
                         </div>
                         {data.isPublic && (
-                          <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6366F1] shadow-lg">
+                          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6366F1] shadow-lg">
                             <Check className="h-3 w-3 text-white" />
                           </div>
                         )}
@@ -910,8 +1175,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     </div>
 
                     {!data.isPublic && (
-                      <div className="space-y-2 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <Label className="text-sm font-semibold text-[#1A1B41]">Access Password</Label>
+                      <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                        <Label className="text-sm font-semibold text-[#1A1B41]">
+                          Access Password
+                        </Label>
                         <Input
                           type="password"
                           value={data.password || ''}
@@ -919,7 +1186,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           placeholder="Set a password for private access"
                           className="h-10 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                         />
-                        <p className="text-xs text-gray-500">Visitors will need this password to view your catalogue</p>
+                        <p className="text-xs text-gray-500">
+                          Visitors will need this password to view your
+                          catalogue
+                        </p>
                       </div>
                     )}
                   </div>
@@ -936,7 +1206,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="rounded-xl border-2 border-gray-300 px-8 py-4 text-md shadow-lg transition-all duration-300 hover:border-[#779CAB] hover:shadow-xl"
+              className="text-md rounded-xl border-2 border-gray-300 px-8 py-4 shadow-lg transition-all duration-300 hover:border-[#779CAB] hover:shadow-xl"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
               Previous
@@ -945,7 +1215,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             {currentStep < 4 ? (
               <Button
                 onClick={nextStep}
-                className="rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4 text-md  text-white shadow-lg transition-all duration-300 hover:from-[#2D1B69] hover:to-[#6366F1] hover:shadow-xl"
+                className="text-md rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4  text-white shadow-lg transition-all duration-300 hover:from-[#2D1B69] hover:to-[#6366F1] hover:shadow-xl"
               >
                 Next
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -954,7 +1224,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               <Button
                 onClick={saveCatalogue}
                 disabled={isSaving}
-                className="rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4 text-md font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50"
+                className="text-md rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4 font-medium text-white shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-50"
               >
                 {isSaving ? (
                   <>

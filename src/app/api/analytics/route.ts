@@ -244,11 +244,11 @@ export async function GET(request: NextRequest) {
       dailyActivity,
       subscription: subscription
         ? {
-          plan: subscription.plan,
-          status: subscription.status,
-          billingCycle: subscription.billingCycle,
-          currentPeriodEnd: subscription.currentPeriodEnd,
-        }
+            plan: subscription.plan,
+            status: subscription.status,
+            billingCycle: subscription.billingCycle,
+            currentPeriodEnd: subscription.currentPeriodEnd,
+          }
         : null,
     })
   } catch (error) {

@@ -268,7 +268,9 @@ export default function ProjectsPage() {
       }
       const admin = await isClientAdmin()
       if (!admin && !canCreateCatalogue()) {
-        toast.error('You have reached the catalogue limit for your current plan.')
+        toast.error(
+          'You have reached the catalogue limit for your current plan.'
+        )
         setShowUpgradePrompt(true)
         return
       }
@@ -510,7 +512,9 @@ export default function ProjectsPage() {
                                   onClick={(e: any) => {
                                     e.stopPropagation()
                                     if (!catalogue.isPublic) return
-                                    setShareDialogUrl(`${typeof window !== 'undefined' ? window.location.origin : ''}/preview/${catalogue.id}`)
+                                    setShareDialogUrl(
+                                      `${typeof window !== 'undefined' ? window.location.origin : ''}/preview/${catalogue.id}`
+                                    )
                                     setShareDialogName(catalogue.name)
                                     setShareDialogOpen(true)
                                   }}
@@ -549,10 +553,11 @@ export default function ProjectsPage() {
                                   {catalogue.theme}
                                 </Badge>
                                 <Badge
-                                  className={`text-xs ${catalogue.isPublic
+                                  className={`text-xs ${
+                                    catalogue.isPublic
                                       ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
                                       : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                  }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
