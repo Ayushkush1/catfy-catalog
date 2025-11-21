@@ -2522,7 +2522,7 @@ export default function EditCataloguePage() {
                       type="button"
                       variant="outline"
                       size="xs"
-                      className="w-fit border-blue-400/20 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-xs text-blue-600"
+                      className="w-fit border-blue-400/20 text-xs text-blue-600"
                       disabled={isGeneratingDescription || !productForm.name.trim()}
                       onClick={async () => {
                         if (!productForm.name.trim()) {
@@ -2714,7 +2714,7 @@ export default function EditCataloguePage() {
                       </Label>
                       <div className="mt-2 space-y-3">
                         {!isCreatingNewCategory[index] ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col items-start gap-2">
                             <Select
                               value={productForm.categoryId || 'no-category'}
                               onValueChange={(value) => {
