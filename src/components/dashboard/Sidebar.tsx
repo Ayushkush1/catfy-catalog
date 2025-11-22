@@ -68,7 +68,7 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed z-40 h-[100vh] w-[70px] pl-1">
+    <aside className="fixed z-40 h-[100vh] w-[70px] pl-2">
       {/* Curved background wrapper */}
       <div className="sidebar-curved absolute inset-0">
         <style jsx>{`
@@ -232,10 +232,6 @@ export function Sidebar() {
                 CATFY
               </p>
             </div>
-            {/* Tooltip */}
-            <div className="pointer-events-none absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-sm text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
-              CATFY Dashboard
-            </div>
           </Link>
         </div>
 
@@ -259,7 +255,7 @@ export function Sidebar() {
                   <Link
                     href={item.isActive ? item.href : '#'}
                     className={cn(
-                      'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
+                      'nav-link group relative flex h-[2.6rem] w-[2.6rem] items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
                       isCurrentPath
                         ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
                         : item.isActive
@@ -271,10 +267,10 @@ export function Sidebar() {
                       className={cn(
                         'transition-all duration-300 ease-out',
                         isCurrentPath
-                          ? 'icon-active h-[1.2rem] w-[1.2rem] text-white'
+                          ? 'icon-active h-[1.3rem] w-[1.3em] text-white'
                           : item.isActive
-                            ? 'icon-hover h-[1.2rem] w-[1.2rem] text-gray-700 group-hover:scale-105 group-hover:text-[#6366F1]'
-                            : 'h-[1.2rem] w-[1.2rem] text-gray-400'
+                            ? 'icon-hover h-[1.3rem] w-[1.3rem] text-gray-700 group-hover:scale-105 group-hover:text-[#6366F1]'
+                            : 'h-[1.3rem] w-[1.3rem] text-gray-400'
                       )}
                       strokeWidth={2.2}
                     />
@@ -285,7 +281,7 @@ export function Sidebar() {
                     )}
                     {/* Tooltip */}
                     {item.isActive && (
-                      <div className="pointer-events-none absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-sm text-white opacity-0 transition-all duration-200 group-hover:block group-hover:translate-x-1 group-hover:opacity-100">
+                      <div className="pointer-events-none absolute left-full ml-3 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white opacity-0 transition-all duration-200 group-hover:block group-hover:translate-x-1 group-hover:opacity-100">
                         {item.label}
                         {item.badge && (
                           <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-xs text-gray-900">
@@ -307,7 +303,7 @@ export function Sidebar() {
             <Link
               href="/dashboard/settings"
               className={cn(
-                'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
+                'nav-link group relative flex h-[2.6rem] w-[2.6rem] items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
                 // Use startsWith to correctly detect nested routes under /dashboard/settings
                 pathname?.startsWith('/dashboard/settings')
                   ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
@@ -318,13 +314,13 @@ export function Sidebar() {
                 className={cn(
                   'transition-all duration-300 ease-out',
                   pathname?.startsWith('/dashboard/settings')
-                    ? 'icon-active h-[1.2rem] w-[1.2rem] text-white'
-                    : 'icon-settings h-[1.2rem] w-[1.2rem] text-gray-700 group-hover:text-[#6366F1]'
+                    ? 'icon-active h-[1.3rem] w-[1.3rem] text-white'
+                    : 'icon-settings h-[1.3rem] w-[1.3rem] text-gray-700 group-hover:text-[#6366F1]'
                 )}
                 strokeWidth={2}
               />
               {/* Tooltip */}
-              <div className="pointer-events-none absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-sm text-white opacity-0 transition-all duration-200 group-hover:block group-hover:translate-x-1 group-hover:opacity-100">
+              <div className="pointer-events-none absolute left-full ml-3 hidden whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white opacity-0 transition-all duration-200 group-hover:block group-hover:translate-x-1 group-hover:opacity-100">
                 Settings
               </div>
             </Link>
