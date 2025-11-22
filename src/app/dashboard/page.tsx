@@ -911,8 +911,8 @@ export default function DashboardPage() {
                                   </div>
 
                                   {/* Decorative icons */}
-                                  <ImageIcon className="absolute right-16 top-1/2 h-5 w-5 animate-pulse text-white/50" />
-                                  <FileText className="absolute bottom-12 left-12 h-5 w-5 animate-pulse text-white/40 delay-500" />
+                                  <ImageIcon className="absolute right-16 top-1/2 h-5 w-5 text-white/50" />
+                                  <FileText className="absolute bottom-12 left-12 h-5 w-5 text-white/40 delay-500" />
                                 </div>
                               )}
                             </div>
