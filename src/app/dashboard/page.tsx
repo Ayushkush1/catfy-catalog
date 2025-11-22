@@ -12,6 +12,8 @@ import {
   Book,
   Clock,
   FileText,
+  FileEdit,
+  ImageIcon,
   ArrowRight,
   DollarSign,
   ShoppingCart,
@@ -28,7 +30,7 @@ import {
   Zap,
   Star,
 } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -562,7 +564,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
-        <div className="ml-24 flex-1">
+        <div className="ml-20 flex-1">
           <DashboardHeader />
           <div className="container mx-auto px-4 py-8">
             <div className="space-y-6">
@@ -586,17 +588,17 @@ export default function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
-      <div className="ml-24 flex-1">
+      <div className="ml-20 flex-1">
         <DashboardHeader />
 
-        <div className="px-8 pb-10 pt-5">
+        <div className="px-8 pb-10 pt-2">
           {/* Branding Intro Section with Top Cards */}
           {stats && (
             <div className="mb-6">
               {/* Hero / Branding Intro (first view for new users) */}
               <div className="relative mb-8">
                 <div className="rounded-[3rem] shadow-lg">
-                  <div className="relative rounded-[3rem] bg-gradient-to-br from-[#6366F1] to-[#2D1B69] p-10 py-[5.5rem] text-white">
+                  <div className="relative rounded-[3rem] bg-gradient-to-br from-[#6366F1] to-[#2D1B69] p-10 py-[6rem] text-white">
                     <motion.div
                       className="flex flex-col items-center gap-6 md:flex-row"
                       variants={heroContainerVariants}
@@ -802,162 +804,141 @@ export default function DashboardPage() {
                   <>
                     {showCatalogue && (
                       <Card
-                        className="group relative cursor-pointer overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
+                        className="group relative cursor-pointer overflow-hidden rounded-3xl border-0 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl"
                         onClick={() => setShowCataloguesModal(true)}
                       >
-                        <div className="absolute right-0 top-0 h-40 w-40 -translate-y-12 translate-x-12 transform opacity-10">
-                          <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-400 to-purple-600" />
-                        </div>
-                        <CardContent className="relative p-8">
-                          <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-[70px] w-24 items-center justify-center rounded-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] p-1 transition-transform duration-300 group-hover:scale-110">
+                        <p className="mb-3 text-sm font-medium text-gray-400">Catalogue Builder</p>
+
+                        <div className="relative">
+                          <div className="relative">
+                            <div className="relative rounded-t-2xl bg-gradient-to-br from-blue-50 to-indigo-50 transition-transform duration-300 group-hover:-translate-y-1">
                               {catalogueStickerError ? (
-                                <Book className="h-7 w-7 text-white" />
+                                <Book className="h-24 w-full rounded-2xl text-indigo-500" />
                               ) : (
-                                <Image
-                                  src="/assets/stickers/cataloguelogo.png"
-                                  alt="Catalogue Sticker"
-                                  width={100}
-                                  height={100}
-                                  className="h-14 w-14"
-                                  onError={() => setCatalogueStickerError(true)}
-                                  style={{ objectFit: 'contain' }}
-                                />
+                                <div className="relative h-64 overflow-hidden bg-gradient-to-br from-indigo-400 via-violet-400 to-pink-300 p-6 rounded-t-2xl">
+                                  <div className="absolute inset-0 opacity-10">
+                                    <div className="absolute left-8 top-8 h-32 w-32 rounded-lg border-4 border-white"></div>
+                                    <div className="absolute right-8 top-12 h-2 w-40 rounded bg-white"></div>
+                                    <div className="absolute right-8 top-16 h-2 w-32 rounded bg-white"></div>
+                                    <div className="absolute right-8 top-20 h-2 w-36 rounded bg-white"></div>
+                                    <div className="absolute bottom-12 left-8 h-2 w-24 rounded bg-white"></div>
+                                    <div className="absolute bottom-8 left-8 h-2 w-32 rounded bg-white"></div>
+                                  </div>
+
+
+
+                                  <div className="relative z-10 flex h-full items-center justify-center">
+                                    <div className="transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                      <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/20 shadow-2xl backdrop-blur-sm">
+                                        <Image
+                                          src="/assets/stickers/cataloguelogo.png"
+                                          alt="Catalogue Preview"
+                                          width={100}
+                                          height={100}
+                                          className="h-36 w-full rounded-2xl object-contain"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <Sparkles className="absolute right-12 top-1/2 h-6 w-6 text-white/60" />
+                                  <FileText className="absolute left-16 bottom-16 h-4 w-4 text-white/40  delay-300" />
+                                </div>
                               )}
                             </div>
-                            <Badge className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
-                              Active
-                            </Badge>
-                          </div>
 
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                            Catalogue Builder
-                          </h3>
-                          <p className="mb-4 text-sm text-gray-600">
-                            Create beautiful, professional product catalogues
-                            with AI-powered descriptions and stunning templates.
-                          </p>
-
-                          <div className="mb-6 grid grid-cols-2 gap-3">
-                            <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">
-                                {catalogueCount}
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                Catalogues
-                              </p>
-                            </div>
-                            <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">
-                                {productCount}
-                              </p>
-                              <p className="text-xs text-gray-600">Products</p>
+                            <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow ring-2 ring-white">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 transform transition-transform duration-200 ease-out hover:scale-110 hover:-rotate-[35deg] group-hover:scale-110 group-hover:-rotate-[35deg]">
+                                <ArrowRight className="h-4 w-4 text-white" />
+                              </div>
                             </div>
                           </div>
 
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span>AI-powered descriptions</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span>Professional templates</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span>Export to PDF</span>
-                            </div>
-                          </div>
+                          <div className="relative rounded-b-2xl bg-indigo-50 px-5 py-4 shadow-sm">
+                            <h3 className="text-lg font-semibold text-indigo-700">Catalogue Builder</h3>
+                            <div className="mt-2 h-px w-full bg-indigo-100 opacity-60" />
+                            <p className="mt-3 text-sm text-gray-700">
+                              Create beautiful, professional catalogues with AI-powered descriptions and on-brand layouts.
+                            </p>
 
-                          <Button
-                            className="mt-6 w-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white shadow-md transition-all duration-200 hover:from-[#5558E3] hover:to-[#1e0f4d] hover:shadow-lg"
-                            onClick={e => {
-                              e.stopPropagation()
-                              setShowCataloguesModal(true)
-                            }}
-                          >
-                            Open Tool
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Button>
-                        </CardContent>
+
+                          </div>
+                        </div>
                       </Card>
                     )}
 
                     {showPdf && (
-                      <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl">
-                        <div className="absolute right-0 top-0 h-40 w-40 -translate-y-12 translate-x-12 transform opacity-10">
-                          <div className="h-full w-full rounded-full bg-gradient-to-br from-emerald-400 to-teal-600" />
-                        </div>
-                        <CardContent className="relative p-8">
-                          <div className="mb-4 flex items-start justify-between">
-                            <div className="flex h-[70px] w-24 items-center justify-center rounded-full bg-gradient-to-r from-[#6366F1] to-[#2D1B69] transition-transform duration-300 group-hover:scale-110">
+                      <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl">
+                        <p className="mb-3 text-sm font-medium text-gray-400">PDF Editor</p>
+
+                        <div className="relative">
+                          <div className="relative">
+                            <div className="relative rounded-t-2xl bg-gradient-to-br from-emerald-50 to-teal-50 transition-transform duration-300 group-hover:-translate-y-1">
                               {pdfStickerError ? (
-                                <FileText className="h-7 w-7 text-white" />
+                                <FileText className="h-24 w-full rounded-2xl text-emerald-600" />
                               ) : (
-                                <Image
-                                  src="/assets/stickers/pdfwhite.png"
-                                  alt="PDF Sticker"
-                                  width={100}
-                                  height={100}
-                                  className="h-14 w-14"
-                                  onError={() => setPdfStickerError(true)}
-                                  style={{ objectFit: 'contain' }}
-                                />
+                                <div className="relative h-64 overflow-hidden bg-gradient-to-br from-teal-500 to-emerald-600 p-6 rounded-t-2xl">
+                                  {/* Decorative elements to look like a PDF document */}
+                                  <div className="absolute inset-0 opacity-20">
+                                    {/* Document lines */}
+                                    <div className="absolute left-12 top-8 h-1 w-48 rounded bg-white"></div>
+                                    <div className="absolute left-12 top-12 h-1 w-40 rounded bg-white"></div>
+                                    <div className="absolute left-12 top-16 h-1 w-44 rounded bg-white"></div>
+                                    <div className="absolute left-12 top-24 h-1 w-36 rounded bg-white"></div>
+                                    <div className="absolute left-12 top-28 h-1 w-42 rounded bg-white"></div>
+                                    {/* Document icon outline */}
+                                    <div className="absolute right-12 top-12 h-40 w-32 rounded-lg border-4 border-white"></div>
+                                    <div className="absolute right-16 top-16 h-2 w-24 rounded bg-white"></div>
+                                    <div className="absolute right-16 top-20 h-2 w-20 rounded bg-white"></div>
+                                  </div>
+
+                                  {/* Tool Icon */}
+                                  <div className="relative z-10 flex h-full items-center justify-center">
+                                    <div className="transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                      <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/20 shadow-2xl backdrop-blur-sm">
+                                        <Image
+                                          src="/assets/stickers/pdfwhite.png"
+                                          alt="PDF Preview"
+                                          width={100}
+                                          height={100}
+                                          className="h-36 w-full rounded-2xl object-contain"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Decorative icons */}
+                                  <ImageIcon className="absolute right-16 top-1/2 h-5 w-5 text-white/50 animate-pulse" />
+                                  <FileText className="absolute left-12 bottom-12 h-5 w-5 text-white/40 animate-pulse delay-500" />
+                                </div>
                               )}
                             </div>
-                            <Badge className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100">
+
+                            <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow ring-2 ring-white">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 transform transition-transform duration-400 ease-out hover:scale-110 hover:rotate-[360deg] group-hover:scale-110 group-hover:rotate-[360deg]">
+                                <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                  <path d="M12 5v14M5 12h14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="relative rounded-b-2xl bg-emerald-50 px-5 py-4 shadow-sm">
+                            <span className="absolute right-4 top-3 inline-flex items-center rounded-full bg-emerald-100/80 px-2 py-1 text-xs font-semibold text-emerald-800">
                               Coming Soon
-                            </Badge>
+                            </span>
+                            <h3 className="text-lg font-semibold text-emerald-700">PDF Editor</h3>
+                            <div className="mt-2 h-px w-full bg-emerald-100 opacity-60" />
+                            <p className="mt-3 text-sm text-gray-700">
+                              Advanced PDF editing for creating, updating, and managing documents launching soon.
+                            </p>
+
+
                           </div>
-
-                          <h3 className="mb-2 text-2xl font-bold text-gray-900">
-                            PDF Editor
-                          </h3>
-                          <p className="mb-4 text-sm text-gray-600">
-                            Professional PDF editing with advanced features for
-                            creating, editing, and managing documents.
-                          </p>
-
-                          <div className="mb-6 grid grid-cols-2 gap-3">
-                            <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">
-                                0
-                              </p>
-                              <p className="text-xs text-gray-600">Documents</p>
-                            </div>
-                            <div className="rounded-xl bg-gray-50 p-3">
-                              <p className="text-2xl font-bold text-gray-900">
-                                0
-                              </p>
-                              <p className="text-xs text-gray-600">Templates</p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-gray-400" />
-                              <span>Advanced PDF editing</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-gray-400" />
-                              <span>Text and image support</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <CheckCircle2 className="h-4 w-4 text-gray-400" />
-                              <span>Professional templates</span>
-                            </div>
-                          </div>
-
-                          <Button
-                            className="mt-6 w-full cursor-not-allowed bg-gray-200 text-gray-500 hover:bg-gray-200"
-                            disabled
-                          >
-                            Coming Soon
-                          </Button>
-                        </CardContent>
+                        </div>
                       </Card>
                     )}
+
                   </>
                 )
               })()}
@@ -973,7 +954,7 @@ export default function DashboardPage() {
               </h2>
 
               {/* Smaller Stat Cards Below */}
-              <div className="mt-4 grid grid-cols-1 gap-4 rounded-3xl bg-white p-4 lg:flex-1">
+              <div className="mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 lg:flex-1 lg:flex lg:flex-col lg:justify-center">
                 <Card className="rounded-2xl border-0 bg-gray-50 shadow-sm hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-5">
                     <div className="flex items-center gap-3">
@@ -1066,7 +1047,21 @@ export default function DashboardPage() {
                           router.push(`/catalogue/${item.id}/edit`)
                         }
                       >
-                        <div className="relative h-32 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="absolute right-3 top-3 z-20 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e: MouseEvent) => {
+                              e.stopPropagation()
+                              router.push(`/catalogue/${item.id}/edit`)
+                            }}
+                            className="h-8 w-8 rounded-full bg-white/90 p-0 shadow-sm"
+                            aria-label={`Edit ${catalogue?.name || 'catalogue'}`}
+                          >
+                            <Edit className="h-4 w-4 text-gray-700" />
+                          </Button>
+                        </div>
+                        <div className="relative h-36 overflow-hidden cursor-pointer bg-gradient-to-br from-gray-100 to-gray-200">
                           <iframe
                             src={`/preview/${catalogue.id}`}
                             className="h-full w-full border-0"
@@ -1080,80 +1075,23 @@ export default function DashboardPage() {
                             }}
                             title={`Preview of ${catalogue.name}`}
                           />
-                          <div className="absolute right-2 top-2">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 bg-white/80 p-0 backdrop-blur-sm hover:bg-white"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <MoreVertical className="h-3 w-3" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    router.push(
-                                      `/catalogue/${catalogue.id}/edit`
-                                    )
-                                  }}
-                                >
-                                  <Edit className="mr-2 h-3 w-3" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    if (!catalogue.isPublic) return
-                                    shareCatalogue(catalogue)
-                                  }}
-                                  disabled={!catalogue.isPublic}
-                                >
-                                  <Share2 className="mr-2 h-3 w-3" />
-                                  Share
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    deleteCatalogue(catalogue.id)
-                                  }}
-                                  className="text-red-600 hover:bg-red-50"
-                                >
-                                  <Trash2 className="mr-2 h-3 w-3" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+
                         </div>
 
                         <CardContent className="p-3">
                           <div className="mb-2 flex items-start justify-between">
                             <div className="min-w-0 flex-1">
-                              <h3 className="mb-1 truncate text-sm font-semibold text-gray-900">
+                              <h3 className="flex items-center justify-between truncate text-sm font-semibold text-gray-900">
                                 {catalogue.name}
-                              </h3>
-                              <div className="flex items-center gap-1">
                                 <Badge
-                                  variant="outline"
-                                  className="text-xs capitalize"
-                                >
-                                  {catalogue.theme}
-                                </Badge>
-                                <Badge
-                                  className={`text-xs ${
-                                    catalogue.isPublic
-                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                  }`}
+                                  className={`text-[10px] ${catalogue.isPublic
+                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                    }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
-                              </div>
+                              </h3>
                             </div>
                           </div>
 
@@ -1169,31 +1107,7 @@ export default function DashboardPage() {
                             </span>
                           </div>
 
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-2 py-1 text-xs text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
-                              onClick={e => {
-                                e.stopPropagation()
-                                router.push(`/catalogue/${catalogue.id}/edit`)
-                              }}
-                            >
-                              <Edit className="mr-1 h-3 w-3" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="px-2 py-1 text-xs"
-                              onClick={e => {
-                                e.stopPropagation()
-                                router.push(`/preview/${catalogue.id}`)
-                              }}
-                            >
-                              <Eye className="mr-1 h-3 w-3" />
-                              Preview
-                            </Button>
-                          </div>
+
                         </CardContent>
                       </Card>
                     )

@@ -11,6 +11,8 @@ import {
 } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
+import { NotificationsProvider } from '@/contexts/NotificationsContext'
+import { NotificationsDrawer } from '@/components/dashboard/NotificationsDrawer'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import { GlobalSidebar } from '@/components/dashboard/SidebarVisibility'
@@ -102,10 +104,13 @@ export default function RootLayout({
         className={`${inter.variable} ${roboto.variable} ${openSans.variable} ${lato.variable} ${montserrat.variable} ${poppins.variable} ${playfairDisplay.variable} ${merriweather.variable} ${inter.className}`}
       >
         <Providers>
-          <GlobalSidebar />
-          {children}
-          <Toaster />
-          <SonnerToaster position="top-right" richColors />
+          <NotificationsProvider>
+            <GlobalSidebar />
+            {children}
+            <NotificationsDrawer />
+            <Toaster />
+            <SonnerToaster position="top-right" richColors />
+          </NotificationsProvider>
         </Providers>
       </body>
     </html>

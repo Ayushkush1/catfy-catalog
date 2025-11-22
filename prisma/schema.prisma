@@ -39,6 +39,7 @@ model Profile {
   receivedInvitations Invitation[] @relation("InvitationReceiver")
   themeAnalytics   ThemeAnalytics[]
   templates        Template[]
+  notifications    Notification[]
 
   @@map("profiles")
 }
@@ -397,6 +398,39 @@ enum ExportType {
   PDF
   HTML
   JSON
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  profileId  String?  // null = global/system notification
+  type       NotificationType @default(SYSTEM)
+  title      String
+  message    String?
+  url        String?
+  meta       Json?
+  read       Boolean  @default(false)
+  priority   NotificationPriority @default(MEDIUM)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  profile    Profile? @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  SYSTEM
+  PRODUCT
+  COLLAB
+  BILLING
+  JOB
+  PROMO
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 enum ExportStatus {

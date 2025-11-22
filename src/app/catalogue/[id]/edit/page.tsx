@@ -1334,11 +1334,11 @@ export default function EditCataloguePage() {
   if (isLoading) {
     return (
       <>
-        <div className="bg-[#E8EAF6] pl-24">
+        <div className="bg-[#E8EAF6] pl-20">
           <Header title="Edit Catalogue" showGradientBanner={true} />
         </div>
 
-        <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-32">
+        <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-28">
           <div className="flex">
             <div className="min-h-screen w-64 bg-white pt-4">
               <div className="space-y-1 p-4">
@@ -1401,7 +1401,7 @@ export default function EditCataloguePage() {
   if (!catalogue) {
     return (
       <>
-        <div className="ml-24">
+        <div className="ml-20">
           <Header title="Edit Catalogue" showGradientBanner={true} />
         </div>
         <div className="container mx-auto px-4 py-8">
@@ -1418,7 +1418,7 @@ export default function EditCataloguePage() {
 
   return (
     <>
-      <div className="bg-[#E8EAF6] pl-24">
+      <div className="bg-[#E8EAF6] pl-20">
         <Header
           title="Edit Catalogue"
           catalogueName={catalogue.name}
@@ -1439,7 +1439,7 @@ export default function EditCataloguePage() {
           isTrackingPresence={isTracking}
         />
       </div>
-      <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-32">
+      <div className="-mt-6 min-h-screen bg-[#E8EAF6] pl-28">
         {/* Main Layout Container */}
         <div className="flex">
           {/* Left Sidebar */}

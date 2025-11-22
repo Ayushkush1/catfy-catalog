@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { useNotifications } from '@/contexts/NotificationsContext'
 
 interface UserProfile {
   id: string
@@ -55,6 +56,7 @@ export function DashboardHeader({
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+  const { openDrawer, unreadCount } = useNotifications()
 
   useEffect(() => {
     const getUser = async () => {
@@ -354,9 +356,30 @@ export function DashboardHeader({
               variant="ghost"
               size="sm"
               className="relative h-10 w-10 rounded-full p-0 text-gray-600 hover:bg-white hover:text-gray-900"
+              onClick={() => {
+                try {
+                  openDrawer()
+                } catch (e) {
+                  try {
+                    window.dispatchEvent(
+                      new CustomEvent('dashboard:openNotifications')
+                    )
+                  } catch (err) {
+                    /* ignore */
+                  }
+                }
+              }}
+              aria-label="Open notifications"
+              title="Notifications"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+              {unreadCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-semibold text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              ) : (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500/0" />
+              )}
             </Button>
 
             {/* Profile Dropdown */}

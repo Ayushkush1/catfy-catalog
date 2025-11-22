@@ -68,38 +68,13 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-4 top-4 z-40 h-[calc(100vh-2rem)] w-[70px]">
+    <aside className="fixed z-40 h-[100vh] w-[70px] pl-1">
       {/* Curved background wrapper */}
       <div className="sidebar-curved absolute inset-0">
         <style jsx>{`
-          .sidebar-curved {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          }
+          
 
-          .sidebar-curved::before {
-            content: '';
-            position: absolute;
-            top: 15%;
-            right: 0;
-            width: 15px;
-            height: 100px;
-            background: #ffffff;
-            border-radius: 0 80px 80px 0;
-          }
-
-          .sidebar-curved::after {
-            content: '';
-            position: absolute;
-            bottom: 20%;
-            right: 0;
-            width: 15px;
-            height: 100px;
-            background: #ffffff;
-            border-radius: 0 80px 80px 0;
-          }
-
+          
           /* Premium Icon Animations */
           @keyframes iconBounce {
             0%,
@@ -247,12 +222,12 @@ export function Sidebar() {
             href="/dashboard"
             className="group relative flex items-center justify-center"
           >
-            <div className="relative flex h-20 w-20 flex-col items-center justify-center  overflow-hidden">
+            <div className="relative mt-2 flex h-20 w-16 flex-col items-center justify-center  overflow-hidden">
               <Image
                 src="/assets/CATFYLogo.png"
                 alt="CatFy Logo"
-                width={60}
-                height={60}
+                width={64}
+                height={64}
                 className="object-contain"
                 priority
               />
@@ -268,8 +243,8 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="w-full flex-1 px-3">
-          <div className="space-y-4">
+        <nav className="w-full flex-1">
+          <div className="space-y-5">
             {sidebarItems.map((item, index) => {
               const Icon = item.icon
               // Exact match for home, prefix match for others
@@ -277,18 +252,18 @@ export function Sidebar() {
                 item.href === '/dashboard'
                   ? pathname === '/dashboard'
                   : pathname === item.href ||
-                    pathname.startsWith(item.href + '/')
+                  pathname.startsWith(item.href + '/')
 
               return (
-                <div key={item.id} className="nav-item relative">
+                <div key={item.id} className="nav-item relative flex justify-center">
                   <Link
                     href={item.isActive ? item.href : '#'}
                     className={cn(
-                      'nav-link group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300 ease-out',
+                      'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:ring-1 hover:ring-[#6366F1]/5 hover:scale-110',
                       isCurrentPath
-                        ? 'nav-link-active scale-105 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
+                        ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
                         : item.isActive
-                          ? 'bg-gray-100/80 hover:scale-110 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg'
+                          ? 'bg-white shadow-sm hover:scale-110 hover:bg-white hover:shadow-lg hover:backdrop-blur-sm'
                           : 'cursor-not-allowed bg-gray-50/50 opacity-40'
                     )}
                   >
@@ -296,10 +271,10 @@ export function Sidebar() {
                       className={cn(
                         'transition-all duration-300 ease-out',
                         isCurrentPath
-                          ? 'icon-active h-6 w-6 text-white'
+                          ? 'icon-active h-[1.2rem] w-[1.2rem] text-white'
                           : item.isActive
-                            ? 'icon-hover h-5 w-5 text-gray-700 group-hover:scale-105 group-hover:text-[#6366F1]'
-                            : 'h-6 w-6 text-gray-400'
+                            ? 'icon-hover h-[1.2rem] w-[1.2rem] text-gray-700 group-hover:scale-105 group-hover:text-[#6366F1]'
+                            : 'h-[1.2rem] w-[1.2rem] text-gray-400'
                       )}
                       strokeWidth={2.2}
                     />
@@ -327,24 +302,24 @@ export function Sidebar() {
         </nav>
 
         {/* Settings at Bottom */}
-        <div className="mt-auto w-full px-3">
-          <div className="relative">
+        <div className="mt-auto w-full">
+          <div className="relative flex justify-center pb-4">
             <Link
               href="/dashboard/settings"
               className={cn(
-                'nav-link group relative flex h-11 w-full items-center justify-center rounded-xl transition-all duration-300 ease-out',
+                'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:ring-1 hover:ring-[#6366F1]/5 hover:scale-110',
                 // Use startsWith to correctly detect nested routes under /dashboard/settings
                 pathname?.startsWith('/dashboard/settings')
-                  ? 'nav-link-active scale-105 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
-                  : 'bg-gray-100/80 hover:scale-110 hover:bg-gradient-to-br hover:from-purple-50 hover:to-blue-50 hover:shadow-lg'
+                  ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
+                  : 'bg-white shadow-sm hover:scale-110 hover:bg-white hover:shadow-lg hover:backdrop-blur-sm'
               )}
             >
               <Settings
                 className={cn(
                   'transition-all duration-300 ease-out',
                   pathname?.startsWith('/dashboard/settings')
-                    ? 'icon-active h-6 w-6  text-white'
-                    : 'icon-settings h-5 w-5 text-gray-700 group-hover:text-[#6366F1]'
+                    ? 'icon-active h-[1.2rem] w-[1.2rem] text-white'
+                    : 'icon-settings h-[1.2rem] w-[1.2rem] text-gray-700 group-hover:text-[#6366F1]'
                 )}
                 strokeWidth={2}
               />
