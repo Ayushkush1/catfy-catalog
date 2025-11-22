@@ -807,7 +807,9 @@ export default function DashboardPage() {
                         className="group relative cursor-pointer overflow-hidden rounded-3xl border-0 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl"
                         onClick={() => setShowCataloguesModal(true)}
                       >
-                        <p className="mb-3 text-sm font-medium text-gray-400">Catalogue Builder</p>
+                        <p className="mb-3 text-sm font-medium text-gray-400">
+                          Catalogue Builder
+                        </p>
 
                         <div className="relative">
                           <div className="relative">
@@ -815,7 +817,7 @@ export default function DashboardPage() {
                               {catalogueStickerError ? (
                                 <Book className="h-24 w-full rounded-2xl text-indigo-500" />
                               ) : (
-                                <div className="relative h-64 overflow-hidden bg-gradient-to-br from-indigo-400 via-violet-400 to-pink-300 p-6 rounded-t-2xl">
+                                <div className="relative h-64 overflow-hidden rounded-t-2xl bg-gradient-to-br from-indigo-400 via-violet-400 to-pink-300 p-6">
                                   <div className="absolute inset-0 opacity-10">
                                     <div className="absolute left-8 top-8 h-32 w-32 rounded-lg border-4 border-white"></div>
                                     <div className="absolute right-8 top-12 h-2 w-40 rounded bg-white"></div>
@@ -825,10 +827,8 @@ export default function DashboardPage() {
                                     <div className="absolute bottom-8 left-8 h-2 w-32 rounded bg-white"></div>
                                   </div>
 
-
-
                                   <div className="relative z-10 flex h-full items-center justify-center">
-                                    <div className="transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                    <div className="transform transition-transform duration-500 group-hover:rotate-3 group-hover:scale-110">
                                       <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/20 shadow-2xl backdrop-blur-sm">
                                         <Image
                                           src="/assets/stickers/cataloguelogo.png"
@@ -842,26 +842,27 @@ export default function DashboardPage() {
                                   </div>
 
                                   <Sparkles className="absolute right-12 top-1/2 h-6 w-6 text-white/60" />
-                                  <FileText className="absolute left-16 bottom-16 h-4 w-4 text-white/40  delay-300" />
+                                  <FileText className="absolute bottom-16 left-16 h-4 w-4 text-white/40  delay-300" />
                                 </div>
                               )}
                             </div>
 
                             <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow ring-2 ring-white">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 transform transition-transform duration-200 ease-out hover:scale-110 hover:-rotate-[35deg] group-hover:scale-110 group-hover:-rotate-[35deg]">
+                              <div className="flex h-8 w-8 transform items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 transition-transform duration-200 ease-out hover:-rotate-[35deg] hover:scale-110 group-hover:-rotate-[35deg] group-hover:scale-110">
                                 <ArrowRight className="h-4 w-4 text-white" />
                               </div>
                             </div>
                           </div>
 
                           <div className="relative rounded-b-2xl bg-indigo-50 px-5 py-4 shadow-sm">
-                            <h3 className="text-lg font-semibold text-indigo-700">Catalogue Builder</h3>
+                            <h3 className="text-lg font-semibold text-indigo-700">
+                              Catalogue Builder
+                            </h3>
                             <div className="mt-2 h-px w-full bg-indigo-100 opacity-60" />
                             <p className="mt-3 text-sm text-gray-700">
-                              Create beautiful, professional catalogues with AI-powered descriptions and on-brand layouts.
+                              Create beautiful, professional catalogues with
+                              AI-powered descriptions and on-brand layouts.
                             </p>
-
-
                           </div>
                         </div>
                       </Card>
@@ -869,7 +870,9 @@ export default function DashboardPage() {
 
                     {showPdf && (
                       <Card className="group relative overflow-hidden rounded-3xl border-0 bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl">
-                        <p className="mb-3 text-sm font-medium text-gray-400">PDF Editor</p>
+                        <p className="mb-3 text-sm font-medium text-gray-400">
+                          PDF Editor
+                        </p>
 
                         <div className="relative">
                           <div className="relative">
@@ -877,7 +880,7 @@ export default function DashboardPage() {
                               {pdfStickerError ? (
                                 <FileText className="h-24 w-full rounded-2xl text-emerald-600" />
                               ) : (
-                                <div className="relative h-64 overflow-hidden bg-gradient-to-br from-teal-500 to-emerald-600 p-6 rounded-t-2xl">
+                                <div className="relative h-64 overflow-hidden rounded-t-2xl bg-gradient-to-br from-teal-500 to-emerald-600 p-6">
                                   {/* Decorative elements to look like a PDF document */}
                                   <div className="absolute inset-0 opacity-20">
                                     {/* Document lines */}
@@ -885,7 +888,7 @@ export default function DashboardPage() {
                                     <div className="absolute left-12 top-12 h-1 w-40 rounded bg-white"></div>
                                     <div className="absolute left-12 top-16 h-1 w-44 rounded bg-white"></div>
                                     <div className="absolute left-12 top-24 h-1 w-36 rounded bg-white"></div>
-                                    <div className="absolute left-12 top-28 h-1 w-42 rounded bg-white"></div>
+                                    <div className="w-42 absolute left-12 top-28 h-1 rounded bg-white"></div>
                                     {/* Document icon outline */}
                                     <div className="absolute right-12 top-12 h-40 w-32 rounded-lg border-4 border-white"></div>
                                     <div className="absolute right-16 top-16 h-2 w-24 rounded bg-white"></div>
@@ -894,7 +897,7 @@ export default function DashboardPage() {
 
                                   {/* Tool Icon */}
                                   <div className="relative z-10 flex h-full items-center justify-center">
-                                    <div className="transform transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                                    <div className="transform transition-transform duration-500 group-hover:rotate-3 group-hover:scale-110">
                                       <div className="flex h-24 w-24 items-center justify-center rounded-2xl bg-white/20 shadow-2xl backdrop-blur-sm">
                                         <Image
                                           src="/assets/stickers/pdfwhite.png"
@@ -908,16 +911,26 @@ export default function DashboardPage() {
                                   </div>
 
                                   {/* Decorative icons */}
-                                  <ImageIcon className="absolute right-16 top-1/2 h-5 w-5 text-white/50 animate-pulse" />
-                                  <FileText className="absolute left-12 bottom-12 h-5 w-5 text-white/40 animate-pulse delay-500" />
+                                  <ImageIcon className="absolute right-16 top-1/2 h-5 w-5 animate-pulse text-white/50" />
+                                  <FileText className="absolute bottom-12 left-12 h-5 w-5 animate-pulse text-white/40 delay-500" />
                                 </div>
                               )}
                             </div>
 
                             <div className="absolute left-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow ring-2 ring-white">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 transform transition-transform duration-400 ease-out hover:scale-110 hover:rotate-[360deg] group-hover:scale-110 group-hover:rotate-[360deg]">
-                                <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                  <path d="M12 5v14M5 12h14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              <div className="duration-400 flex h-8 w-8 transform items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 transition-transform ease-out hover:rotate-[360deg] hover:scale-110 group-hover:rotate-[360deg] group-hover:scale-110">
+                                <svg
+                                  className="h-4 w-4 text-white"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    d="M12 5v14M5 12h14"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
                                 </svg>
                               </div>
                             </div>
@@ -927,18 +940,18 @@ export default function DashboardPage() {
                             <span className="absolute right-4 top-3 inline-flex items-center rounded-full bg-emerald-100/80 px-2 py-1 text-xs font-semibold text-emerald-800">
                               Coming Soon
                             </span>
-                            <h3 className="text-lg font-semibold text-emerald-700">PDF Editor</h3>
+                            <h3 className="text-lg font-semibold text-emerald-700">
+                              PDF Editor
+                            </h3>
                             <div className="mt-2 h-px w-full bg-emerald-100 opacity-60" />
                             <p className="mt-3 text-sm text-gray-700">
-                              Advanced PDF editing for creating, updating, and managing documents launching soon.
+                              Advanced PDF editing for creating, updating, and
+                              managing documents launching soon.
                             </p>
-
-
                           </div>
                         </div>
                       </Card>
                     )}
-
                   </>
                 )
               })()}
@@ -954,7 +967,7 @@ export default function DashboardPage() {
               </h2>
 
               {/* Smaller Stat Cards Below */}
-              <div className="mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 lg:flex-1 lg:flex lg:flex-col lg:justify-center">
+              <div className="mt-4 grid grid-cols-1 gap-4 rounded-2xl bg-white p-4 lg:flex lg:flex-1 lg:flex-col lg:justify-center">
                 <Card className="rounded-2xl border-0 bg-gray-50 shadow-sm hover:shadow-md">
                   <CardContent className="flex items-center justify-between p-5">
                     <div className="flex items-center gap-3">
@@ -1061,7 +1074,7 @@ export default function DashboardPage() {
                             <Edit className="h-4 w-4 text-gray-700" />
                           </Button>
                         </div>
-                        <div className="relative h-36 overflow-hidden cursor-pointer bg-gradient-to-br from-gray-100 to-gray-200">
+                        <div className="relative h-36 cursor-pointer overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
                           <iframe
                             src={`/preview/${catalogue.id}`}
                             className="h-full w-full border-0"
@@ -1075,7 +1088,6 @@ export default function DashboardPage() {
                             }}
                             title={`Preview of ${catalogue.name}`}
                           />
-
                         </div>
 
                         <CardContent className="p-3">
@@ -1084,10 +1096,11 @@ export default function DashboardPage() {
                               <h3 className="flex items-center justify-between truncate text-sm font-semibold text-gray-900">
                                 {catalogue.name}
                                 <Badge
-                                  className={`text-[10px] ${catalogue.isPublic
-                                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                    }`}
+                                  className={`text-[10px] ${
+                                    catalogue.isPublic
+                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
+                                  }`}
                                 >
                                   {catalogue.isPublic ? 'Public' : 'Private'}
                                 </Badge>
@@ -1106,8 +1119,6 @@ export default function DashboardPage() {
                               )}
                             </span>
                           </div>
-
-
                         </CardContent>
                       </Card>
                     )

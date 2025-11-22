@@ -72,9 +72,6 @@ export function Sidebar() {
       {/* Curved background wrapper */}
       <div className="sidebar-curved absolute inset-0">
         <style jsx>{`
-          
-
-          
           /* Premium Icon Animations */
           @keyframes iconBounce {
             0%,
@@ -252,14 +249,17 @@ export function Sidebar() {
                 item.href === '/dashboard'
                   ? pathname === '/dashboard'
                   : pathname === item.href ||
-                  pathname.startsWith(item.href + '/')
+                    pathname.startsWith(item.href + '/')
 
               return (
-                <div key={item.id} className="nav-item relative flex justify-center">
+                <div
+                  key={item.id}
+                  className="nav-item relative flex justify-center"
+                >
                   <Link
                     href={item.isActive ? item.href : '#'}
                     className={cn(
-                      'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:ring-1 hover:ring-[#6366F1]/5 hover:scale-110',
+                      'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
                       isCurrentPath
                         ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
                         : item.isActive
@@ -307,7 +307,7 @@ export function Sidebar() {
             <Link
               href="/dashboard/settings"
               className={cn(
-                'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:ring-1 hover:ring-[#6366F1]/5 hover:scale-110',
+                'nav-link group relative flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 ease-out hover:scale-110 hover:ring-1 hover:ring-[#6366F1]/5',
                 // Use startsWith to correctly detect nested routes under /dashboard/settings
                 pathname?.startsWith('/dashboard/settings')
                   ? 'nav-link-active scale-110 bg-gradient-to-br from-[#6366F1] to-[#2D1B69] shadow-lg shadow-purple-500/40'
