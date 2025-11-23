@@ -18,7 +18,9 @@ interface ProfileDropdownProps {
   catalogueId?: string
 }
 
-export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ catalogueId }) => {
+export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
+  catalogueId,
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)

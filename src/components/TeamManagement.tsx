@@ -68,7 +68,6 @@ import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { SubscriptionPlan } from '@prisma/client'
 import { createClient } from '@/lib/supabase/client'
 
-
 interface SharedUser {
   id: string
   email: string
@@ -120,7 +119,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [editingMember, setEditingMember] = useState<SharedUser | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [invitePermission, setInvitePermission] = useState<'edit' | 'view'>('edit')
+  const [invitePermission, setInvitePermission] = useState<'edit' | 'view'>(
+    'edit'
+  )
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [activeTab, setActiveTab] = useState('members')
@@ -143,7 +144,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             const data = parsed.data
             setTeam(data.team || [])
             setPendingInvitations(data.pendingInvitations || [])
-
 
             const apiActivityLog = data.activityLog || []
             if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
@@ -168,30 +168,30 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
             setIsLoading(false)
 
-              // revalidate in background
-              ; (async () => {
-                try {
-                  const response = await fetch(
-                    `/api/catalogues/${catalogueId}/team`
-                  )
-                  if (response.ok) {
-                    const fresh = await response.json()
-                    setTeam(fresh.team || [])
-                    setPendingInvitations(fresh.pendingInvitations || [])
+            // revalidate in background
+            ;(async () => {
+              try {
+                const response = await fetch(
+                  `/api/catalogues/${catalogueId}/team`
+                )
+                if (response.ok) {
+                  const fresh = await response.json()
+                  setTeam(fresh.team || [])
+                  setPendingInvitations(fresh.pendingInvitations || [])
 
-                    const freshActivity = fresh.activityLog || []
-                    setActivityLog(freshActivity.length ? freshActivity : [])
-                    try {
-                      sessionStorage.setItem(
-                        CACHE_KEY,
-                        JSON.stringify({ _ts: Date.now(), data: fresh })
-                      )
-                    } catch (e) { }
-                  }
-                } catch (e) {
-                  // ignore
+                  const freshActivity = fresh.activityLog || []
+                  setActivityLog(freshActivity.length ? freshActivity : [])
+                  try {
+                    sessionStorage.setItem(
+                      CACHE_KEY,
+                      JSON.stringify({ _ts: Date.now(), data: fresh })
+                    )
+                  } catch (e) {}
                 }
-              })()
+              } catch (e) {
+                // ignore
+              }
+            })()
 
             return
           }
@@ -208,8 +208,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       const data = await response.json()
       setTeam(data.team || [])
       setPendingInvitations(data.pendingInvitations || [])
-
-
 
       const apiActivityLog = data.activityLog || []
       if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
@@ -237,7 +235,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
           CACHE_KEY,
           JSON.stringify({ _ts: Date.now(), data })
         )
-      } catch (e) { }
+      } catch (e) {}
     } catch (error) {
       console.error('Error loading team data:', error)
       toast.error('Failed to load team data')
@@ -284,7 +282,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Permission updated successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating permission:', error)
@@ -332,15 +330,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setEditingMember(null)
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData()
     } catch (error) {
       console.error('Error updating responsibility:', error)
       toast.error('Failed to update responsibility')
     }
   }
-
-
 
   // Validate email
   const validateEmail = (email: string) => {
@@ -428,7 +424,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setShowInviteDialog(false)
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error sending invitation:', error)
@@ -470,7 +466,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Collaborator removed successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error removing collaborator:', error)
@@ -493,7 +489,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Invitation cancelled successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error cancelling invitation:', error)
@@ -522,7 +518,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       toast.success('Invitation resent successfully!')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) { }
+      } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
       console.error('Error resending invitation:', error)
@@ -596,8 +592,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   // Determine if current user is the actual owner based on team data
   const currentUserMember = team.find(member => member.id === currentUserId)
   const isActualOwner = currentUserMember?.role === 'OWNER'
-
-
 
   if (isLoading) {
     return (
@@ -684,8 +678,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             <Alert className="border-blue-200 bg-blue-50">
               <Users className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                You have access to this catalogue. Only the owner can
-                invite or remove collaborators.
+                You have access to this catalogue. Only the owner can invite or
+                remove collaborators.
               </AlertDescription>
             </Alert>
           )}
@@ -714,8 +708,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </TabsList>
 
             <TabsContent value="members" className="mt-8 space-y-6">
-
-
               {/* Shared Users */}
               <div>
                 <div className="mb-6 flex items-center justify-between">
@@ -733,12 +725,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     return (
                       <div
                         key={member.id}
-                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${isCurrentUser
+                        className={`group relative flex items-center justify-between rounded-xl border-2 p-5 transition-all duration-200 hover:shadow-lg ${
+                          isCurrentUser
                             ? 'border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm'
                             : member.role === 'OWNER'
                               ? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50 shadow-sm'
                               : 'border-gray-200 bg-white hover:border-gray-300'
-                          }`}
+                        }`}
                       >
                         <div className="flex items-center space-x-4">
                           <div className="relative">
@@ -783,12 +776,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               {member.permission && (
                                 <Badge
                                   variant="outline"
-                                  className={`flex items-center gap-1 font-medium ${member.permission === 'ADMIN'
+                                  className={`flex items-center gap-1 font-medium ${
+                                    member.permission === 'ADMIN'
                                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                                       : member.permission === 'EDITOR'
                                         ? 'border-green-500 bg-green-50 text-green-700'
                                         : 'border-gray-400 bg-gray-50 text-gray-700'
-                                    }`}
+                                  }`}
                                 >
                                   {member.permission === 'ADMIN' ? (
                                     <Shield className="h-3 w-3" />
@@ -800,7 +794,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                   {member.permission}
                                 </Badge>
                               )}
-
                             </div>
                             <p className="text-sm font-medium text-gray-600">
                               {member.email}
@@ -892,7 +885,9 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                               <div className="mt-1 flex items-center gap-3 text-sm text-gray-600">
                                 {invitation.permission && (
                                   <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
-                                    {invitation.permission === 'EDIT' ? 'Edit' : 'View'}
+                                    {invitation.permission === 'EDIT'
+                                      ? 'Edit'
+                                      : 'View'}
                                   </span>
                                 )}
                                 <span className="flex items-center gap-1">
@@ -959,7 +954,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   </div>
                 </>
               )}
-
             </TabsContent>
 
             {/* Activity Log Tab */}
@@ -1002,15 +996,16 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                         >
                           {/* Icon */}
                           <div
-                            className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110 ${log.action.includes('permission')
+                            className={`relative z-10 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform group-hover:scale-110 ${
+                              log.action.includes('permission')
                                 ? 'bg-gradient-to-br from-blue-500 to-blue-600'
                                 : log.action.includes('responsibility')
                                   ? 'bg-gradient-to-br from-green-500 to-green-600'
                                   : log.action.includes('Invited') ||
-                                    log.action.includes('added')
+                                      log.action.includes('added')
                                     ? 'bg-gradient-to-br from-purple-500 to-purple-600'
                                     : 'bg-gradient-to-br from-red-500 to-red-600'
-                              }`}
+                            }`}
                           >
                             {log.action.includes('permission') ? (
                               <Shield className="h-5 w-5 text-white" />
@@ -1077,8 +1072,6 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         </CardContent>
       </Card>
 
-
-
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent>
@@ -1121,13 +1114,17 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 <select
                   id="invitePermission"
                   value={invitePermission}
-                  onChange={e => setInvitePermission(e.target.value as 'edit' | 'view')}
+                  onChange={e =>
+                    setInvitePermission(e.target.value as 'edit' | 'view')
+                  }
                   className="rounded border px-2 py-1 text-sm"
                 >
                   <option value="edit">Edit (collaborator)</option>
                   <option value="view">View (read-only)</option>
                 </select>
-                <p className="text-xs text-gray-500">Choose whether the invitee can edit or only view.</p>
+                <p className="text-xs text-gray-500">
+                  Choose whether the invitee can edit or only view.
+                </p>
               </div>
             </div>
           </div>

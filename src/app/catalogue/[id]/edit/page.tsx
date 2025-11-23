@@ -1455,10 +1455,11 @@ export default function EditCataloguePage() {
                     setActiveTab('overview')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'overview'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'overview'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <LayoutDashboard className="mr-3 h-4 w-4" />
                   Overview
@@ -1469,10 +1470,11 @@ export default function EditCataloguePage() {
                     setActiveTab('products')
                     setCurrentSection('products')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'products'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'products'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Package className="mr-3 h-4 w-4" />
                   Products
@@ -1485,18 +1487,20 @@ export default function EditCataloguePage() {
                     setActiveTab('categories')
                     setCurrentSection('categories')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'categories'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'categories'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <FolderOpen className="mr-3 h-4 w-4" />
                   Categories
                   <span
-                    className={`ml-auto rounded-full px-2 py-1 text-xs ${activeTab === 'categories'
-                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                      : 'bg-gray-200 text-gray-600'
-                      }`}
+                    className={`ml-auto rounded-full px-2 py-1 text-xs ${
+                      activeTab === 'categories'
+                        ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
                   >
                     {catalogue.categories.length}
                   </span>
@@ -1507,10 +1511,11 @@ export default function EditCataloguePage() {
                     setActiveTab('theme')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'theme'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'theme'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Palette className="mr-3 h-4 w-4" />
                   Template
@@ -1521,10 +1526,11 @@ export default function EditCataloguePage() {
                     setActiveTab('sharing')
                     setCurrentSection('general')
                   }}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'team'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'team'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   <Users className="mr-3 h-4 w-4" />
                   Sharing
@@ -1532,10 +1538,11 @@ export default function EditCataloguePage() {
 
                 <button
                   onClick={() => setActiveTab('visibility')}
-                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${activeTab === 'visibility'
-                    ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
-                    : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                  className={`flex w-full items-center px-3 py-3 text-sm font-medium transition-colors ${
+                    activeTab === 'visibility'
+                      ? 'rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white'
+                      : 'rounded-xl text-gray-600 transition-transform duration-200 hover:scale-105 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
                 >
                   {catalogue?.isPublic ? (
                     <Eye className="mr-3 h-4 w-4" />
@@ -1679,7 +1686,7 @@ export default function EditCataloguePage() {
                             </div>
                             <Button
                               size="xs"
-                              className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-3 pr-4 py-4 text-white"
+                              className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-3 py-4 pr-4 text-white"
                               onClick={() => openProductDialog()}
                             >
                               <Plus className="mr-1 h-4 w-4" />
@@ -1798,7 +1805,7 @@ export default function EditCataloguePage() {
                                       <div className="flex items-center justify-between">
                                         <div className="text-sm font-bold text-gray-900">
                                           {product.priceDisplay === 'show' &&
-                                            product.price ? (
+                                          product.price ? (
                                             `$${Number(product.price).toFixed(2)}`
                                           ) : product.priceDisplay ===
                                             'contact' ? (
@@ -1818,8 +1825,8 @@ export default function EditCataloguePage() {
                                         >
                                           {product.categoryId
                                             ? catalogue.categories.find(
-                                              c => c.id === product.categoryId
-                                            )?.name || 'Unknown'
+                                                c => c.id === product.categoryId
+                                              )?.name || 'Unknown'
                                             : 'Uncategorized'}
                                         </Badge>
                                       </div>
@@ -2271,7 +2278,7 @@ export default function EditCataloguePage() {
                                 <div className="flex items-center justify-between">
                                   <div className="text-xl font-bold text-gray-900">
                                     {product.priceDisplay === 'show' &&
-                                      product.price ? (
+                                    product.price ? (
                                       `$${Number(product.price).toFixed(2)}`
                                     ) : product.priceDisplay === 'contact' ? (
                                       <span className="text-base font-medium text-blue-600">
@@ -2292,8 +2299,8 @@ export default function EditCataloguePage() {
                                   <Badge variant="outline" className="text-xs">
                                     {product.categoryId
                                       ? catalogue.categories.find(
-                                        c => c.id === product.categoryId
-                                      )?.name || 'Unknown'
+                                          c => c.id === product.categoryId
+                                        )?.name || 'Unknown'
                                       : 'Uncategorized'}
                                   </Badge>
                                 </div>
@@ -3108,15 +3115,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showPrices: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showPrices: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -3141,15 +3148,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showCategories: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showCategories: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -3173,15 +3180,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                allowSearch: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  allowSearch: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -3206,15 +3213,15 @@ export default function EditCataloguePage() {
                       setCatalogue(prev =>
                         prev
                           ? {
-                            ...prev,
-                            settings: {
-                              ...prev.settings,
-                              displaySettings: {
-                                ...prev.settings?.displaySettings,
-                                showProductCodes: checked,
+                              ...prev,
+                              settings: {
+                                ...prev.settings,
+                                displaySettings: {
+                                  ...prev.settings?.displaySettings,
+                                  showProductCodes: checked,
+                                },
                               },
-                            },
-                          }
+                            }
                           : null
                       )
                     }
@@ -3647,15 +3654,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          logoUrl: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            logoUrl: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3685,15 +3692,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          logoUrl: '',
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            logoUrl: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3725,15 +3732,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          coverImageUrl: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            coverImageUrl: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3763,15 +3770,15 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...prev.settings,
-                                        mediaAssets: {
-                                          ...prev.settings?.mediaAssets,
-                                          coverImageUrl: '',
+                                        ...prev,
+                                        settings: {
+                                          ...prev.settings,
+                                          mediaAssets: {
+                                            ...prev.settings?.mediaAssets,
+                                            coverImageUrl: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -3819,15 +3826,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  companyInfo: {
-                                    ...(prev.settings?.companyInfo || {}),
-                                    companyName: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    companyInfo: {
+                                      ...(prev.settings?.companyInfo || {}),
+                                      companyName: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -3853,15 +3860,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  companyInfo: {
-                                    ...(prev.settings?.companyInfo || {}),
-                                    companyDescription: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    companyInfo: {
+                                      ...(prev.settings?.companyInfo || {}),
+                                      companyDescription: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -3908,16 +3915,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails ||
-                                        {}),
-                                      email: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        email: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3942,16 +3949,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails ||
-                                        {}),
-                                      phone: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        phone: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -3976,16 +3983,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings?.contactDetails ||
-                                        {}),
-                                      website: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings?.contactDetails ||
+                                          {}),
+                                        website: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4012,15 +4019,15 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  contactDetails: {
-                                    ...(prev.settings as any)?.contactDetails,
-                                    address: e.target.value,
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDetails: {
+                                      ...(prev.settings as any)?.contactDetails,
+                                      address: e.target.value,
+                                    },
                                   },
-                                },
-                              }
+                                }
                               : null
                           )
                         }
@@ -4045,12 +4052,12 @@ export default function EditCataloguePage() {
                           setCatalogue(prev =>
                             prev
                               ? {
-                                ...prev,
-                                settings: {
-                                  ...(prev.settings || {}),
-                                  contactDescription: e.target.value,
-                                },
-                              }
+                                  ...prev,
+                                  settings: {
+                                    ...(prev.settings || {}),
+                                    contactDescription: e.target.value,
+                                  },
+                                }
                               : null
                           )
                         }
@@ -4089,16 +4096,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...(prev.settings || {}),
-                                        contactDetails: {
-                                          ...(prev.settings as any)
-                                            ?.contactDetails,
-                                          contactImage: files[0].url,
+                                        ...prev,
+                                        settings: {
+                                          ...(prev.settings || {}),
+                                          contactDetails: {
+                                            ...(prev.settings as any)
+                                              ?.contactDetails,
+                                            contactImage: files[0].url,
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -4128,16 +4135,16 @@ export default function EditCataloguePage() {
                                 setCatalogue(prev =>
                                   prev
                                     ? {
-                                      ...prev,
-                                      settings: {
-                                        ...(prev.settings || {}),
-                                        contactDetails: {
-                                          ...(prev.settings as any)
-                                            ?.contactDetails,
-                                          contactImage: '',
+                                        ...prev,
+                                        settings: {
+                                          ...(prev.settings || {}),
+                                          contactDetails: {
+                                            ...(prev.settings as any)
+                                              ?.contactDetails,
+                                            contactImage: '',
+                                          },
                                         },
-                                      },
-                                    }
+                                      }
                                     : null
                                 )
                               }
@@ -4165,16 +4172,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)
-                                        ?.contactDetails,
-                                      contactQuote: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings as any)
+                                          ?.contactDetails,
+                                        contactQuote: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4201,16 +4208,16 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    contactDetails: {
-                                      ...(prev.settings as any)
-                                        ?.contactDetails,
-                                      contactQuoteBy: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      contactDetails: {
+                                        ...(prev.settings as any)
+                                          ?.contactDetails,
+                                        contactQuoteBy: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4256,15 +4263,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      facebook: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        facebook: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4289,15 +4296,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      twitter: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        twitter: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4322,15 +4329,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      instagram: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        instagram: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
@@ -4355,15 +4362,15 @@ export default function EditCataloguePage() {
                             setCatalogue(prev =>
                               prev
                                 ? {
-                                  ...prev,
-                                  settings: {
-                                    ...(prev.settings || {}),
-                                    socialMedia: {
-                                      ...(prev.settings?.socialMedia || {}),
-                                      linkedin: e.target.value,
+                                    ...prev,
+                                    settings: {
+                                      ...(prev.settings || {}),
+                                      socialMedia: {
+                                        ...(prev.settings?.socialMedia || {}),
+                                        linkedin: e.target.value,
+                                      },
                                     },
-                                  },
-                                }
+                                  }
                                 : null
                             )
                           }
