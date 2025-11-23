@@ -575,11 +575,10 @@ export default function CataloguePreviewPage() {
           <div className="flex items-center gap-3">
             <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
               <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  !isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${!isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
                 onClick={() => setIsPreviewMode(false)}
                 aria-label="Switch to edit mode"
               >
@@ -587,11 +586,10 @@ export default function CataloguePreviewPage() {
                 <span className="leading-none">Edit</span>
               </button>
               <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  isPreviewMode
+                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${isPreviewMode
                     ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                  }`}
                 onClick={() => setIsPreviewMode(true)}
                 aria-label="Switch to preview mode"
               >
@@ -676,7 +674,7 @@ export default function CataloguePreviewPage() {
                     )
                     setPageCount(
                       editorControlsRef.current?.getPages?.()?.length ||
-                        pageCount
+                      pageCount
                     )
                   }, 0)
                 }}
@@ -695,7 +693,7 @@ export default function CataloguePreviewPage() {
                     )
                     setPageCount(
                       editorControlsRef.current?.getPages?.()?.length ||
-                        pageCount
+                      pageCount
                     )
                   }, 0)
                 }}
@@ -836,18 +834,18 @@ export default function CataloguePreviewPage() {
                 setLiveData({
                   catalogue: catalogue
                     ? {
-                        id: catalogue.id,
-                        name: catalogue.name,
-                      }
+                      id: catalogue.id,
+                      name: catalogue.name,
+                    }
                     : {},
                   profile: catalogue?.profile || {},
                   product: catalogue?.products?.[0]
                     ? {
-                        title: catalogue.products[0].name || '',
-                        price: catalogue.products[0].priceDisplay || '',
-                        image: catalogue.products[0].imageUrl || '',
-                        description: catalogue.products[0].description || '',
-                      }
+                      title: catalogue.products[0].name || '',
+                      price: catalogue.products[0].priceDisplay || '',
+                      image: catalogue.products[0].imageUrl || '',
+                      description: catalogue.products[0].description || '',
+                    }
                     : {},
                   products: catalogue?.products || [],
                   categories: catalogue?.categories || [],
