@@ -170,3 +170,61 @@ They now have full access to collaborate on your catalogue.
     throw new Error('Failed to send notification email')
   }
 }
+
+export interface CatalogueAccessEmailData {
+  inviterName: string
+  inviterEmail: string
+  catalogueName: string
+  invitationToken: string
+  recipientEmail: string
+  permission: 'view' | 'edit'
+}
+
+export async function sendCatalogueAccessEmail(data: CatalogueAccessEmailData) {
+  const {
+    inviterName,
+    inviterEmail,
+    catalogueName,
+    invitationToken,
+    recipientEmail,
+    permission,
+  } = data
+
+  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/invitations/${invitationToken}`
+
+  const permissionText = permission === 'edit' ? 'edit' : 'view'
+  const subject =
+    permission === 'edit'
+      ? `You've been invited to edit ${catalogueName}`
+      : `You've been invited to view ${catalogueName}`
+
+  const bodyHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8" /></head>
+    <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, sans-serif; color:#222;">
+      <div style="max-width:600px;margin:0 auto;padding:20px;">
+        <h2>${inviterName} invited you to ${permissionText} the catalogue</h2>
+        <p>${inviterName} (${inviterEmail}) has invited you to ${permissionText} the catalogue <strong>"${catalogueName}"</strong>.</p>
+        <p style="margin-top:18px;text-align:center;"><a href="${acceptUrl}" style="background:#2563eb;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;">Open Invitation</a></p>
+        <p style="margin-top:12px;color:#666;font-size:13px;">This invitation expires in 7 days.</p>
+      </div>
+    </body>
+    </html>
+  `
+
+  try {
+    const emailData = await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: recipientEmail,
+      subject,
+      html: bodyHtml,
+      text: `${inviterName} (${inviterEmail}) has invited you to ${permissionText} the catalogue "${catalogueName}". Open: ${acceptUrl}`,
+    })
+
+    return { success: true, messageId: emailData.messageId }
+  } catch (error) {
+    console.error('Error sending catalogue access email:', error)
+    throw new Error('Failed to send catalogue access email')
+  }
+}

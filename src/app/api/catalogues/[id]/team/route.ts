@@ -270,6 +270,7 @@ export async function POST(
       data: {
         email: email.toLowerCase(),
         token,
+        permission: 'EDIT',
         catalogueId,
         senderId: user.id,
         expiresAt,

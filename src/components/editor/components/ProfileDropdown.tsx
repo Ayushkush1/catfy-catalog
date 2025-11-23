@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useCataloguePresence } from '@/hooks/useCataloguePresence'
 
 interface UserProfile {
   id: string
@@ -13,13 +14,25 @@ interface UserProfile {
   companyName?: string
 }
 
-export const ProfileDropdown: React.FC = () => {
+interface ProfileDropdownProps {
+  catalogueId?: string
+}
+
+export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ catalogueId }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const { activeUsers, totalActiveUsers } = useCataloguePresence({
+    catalogueId: catalogueId || '',
+    currentUser: profile
+      ? { userId: profile.id, fullName: profile.fullName, email: profile.email }
+      : null,
+    enabled: Boolean(catalogueId && profile),
+  })
 
   useEffect(() => {
     fetchProfile()
@@ -112,8 +125,15 @@ export const ProfileDropdown: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 rounded-lg p-1 transition-colors hover:bg-gray-100"
       >
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-xs font-medium text-white">
-          {getInitials(profile.fullName)}
+        <div className="relative">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-xs font-medium text-white">
+            {getInitials(profile.fullName)}
+          </div>
+          {totalActiveUsers > 0 && (
+            <div className="absolute -right-1 -top-1 flex h-5 min-w-[18px] items-center justify-center rounded-full bg-green-500 px-1.5 text-xs font-semibold text-white">
+              +{totalActiveUsers}
+            </div>
+          )}
         </div>
         <ChevronDown
           className={`h-4 w-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}

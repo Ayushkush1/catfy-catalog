@@ -62,20 +62,14 @@ import {
   FileEdit,
   Settings,
   UserCog,
-  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
+import { SubscriptionPlan } from '@prisma/client'
 import { createClient } from '@/lib/supabase/client'
-import {
-  canInviteTeamMembers,
-  getMaxTeamMembers,
-  canAddTeamMember,
-  getTeamMemberUpgradeMessage,
-} from '@/lib/subscription'
 
-interface TeamMember {
+
+interface SharedUser {
   id: string
   email: string
   fullName: string | null
@@ -106,6 +100,7 @@ interface PendingInvitation {
   createdAt: string
   expiresAt: string
   token?: string
+  permission?: 'VIEW' | 'EDIT'
 }
 
 interface TeamManagementProps {
@@ -114,7 +109,7 @@ interface TeamManagementProps {
 }
 
 export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
-  const [team, setTeam] = useState<TeamMember[]>([])
+  const [team, setTeam] = useState<SharedUser[]>([])
   const [pendingInvitations, setPendingInvitations] = useState<
     PendingInvitation[]
   >([])
@@ -123,20 +118,15 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const [isInviting, setIsInviting] = useState(false)
   const [showInviteDialog, setShowInviteDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [editingMember, setEditingMember] = useState<TeamMember | null>(null)
+  const [editingMember, setEditingMember] = useState<SharedUser | null>(null)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [invitePermission, setInvitePermission] = useState<'edit' | 'view'>('edit')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [emailError, setEmailError] = useState('')
   const [activeTab, setActiveTab] = useState('members')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [isPlanSharingEnabled, setIsPlanSharingEnabled] = useState(false)
-  const [isUpdatingPlanSharing, setIsUpdatingPlanSharing] = useState(false)
-  const [selectedMembersForSharing, setSelectedMembersForSharing] = useState<
-    string[]
-  >([])
-  const [showPlanSharingDialog, setShowPlanSharingDialog] = useState(false)
-  const { currentPlan } = useSubscription()
-  const canInvite = true // All plans support team collaboration with unlimited members
+  
+  const canInvite = true // All plans support catalogue sharing with unlimited collaborators
 
   // Load team data
   const loadTeamData = async () => {
@@ -153,15 +143,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             const data = parsed.data
             setTeam(data.team || [])
             setPendingInvitations(data.pendingInvitations || [])
-            const membersWithAccess = (data.team || [])
-              .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
-              .map((m: any) => m.id)
-            setSelectedMembersForSharing(membersWithAccess)
+            
 
             const apiActivityLog = data.activityLog || []
             if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
               const owner = (data.team || []).find(
-                (m: TeamMember) => m.role === 'OWNER'
+                (m: SharedUser) => m.role === 'OWNER'
               )
               if (owner) {
                 setActivityLog([
@@ -171,7 +158,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     performedBy: owner.id,
                     performedByName: owner.fullName || owner.email,
                     timestamp: new Date().toISOString(),
-                    details: 'Team collaboration started',
+                    details: 'Catalogue sharing started',
                   },
                 ])
               }
@@ -191,12 +178,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   const fresh = await response.json()
                   setTeam(fresh.team || [])
                   setPendingInvitations(fresh.pendingInvitations || [])
-                  const freshMembersWithAccess = (fresh.team || [])
-                    .filter(
-                      (m: any) => m.role === 'MEMBER' && m.hasPremiumAccess
-                    )
-                    .map((m: any) => m.id)
-                  setSelectedMembersForSharing(freshMembersWithAccess)
+                  
                   const freshActivity = fresh.activityLog || []
                   setActivityLog(freshActivity.length ? freshActivity : [])
                   try {
@@ -227,15 +209,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       setTeam(data.team || [])
       setPendingInvitations(data.pendingInvitations || [])
 
-      const membersWithAccess = (data.team || [])
-        .filter((m: any) => m.role === 'MEMBER' && m.hasPremiumAccess)
-        .map((m: any) => m.id)
-      setSelectedMembersForSharing(membersWithAccess)
+      
 
       const apiActivityLog = data.activityLog || []
       if (apiActivityLog.length === 0 && (data.team || []).length > 0) {
         const owner = (data.team || []).find(
-          (m: TeamMember) => m.role === 'OWNER'
+          (m: SharedUser) => m.role === 'OWNER'
         )
         if (owner) {
           setActivityLog([
@@ -296,7 +275,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         performedBy: 'current-user-id',
         performedByName: 'You',
         targetUser: memberId,
-        targetUserName: member?.fullName || member?.email || 'Team member',
+        targetUserName: member?.fullName || member?.email || 'Collaborator',
         timestamp: new Date().toISOString(),
         details: `Permission level updated to ${permission}`,
       }
@@ -342,7 +321,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         performedBy: 'current-user-id',
         performedByName: 'You',
         targetUser: memberId,
-        targetUserName: member?.fullName || member?.email || 'Team member',
+        targetUserName: member?.fullName || member?.email || 'Collaborator',
         timestamp: new Date().toISOString(),
         details: responsibility,
       }
@@ -361,72 +340,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     }
   }
 
-  // Load plan sharing settings
-  const loadPlanSharingSettings = async () => {
-    try {
-      const response = await fetch(
-        `/api/catalogues/${catalogueId}/plan-sharing`
-      )
-      if (!response.ok) throw new Error('Failed to load plan sharing settings')
-      const data = await response.json()
-      setIsPlanSharingEnabled(data.planSharingEnabled || false)
-    } catch (error) {
-      console.error('Error loading plan sharing settings:', error)
-    }
-  }
-
-  // Toggle plan sharing
-  const togglePlanSharing = async (enabled: boolean, memberIds?: string[]) => {
-    setIsUpdatingPlanSharing(true)
-    try {
-      const response = await fetch(
-        `/api/catalogues/${catalogueId}/plan-sharing`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            enabled,
-            memberIds: memberIds || selectedMembersForSharing,
-          }),
-        }
-      )
-
-      if (!response.ok) {
-        throw new Error('Failed to update plan sharing settings')
-      }
-
-      setIsPlanSharingEnabled(enabled)
-
-      // Add activity log entry
-      const newActivity: ActivityLogEntry = {
-        id: Date.now().toString(),
-        action: enabled ? 'Enabled plan sharing' : 'Disabled plan sharing',
-        performedBy: 'current-user-id',
-        performedByName: 'You',
-        timestamp: new Date().toISOString(),
-        details: enabled
-          ? `Team members now have access to ${currentPlan} plan features`
-          : 'Team members no longer have access to premium features',
-      }
-      setActivityLog(prev => [newActivity, ...prev])
-
-      toast.success(
-        enabled
-          ? 'Plan sharing enabled! Team members now have access to your plan features.'
-          : 'Plan sharing disabled.'
-      )
-      try {
-        sessionStorage.removeItem(`catfy:team:${catalogueId}`)
-      } catch (e) {}
-    } catch (error) {
-      console.error('Error updating plan sharing:', error)
-      toast.error('Failed to update plan sharing settings')
-    } finally {
-      setIsUpdatingPlanSharing(false)
-    }
-  }
+  
 
   // Validate email
   const validateEmail = (email: string) => {
@@ -448,12 +362,12 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       return
     }
 
-    // Check if email is already a team member
+    // Check if email already has access
     const existingMember = team.find(
       member => member.email.toLowerCase() === email.toLowerCase()
     )
     if (existingMember) {
-      setEmailError('This email is already a team member')
+      setEmailError('This email already has access')
       return
     }
 
@@ -470,13 +384,22 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
     setIsInviting(true)
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}/team`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
+      let response: Response
+      // Use team endpoint for EDIT invites (preserves subscription/team limits)
+      if (invitePermission === 'edit') {
+        response = await fetch(`/api/catalogues/${catalogueId}/team`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+      } else {
+        // Use share endpoint for VIEW invites
+        response = await fetch(`/api/catalogues/${catalogueId}/share`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, permission: 'view' }),
+        })
+      }
 
       const data = await response.json()
 
@@ -487,7 +410,10 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       // Add activity log entry
       const newActivity: ActivityLogEntry = {
         id: Date.now().toString(),
-        action: 'Invited new member',
+        action:
+          invitePermission === 'edit'
+            ? 'Invited collaborator (edit)'
+            : 'Invited viewer (view only)',
         performedBy: 'current-user-id',
         performedByName: 'You',
         targetUserName: email,
@@ -498,6 +424,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
       toast.success('Invitation sent successfully!')
       setInviteEmail('')
+      setInvitePermission('edit')
       setShowInviteDialog(false)
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
@@ -511,7 +438,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
     }
   }
 
-  // Remove team member
+  // Remove collaborator
   const removeMember = async (memberId: string) => {
     try {
       const member = team.find(m => m.id === memberId)
@@ -524,30 +451,30 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to remove team member')
+        throw new Error(data.error || 'Failed to remove collaborator')
       }
 
       // Add activity log entry
       const newActivity: ActivityLogEntry = {
         id: Date.now().toString(),
-        action: 'Removed team member',
+        action: 'Removed collaborator',
         performedBy: 'current-user-id',
         performedByName: 'You',
         targetUser: memberId,
-        targetUserName: member?.fullName || member?.email || 'Team member',
+        targetUserName: member?.fullName || member?.email || 'Collaborator',
         timestamp: new Date().toISOString(),
-        details: `Removed ${member?.fullName || member?.email} from team`,
+        details: `Removed ${member?.fullName || member?.email} from catalogue`,
       }
       setActivityLog(prev => [newActivity, ...prev])
 
-      toast.success('Team member removed successfully')
+      toast.success('Collaborator removed successfully')
       try {
         sessionStorage.removeItem(`catfy:team:${catalogueId}`)
       } catch (e) {}
       loadTeamData() // Refresh data
     } catch (error: any) {
-      console.error('Error removing team member:', error)
-      toast.error(error.message || 'Failed to remove team member')
+      console.error('Error removing collaborator:', error)
+      toast.error(error.message || 'Failed to remove collaborator')
     }
   }
 
@@ -627,7 +554,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   }
 
   // Get member display name
-  const getMemberDisplayName = (member: TeamMember) => {
+  const getMemberDisplayName = (member: SharedUser) => {
     if (member.fullName) return member.fullName
     if (member.firstName && member.lastName)
       return `${member.firstName} ${member.lastName}`
@@ -636,7 +563,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   }
 
   // Get member initials
-  const getMemberInitials = (member: TeamMember) => {
+  const getMemberInitials = (member: SharedUser) => {
     if (member.firstName && member.lastName) {
       return `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
     }
@@ -670,12 +597,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
   const currentUserMember = team.find(member => member.id === currentUserId)
   const isActualOwner = currentUserMember?.role === 'OWNER'
 
-  // Load plan sharing settings when component mounts and when isActualOwner changes
-  useEffect(() => {
-    if (isActualOwner && currentPlan !== 'FREE') {
-      loadPlanSharingSettings()
-    }
-  }, [catalogueId, isActualOwner, currentPlan])
+  
 
   if (isLoading) {
     return (
@@ -683,7 +605,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Team Management
+            Catalogue Sharing
           </CardTitle>
           <CardDescription>Loading team data...</CardDescription>
         </CardHeader>
@@ -715,7 +637,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Team Management
+                Catalogue Sharing
                 {isActualOwner && (
                   <Badge
                     variant="secondary"
@@ -730,17 +652,17 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                     variant="secondary"
                     className="ml-2 bg-blue-600 text-white hover:bg-blue-600 hover:text-white"
                   >
-                    Team Member
+                    Collaborator
                   </Badge>
                 )}
               </CardTitle>
               <CardDescription>
                 {isActualOwner
-                  ? 'Manage your team members and their permissions'
-                  : 'View team members on this catalogue'}
+                  ? 'Manage shared users and their permissions'
+                  : 'View collaborators on this catalogue'}
                 {canInvite && isActualOwner && (
                   <span className="mt-1 block text-sm">
-                    {team.filter(m => m.role === 'MEMBER').length} team members
+                    {team.filter(m => m.role === 'MEMBER').length} collaborators
                   </span>
                 )}
               </CardDescription>
@@ -751,7 +673,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 className="flex items-center gap-2 bg-gradient-to-r from-[#6366F1] to-[#2D1B69]"
               >
                 <UserPlus className="h-4 w-4" />
-                Invite Member
+                Invite Collaborator
               </Button>
             )}
           </div>
@@ -762,13 +684,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             <Alert className="border-blue-200 bg-blue-50">
               <Users className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                You are a team member of this catalogue. Only the owner can
-                invite or remove team members.
+                You have access to this catalogue. Only the owner can
+                invite or remove collaborators.
               </AlertDescription>
             </Alert>
           )}
 
-          {/* Tabs for Team Members and Activity Log */}
+          {/* Tabs for Shared Users and Activity Log */}
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -780,7 +702,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                 className="flex items-center gap-2 rounded-lg transition-all data-[state=active]:bg-white data-[state=active]:shadow-md"
               >
                 <Users className="h-4 w-4" />
-                <span className="font-medium">Team Members</span>
+                <span className="font-medium">Shared Users</span>
               </TabsTrigger>
               <TabsTrigger
                 value="activity"
@@ -792,56 +714,14 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
             </TabsList>
 
             <TabsContent value="members" className="mt-8 space-y-6">
-              {/* Premium Access Notice for Team Members */}
-              {!isActualOwner && isPlanSharingEnabled && (
-                <Alert className="border-2 border-purple-300 bg-gradient-to-r from-purple-50 via-pink-50 to-purple-50 shadow-lg">
-                  <div className="flex items-start gap-4">
-                    <div className="mt-0.5 flex-shrink-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-600 shadow-md">
-                        <Sparkles className="h-5 w-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="mb-2 text-base font-bold text-purple-900">
-                        🎉 You have Premium Access!
-                      </h4>
-                      <AlertDescription className="space-y-2 text-sm text-purple-800">
-                        <p className="font-medium">
-                          The catalogue owner has shared their premium plan
-                          benefits with you for this catalogue.
-                        </p>
-                        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
-                            <Sparkles className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">
-                              AI Features
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
-                            <FileEdit className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">
-                              Premium Export
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 rounded-lg border border-purple-200 bg-white/60 p-2">
-                            <Settings className="h-4 w-4 text-purple-600" />
-                            <span className="text-xs font-semibold text-purple-900">
-                              Premium Templates
-                            </span>
-                          </div>
-                        </div>
-                      </AlertDescription>
-                    </div>
-                  </div>
-                </Alert>
-              )}
+              
 
-              {/* Team Members */}
+              {/* Shared Users */}
               <div>
                 <div className="mb-6 flex items-center justify-between">
                   <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-900">
                     <div className="h-8 w-1 rounded-full bg-gradient-to-b from-blue-600 to-purple-600"></div>
-                    Team Members
+                    Shared Users
                     <span className="ml-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-600">
                       {team.length}
                     </span>
@@ -922,17 +802,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                   {member.permission}
                                 </Badge>
                               )}
-                              {isPlanSharingEnabled &&
-                                member.role === 'MEMBER' &&
-                                currentPlan !== 'FREE' && (
-                                  <Badge
-                                    variant="outline"
-                                    className="flex items-center gap-1 border-purple-500 bg-gradient-to-r from-purple-50 to-pink-50 font-medium text-purple-700 shadow-sm"
-                                  >
-                                    <Sparkles className="h-3 w-3" />
-                                    Premium Access
-                                  </Badge>
-                                )}
+                              
                             </div>
                             <p className="text-sm font-medium text-gray-600">
                               {member.email}
@@ -974,7 +844,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                 className="cursor-pointer"
                               >
                                 <UserCog className="mr-2 h-4 w-4" />
-                                Edit Member
+                                Edit Collaborator
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
@@ -982,7 +852,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                 className="cursor-pointer text-red-600 focus:text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Remove from team
+                                Remove access
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1022,6 +892,11 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                                 {invitation.email}
                               </p>
                               <div className="mt-1 flex items-center gap-3 text-sm text-gray-600">
+                                {invitation.permission && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
+                                    {invitation.permission === 'EDIT' ? 'Edit' : 'View'}
+                                  </span>
+                                )}
                                 <span className="flex items-center gap-1">
                                   <Send className="h-3.5 w-3.5" />
                                   Invited{' '}
@@ -1086,39 +961,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   </div>
                 </>
               )}
-              {/* Compact Plan Sharing Card - At Bottom for Owners */}
-              {isActualOwner && currentPlan !== 'FREE' && (
-                <Card className="mt-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Shield className="h-4 w-4 text-blue-600" />
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900">
-                            Plan Sharing
-                          </p>
-                          <p className="text-xs text-gray-600">
-                            {selectedMembersForSharing.length > 0
-                              ? `${selectedMembersForSharing.length}/3 members selected`
-                              : 'Share with up to 3 members'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setShowPlanSharingDialog(true)}
-                          className="h-8 text-xs"
-                        >
-                          <UserCog className="mr-1 h-3 w-3" />
-                          Manage
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              
             </TabsContent>
 
             {/* Activity Log Tab */}
@@ -1145,7 +988,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                       No activity recorded yet
                     </p>
                     <p className="mt-2 text-sm text-gray-500">
-                      Team actions will appear here
+                      Catalogue sharing actions will appear here
                     </p>
                   </div>
                 ) : (
@@ -1237,133 +1080,13 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
         </CardContent>
       </Card>
 
-      {/* Plan Sharing Dialog */}
-      <Dialog
-        open={showPlanSharingDialog}
-        onOpenChange={setShowPlanSharingDialog}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-blue-600" />
-              Share Plan Benefits
-            </DialogTitle>
-            <DialogDescription>
-              Select up to 3 team members who can access your {currentPlan} plan
-              features
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            {selectedMembersForSharing.length >= 3 && (
-              <Alert className="border-amber-200 bg-amber-50">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-sm text-amber-900">
-                  Maximum limit reached. You can share premium access with up to
-                  3 team members.
-                </AlertDescription>
-              </Alert>
-            )}
-            <div className="max-h-96 space-y-3 overflow-y-auto">
-              {team
-                .filter(member => member.role === 'MEMBER')
-                .map(member => {
-                  const isSelected = selectedMembersForSharing.includes(
-                    member.id
-                  )
-                  const canSelect =
-                    isSelected || selectedMembersForSharing.length < 3
-
-                  return (
-                    <div
-                      key={member.id}
-                      className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${
-                        !canSelect
-                          ? 'cursor-not-allowed opacity-50'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex flex-1 items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={member.avatarUrl || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {getMemberInitials(member)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-gray-900">
-                            {getMemberDisplayName(member)}
-                          </p>
-                          <p className="truncate text-xs text-gray-500">
-                            {member.email}
-                          </p>
-                        </div>
-                      </div>
-                      <Button
-                        variant={isSelected ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => {
-                          setSelectedMembersForSharing(prev =>
-                            prev.includes(member.id)
-                              ? prev.filter(id => id !== member.id)
-                              : [...prev, member.id]
-                          )
-                        }}
-                        disabled={!canSelect}
-                        className="h-8"
-                      >
-                        {isSelected ? (
-                          <>
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                            Shared
-                          </>
-                        ) : (
-                          'Share'
-                        )}
-                      </Button>
-                    </div>
-                  )
-                })}
-              {team.filter(member => member.role === 'MEMBER').length === 0 && (
-                <div className="py-8 text-center text-gray-500">
-                  <Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
-                  <p className="text-sm">No team members yet</p>
-                </div>
-              )}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowPlanSharingDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={async () => {
-                await togglePlanSharing(selectedMembersForSharing.length > 0)
-                setShowPlanSharingDialog(false)
-                toast.success('Plan sharing updated!')
-              }}
-              disabled={isUpdatingPlanSharing}
-            >
-              {isUpdatingPlanSharing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogTitle>Invite Collaborator</DialogTitle>
             <DialogDescription>
               Send an invitation to collaborate on this catalogue. They will
               receive an email with instructions to join.
@@ -1394,6 +1117,21 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
               {emailError && (
                 <p className="mt-1 text-sm text-red-600">{emailError}</p>
               )}
+            </div>
+            <div>
+              <Label htmlFor="invitePermission">Permission</Label>
+              <div className="mt-2 flex items-center gap-2">
+                <select
+                  id="invitePermission"
+                  value={invitePermission}
+                  onChange={e => setInvitePermission(e.target.value as 'edit' | 'view')}
+                  className="rounded border px-2 py-1 text-sm"
+                >
+                  <option value="edit">Edit (collaborator)</option>
+                  <option value="view">View (read-only)</option>
+                </select>
+                <p className="text-xs text-gray-500">Choose whether the invitee can edit or only view.</p>
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -1428,7 +1166,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Team Member</DialogTitle>
+            <DialogTitle>Edit Collaborator</DialogTitle>
             <DialogDescription>
               Update permissions and responsibilities for{' '}
               {editingMember?.fullName || editingMember?.email}
@@ -1536,7 +1274,7 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
                   await loadTeamData()
                 } catch (error) {
                   console.error('Failed to update member:', error)
-                  toast.error('Failed to update team member')
+                  toast.error('Failed to update collaborator')
                 }
               }}
               className="flex items-center gap-2"
@@ -1552,8 +1290,8 @@ export function TeamManagement({ catalogueId, isOwner }: TeamManagementProps) {
       <UpgradePrompt
         isOpen={showUpgradePrompt}
         onClose={() => setShowUpgradePrompt(false)}
-        feature="team collaboration"
-        currentPlan={currentPlan as any}
+        feature="catalogue sharing"
+        currentPlan={SubscriptionPlan.FREE}
       />
     </>
   )

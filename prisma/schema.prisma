@@ -290,6 +290,7 @@ model Invitation {
   email       String
   token       String           @unique
   role        TeamRole         @default(MEMBER)
+  permission  InvitationPermission @default(EDIT)
   status      InvitationStatus @default(PENDING)
   expiresAt   DateTime
   acceptedAt  DateTime?
@@ -470,6 +471,11 @@ enum InvitationStatus {
   ACCEPTED
   DECLINED
   EXPIRED
+}
+
+enum InvitationPermission {
+  VIEW
+  EDIT
 }
 
 // Template enums

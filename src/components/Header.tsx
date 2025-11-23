@@ -214,7 +214,7 @@ export function Header({
 
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
-        <div className=" bg-[#E8EAF6] pt-2">
+        <div className=" pt-2">
           <div className="mx-8 h-40 rounded-t-[3rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-8 text-white">
             <div className="container mx-auto">
               <div className="flex items-center justify-between">

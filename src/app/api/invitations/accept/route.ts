@@ -130,6 +130,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If this is a VIEW permission invitation, accept without creating a team member
+    if (invitation.permission === 'VIEW') {
+      await prisma.invitation.update({
+        where: { id: invitation.id },
+        data: {
+          status: 'ACCEPTED',
+          acceptedAt: new Date(),
+          receiverId: user.id,
+        },
+      })
+
+      return NextResponse.json({
+        message: 'Invitation accepted (view access granted)',
+        catalogue: {
+          id: invitation.catalogueId,
+        },
+      })
+    }
+
+    // For EDIT permission, proceed to create a team member (existing behavior)
     // Check subscription plan and team limits
     const subscription = invitation.catalogue.profile.subscriptions[0]
     const plan = subscription?.plan || SubscriptionPlan.FREE

@@ -763,7 +763,7 @@ export default function CataloguePreviewPage() {
             Share
           </Button>
 
-          <ProfileDropdown />
+          <ProfileDropdown catalogueId={catalogueId} />
         </div>
       </div>
 
@@ -1109,6 +1109,8 @@ export default function CataloguePreviewPage() {
                 </div>
               </div>
             )}
+
+            {/* Invitations are managed from the Edit → Team tab */}
           </div>
         </DialogContent>
       </Dialog>
