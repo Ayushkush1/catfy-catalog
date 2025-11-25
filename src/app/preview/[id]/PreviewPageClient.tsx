@@ -21,7 +21,13 @@ import {
 import { getTemplateComponent, getTemplateById } from '@/templates'
 
 // Client component that handles the responsive toggle
-export function PreviewPageClient({ catalogue }: { catalogue: any }) {
+export function PreviewPageClient({
+  catalogue,
+  compact = false,
+}: {
+  catalogue: any
+  compact?: boolean
+}) {
   const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop')
 
   const settings = (catalogue.settings as any) || {}
@@ -41,12 +47,14 @@ export function PreviewPageClient({ catalogue }: { catalogue: any }) {
 
   return (
     <>
-      {/* Viewport Toggle */}
-      <ViewportToggle
-        currentMode={viewportMode}
-        onModeChange={setViewportMode}
-        className="print:hidden"
-      />
+      {/* Viewport Toggle - hidden in compact/embed mode */}
+      {!compact && (
+        <ViewportToggle
+          currentMode={viewportMode}
+          onModeChange={setViewportMode}
+          className="print:hidden"
+        />
+      )}
 
       {/* Responsive Container */}
       <div style={viewportStyles.wrapper} className="print:m-0 print:p-0">
@@ -86,64 +94,64 @@ export function PreviewPageClient({ catalogue }: { catalogue: any }) {
             {/* Company Info */}
             {(settings.companyInfo?.companyName ||
               settings.companyInfo?.companyDescription) && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Company Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {settings.companyInfo?.companyName && (
-                    <h4 className="mb-2 text-lg font-medium">
-                      {settings.companyInfo.companyName}
-                    </h4>
-                  )}
-                  {settings.companyInfo?.companyDescription && (
-                    <p className="text-gray-600">
-                      {settings.companyInfo.companyDescription}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Company Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {settings.companyInfo?.companyName && (
+                      <h4 className="mb-2 text-lg font-medium">
+                        {settings.companyInfo.companyName}
+                      </h4>
+                    )}
+                    {settings.companyInfo?.companyDescription && (
+                      <p className="text-gray-600">
+                        {settings.companyInfo.companyDescription}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Media & Assets */}
             {(settings.mediaAssets?.logoUrl ||
               settings.mediaAssets?.coverImageUrl) && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Media & Assets</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {settings.mediaAssets?.logoUrl && (
-                      <div>
-                        <h4 className="mb-2 text-sm font-medium">Logo</h4>
-                        <Image
-                          src={settings.mediaAssets.logoUrl}
-                          alt="Company Logo"
-                          width={100}
-                          height={100}
-                          className="rounded border"
-                        />
-                      </div>
-                    )}
-                    {settings.mediaAssets?.coverImageUrl && (
-                      <div>
-                        <h4 className="mb-2 text-sm font-medium">
-                          Cover Image
-                        </h4>
-                        <Image
-                          src={settings.mediaAssets.coverImageUrl}
-                          alt="Cover Image"
-                          width={200}
-                          height={100}
-                          className="rounded border"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Media & Assets</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      {settings.mediaAssets?.logoUrl && (
+                        <div>
+                          <h4 className="mb-2 text-sm font-medium">Logo</h4>
+                          <Image
+                            src={settings.mediaAssets.logoUrl}
+                            alt="Company Logo"
+                            width={100}
+                            height={100}
+                            className="rounded border"
+                          />
+                        </div>
+                      )}
+                      {settings.mediaAssets?.coverImageUrl && (
+                        <div>
+                          <h4 className="mb-2 text-sm font-medium">
+                            Cover Image
+                          </h4>
+                          <Image
+                            src={settings.mediaAssets.coverImageUrl}
+                            alt="Cover Image"
+                            width={200}
+                            height={100}
+                            className="rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Contact Details */}
             {(settings.contactDetails?.email ||
@@ -151,141 +159,141 @@ export function PreviewPageClient({ catalogue }: { catalogue: any }) {
               settings.contactDetails?.website ||
               settings.contactDetails?.address ||
               catalogue.profile?.address) && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Contact Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {settings.contactDetails?.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <a
-                        href={`mailto:${settings.contactDetails.email}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {settings.contactDetails.email}
-                      </a>
-                    </div>
-                  )}
-
-                  {settings.contactDetails?.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <a
-                        href={`tel:${settings.contactDetails.phone}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        {settings.contactDetails.phone}
-                      </a>
-                    </div>
-                  )}
-
-                  {settings.contactDetails?.website && (
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-gray-500" />
-                      <a
-                        href={settings.contactDetails.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:underline"
-                      >
-                        Visit Website
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  )}
-
-                  {/* Address */}
-                  {(settings.contactDetails?.address ||
-                    catalogue.profile?.address) && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="mt-0.5 h-4 w-4 text-gray-500" />
-                      <div>
-                        {(settings.contactDetails?.address ||
-                          catalogue.profile?.address) && (
-                          <div>
-                            {settings.contactDetails?.address ||
-                              catalogue.profile?.address}
-                          </div>
-                        )}
-                        <div>
-                          {[
-                            settings.contactDetails?.city ||
-                              catalogue.profile?.city,
-                            settings.contactDetails?.state ||
-                              catalogue.profile?.state,
-                            settings.contactDetails?.country ||
-                              catalogue.profile?.country,
-                          ]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </div>
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Contact Details</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {settings.contactDetails?.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                        <a
+                          href={`mailto:${settings.contactDetails.email}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {settings.contactDetails.email}
+                        </a>
                       </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+                    )}
+
+                    {settings.contactDetails?.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <a
+                          href={`tel:${settings.contactDetails.phone}`}
+                          className="text-blue-600 hover:underline"
+                        >
+                          {settings.contactDetails.phone}
+                        </a>
+                      </div>
+                    )}
+
+                    {settings.contactDetails?.website && (
+                      <div className="flex items-center gap-2">
+                        <Globe className="h-4 w-4 text-gray-500" />
+                        <a
+                          href={settings.contactDetails.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:underline"
+                        >
+                          Visit Website
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Address */}
+                    {(settings.contactDetails?.address ||
+                      catalogue.profile?.address) && (
+                        <div className="flex items-start gap-2">
+                          <MapPin className="mt-0.5 h-4 w-4 text-gray-500" />
+                          <div>
+                            {(settings.contactDetails?.address ||
+                              catalogue.profile?.address) && (
+                                <div>
+                                  {settings.contactDetails?.address ||
+                                    catalogue.profile?.address}
+                                </div>
+                              )}
+                            <div>
+                              {[
+                                settings.contactDetails?.city ||
+                                catalogue.profile?.city,
+                                settings.contactDetails?.state ||
+                                catalogue.profile?.state,
+                                settings.contactDetails?.country ||
+                                catalogue.profile?.country,
+                              ]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Social Media Links */}
             {(settings.socialMedia?.facebook ||
               settings.socialMedia?.twitter ||
               settings.socialMedia?.instagram ||
               settings.socialMedia?.linkedin) && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>Follow Us</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-4">
-                    {settings.socialMedia?.facebook && (
-                      <a
-                        href={settings.socialMedia.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        <Facebook className="h-4 w-4" />
-                        Facebook
-                      </a>
-                    )}
-                    {settings.socialMedia?.twitter && (
-                      <a
-                        href={settings.socialMedia.twitter}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        <Twitter className="h-4 w-4" />
-                        Twitter
-                      </a>
-                    )}
-                    {settings.socialMedia?.instagram && (
-                      <a
-                        href={settings.socialMedia.instagram}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        <Instagram className="h-4 w-4" />
-                        Instagram
-                      </a>
-                    )}
-                    {settings.socialMedia?.linkedin && (
-                      <a
-                        href={settings.socialMedia.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                      >
-                        <Linkedin className="h-4 w-4" />
-                        LinkedIn
-                      </a>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Follow Us</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-4">
+                      {settings.socialMedia?.facebook && (
+                        <a
+                          href={settings.socialMedia.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                        >
+                          <Facebook className="h-4 w-4" />
+                          Facebook
+                        </a>
+                      )}
+                      {settings.socialMedia?.twitter && (
+                        <a
+                          href={settings.socialMedia.twitter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                        >
+                          <Twitter className="h-4 w-4" />
+                          Twitter
+                        </a>
+                      )}
+                      {settings.socialMedia?.instagram && (
+                        <a
+                          href={settings.socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                        >
+                          <Instagram className="h-4 w-4" />
+                          Instagram
+                        </a>
+                      )}
+                      {settings.socialMedia?.linkedin && (
+                        <a
+                          href={settings.socialMedia.linkedin}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:underline"
+                        >
+                          <Linkedin className="h-4 w-4" />
+                          LinkedIn
+                        </a>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
             {/* Categories & Products */}
             <div className="space-y-8">

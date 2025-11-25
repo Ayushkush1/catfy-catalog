@@ -465,18 +465,18 @@ export default function ProjectsPage() {
                     {catalogues.map(catalogue => (
                       <Card
                         key={catalogue.id}
-                        className="group relative cursor-pointer overflow-hidden rounded-2xl border-0 bg-white shadow-lg transition-all duration-300 hover:shadow-2xl"
+                        className="group relative cursor-pointer overflow-hidden rounded-[1.6rem]  bg-white  transition-all duration-300 shadow-sm hover:shadow-2xl "
                         onClick={() =>
                           router.push(`/catalogue/${catalogue.id}/edit`)
                         }
                       >
-                        <div className="relative h-36 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 md:h-40 lg:h-44">
+                        <div className="relative h-36 md:h-40 lg:h-56 p-4 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50">
                           <iframe
-                            src={`/preview/${catalogue.id}`}
-                            className="h-full w-full border-0"
+                            src={`/catalogue/${catalogue.id}/preview?embed=true`}
+                            className="h-full w-full border-0 overflow-hidden scrollbar-hide rounded-[3rem] shadow-inner"
                             style={{
                               width: '400%',
-                              height: '400%',
+                              height: '410%',
                               transform: 'scale(0.25)',
                               transformOrigin: 'top left',
                               opacity: 1,
@@ -484,129 +484,84 @@ export default function ProjectsPage() {
                             }}
                             title={`Preview of ${catalogue.name}`}
                           />
-                          <div className="absolute right-3 top-3">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 bg-white/80 p-0 backdrop-blur-sm hover:bg-white"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    router.push(
-                                      `/catalogue/${catalogue.id}/edit`
-                                    )
-                                  }}
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit Project
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    if (!catalogue.isPublic) return
-                                    setShareDialogUrl(
-                                      `${typeof window !== 'undefined' ? window.location.origin : ''}/preview/${catalogue.id}`
-                                    )
-                                    setShareDialogName(catalogue.name)
-                                    setShareDialogOpen(true)
-                                  }}
-                                  disabled={!catalogue.isPublic}
-                                >
-                                  <Share2 className="mr-2 h-4 w-4" />
-                                  Share Project
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={(e: any) => {
-                                    e.stopPropagation()
-                                    deleteCatalogue(catalogue.id)
-                                  }}
-                                  className="text-red-600 hover:bg-red-50"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete Project
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                          {/* Action buttons - visible on hover */}
+                          <div className="absolute right-4 top-3 flex gap-1.5 translate-x-3 opacity-0 transition-all duration-400 group-hover:translate-x-0 group-hover:opacity-100">
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              className="h-7 w-7 bg-white/90 text-blue-600 hover:bg-blue-50 hover:text-blue-700 p-1.5 backdrop-blur-md shadow-md border border-blue-100/50 transition-all duration-200"
+                              onClick={(e: any) => {
+                                e.stopPropagation()
+                                router.push(`/catalogue/${catalogue.id}/edit`)
+                              }}
+                              title="Edit Project"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              className="h-7 w-7 bg-white/90 text-green-600 hover:bg-green-50 hover:text-green-700 p-1.5 backdrop-blur-md shadow-md border border-green-100/50 transition-all duration-200"
+                              onClick={(e: any) => {
+                                e.stopPropagation()
+                                if (!catalogue.isPublic) return
+                                setShareDialogUrl(
+                                  `${typeof window !== 'undefined' ? window.location.origin : ''}/preview/${catalogue.id}`
+                                )
+                                setShareDialogName(catalogue.name)
+                                setShareDialogOpen(true)
+                              }}
+                              disabled={!catalogue.isPublic}
+                              title="Share Project"
+                            >
+                              <Share2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              className="h-7 w-7 bg-white/90 text-red-600 hover:bg-red-50 hover:text-red-700 p-1.5 backdrop-blur-md shadow-md border border-red-100/50 transition-all duration-200"
+                              onClick={(e: any) => {
+                                e.stopPropagation()
+                                deleteCatalogue(catalogue.id)
+                              }}
+                              title="Delete Project"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
                           </div>
                         </div>
 
-                        <CardContent className="p-4">
-                          <div className="mb-3 flex items-start justify-between">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="mb-1 truncate font-semibold text-gray-900">
-                                {catalogue.name}
-                              </h3>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs capitalize"
-                                >
-                                  {catalogue.theme}
-                                </Badge>
-                                <Badge
-                                  className={`text-xs ${
-                                    catalogue.isPublic
-                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-100'
-                                  }`}
-                                >
-                                  {catalogue.isPublic ? 'Public' : 'Private'}
-                                </Badge>
-                              </div>
-                            </div>
+                        <CardContent className="p-0 px-4 pb-4">
+                          <div className="">
+                            <h3 className="font-semibold text-md text-gray-900">
+                              {catalogue.name}
+                            </h3>
                           </div>
 
                           {catalogue.description && (
-                            <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                            <p className="mb-2 text-xs  text-gray-600">
                               {catalogue.description}
                             </p>
                           )}
 
-                          <div className="mb-4 flex items-center justify-between text-sm text-gray-500">
-                            <span>
-                              {catalogue._count?.products || 0} products
-                            </span>
-                            <span>
-                              Updated{' '}
+                          <div className="flex items-center justify-between text-[10px] border-t border-gray-100 pt-2">
+                            <Badge
+                              className={`text-[10px] px-2.5 pr-3 py-[2px] font-medium rounded-full ${catalogue.isPublic
+                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                                : 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
+                                }`}
+                            >
+                              <div className="mr-1 flex items-center justify-center">●</div>
+                              <div>{catalogue.isPublic ? 'Public' : 'Private'}</div>
+                            </Badge>
+                            <span className="text-gray-500 flex items-center gap-1">
+                              <Edit className="h-3 w-3" />
+                              Edited{' '}
                               {formatDistanceToNow(
                                 new Date(catalogue.updatedAt),
                                 { addSuffix: true }
                               )}
                             </span>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="flex-1 bg-gradient-to-r from-[#6366F1] to-[#2D1B69] text-white hover:from-[#5558E3] hover:to-[#1e0f4d]"
-                              onClick={e => {
-                                e.stopPropagation()
-                                router.push(`/catalogue/${catalogue.id}/edit`)
-                              }}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={e => {
-                                e.stopPropagation()
-                                router.push(`/preview/${catalogue.id}`)
-                              }}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Preview
-                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -698,7 +653,7 @@ export default function ProjectsPage() {
                       return (
                         <Card
                           key={template.id}
-                          className="group overflow-hidden border transition-all duration-200 hover:shadow-xl"
+                          className="group overflow-hidden border transition-all duration-200 rounded-3xl hover:shadow-xl"
                         >
                           <CardContent className="p-0">
                             {/* Template Preview */}

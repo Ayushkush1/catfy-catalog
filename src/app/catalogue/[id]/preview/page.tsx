@@ -28,7 +28,7 @@ import {
   Printer,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
@@ -181,6 +181,8 @@ export default function CataloguePreviewPage() {
 
   const params = useParams()
   const catalogueId = params.id as string
+  const searchParams = useSearchParams()
+  const isEmbed = searchParams?.get('embed') === 'true'
 
   // Timeout fallback: if iframe doesn't load in 10 seconds, show it anyway
   useEffect(() => {
@@ -558,214 +560,214 @@ export default function CataloguePreviewPage() {
   return (
     <div className="h-screen overflow-hidden bg-gray-50">
       {/* Top Toolbar with center Zoom/Grid and right actions */}
-      <div className="relative flex h-16 items-center justify-between border-b bg-white px-4">
-        <div className="flex items-center gap-10">
-          <Button
-            asChild
-            variant="ghost"
-            className="rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10 hover:text-gray-900"
-          >
-            <Link href={`/catalogue/${catalogueId}/edit`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
+      {!isEmbed && (
+        <div className="relative flex h-16 items-center justify-between border-b bg-white px-4">
+          <div className="flex items-center gap-10">
+            <Button
+              asChild
+              variant="ghost"
+              className="rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gradient-to-r hover:from-[#2D1B69]/10 hover:to-[#6366F1]/10 hover:text-gray-900"
+            >
+              <Link href={`/catalogue/${catalogueId}/edit`}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
 
-          {/* Mode Toggle - Segmented Control */}
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
-              <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  !isPreviewMode
-                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-                onClick={() => setIsPreviewMode(false)}
-                aria-label="Switch to edit mode"
-              >
-                <Edit3 className="h-3.5 w-3.5" />
-                <span className="leading-none">Edit</span>
-              </button>
-              <button
-                className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${
-                  isPreviewMode
-                    ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-                onClick={() => setIsPreviewMode(true)}
-                aria-label="Switch to preview mode"
-              >
-                <Eye className="h-4 w-4" />
-                <span className="leading-none">Preview</span>
-              </button>
+            {/* Mode Toggle - Segmented Control */}
+            <div className="flex items-center gap-3">
+              <div className="inline-flex items-center rounded-xl bg-gray-100 p-1 ">
+                <button
+                  className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${!isPreviewMode
+                      ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  onClick={() => setIsPreviewMode(false)}
+                  aria-label="Switch to edit mode"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  <span className="leading-none">Edit</span>
+                </button>
+                <button
+                  className={`relative flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all duration-150 ${isPreviewMode
+                      ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  onClick={() => setIsPreviewMode(true)}
+                  aria-label="Switch to preview mode"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span className="leading-none">Preview</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Center Zoom/Grid controls */}
-        <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
-          {/* Undo/Redo icons - Hidden in preview mode */}
-          {!isPreviewMode && (
-            <>
-              <button
-                className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                disabled={!canUndo}
-                onClick={() => editorControlsRef.current?.undo?.()}
-                aria-label="Undo"
-              >
-                <Undo className="h-4 w-4" />
-              </button>
-              <button
-                className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
-                disabled={!canRedo}
-                onClick={() => editorControlsRef.current?.redo?.()}
-                aria-label="Redo"
-              >
-                <Redo className="h-4 w-4" />
-              </button>
+          {/* Center Zoom/Grid controls */}
+          <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-2">
+            {/* Undo/Redo icons - Hidden in preview mode */}
+            {!isPreviewMode && (
+              <>
+                <button
+                  className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  disabled={!canUndo}
+                  onClick={() => editorControlsRef.current?.undo?.()}
+                  aria-label="Undo"
+                >
+                  <Undo className="h-4 w-4" />
+                </button>
+                <button
+                  className="rounded-md p-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                  disabled={!canRedo}
+                  onClick={() => editorControlsRef.current?.redo?.()}
+                  aria-label="Redo"
+                >
+                  <Redo className="h-4 w-4" />
+                </button>
 
-              <hr className="h-6 w-[1px] bg-gray-300"></hr>
-            </>
-          )}
-          <button
-            className="pl-2 text-gray-700"
-            onClick={() => {
-              editorControlsRef.current?.zoomOut?.()
-              setTimeout(() => {
-                const pct = Math.round(
-                  (editorControlsRef.current?.getZoom?.() || 1) * 100
-                )
-                setToolbarZoom(pct)
-              }, 0)
-            }}
-            aria-label="Zoom out"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </button>
-          <div className="rounded-xl bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-            {toolbarZoom}%
-          </div>
-          <button
-            className="pr-2  text-gray-700"
-            onClick={() => {
-              editorControlsRef.current?.zoomIn?.()
-              setTimeout(() => {
-                const pct = Math.round(
-                  (editorControlsRef.current?.getZoom?.() || 1) * 100
-                )
-                setToolbarZoom(pct)
-              }, 0)
-            }}
-            aria-label="Zoom in"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
-          {/* Page navigator: Page X of Y with prev/next chevrons - Hidden in preview mode */}
-          {!isPreviewMode && (
-            <div className="ml-3 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1">
-              <span className="text-xs text-gray-700">
-                Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}
-              </span>
-              <button
-                className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-                onClick={() => {
-                  editorControlsRef.current?.goPrev?.()
-                  setTimeout(() => {
-                    setPageIndex(
-                      editorControlsRef.current?.getCurrentPageIndex?.() || 0
-                    )
-                    setPageCount(
-                      editorControlsRef.current?.getPages?.()?.length ||
-                        pageCount
-                    )
-                  }, 0)
-                }}
-                disabled={pageIndex <= 0}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
-                onClick={() => {
-                  editorControlsRef.current?.goNext?.()
-                  setTimeout(() => {
-                    setPageIndex(
-                      editorControlsRef.current?.getCurrentPageIndex?.() || 0
-                    )
-                    setPageCount(
-                      editorControlsRef.current?.getPages?.()?.length ||
-                        pageCount
-                    )
-                  }, 0)
-                }}
-                disabled={pageIndex >= pageCount - 1}
-                aria-label="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+                <hr className="h-6 w-[1px] bg-gray-300"></hr>
+              </>
+            )}
+            <button
+              className="pl-2 text-gray-700"
+              onClick={() => {
+                editorControlsRef.current?.zoomOut?.()
+                setTimeout(() => {
+                  const pct = Math.round(
+                    (editorControlsRef.current?.getZoom?.() || 1) * 100
+                  )
+                  setToolbarZoom(pct)
+                }, 0)
+              }}
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <div className="rounded-xl bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+              {toolbarZoom}%
             </div>
-          )}
+            <button
+              className="pr-2  text-gray-700"
+              onClick={() => {
+                editorControlsRef.current?.zoomIn?.()
+                setTimeout(() => {
+                  const pct = Math.round(
+                    (editorControlsRef.current?.getZoom?.() || 1) * 100
+                  )
+                  setToolbarZoom(pct)
+                }, 0)
+              }}
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+            {/* Page navigator: Page X of Y with prev/next chevrons - Hidden in preview mode */}
+            {!isPreviewMode && (
+              <div className="ml-3 flex items-center gap-2 rounded-2xl border bg-white px-3 py-1">
+                <span className="text-xs text-gray-700">
+                  Page {Math.min(pageIndex + 1, pageCount)} of {pageCount}
+                </span>
+                <button
+                  className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                  onClick={() => {
+                    editorControlsRef.current?.goPrev?.()
+                    setTimeout(() => {
+                      setPageIndex(
+                        editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                      )
+                      setPageCount(
+                        editorControlsRef.current?.getPages?.()?.length ||
+                        pageCount
+                      )
+                    }, 0)
+                  }}
+                  disabled={pageIndex <= 0}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  className="rounded-md p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
+                  onClick={() => {
+                    editorControlsRef.current?.goNext?.()
+                    setTimeout(() => {
+                      setPageIndex(
+                        editorControlsRef.current?.getCurrentPageIndex?.() || 0
+                      )
+                      setPageCount(
+                        editorControlsRef.current?.getPages?.()?.length ||
+                        pageCount
+                      )
+                    }, 0)
+                  }}
+                  disabled={pageIndex >= pageCount - 1}
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-4">
+            {/* Save Status Indicator (hidden in preview mode) */}
+            {!isPreviewMode && (
+              <>
+                {saveStatus === 'saving' && (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
+                    Saving...
+                  </div>
+                )}
+                {saveStatus === 'saved' && (
+                  <div className="flex items-center gap-2 text-xs text-green-600">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    All changes saved
+                  </div>
+                )}
+                {saveStatus === 'unsaved' && (
+                  <div className="flex items-center gap-2 text-xs text-orange-600">
+                    <div className="h-2 w-2 rounded-full bg-orange-500"></div>
+                    Unsaved changes
+                  </div>
+                )}
+                {saveStatus === 'error' && (
+                  <div className="flex items-center gap-2 text-xs text-red-600">
+                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                    Save failed
+                  </div>
+                )}
+
+                <Button
+                  className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-50"
+                  onClick={async () => {
+                    try {
+                      await editorControlsRef.current?.saveToDatabase?.()
+                      toast.success('Changes saved successfully')
+                    } catch (error) {
+                      toast.error('Failed to save changes')
+                    }
+                  }}
+                  disabled={saveStatus === 'saving'}
+                >
+                  <Save className="mr-1 h-3 w-3" />
+                  {saveStatus === 'saving' ? 'Saving...' : 'Save'}
+                </Button>
+              </>
+            )}
+            {/* Share */}
+            <Button
+              className="flex items-center rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-3 py-2 text-sm font-medium text-white transition-colors hover:from-[#1E1338] hover:to-[#4F46E5]"
+              onClick={() => setShareOpen(true)}
+            >
+              <Share2 className="mr-2 h-3 w-3" />
+              Share
+            </Button>
+
+            <ProfileDropdown catalogueId={catalogueId} />
+          </div>
         </div>
-
-        <div className="flex items-center gap-4">
-          {/* Save Status Indicator (hidden in preview mode) */}
-          {!isPreviewMode && (
-            <>
-              {saveStatus === 'saving' && (
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
-                  Saving...
-                </div>
-              )}
-              {saveStatus === 'saved' && (
-                <div className="flex items-center gap-2 text-xs text-green-600">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                  All changes saved
-                </div>
-              )}
-              {saveStatus === 'unsaved' && (
-                <div className="flex items-center gap-2 text-xs text-orange-600">
-                  <div className="h-2 w-2 rounded-full bg-orange-500"></div>
-                  Unsaved changes
-                </div>
-              )}
-              {saveStatus === 'error' && (
-                <div className="flex items-center gap-2 text-xs text-red-600">
-                  <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                  Save failed
-                </div>
-              )}
-
-              <Button
-                className="rounded-lg bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200 disabled:opacity-50"
-                onClick={async () => {
-                  try {
-                    await editorControlsRef.current?.saveToDatabase?.()
-                    toast.success('Changes saved successfully')
-                  } catch (error) {
-                    toast.error('Failed to save changes')
-                  }
-                }}
-                disabled={saveStatus === 'saving'}
-              >
-                <Save className="mr-1 h-3 w-3" />
-                {saveStatus === 'saving' ? 'Saving...' : 'Save'}
-              </Button>
-            </>
-          )}
-          {/* Share */}
-          <Button
-            className="flex items-center rounded-lg bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-3 py-2 text-sm font-medium text-white transition-colors hover:from-[#1E1338] hover:to-[#4F46E5]"
-            onClick={() => setShareOpen(true)}
-          >
-            <Share2 className="mr-2 h-3 w-3" />
-            Share
-          </Button>
-
-          <ProfileDropdown catalogueId={catalogueId} />
-        </div>
-      </div>
+      )}
 
       {/* Iframe Editor */}
       <div className="relative h-[calc(100vh-64px)] overflow-hidden bg-gray-50">
@@ -836,18 +838,18 @@ export default function CataloguePreviewPage() {
                 setLiveData({
                   catalogue: catalogue
                     ? {
-                        id: catalogue.id,
-                        name: catalogue.name,
-                      }
+                      id: catalogue.id,
+                      name: catalogue.name,
+                    }
                     : {},
                   profile: catalogue?.profile || {},
                   product: catalogue?.products?.[0]
                     ? {
-                        title: catalogue.products[0].name || '',
-                        price: catalogue.products[0].priceDisplay || '',
-                        image: catalogue.products[0].imageUrl || '',
-                        description: catalogue.products[0].description || '',
-                      }
+                      title: catalogue.products[0].name || '',
+                      price: catalogue.products[0].priceDisplay || '',
+                      image: catalogue.products[0].imageUrl || '',
+                      description: catalogue.products[0].description || '',
+                    }
                     : {},
                   products: catalogue?.products || [],
                   categories: catalogue?.categories || [],
@@ -967,153 +969,155 @@ export default function CataloguePreviewPage() {
       </div>
 
       {/* Share Dialog */}
-      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Share & Export</DialogTitle>
-            <DialogDescription>
-              Share your catalogue with others or export it as PDF/PNG.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            {/* Export Options */}
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                disabled={isExportingPDF}
-                onClick={async () => {
-                  try {
-                    setIsExportingPDF(true)
-                    toast.loading('Generating PDF...', {
-                      id: 'pdf-export',
-                    })
-                    await editorControlsRef.current?.exportPDF?.()
-                    toast.success('PDF exported successfully', {
-                      id: 'pdf-export',
-                    })
-                  } catch (error) {
-                    toast.error('Failed to export PDF', { id: 'pdf-export' })
-                  } finally {
-                    setIsExportingPDF(false)
-                  }
-                }}
-              >
-                <Printer className="h-4 w-4" />
-                {isExportingPDF ? 'Exporting...' : 'Export PDF'}
-              </Button>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2"
-                onClick={async () => {
-                  try {
-                    await editorControlsRef.current?.exportPNG?.()
-                    toast.success('PNG exported successfully')
-                  } catch (error) {
-                    toast.error('Failed to export PNG')
-                  }
-                }}
-              >
-                <Share className="h-4 w-4" /> Export PNG
-              </Button>
-            </div>
+      {!isEmbed && (
+        <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share & Export</DialogTitle>
+              <DialogDescription>
+                Share your catalogue with others or export it as PDF/PNG.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Export Options */}
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  disabled={isExportingPDF}
+                  onClick={async () => {
+                    try {
+                      setIsExportingPDF(true)
+                      toast.loading('Generating PDF...', {
+                        id: 'pdf-export',
+                      })
+                      await editorControlsRef.current?.exportPDF?.()
+                      toast.success('PDF exported successfully', {
+                        id: 'pdf-export',
+                      })
+                    } catch (error) {
+                      toast.error('Failed to export PDF', { id: 'pdf-export' })
+                    } finally {
+                      setIsExportingPDF(false)
+                    }
+                  }}
+                >
+                  <Printer className="h-4 w-4" />
+                  {isExportingPDF ? 'Exporting...' : 'Export PDF'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2"
+                  onClick={async () => {
+                    try {
+                      await editorControlsRef.current?.exportPNG?.()
+                      toast.success('PNG exported successfully')
+                    } catch (error) {
+                      toast.error('Failed to export PNG')
+                    }
+                  }}
+                >
+                  <Share className="h-4 w-4" /> Export PNG
+                </Button>
+              </div>
 
-            {/* Share Link Section */}
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Public Share Link</div>
-              {catalogue?.isPublic && catalogue?.slug ? (
-                <>
+              {/* Share Link Section */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Public Share Link</div>
+                {catalogue?.isPublic && catalogue?.slug ? (
+                  <>
+                    <div className="flex gap-2">
+                      <input
+                        className="flex-1 rounded border border-green-200 bg-green-50 px-2 py-1 text-sm"
+                        value={getPublicShareUrl()}
+                        readOnly
+                      />
+                      <Button
+                        onClick={() => {
+                          const shareUrl = getPublicShareUrl()
+                          navigator.clipboard.writeText(shareUrl)
+                          toast.success('Public link copied to clipboard!')
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <LinkIcon className="h-4 w-4" /> Copy
+                      </Button>
+                    </div>
+                    <p className="flex items-center gap-1 text-xs text-green-600">
+                      ✓ Anyone with this link can view your catalogue
+                    </p>
+                  </>
+                ) : catalogue?.isPublic && !catalogue?.slug ? (
+                  <div className="rounded-md border border-orange-200 bg-orange-50 p-3">
+                    <p className="mb-2 text-sm text-orange-800">
+                      ⚠️ Your catalogue is public but needs a unique URL slug to
+                      be shareable.
+                    </p>
+                    <p className="text-xs text-orange-700">
+                      Go to <strong>Edit → Overview → Quick Actions</strong> to
+                      add a slug and generate your public share link.
+                    </p>
+                  </div>
+                ) : !catalogue?.isPublic ? (
+                  <div className="rounded-md border border-orange-200 bg-orange-50 p-3">
+                    <p className="mb-2 text-sm text-orange-800">
+                      🔒 This catalogue is currently private.
+                    </p>
+                    <p className="text-xs text-orange-700">
+                      Go to <strong>Edit → Overview → Quick Actions</strong> to
+                      make it public and add a share link.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Share to Social Media - Only show if public and has slug */}
+              {catalogue?.isPublic && catalogue?.slug && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Share via</div>
                   <div className="flex gap-2">
-                    <input
-                      className="flex-1 rounded border border-green-200 bg-green-50 px-2 py-1 text-sm"
-                      value={getPublicShareUrl()}
-                      readOnly
-                    />
                     <Button
+                      variant="secondary"
+                      className="flex-1"
                       onClick={() => {
                         const shareUrl = getPublicShareUrl()
-                        navigator.clipboard.writeText(shareUrl)
-                        toast.success('Public link copied to clipboard!')
+                        const text = `Check out my catalogue: ${catalogue?.name}`
+                        window.open(
+                          `https://wa.me/?text=${encodeURIComponent(`${text}\n${shareUrl}`)}`,
+                          '_blank'
+                        )
                       }}
-                      className="flex items-center gap-2"
                     >
-                      <LinkIcon className="h-4 w-4" /> Copy
+                      WhatsApp
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="flex-1"
+                      onClick={() => {
+                        const shareUrl = getPublicShareUrl()
+                        const subject = encodeURIComponent(
+                          `Check out: ${catalogue?.name}`
+                        )
+                        const body = encodeURIComponent(
+                          `I wanted to share this catalogue with you:\n\n${catalogue?.name}\n\nView it here: ${shareUrl}`
+                        )
+                        window.open(
+                          `mailto:?subject=${subject}&body=${body}`,
+                          '_blank'
+                        )
+                      }}
+                    >
+                      Email
                     </Button>
                   </div>
-                  <p className="flex items-center gap-1 text-xs text-green-600">
-                    ✓ Anyone with this link can view your catalogue
-                  </p>
-                </>
-              ) : catalogue?.isPublic && !catalogue?.slug ? (
-                <div className="rounded-md border border-orange-200 bg-orange-50 p-3">
-                  <p className="mb-2 text-sm text-orange-800">
-                    ⚠️ Your catalogue is public but needs a unique URL slug to
-                    be shareable.
-                  </p>
-                  <p className="text-xs text-orange-700">
-                    Go to <strong>Edit → Overview → Quick Actions</strong> to
-                    add a slug and generate your public share link.
-                  </p>
                 </div>
-              ) : !catalogue?.isPublic ? (
-                <div className="rounded-md border border-orange-200 bg-orange-50 p-3">
-                  <p className="mb-2 text-sm text-orange-800">
-                    🔒 This catalogue is currently private.
-                  </p>
-                  <p className="text-xs text-orange-700">
-                    Go to <strong>Edit → Overview → Quick Actions</strong> to
-                    make it public and add a share link.
-                  </p>
-                </div>
-              ) : null}
+              )}
+
+              {/* Invitations are managed from the Edit → Team tab */}
             </div>
-
-            {/* Share to Social Media - Only show if public and has slug */}
-            {catalogue?.isPublic && catalogue?.slug && (
-              <div className="space-y-2">
-                <div className="text-sm font-medium">Share via</div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    className="flex-1"
-                    onClick={() => {
-                      const shareUrl = getPublicShareUrl()
-                      const text = `Check out my catalogue: ${catalogue?.name}`
-                      window.open(
-                        `https://wa.me/?text=${encodeURIComponent(`${text}\n${shareUrl}`)}`,
-                        '_blank'
-                      )
-                    }}
-                  >
-                    WhatsApp
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="flex-1"
-                    onClick={() => {
-                      const shareUrl = getPublicShareUrl()
-                      const subject = encodeURIComponent(
-                        `Check out: ${catalogue?.name}`
-                      )
-                      const body = encodeURIComponent(
-                        `I wanted to share this catalogue with you:\n\n${catalogue?.name}\n\nView it here: ${shareUrl}`
-                      )
-                      window.open(
-                        `mailto:?subject=${subject}&body=${body}`,
-                        '_blank'
-                      )
-                    }}
-                  >
-                    Email
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Invitations are managed from the Edit → Team tab */}
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
