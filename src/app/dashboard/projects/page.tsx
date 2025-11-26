@@ -465,15 +465,15 @@ export default function ProjectsPage() {
                     {catalogues.map(catalogue => (
                       <Card
                         key={catalogue.id}
-                        className="group relative cursor-pointer overflow-hidden rounded-[1.6rem]  bg-white  transition-all duration-300 shadow-sm hover:shadow-2xl "
+                        className="group relative cursor-pointer overflow-hidden rounded-[1.6rem]  bg-white  shadow-sm transition-all duration-300 hover:shadow-2xl "
                         onClick={() =>
                           router.push(`/catalogue/${catalogue.id}/edit`)
                         }
                       >
-                        <div className="relative h-36 md:h-40 lg:h-56 py-4 px-3 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50">
+                        <div className="relative h-36 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50 px-3 py-4 md:h-40 lg:h-56">
                           <iframe
                             src={`/catalogue/${catalogue.id}/preview?embed=true`}
-                            className="h-full w-full border-0 overflow-hidden scrollbar-hide rounded-[3rem] shadow-inner"
+                            className="scrollbar-hide h-full w-full overflow-hidden rounded-[3rem] border-0 shadow-inner"
                             style={{
                               width: '400%',
                               height: '410%',
@@ -485,11 +485,11 @@ export default function ProjectsPage() {
                             title={`Preview of ${catalogue.name}`}
                           />
                           {/* Action buttons - visible on hover */}
-                          <div className="absolute right-4 top-3 flex gap-1.5 translate-x-3 opacity-0 transition-all duration-400 group-hover:translate-x-0 group-hover:opacity-100">
+                          <div className="duration-400 absolute right-4 top-3 flex translate-x-3 gap-1.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
                             <Button
                               variant="ghost"
                               size="xs"
-                              className="h-7 w-7 bg-white/90 text-blue-600 hover:bg-blue-50 hover:text-blue-700 p-1.5 backdrop-blur-md shadow-md border border-blue-100/50 transition-all duration-200"
+                              className="h-7 w-7 border border-blue-100/50 bg-white/90 p-1.5 text-blue-600 shadow-md backdrop-blur-md transition-all duration-200 hover:bg-blue-50 hover:text-blue-700"
                               onClick={(e: any) => {
                                 e.stopPropagation()
                                 router.push(`/catalogue/${catalogue.id}/edit`)
@@ -501,7 +501,7 @@ export default function ProjectsPage() {
                             <Button
                               variant="ghost"
                               size="xs"
-                              className="h-7 w-7 bg-white/90 text-green-600 hover:bg-green-50 hover:text-green-700 p-1.5 backdrop-blur-md shadow-md border border-green-100/50 transition-all duration-200"
+                              className="h-7 w-7 border border-green-100/50 bg-white/90 p-1.5 text-green-600 shadow-md backdrop-blur-md transition-all duration-200 hover:bg-green-50 hover:text-green-700"
                               onClick={(e: any) => {
                                 e.stopPropagation()
                                 if (!catalogue.isPublic) return
@@ -519,7 +519,7 @@ export default function ProjectsPage() {
                             <Button
                               variant="ghost"
                               size="xs"
-                              className="h-7 w-7 bg-white/90 text-red-600 hover:bg-red-50 hover:text-red-700 p-1.5 backdrop-blur-md shadow-md border border-red-100/50 transition-all duration-200"
+                              className="h-7 w-7 border border-red-100/50 bg-white/90 p-1.5 text-red-600 shadow-md backdrop-blur-md transition-all duration-200 hover:bg-red-50 hover:text-red-700"
                               onClick={(e: any) => {
                                 e.stopPropagation()
                                 deleteCatalogue(catalogue.id)
@@ -533,7 +533,7 @@ export default function ProjectsPage() {
 
                         <CardContent className="p-0 px-4 pb-4">
                           <div className="">
-                            <h3 className="font-semibold text-md text-gray-900">
+                            <h3 className="text-md font-semibold text-gray-900">
                               {catalogue.name}
                             </h3>
                           </div>
@@ -544,17 +544,22 @@ export default function ProjectsPage() {
                             </p>
                           )}
 
-                          <div className="flex items-center justify-between text-[10px] border-t border-gray-100 pt-2">
+                          <div className="flex items-center justify-between border-t border-gray-100 pt-2 text-[10px]">
                             <Badge
-                              className={`text-[10px] px-2.5 pr-3 py-[2px] font-medium rounded-full ${catalogue.isPublic
-                                ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100'
-                                }`}
+                              className={`rounded-full px-2.5 py-[2px] pr-3 text-[10px] font-medium ${
+                                catalogue.isPublic
+                                  ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                                  : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                              }`}
                             >
-                              <div className="mr-1 flex items-center justify-center">●</div>
-                              <div>{catalogue.isPublic ? 'Public' : 'Private'}</div>
+                              <div className="mr-1 flex items-center justify-center">
+                                ●
+                              </div>
+                              <div>
+                                {catalogue.isPublic ? 'Public' : 'Private'}
+                              </div>
                             </Badge>
-                            <span className="text-gray-500 flex items-center gap-1">
+                            <span className="flex items-center gap-1 text-gray-500">
                               <Edit className="h-3 w-3" />
                               Edited{' '}
                               {formatDistanceToNow(
@@ -653,7 +658,7 @@ export default function ProjectsPage() {
                       return (
                         <Card
                           key={template.id}
-                          className="group overflow-hidden border transition-all duration-200 rounded-3xl hover:shadow-xl"
+                          className="group overflow-hidden rounded-3xl border transition-all duration-200 hover:shadow-xl"
                         >
                           <CardContent className="p-0">
                             {/* Template Preview */}
