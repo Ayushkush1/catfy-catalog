@@ -401,7 +401,7 @@ export default function ProjectsPage() {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
-      <div className="ml-24 flex-1">
+      <div className="ml-20 flex-1">
         <DashboardHeader
           title="My Projects"
           subtitle="Manage your catalogue projects and templates"
@@ -461,7 +461,7 @@ export default function ProjectsPage() {
                 </div>
 
                 {catalogues.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     {catalogues.map(catalogue => (
                       <Card
                         key={catalogue.id}
@@ -470,7 +470,7 @@ export default function ProjectsPage() {
                           router.push(`/catalogue/${catalogue.id}/edit`)
                         }
                       >
-                        <div className="relative h-36 md:h-40 lg:h-56 p-4 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50">
+                        <div className="relative h-36 md:h-40 lg:h-56 py-4 px-3 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50">
                           <iframe
                             src={`/catalogue/${catalogue.id}/preview?embed=true`}
                             className="h-full w-full border-0 overflow-hidden scrollbar-hide rounded-[3rem] shadow-inner"

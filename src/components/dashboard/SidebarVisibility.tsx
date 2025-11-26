@@ -24,6 +24,7 @@ export function GlobalSidebar() {
     if (pathname.startsWith('/pdf-editor')) return true
     if (pathname.startsWith('/auth')) return true
     if (pathname.startsWith('/admin/')) return true
+    if (pathname.startsWith('/onboarding')) return true
     // Hide on preview routes
     if (/^\/catalogue\/[^/]+\/preview(\/.*)?$/.test(pathname)) return true
     if (pathname.startsWith('/preview')) return true
