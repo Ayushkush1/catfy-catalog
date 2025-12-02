@@ -2678,7 +2678,12 @@ export default function EditCataloguePage() {
                       catalogueId={catalogueId}
                       productId={editingProduct?.id}
                       maxFiles={1}
-                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      accept={[
+                        'image/jpeg',
+                        'image/jpg',
+                        'image/png',
+                        'image/webp',
+                      ]}
                       autoUpload={true}
                       onUpload={files => {
                         if (files.length > 0) {
@@ -2686,7 +2691,9 @@ export default function EditCataloguePage() {
                         }
                       }}
                       onError={error => {
-                        setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
+                        setErrorWithAutoDismiss(
+                          `Product image upload failed: ${error}`
+                        )
                       }}
                       className="mt-2"
                     />
@@ -3102,8 +3109,10 @@ export default function EditCataloguePage() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {editingProduct ? 'Updating...' : 'Saving...'}
                 </>
+              ) : editingProduct ? (
+                'Update Product'
               ) : (
-                editingProduct ? 'Update Product' : 'Preview Catalogue'
+                'Preview Catalogue'
               )}
             </Button>
           </DialogFooter>

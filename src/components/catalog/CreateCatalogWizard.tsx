@@ -492,7 +492,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         isGeneratingDescription || !(data.name || data.title)
                       }
                       onClick={async () => {
-                        const catalogueName = (data.name || data.title || '').trim()
+                        const catalogueName = (
+                          data.name ||
+                          data.title ||
+                          ''
+                        ).trim()
                         if (!catalogueName) {
                           toast.error('Please enter a catalogue name first')
                           return
@@ -504,7 +508,9 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           const response = await fetch('/api/ai/description', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ productName: catalogueName }),
+                            body: JSON.stringify({
+                              productName: catalogueName,
+                            }),
                           })
 
                           if (!response.ok) {
@@ -516,13 +522,19 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           const result = await response.json()
                           if (result.success && result.description) {
                             updateData('description', result.description)
-                            toast.success('AI description generated successfully!')
+                            toast.success(
+                              'AI description generated successfully!'
+                            )
                           } else {
-                            throw new Error(result.error || 'Failed to generate description')
+                            throw new Error(
+                              result.error || 'Failed to generate description'
+                            )
                           }
                         } catch (err) {
                           toast.error(
-                            err instanceof Error ? err.message : 'Failed to generate description'
+                            err instanceof Error
+                              ? err.message
+                              : 'Failed to generate description'
                           )
                         } finally {
                           setIsGeneratingDescription(false)
