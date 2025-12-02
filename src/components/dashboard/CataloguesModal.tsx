@@ -203,7 +203,7 @@ export function CataloguesModal({ open, onOpenChange }: CataloguesModalProps) {
 
   const handleOpenCatalogue = (id: string) => {
     onOpenChange(false)
-    router.push(`/catalogue/${id}/edit`)
+    router.push(`/catalogue/${id}/preview?mode=edit`)
   }
 
   const handleUseTemplate = (template: Template) => {

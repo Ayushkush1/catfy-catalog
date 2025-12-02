@@ -47,6 +47,7 @@ interface HeaderProps {
   catalogueName?: string
   lastUpdated?: string
   showGradientBanner?: boolean
+  showOnlyGradient?: boolean
   onPreview?: () => void
   onSave?: () => void
   isSaving?: boolean
@@ -70,6 +71,7 @@ export function Header({
   catalogueName,
   lastUpdated,
   showGradientBanner = false,
+  showOnlyGradient = false,
   onPreview,
   onSave,
   isSaving = false,
@@ -165,19 +167,21 @@ export function Header({
   if (isLoading) {
     return (
       <>
-        <header className="border-b border-gray-200 bg-[#E8EAF6]">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {showBackButton && (
-                  <div className="h-8 w-8 animate-pulse rounded bg-gray-300" />
-                )}
-                <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
+        {!showOnlyGradient && (
+          <header className="border-b border-gray-200 bg-[#E8EAF6]">
+            <div className="container mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  {showBackButton && (
+                    <div className="h-8 w-8 animate-pulse rounded bg-gray-300" />
+                  )}
+                  <div className="h-6 w-32 animate-pulse rounded bg-gray-300" />
+                </div>
+                <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
               </div>
-              <div className="h-8 w-8 animate-pulse rounded-full bg-gray-300" />
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
         {showGradientBanner && (
           <div className="bg-[#E8EAF6] pt-2">
@@ -210,12 +214,12 @@ export function Header({
 
   return (
     <>
-      <DashboardHeader />
+      {!showOnlyGradient && <DashboardHeader />}
 
       {/* Gradient Banner Section for Edit Catalogue */}
       {showGradientBanner && (
-        <div className=" pt-2">
-          <div className="mx-8 h-40 rounded-t-[3rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-8 text-white">
+        <div className="sticky top-0 z-30 pt-2">
+          <div className="mx-8 h-32 rounded-t-[3rem] bg-gradient-to-r from-[#2D1B69] to-[#6366F1] px-8 pt-7 text-white">
             <div className="container mx-auto">
               <div className="flex items-center justify-between">
                 <div className="text-white">
@@ -261,7 +265,7 @@ export function Header({
                       disabled={!onPreview}
                     >
                       <Eye className="mr-2 h-4 w-4" />
-                      Preview
+                      Preview Catalogue
                     </Button>
                     <Button
                       size="sm"
@@ -282,6 +286,122 @@ export function Header({
                       )}
                     </Button>
                   </div>
+                  {/* Profile Avatar */}
+                  {profile && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Avatar className="cursor-pointer text-white ring-2 ring-white/60">
+                          {profile.avatarUrl ? (
+                            <AvatarImage
+                              src={profile.avatarUrl}
+                              alt={profile.fullName || profile.email}
+                            />
+                          ) : (
+                            <AvatarFallback className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69]">
+                              {getInitials(profile.fullName, profile.email)}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-72 rounded-xl p-2"
+                        align="end"
+                        forceMount
+                      >
+                        <div className="flex flex-col space-y-2 border-b border-gray-100 p-3">
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-10 w-10 border-2 border-purple-200">
+                              <AvatarImage
+                                src={profile?.avatarUrl || ''}
+                                alt={profile?.fullName || user.email}
+                              />
+                              <AvatarFallback className="bg-gradient-to-r from-[#6366F1] to-[#2D1B69] font-semibold text-white">
+                                {getInitials(
+                                  profile?.fullName || null,
+                                  user.email
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-gray-700">
+                                {profile?.fullName || 'User'}
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                {user.email}
+                              </p>
+                              {profile?.subscriptionPlan && (
+                                <div className="mt-1 flex items-center space-x-1">
+                                  <Crown className="h-3 w-3 text-yellow-300" />
+                                  <span className="text-xs font-medium text-purple-100">
+                                    {`${profile.subscriptionPlan[0].toUpperCase()}${profile.subscriptionPlan.slice(1)} `}
+                                    Plan
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="py-1">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/profile"
+                              className="cursor-pointer text-gray-700 hover:bg-gray-50"
+                            >
+                              <User className="mr-3 h-4 w-4 text-gray-500" />
+                              <span>Profile Settings</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={isAdmin ? '/admin' : '/dashboard'}
+                              className="cursor-pointer text-gray-700 hover:bg-gray-50"
+                            >
+                              <Sparkles className="mr-3 h-4 w-4 text-gray-500" />
+                              <span>Dashboard</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/billing"
+                              className="cursor-pointer text-gray-700 hover:bg-gray-50"
+                            >
+                              <CreditCard className="mr-3 h-4 w-4 text-gray-500" />
+                              <span>Billing & Plans</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </div>
+                        <DropdownMenuSeparator className="my-1" />
+                        <div className="py-1">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/help"
+                              className="cursor-pointer text-gray-700 hover:bg-gray-50"
+                            >
+                              <HelpCircle className="mr-3 h-4 w-4 text-gray-500" />
+                              <span>Help & Support</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/documentation"
+                              className="cursor-pointer text-gray-700 hover:bg-gray-50"
+                            >
+                              <FileText className="mr-3 h-4 w-4 text-gray-500" />
+                              <span>Documentation</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </div>
+                        <DropdownMenuSeparator className="my-1" />
+                        <DropdownMenuItem
+                          onClick={handleSignOut}
+                          className="cursor-pointer text-red-600 hover:bg-red-50 focus:bg-red-50"
+                        >
+                          <LogOut className="mr-3 h-4 w-4" />
+                          <span>Sign out</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </div>
             </div>

@@ -28,7 +28,7 @@ import {
   Printer,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { ProfileDropdown } from '@/components/editor/components/ProfileDropdown'
@@ -144,6 +144,9 @@ export default function CataloguePreviewPage() {
   const [pageCount, setPageCount] = useState<number>(1)
   const [canUndo, setCanUndo] = useState<boolean>(false)
   const [canRedo, setCanRedo] = useState<boolean>(false)
+  const [loaderProgress, setLoaderProgress] = useState<number>(12)
+  const [typedText, setTypedText] = useState<string>('')
+  const [typedDots, setTypedDots] = useState<number>(0)
 
   // Keep navbar page index/count in sync with iframe editor
   useEffect(() => {
@@ -179,10 +182,60 @@ export default function CataloguePreviewPage() {
     return () => clearInterval(interval)
   }, [saveStatus])
 
+  // Loader typing animation
+  useEffect(() => {
+    const message = 'Opening editor'
+    let i = 0
+    const typing = setInterval(() => {
+      setTypedText(message.slice(0, i + 1))
+      i += 1
+      if (i >= message.length) {
+        clearInterval(typing)
+      }
+    }, 60)
+    const dotting = setInterval(() => {
+      setTypedDots(prev => (prev + 1) % 4)
+    }, 500)
+    return () => {
+      clearInterval(typing)
+      clearInterval(dotting)
+    }
+  }, [])
+
+  // Loader progress animation
+  useEffect(() => {
+    if (isEditorReady) {
+      setLoaderProgress(100)
+      return
+    }
+    const interval = setInterval(() => {
+      setLoaderProgress(prev => Math.min(prev + Math.random() * 6 + 2, 95))
+    }, 400)
+    return () => clearInterval(interval)
+  }, [isEditorReady])
+
   const params = useParams()
   const catalogueId = params.id as string
   const searchParams = useSearchParams()
+  const router = useRouter()
   const isEmbed = searchParams?.get('embed') === 'true'
+
+  // Reflect mode in URL and initialize from it
+  useEffect(() => {
+    const mode = searchParams?.get('mode')
+    if (mode === 'edit') {
+      setIsPreviewMode(false)
+    } else if (mode === 'preview') {
+      setIsPreviewMode(true)
+    }
+  }, [searchParams])
+
+  const updateModeInUrl = (toPreview: boolean) => {
+    const sp = new URLSearchParams(searchParams ? searchParams.toString() : '')
+    sp.set('mode', toPreview ? 'preview' : 'edit')
+    const qs = sp.toString()
+    router.replace(`/catalogue/${catalogueId}/preview${qs ? `?${qs}` : ''}`)
+  }
 
   // Timeout fallback: if iframe doesn't load in 10 seconds, show it anyway
   useEffect(() => {
@@ -583,7 +636,10 @@ export default function CataloguePreviewPage() {
                       ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  onClick={() => setIsPreviewMode(false)}
+                  onClick={() => {
+                    setIsPreviewMode(false)
+                    updateModeInUrl(false)
+                  }}
                   aria-label="Switch to edit mode"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -595,7 +651,10 @@ export default function CataloguePreviewPage() {
                       ? 'bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  onClick={() => setIsPreviewMode(true)}
+                  onClick={() => {
+                    setIsPreviewMode(true)
+                    updateModeInUrl(true)
+                  }}
                   aria-label="Switch to preview mode"
                 >
                   <Eye className="h-4 w-4" />
@@ -776,11 +835,31 @@ export default function CataloguePreviewPage() {
         {/* Loading overlay - shows until editor is fully ready with user's edits */}
         {!isEditorReady && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-gray-50">
-            <div className="text-center">
-              <div className="mx-auto mb-3 h-10 w-10 animate-spin rounded-full border-b-2 border-blue-600"></div>
-              <p className="text-sm font-medium text-gray-600">
-                Loading your catalogue...
-              </p>
+            <div className="w-[420px] rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white">
+                  <Edit3 className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-mono text-sm text-gray-900">
+                    {typedText}
+                    <span className="opacity-60">{'.'.repeat(typedDots)}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Preparing canvas & assets
+                  </p>
+                </div>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-200">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-[#2D1B69] via-[#6366F1] to-[#43d8a9]"
+                  style={{ width: `${Math.round(loaderProgress)}%` }}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <span>{Math.round(loaderProgress)}%</span>
+                <span>Nearly there</span>
+              </div>
             </div>
           </div>
         )}

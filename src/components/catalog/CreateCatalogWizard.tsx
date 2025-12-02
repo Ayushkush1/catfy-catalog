@@ -40,6 +40,7 @@ import {
   Loader2,
   Monitor,
   Check,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { isClientAdmin } from '@/lib/client-auth'
@@ -170,6 +171,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const [isSaving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -328,7 +330,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
       {/* Content */}
       <div className="container mx-auto px-4 pb-8">
         {/* Progress Bar inside content for responsiveness */}
-        <div className="max-w-8xl w-full  rounded-t-2xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-20 pb-2 pt-6">
+        <div className="max-w-8xl w-full rounded-t-2xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-20 pb-2 pt-6">
           <div className="flex items-center justify-between px-20 pt-4">
             {[
               { step: 1, label: 'Design', icon: Layout },
@@ -414,7 +416,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 2 && (
             <div className="space-y-6">
               {/* Basic Information Card */}
-              <Card className="rounded-b-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
+              <Card className="rounded-b-2xl border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
@@ -481,6 +483,63 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       rows={3}
                       className="resize-none border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                     />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="xs"
+                      className="w-fit border-blue-400/20 text-xs text-blue-600"
+                      disabled={
+                        isGeneratingDescription || !(data.name || data.title)
+                      }
+                      onClick={async () => {
+                        const catalogueName = (data.name || data.title || '').trim()
+                        if (!catalogueName) {
+                          toast.error('Please enter a catalogue name first')
+                          return
+                        }
+
+                        setIsGeneratingDescription(true)
+
+                        try {
+                          const response = await fetch('/api/ai/description', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ productName: catalogueName }),
+                          })
+
+                          if (!response.ok) {
+                            throw new Error(
+                              `Failed to generate description: ${response.status}`
+                            )
+                          }
+
+                          const result = await response.json()
+                          if (result.success && result.description) {
+                            updateData('description', result.description)
+                            toast.success('AI description generated successfully!')
+                          } else {
+                            throw new Error(result.error || 'Failed to generate description')
+                          }
+                        } catch (err) {
+                          toast.error(
+                            err instanceof Error ? err.message : 'Failed to generate description'
+                          )
+                        } finally {
+                          setIsGeneratingDescription(false)
+                        }
+                      }}
+                    >
+                      {isGeneratingDescription ? (
+                        <>
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-1 h-3 w-3" /> AI Generate
+                        </>
+                      )}
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -616,6 +675,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
+                              autoUpload={true}
                               onUpload={results => {
                                 if (results.length > 0) {
                                   updateData('logoUrl', results[0].url)
@@ -661,6 +721,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
+                              autoUpload={true}
                               onUpload={results => {
                                 if (results.length > 0) {
                                   updateData('coverImageUrl', results[0].url)
@@ -706,6 +767,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                             <FileUpload
                               uploadType="catalogue"
                               catalogueId={data.id || 'temp'}
+                              autoUpload={true}
                               onUpload={results => {
                                 if (results.length > 0) {
                                   updateData('introImage', results[0].url)
@@ -893,7 +955,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               </Card>
 
               {/* Contact Page Details */}
-              <Card className="rounded-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
+              <Card className="rounded-2xl border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
@@ -1018,7 +1080,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           {currentStep === 4 && (
             <div className="space-y-6">
               {/* Settings & Visibility */}
-              <Card className="rounded-b-2xl  border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
+              <Card className="rounded-b-2xl border border-gray-200/60 bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-4">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] shadow-lg">
@@ -1215,7 +1277,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             {currentStep < 4 ? (
               <Button
                 onClick={nextStep}
-                className="text-md rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4  text-white shadow-lg transition-all duration-300 hover:from-[#2D1B69] hover:to-[#6366F1] hover:shadow-xl"
+                className="text-md rounded-xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-8 py-4 text-white shadow-lg transition-all duration-300 hover:from-[#2D1B69] hover:to-[#6366F1] hover:shadow-xl"
               >
                 Next
                 <ArrowRight className="ml-2 h-4 w-4" />

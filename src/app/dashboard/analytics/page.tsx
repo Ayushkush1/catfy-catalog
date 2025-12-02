@@ -191,7 +191,7 @@ export default function AnalyticsPage() {
       <div
         className={`${poppins.className} relative flex min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50`}
       >
-        <div className="relative z-10 ml-28 flex-1">
+        <div className="relative z-10 ml-20 flex-1">
           <div className="">
             <DashboardHeader
               title="Analytics Overview"
@@ -278,8 +278,8 @@ export default function AnalyticsPage() {
       <div
         className={`${poppins.className} relative flex min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50`}
       >
-        <div className="relative z-10 ml-28 flex-1">
-          <div className="container py-6">
+        <div className="relative z-10 ml-20 flex-1">
+          <div className="px-8 py-6">
             <div className="text-center">
               <p className="text-gray-600">Failed to load analytics data</p>
             </div>
@@ -293,7 +293,7 @@ export default function AnalyticsPage() {
     <div
       className={`${poppins.className} relative flex min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50 pb-10`}
     >
-      <div className="relative z-10 ml-28 flex-1">
+      <div className="relative z-10 ml-20 flex-1">
         <div className="">
           <DashboardHeader
             title="Analytics Overview"
@@ -302,7 +302,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Top pill: New Items / Manage */}
-        <div className="container px-5">
+        <div className="px-8">
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-6 rounded-3xl border border-white/20 bg-white/60 px-6 py-4 shadow-lg backdrop-blur">
               <div className="flex items-center gap-3">

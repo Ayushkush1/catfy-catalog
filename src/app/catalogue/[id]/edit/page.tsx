@@ -187,6 +187,7 @@ export default function EditCataloguePage() {
       tags: string[]
     }>
   >([])
+  const [isSavingProduct, setIsSavingProduct] = useState(false)
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showSettingsDialog, setShowSettingsDialog] = useState(false)
@@ -1157,15 +1158,16 @@ export default function EditCataloguePage() {
     }
   }
 
-  const saveProduct = async () => {
+  const saveProduct = async (): Promise<boolean> => {
     // Validate that at least one product has a name
     const validProducts = productForms.filter(form => form.name.trim())
     if (validProducts.length === 0) {
       toast.error('At least one product must have a name')
-      return
+      return false
     }
 
     try {
+      setIsSavingProduct(true)
       // Save each product individually
       const savePromises = validProducts.map(async productForm => {
         const isEditing = editingProduct && productForm.id === editingProduct.id
@@ -1224,9 +1226,13 @@ export default function EditCataloguePage() {
       setProductForms([])
       setEditingProduct(null)
       await fetchCatalogue()
+      return true
     } catch (error: any) {
       console.error('Error saving products:', error)
       toast.error(error.message || 'Failed to save products')
+      return false
+    } finally {
+      setIsSavingProduct(false)
     }
   }
 
@@ -1246,6 +1252,18 @@ export default function EditCataloguePage() {
 
   const handlePreview = () => {
     router.push(`/catalogue/${catalogueId}/preview`)
+  }
+
+  const handleSaveAndPreview = async () => {
+    const ok = await saveProduct()
+    if (ok) {
+      toast.success(
+        editingProduct
+          ? 'Product updated - opening preview'
+          : 'Product added - opening preview'
+      )
+      router.push(`/catalogue/${catalogueId}/preview?mode=preview`)
+    }
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
@@ -1421,7 +1439,7 @@ export default function EditCataloguePage() {
 
   return (
     <div className="bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
-      <div className=" pl-20">
+      <div className="pl-16">
         <Header
           title="Edit Catalogue"
           catalogueName={catalogue.name}
@@ -1434,6 +1452,7 @@ export default function EditCataloguePage() {
             }
           )}
           showGradientBanner={true}
+          showOnlyGradient={true}
           onPreview={handlePreview}
           onSave={saveCatalogue}
           isSaving={isSaving}
@@ -1442,11 +1461,11 @@ export default function EditCataloguePage() {
           isTrackingPresence={isTracking}
         />
       </div>
-      <div className="-mt-6 min-h-screen pl-28">
+      <div className="h-[calc(100vh-8.5rem)] overflow-hidden pl-24">
         {/* Main Layout Container */}
         <div className="flex">
           {/* Left Sidebar */}
-          <div className="min-h-screen w-64 bg-white pt-4">
+          <div className="sticky top-0 h-[calc(100vh-8rem)] w-64 bg-white pt-4">
             {/* Navigation */}
             <nav className="p-4">
               <div className="space-y-2">
@@ -1556,7 +1575,7 @@ export default function EditCataloguePage() {
           </div>
 
           {/* Main Content */}
-          <div className="mr-8 flex flex-1  bg-gray-50">
+          <div className="mr-8 flex h-[calc(100vh-7rem)] flex-1 overflow-y-auto bg-gray-50">
             {/* Content Area */}
             <div className="flex-1 p-6">
               {error && (
@@ -2659,21 +2678,15 @@ export default function EditCataloguePage() {
                       catalogueId={catalogueId}
                       productId={editingProduct?.id}
                       maxFiles={1}
-                      accept={[
-                        'image/jpeg',
-                        'image/jpg',
-                        'image/png',
-                        'image/webp',
-                      ]}
+                      accept={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                      autoUpload={true}
                       onUpload={files => {
                         if (files.length > 0) {
                           updateProductForm(index, { imageUrl: files[0].url })
                         }
                       }}
                       onError={error => {
-                        setErrorWithAutoDismiss(
-                          `Product image upload failed: ${error}`
-                        )
+                        setErrorWithAutoDismiss(`Product image upload failed: ${error}`)
                       }}
                       className="mt-2"
                     />
@@ -3064,6 +3077,15 @@ export default function EditCataloguePage() {
           </div>
 
           <DialogFooter className="shrink-0 border-t bg-gray-50 px-6 py-4">
+            <div className="mr-2 flex items-end">
+              {editingProduct ? (
+                <span className="ml-2 text-xs text-gray-500"></span>
+              ) : (
+                <span className="ml-2 text-xs text-gray-500">
+                  We will open Preview next
+                </span>
+              )}
+            </div>
             <Button
               variant="outline"
               onClick={() => setShowProductDialog(false)}
@@ -3072,10 +3094,17 @@ export default function EditCataloguePage() {
             </Button>
             <Button
               className="bg-gradient-to-r from-[#2D1B69] to-[#6366F1] text-white hover:from-[#3D2B79] hover:to-[#7376F1]"
-              onClick={saveProduct}
+              onClick={editingProduct ? saveProduct : handleSaveAndPreview}
+              disabled={isSavingProduct}
             >
-              {editingProduct ? 'Update' : 'Add'} Product
-              {productForms.length > 1 ? 's' : ''}
+              {isSavingProduct ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {editingProduct ? 'Updating...' : 'Saving...'}
+                </>
+              ) : (
+                editingProduct ? 'Update Product' : 'Preview Catalogue'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

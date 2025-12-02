@@ -87,7 +87,7 @@ const HelpSupportPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
-      <div className="ml-24 flex-1">
+      <div className="ml-20 flex-1">
         <DashboardHeader
           title="Help & Support"
           subtitle="Find answers and get support when you need it"

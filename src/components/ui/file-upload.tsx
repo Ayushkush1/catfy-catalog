@@ -27,6 +27,7 @@ interface FileUploadProps {
   accept?: string[]
   className?: string
   disabled?: boolean
+  autoUpload?: boolean
 }
 
 export function FileUpload({
@@ -40,6 +41,7 @@ export function FileUpload({
   accept = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
   className,
   disabled = false,
+  autoUpload = false,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -48,6 +50,7 @@ export function FileUpload({
   const [previews, setPreviews] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const autoUploadEnabled = autoUpload
 
   const validateFile = useCallback(
     (file: File): string | null => {
@@ -61,6 +64,50 @@ export function FileUpload({
     },
     [accept, maxSize]
   )
+
+  const uploadFiles = useCallback(async () => {
+    if (selectedFiles.length === 0) return
+
+    setIsUploading(true)
+    setUploadProgress(0)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      selectedFiles.forEach(file => {
+        formData.append('files', file)
+      })
+      formData.append('type', uploadType)
+      if (catalogueId) formData.append('catalogueId', catalogueId)
+      if (productId) formData.append('productId', productId)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Upload failed')
+      }
+
+      const result = await response.json()
+      setUploadProgress(100)
+
+      setSelectedFiles([])
+      setPreviews([])
+
+      onUpload(result.files)
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Upload failed'
+      setError(errorMessage)
+      onError?.(errorMessage)
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
+    }
+  }, [selectedFiles, uploadType, catalogueId, productId, onUpload, onError])
 
   const handleFiles = useCallback(
     (files: FileList | File[]) => {
@@ -110,10 +157,23 @@ export function FileUpload({
           newPreviews.push('')
         }
       })
+      // If auto upload is enabled, start upload immediately for the newly added valid files
+      if (autoUploadEnabled && validFiles.length > 0) {
+        setTimeout(() => {
+          uploadFiles()
+        }, 0)
+      }
     },
-    [selectedFiles, previews, maxFiles, validateFile, onError]
+    [
+      selectedFiles,
+      previews,
+      maxFiles,
+      validateFile,
+      onError,
+      autoUploadEnabled,
+      uploadFiles,
+    ]
   )
-
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
@@ -164,53 +224,6 @@ export function FileUpload({
     },
     [selectedFiles, previews]
   )
-
-  const uploadFiles = useCallback(async () => {
-    if (selectedFiles.length === 0) return
-
-    setIsUploading(true)
-    setUploadProgress(0)
-    setError(null)
-
-    try {
-      const formData = new FormData()
-      selectedFiles.forEach(file => {
-        formData.append('files', file)
-      })
-      formData.append('type', uploadType)
-      if (catalogueId) formData.append('catalogueId', catalogueId)
-      if (productId) formData.append('productId', productId)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Upload failed')
-      }
-
-      const result = await response.json()
-      setUploadProgress(100)
-
-      // Clear selected files and previews
-      setSelectedFiles([])
-      setPreviews([])
-
-      // Call success callback
-      onUpload(result.files)
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Upload failed'
-      setError(errorMessage)
-      onError?.(errorMessage)
-    } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
-    }
-  }, [selectedFiles, uploadType, catalogueId, productId, onUpload, onError])
-
   const openFileDialog = useCallback(() => {
     if (!disabled) {
       fileInputRef.current?.click()

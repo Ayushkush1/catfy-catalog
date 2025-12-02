@@ -130,71 +130,100 @@ export function UpgradePrompt({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <div className="flex items-center space-x-2">
-            <Crown className="h-6 w-6 text-yellow-500" />
-            <DialogTitle>
+      <DialogContent className="overflow-hidden border-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-0 sm:max-w-[500px]">
+        <div className="absolute right-0 top-0 -z-10 h-64 w-64 rounded-full bg-gradient-to-br from-blue-500/10 to-purple-500/10 blur-3xl" />
+        <div className="absolute bottom-0 left-0 -z-10 h-48 w-48 rounded-full bg-gradient-to-tr from-yellow-500/10 to-orange-500/10 blur-3xl" />
+
+        <DialogHeader className="space-y-2 p-5 pb-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 p-1.5 shadow-lg shadow-yellow-500/30">
+              <Crown className="h-4 w-4 text-white" />
+            </div>
+            <DialogTitle className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-lg font-semibold text-transparent">
               {title || `Upgrade to ${nextPlanFeatures.name}`}
             </DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-sm leading-relaxed text-gray-600">
             {description ||
               `You've reached the limit for ${feature}. Upgrade to ${nextPlanFeatures.name} to continue.`}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 px-5">
           {/* Current vs Next Plan Comparison */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <div className="text-center">
-                <h3 className="font-medium text-gray-900">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-2">
+              <div className="rounded-xl border border-gray-200/60 bg-white/60 p-3 text-center shadow-sm">
+                <h3 className="text-sm font-semibold text-gray-900">
                   {currentPlanFeatures.name}
                 </h3>
-                <p className="text-sm text-gray-500">Current Plan</p>
+                <p className="mt-0.5 text-xs font-medium text-gray-500">
+                  Current Plan
+                </p>
                 <div className="mt-2">
-                  <span className="text-2xl font-bold">
+                  <span className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-xl font-bold text-transparent">
                     {formatPrice(currentPlanFeatures.monthlyPrice)}
                   </span>
-                  <span className="text-gray-500">/month</span>
+                  <span className="text-xs text-gray-500">/mo</span>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="text-center">
-                <div className="flex items-center justify-center space-x-2">
-                  <h3 className="font-medium text-blue-900">
-                    {nextPlanFeatures.name}
-                  </h3>
-                  <Badge className="bg-blue-500">Recommended</Badge>
-                </div>
-                <p className="text-sm text-blue-600">Upgrade to</p>
-                <div className="mt-2">
-                  <span className="text-2xl font-bold text-blue-600">
-                    {formatPrice(nextPlanFeatures.monthlyPrice)}
-                  </span>
-                  <span className="text-blue-500">/month</span>
+            <div className="space-y-2">
+              <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#6366F1] to-[#2D1B69] p-3 text-center shadow-lg shadow-purple-500/25">
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+                <div className="relative">
+                  <div className="flex items-center justify-center space-x-1.5">
+                    <h3 className="text-sm font-semibold text-white">
+                      {nextPlanFeatures.name}
+                    </h3>
+                  </div>
+                  <Badge className="mt-0.5 border-0 bg-white/20 px-1.5 py-0 text-xs text-white hover:bg-white/30">
+                    Recommended
+                  </Badge>
+                  <div className="mt-2">
+                    <span className="text-xl font-bold text-white">
+                      {formatPrice(nextPlanFeatures.monthlyPrice)}
+                    </span>
+                    <span className="text-xs text-white">/mo</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Feature Comparison */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">What you&apos;ll get:</h4>
-            <div className="space-y-2">
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold text-gray-900">
+              What you&apos;ll get:
+            </h4>
+            <div className="space-y-1.5 rounded-xl border border-gray-200/60 bg-white/60 p-3">
               {getComparisonFeatures().map((feature, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between text-sm"
+                  className="flex items-center justify-between py-1.5 text-xs"
                 >
-                  <span className="text-gray-600">{feature.name}</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-500">{feature.current}</span>
-                    <span className="text-gray-400">→</span>
-                    <span className="font-medium text-blue-600">
+                  <span className="font-medium text-gray-700">
+                    {feature.name}
+                  </span>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                      {feature.current}
+                    </span>
+                    <svg
+                      className="h-2.5 w-2.5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                    <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-600">
                       {feature.next}
                     </span>
                   </div>
@@ -202,31 +231,26 @@ export function UpgradePrompt({
               ))}
             </div>
           </div>
-
-          {/* Additional Benefits */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900">Additional benefits:</h4>
-            <div className="space-y-2">
-              {nextPlanFeatures.included.slice(1, 4).map((benefit, index) => (
-                <div
-                  key={index}
-                  className="flex items-center space-x-2 text-sm"
-                >
-                  <Check className="h-4 w-4 flex-shrink-0 text-green-500" />
-                  <span className="text-gray-600">{benefit}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
-        <DialogFooter className="space-x-2">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Maybe Later
-          </Button>
-          <Button onClick={handleUpgrade} disabled={isLoading}>
-            {isLoading ? 'Loading...' : `Upgrade to ${nextPlanFeatures.name}`}
-          </Button>
+        <DialogFooter className="mt-4 border-t border-gray-200/60 bg-gradient-to-r from-gray-50/80 to-slate-50/80 px-5 py-3">
+          <div className="flex w-full space-x-2.5">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+              className="h-9 flex-1 rounded-xl border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+            >
+              Maybe Later
+            </Button>
+            <Button
+              onClick={handleUpgrade}
+              disabled={isLoading}
+              className="h-9 flex-1 rounded-xl bg-gradient-to-r  from-[#6366F1] to-[#2D1B69] text-sm font-semibold text-white shadow-lg shadow-purple-500/30 transition-all duration-200"
+            >
+              {isLoading ? 'Loading...' : `Upgrade Now`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

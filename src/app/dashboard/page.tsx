@@ -1595,7 +1595,7 @@ export default function DashboardPage() {
                       key={catalogue.id}
                       className="group relative cursor-pointer overflow-hidden rounded-[1.6rem]  bg-white  shadow-md transition-all duration-300 hover:shadow-xl "
                       onClick={() =>
-                        router.push(`/catalogue/${catalogue.id}/edit`)
+                        router.push(`/catalogue/${catalogue.id}/preview?mode=edit`)
                       }
                     >
                       <div className="relative h-36 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50 p-4 md:h-40 lg:h-56">
@@ -1620,7 +1620,7 @@ export default function DashboardPage() {
                             className="h-8 w-8 border border-blue-100/50 bg-white/90 p-1.5 text-blue-600 shadow-md backdrop-blur-md transition-all duration-200 hover:bg-blue-50 hover:text-blue-700"
                             onClick={(e: any) => {
                               e.stopPropagation()
-                              router.push(`/catalogue/${catalogue.id}/edit`)
+                              router.push(`/catalogue/${catalogue.id}/preview?mode=edit`)
                             }}
                             title="Edit Project"
                           >
