@@ -128,7 +128,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         if (channel && typeof channel.unsubscribe === 'function')
           channel.unsubscribe()
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [queryClient])
 

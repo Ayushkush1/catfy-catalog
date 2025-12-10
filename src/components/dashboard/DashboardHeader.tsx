@@ -239,7 +239,7 @@ export function DashboardHeader({
                           detail: { query: search },
                         })
                       )
-                    } catch (err) {}
+                    } catch (err) { }
                     // scroll to tools section on Enter so results are visible
                     try {
                       const el = document.getElementById('tools-section')
@@ -248,8 +248,8 @@ export function DashboardHeader({
                           behavior: 'smooth',
                           block: 'start',
                         })
-                        // ensure focus for screen readers
-                        ;(el as HTMLElement).focus()
+                          // ensure focus for screen readers
+                          ; (el as HTMLElement).focus()
 
                         // rely on smooth scroll + focus; no temporary highlight
                       }
@@ -272,7 +272,7 @@ export function DashboardHeader({
                           detail: { query: '' },
                         })
                       )
-                    } catch (err) {}
+                    } catch (err) { }
                   }}
                   className="absolute right-10 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:text-gray-700"
                   aria-label="Clear search"
