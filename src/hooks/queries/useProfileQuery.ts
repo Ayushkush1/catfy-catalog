@@ -5,6 +5,8 @@ interface UserProfile {
   id: string
   fullName: string
   email: string
+  avatarUrl?: string
+  subscriptionPlan?: string
   companyName?: string
   companyDescription?: string
   phone?: string
