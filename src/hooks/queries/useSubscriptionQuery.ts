@@ -3,32 +3,32 @@ import { queryKeys } from './queryKeys'
 import { SubscriptionPlan } from '@prisma/client'
 
 interface SubscriptionData {
-    plan: SubscriptionPlan
-    status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
-    usage: {
-        catalogues: number
-        monthlyExports: number
-    }
-    currentPeriodEnd?: string
-    cancelAtPeriodEnd?: boolean
+  plan: SubscriptionPlan
+  status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
+  usage: {
+    catalogues: number
+    monthlyExports: number
+  }
+  currentPeriodEnd?: string
+  cancelAtPeriodEnd?: boolean
 }
 
 async function fetchSubscription(): Promise<SubscriptionData> {
-    const response = await fetch('/api/subscription/current')
+  const response = await fetch('/api/subscription/current')
 
-    if (!response.ok) {
-        // Return default FREE plan on error
-        return {
-            plan: SubscriptionPlan.FREE,
-            status: 'ACTIVE',
-            usage: {
-                catalogues: 0,
-                monthlyExports: 0,
-            },
-        }
+  if (!response.ok) {
+    // Return default FREE plan on error
+    return {
+      plan: SubscriptionPlan.FREE,
+      status: 'ACTIVE',
+      usage: {
+        catalogues: 0,
+        monthlyExports: 0,
+      },
     }
+  }
 
-    return response.json()
+  return response.json()
 }
 
 /**
@@ -38,21 +38,21 @@ async function fetchSubscription(): Promise<SubscriptionData> {
  * - Returns FREE plan as default while loading
  */
 export function useSubscriptionQuery() {
-    return useQuery({
-        queryKey: queryKeys.subscription.current(),
-        queryFn: fetchSubscription,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes
-        refetchOnWindowFocus: true,
-        placeholderData: {
-            plan: SubscriptionPlan.FREE,
-            status: 'ACTIVE' as const,
-            usage: {
-                catalogues: 0,
-                monthlyExports: 0,
-            },
-        },
-    })
+  return useQuery({
+    queryKey: queryKeys.subscription.current(),
+    queryFn: fetchSubscription,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
+    placeholderData: {
+      plan: SubscriptionPlan.FREE,
+      status: 'ACTIVE' as const,
+      usage: {
+        catalogues: 0,
+        monthlyExports: 0,
+      },
+    },
+  })
 }
 
 /**
@@ -60,11 +60,11 @@ export function useSubscriptionQuery() {
  * Useful after subscription changes
  */
 export function useRefreshSubscription() {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
-    return () => {
-        queryClient.invalidateQueries({
-            queryKey: queryKeys.subscription.current(),
-        })
-    }
+  return () => {
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.subscription.current(),
+    })
+  }
 }

@@ -318,12 +318,13 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             ].map(({ step, label, icon: Icon }) => (
               <div key={step} className="flex flex-1 flex-col items-center">
                 <div
-                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${step < currentStep
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${
+                    step < currentStep
                       ? 'scale-110 border-2 border-[#FFFFFF] bg-white text-[#6366F1] shadow-lg'
                       : step === currentStep
                         ? 'scale-110 border-2 border-white bg-gray-200 text-[#2D1B69] shadow-lg ring-4 ring-[#6366F1]/20'
                         : 'border border-gray-500 bg-[#2D1B69] text-white opacity-70'
-                    }`}
+                  }`}
                 >
                   {step < currentStep ? (
                     <CheckCircle className="h-5 w-5" />
@@ -1244,10 +1245,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     </h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${!data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
+                          !data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                          }`}
+                        }`}
                         onClick={() => updateData('isPublic', false)}
                       >
                         <div className="flex items-center gap-3">
@@ -1269,10 +1271,11 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       </div>
 
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
+                          data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                          }`}
+                        }`}
                         onClick={() => updateData('isPublic', true)}
                       >
                         <div className="flex items-center gap-3">
