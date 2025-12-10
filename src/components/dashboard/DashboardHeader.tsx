@@ -30,7 +30,6 @@ import {
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { useNotifications } from '@/contexts/NotificationsContext'
-import { useProfileQuery } from '@/hooks/queries'
 
 interface UserProfile {
   id: string
@@ -49,24 +48,75 @@ export function DashboardHeader({
   title,
   subtitle,
 }: DashboardHeaderProps = {}) {
-  // Use React Query for instant cached profile data
-  const { data: profileData, isLoading: profileLoading } = useProfileQuery()
-
   const [search, setSearch] = useState('')
   const searchDebounceRef = useRef<number | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-
-  const profile = profileData?.profile || null
-
   const router = useRouter()
   const supabase = createClient()
   const { openDrawer, unreadCount } = useNotifications()
 
   useEffect(() => {
     const getUser = async () => {
+      const CACHE_KEY = 'catfy:headerProfile'
+      const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
       try {
+        // Try cache first so header can render instantly
+        try {
+          const raw = sessionStorage.getItem(CACHE_KEY)
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
+              setUser(parsed.user || null)
+              setIsAdmin(parsed.isAdmin || false)
+              setProfile(parsed.profile || null)
+              setIsLoading(false)
+              // background refresh
+              ;(async () => {
+                try {
+                  const {
+                    data: { user },
+                  } = await supabase.auth.getUser()
+                  const adminStatus = await isClientAdmin()
+                  const response = await fetch('/api/auth/profile')
+                  if (response.ok) {
+                    const data = await response.json()
+                    if (adminStatus) {
+                      setProfile({
+                        ...data.profile,
+                        subscriptionPlan: 'BUSINESS',
+                      })
+                    } else {
+                      setProfile(data.profile)
+                    }
+                    setIsAdmin(adminStatus)
+                    setUser(user)
+                    try {
+                      sessionStorage.setItem(
+                        CACHE_KEY,
+                        JSON.stringify({
+                          _ts: Date.now(),
+                          isAdmin: adminStatus,
+                          profile: data.profile || null,
+                          user,
+                        })
+                      )
+                    } catch (e) {}
+                  }
+                } catch (e) {
+                  /* ignore */
+                }
+              })()
+              return
+            }
+          }
+        } catch (e) {
+          // ignore cache read errors
+        }
+
+        // No fresh cache — fetch synchronously so we know auth state
         const {
           data: { user },
         } = await supabase.auth.getUser()
@@ -75,6 +125,27 @@ export function DashboardHeader({
         if (user) {
           const adminStatus = await isClientAdmin()
           setIsAdmin(adminStatus)
+
+          const response = await fetch('/api/auth/profile')
+          if (response.ok) {
+            const data = await response.json()
+            if (adminStatus) {
+              setProfile({ ...data.profile, subscriptionPlan: 'BUSINESS' })
+            } else {
+              setProfile(data.profile)
+            }
+            try {
+              sessionStorage.setItem(
+                CACHE_KEY,
+                JSON.stringify({
+                  _ts: Date.now(),
+                  isAdmin: adminStatus,
+                  profile: data.profile || null,
+                  user,
+                })
+              )
+            } catch (e) {}
+          }
         }
       } catch (error) {
         console.error('Error fetching user:', error)

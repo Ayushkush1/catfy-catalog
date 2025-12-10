@@ -1,7 +1,6 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { ThemeProvider } from 'next-themes'
 import { useState } from 'react'
 import { Toaster } from '@/components/ui/toaster'
@@ -14,11 +13,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Increased staleTime for better performance
-            staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh longer
-            gcTime: 10 * 60 * 1000, // 10 minutes - cache persists longer
-            refetchOnWindowFocus: true, // Auto-refresh when user returns to tab
-            refetchOnReconnect: true, // Refetch when internet reconnects
+            // With SSR, we usually want to set some default staleTime
+            // above 0 to avoid refetching immediately on the client
+            staleTime: 60 * 1000,
             retry: (failureCount, error: any) => {
               // Don't retry on 4xx errors
               if (error?.status >= 400 && error?.status < 500) {
@@ -49,10 +46,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </SubscriptionProvider>
         </AuthProvider>
       </ThemeProvider>
-      {/* React Query DevTools - only in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
     </QueryClientProvider>
   )
 }
