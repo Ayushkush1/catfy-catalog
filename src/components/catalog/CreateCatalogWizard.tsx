@@ -334,19 +334,18 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
           <div className="flex items-center justify-between px-20 pt-4">
             {[
               { step: 1, label: 'Design', icon: Layout },
-              { step: 2, label: 'Plan', icon: Settings },
+              { step: 2, label: 'Basic Info', icon: Settings },
               { step: 3, label: 'Branding', icon: Palette },
               { step: 4, label: 'Settings', icon: Globe },
             ].map(({ step, label, icon: Icon }) => (
               <div key={step} className="flex flex-1 flex-col items-center">
                 <div
-                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${
-                    step < currentStep
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${step < currentStep
                       ? 'scale-110 border-2 border-[#FFFFFF] bg-white text-[#6366F1] shadow-lg'
                       : step === currentStep
                         ? 'scale-110 border-2 border-white bg-gray-200 text-[#2D1B69] shadow-lg ring-4 ring-[#6366F1]/20'
                         : 'border border-gray-500 bg-[#2D1B69] text-white opacity-70'
-                  }`}
+                    }`}
                 >
                   {step < currentStep ? (
                     <CheckCircle className="h-5 w-5" />
@@ -397,7 +396,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             <div className="space-y-6">
               {/* Template Selection Card */}
               <Card className="rounded-b-2xl bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
-                <CardContent className="p-6">
+                <CardContent className="min-h-[600px] p-6">
                   <TemplateThemeWorkflow
                     userProfile={profile}
                     initialTemplateId={data.templateId}
@@ -1196,11 +1195,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     </h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
-                          !data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${!data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                        }`}
+                          }`}
                         onClick={() => updateData('isPublic', false)}
                       >
                         <div className="flex items-center gap-3">
@@ -1222,11 +1220,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       </div>
 
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
-                          data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                        }`}
+                          }`}
                         onClick={() => updateData('isPublic', true)}
                       >
                         <div className="flex items-center gap-3">

@@ -1595,9 +1595,7 @@ export default function DashboardPage() {
                       key={catalogue.id}
                       className="group relative cursor-pointer overflow-hidden rounded-[1.6rem]  bg-white  shadow-md transition-all duration-300 hover:shadow-xl "
                       onClick={() =>
-                        router.push(
-                          `/catalogue/${catalogue.id}/preview?mode=edit`
-                        )
+                        router.push(`/catalogue/${catalogue.id}/preview`)
                       }
                     >
                       <div className="relative h-36 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50 p-4 md:h-40 lg:h-56">
@@ -1622,9 +1620,7 @@ export default function DashboardPage() {
                             className="h-8 w-8 border border-blue-100/50 bg-white/90 p-1.5 text-blue-600 shadow-md backdrop-blur-md transition-all duration-200 hover:bg-blue-50 hover:text-blue-700"
                             onClick={(e: any) => {
                               e.stopPropagation()
-                              router.push(
-                                `/catalogue/${catalogue.id}/preview?mode=edit`
-                              )
+                              router.push(`/catalogue/${catalogue.id}/preview`)
                             }}
                             title="Edit Project"
                           >
@@ -1678,11 +1674,10 @@ export default function DashboardPage() {
 
                         <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
                           <Badge
-                            className={`rounded-full px-2.5 py-[2.5px] pr-3 text-xs font-medium ${
-                              catalogue.isPublic
+                            className={`rounded-full px-2.5 py-[2.5px] pr-3 text-xs font-medium ${catalogue.isPublic
                                 ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                                 : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                            }`}
+                              }`}
                           >
                             <div className="mr-1 flex items-center justify-center">
                               ●

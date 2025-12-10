@@ -15,6 +15,10 @@ export async function POST(request: NextRequest) {
     const body: RequestBody = await request.json()
     const { productName, category, tags, price } = body
 
+    if (DEBUG) {
+      console.log('AI Description Request:', { productName, category, tags, price })
+    }
+
     if (
       !productName ||
       typeof productName !== 'string' ||
@@ -26,14 +30,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const prompt = `Generate a short, engaging, and SEO-friendly product description (max 25 words) for:
-      Product: ${productName}
+    const prompt = `Generate a compelling and professional description (1 sentence, around 25-30 words) for:
+      Name: ${productName}
       ${category ? `Category: ${category}` : ''}
       ${tags?.length ? `Tags: ${tags.join(', ')}` : ''}
       ${price ? `Price: ₹${Number(price).toLocaleString('en-IN')}` : ''}
       
-      Make it professional, engaging, and focused on key features and benefits.
-      Important: Return plain text only. Do not use markdown, asterisks (*), underscores (_), hashtags (#), or any other special formatting characters.`
+      The description should:
+      - Be engaging and professional
+      - Highlight key features and benefits
+      - Appeal to potential customers
+      - Be complete sentences with proper punctuation
+      
+      IMPORTANT: 
+      - Return ONLY the description text, nothing else
+      - Do NOT use markdown, asterisks (*), underscores (_), hashtags (#), or special formatting
+      - Make sure the description is COMPLETE and not cut off
+      - Write in a natural, flowing style`
+
+    if (DEBUG) {
+      console.log('Generating description with prompt:', prompt)
+    }
 
     let description = await generateWithGemini(prompt)
 
@@ -48,21 +65,27 @@ export async function POST(request: NextRequest) {
       description = description.slice(0, 497) + '...'
     }
 
+    if (DEBUG) {
+      console.log('Generated description:', description)
+    }
+
     // Return in the exact format expected by the frontend
     return NextResponse.json({
       success: true,
       description,
       metadata: {
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         promptLength: prompt.length,
       },
     })
   } catch (error) {
     console.error('Description generation error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to generate description'
+
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to generate description',
+        error: errorMessage,
         description: '', // Ensure consistent response format
       },
       { status: 500 }
