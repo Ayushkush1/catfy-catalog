@@ -41,6 +41,9 @@ import {
   Monitor,
   Check,
   Sparkles,
+  Eye,
+  EyeOff,
+  Copy,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { isClientAdmin } from '@/lib/client-auth'
@@ -172,6 +175,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const [error, setError] = useState('')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
@@ -340,13 +344,12 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
             ].map(({ step, label, icon: Icon }) => (
               <div key={step} className="flex flex-1 flex-col items-center">
                 <div
-                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${
-                    step < currentStep
+                  className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-500 ${step < currentStep
                       ? 'scale-110 border-2 border-[#FFFFFF] bg-white text-[#6366F1] shadow-lg'
                       : step === currentStep
                         ? 'scale-110 border-2 border-white bg-gray-200 text-[#2D1B69] shadow-lg ring-4 ring-[#6366F1]/20'
                         : 'border border-gray-500 bg-[#2D1B69] text-white opacity-70'
-                  }`}
+                    }`}
                 >
                   {step < currentStep ? (
                     <CheckCircle className="h-5 w-5" />
@@ -1049,6 +1052,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                           <FileUpload
                             uploadType="catalogue"
                             catalogueId={data.id || 'temp'}
+                            autoUpload={true}
                             onUpload={results => {
                               if (results.length > 0) {
                                 updateData('contactImage', results[0].url)
@@ -1196,11 +1200,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                     </h4>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
-                          !data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${!data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                        }`}
+                          }`}
                         onClick={() => updateData('isPublic', false)}
                       >
                         <div className="flex items-center gap-3">
@@ -1222,11 +1225,10 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                       </div>
 
                       <div
-                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${
-                          data.isPublic
+                        className={`cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 ${data.isPublic
                             ? 'border-[#6366F1] bg-[#6366F1]/5 shadow-lg'
                             : 'border-gray-200 hover:border-[#6366F1]/50 hover:shadow-md'
-                        }`}
+                          }`}
                         onClick={() => updateData('isPublic', true)}
                       >
                         <div className="flex items-center gap-3">
@@ -1253,13 +1255,46 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         <Label className="text-sm font-semibold text-[#1A1B41]">
                           Access Password
                         </Label>
-                        <Input
-                          type="password"
-                          value={data.password || ''}
-                          onChange={e => updateData('password', e.target.value)}
-                          placeholder="Set a password for private access"
-                          className="h-10 border-gray-300 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
-                        />
+                        <div className="relative flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              value={data.password || ''}
+                              onChange={e => updateData('password', e.target.value)}
+                              placeholder="Set a password for private access"
+                              className="h-10 border-gray-300 pr-10 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="absolute right-0 top-0 h-10 w-10 p-0 hover:bg-transparent"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? (
+                                <EyeOff className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <Eye className="h-4 w-4 text-gray-500" />
+                              )}
+                            </Button>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-10 px-3"
+                            onClick={() => {
+                              if (data.password) {
+                                navigator.clipboard.writeText(data.password)
+                                toast.success('Password copied to clipboard!')
+                              } else {
+                                toast.error('Please set a password first')
+                              }
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <p className="text-xs text-gray-500">
                           Visitors will need this password to view your
                           catalogue

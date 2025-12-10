@@ -232,29 +232,31 @@ export function FileUpload({
 
   return (
     <div className={cn('w-full', className)}>
-      {/* Upload Area */}
-      <div
-        className={cn(
-          'cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors',
-          isDragging
-            ? 'border-primary bg-primary/5'
-            : 'border-gray-300 hover:border-gray-400',
-          disabled && 'cursor-not-allowed opacity-50'
-        )}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={openFileDialog}
-      >
-        <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-        <p className="mb-2 text-lg font-medium text-gray-900">
-          Drop files here or click to browse
-        </p>
-        <p className="text-sm text-gray-500">
-          Supports: {accept.map(type => type.split('/')[1]).join(', ')} • Max{' '}
-          {maxSize}MB per file • Up to {maxFiles} files
-        </p>
-      </div>
+      {/* Upload Area - Hide when files are selected and uploading/uploaded */}
+      {!(selectedFiles.length > 0 && (isUploading || autoUploadEnabled)) && (
+        <div
+          className={cn(
+            'cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors',
+            isDragging
+              ? 'border-primary bg-primary/5'
+              : 'border-gray-300 hover:border-gray-400',
+            disabled && 'cursor-not-allowed opacity-50'
+          )}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={openFileDialog}
+        >
+          <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <p className="mb-2 text-lg font-medium text-gray-900">
+            Drop files here or click to browse
+          </p>
+          <p className="text-sm text-gray-500">
+            Supports: {accept.map(type => type.split('/')[1]).join(', ')} • Max{' '}
+            {maxSize}MB per file • Up to {maxFiles} files
+          </p>
+        </div>
+      )}
 
       {/* Hidden File Input */}
       <input
@@ -332,29 +334,31 @@ export function FileUpload({
             </div>
           )}
 
-          {/* Upload Button */}
-          <div className="mt-4 flex gap-2">
-            <Button
-              onClick={uploadFiles}
-              disabled={isUploading || disabled}
-              className="flex-1"
-            >
-              {isUploading
-                ? 'Uploading...'
-                : `Upload ${selectedFiles.length} file(s)`}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setSelectedFiles([])
-                setPreviews([])
-                setError(null)
-              }}
-              disabled={isUploading || disabled}
-            >
-              Clear
-            </Button>
-          </div>
+          {/* Upload Button - Only show if autoUpload is disabled */}
+          {!autoUploadEnabled && (
+            <div className="mt-4 flex gap-2">
+              <Button
+                onClick={uploadFiles}
+                disabled={isUploading || disabled}
+                className="flex-1"
+              >
+                {isUploading
+                  ? 'Uploading...'
+                  : `Upload ${selectedFiles.length} file(s)`}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedFiles([])
+                  setPreviews([])
+                  setError(null)
+                }}
+                disabled={isUploading || disabled}
+              >
+                Clear
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
