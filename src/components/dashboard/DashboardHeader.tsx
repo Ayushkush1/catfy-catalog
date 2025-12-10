@@ -73,42 +73,42 @@ export function DashboardHeader({
               setIsAdmin(parsed.isAdmin || false)
               setProfile(parsed.profile || null)
               setIsLoading(false)
-                // background refresh
-                ; (async () => {
-                  try {
-                    const {
-                      data: { user },
-                    } = await supabase.auth.getUser()
-                    const adminStatus = await isClientAdmin()
-                    const response = await fetch('/api/auth/profile')
-                    if (response.ok) {
-                      const data = await response.json()
-                      if (adminStatus) {
-                        setProfile({
-                          ...data.profile,
-                          subscriptionPlan: 'BUSINESS',
-                        })
-                      } else {
-                        setProfile(data.profile)
-                      }
-                      setIsAdmin(adminStatus)
-                      setUser(user)
-                      try {
-                        sessionStorage.setItem(
-                          CACHE_KEY,
-                          JSON.stringify({
-                            _ts: Date.now(),
-                            isAdmin: adminStatus,
-                            profile: data.profile || null,
-                            user,
-                          })
-                        )
-                      } catch (e) { }
+              // background refresh
+              ;(async () => {
+                try {
+                  const {
+                    data: { user },
+                  } = await supabase.auth.getUser()
+                  const adminStatus = await isClientAdmin()
+                  const response = await fetch('/api/auth/profile')
+                  if (response.ok) {
+                    const data = await response.json()
+                    if (adminStatus) {
+                      setProfile({
+                        ...data.profile,
+                        subscriptionPlan: 'BUSINESS',
+                      })
+                    } else {
+                      setProfile(data.profile)
                     }
-                  } catch (e) {
-                    /* ignore */
+                    setIsAdmin(adminStatus)
+                    setUser(user)
+                    try {
+                      sessionStorage.setItem(
+                        CACHE_KEY,
+                        JSON.stringify({
+                          _ts: Date.now(),
+                          isAdmin: adminStatus,
+                          profile: data.profile || null,
+                          user,
+                        })
+                      )
+                    } catch (e) {}
                   }
-                })()
+                } catch (e) {
+                  /* ignore */
+                }
+              })()
               return
             }
           }
@@ -144,7 +144,7 @@ export function DashboardHeader({
                   user,
                 })
               )
-            } catch (e) { }
+            } catch (e) {}
           }
         }
       } catch (error) {
@@ -310,7 +310,7 @@ export function DashboardHeader({
                           detail: { query: search },
                         })
                       )
-                    } catch (err) { }
+                    } catch (err) {}
                     // scroll to tools section on Enter so results are visible
                     try {
                       const el = document.getElementById('tools-section')
@@ -319,8 +319,8 @@ export function DashboardHeader({
                           behavior: 'smooth',
                           block: 'start',
                         })
-                          // ensure focus for screen readers
-                          ; (el as HTMLElement).focus()
+                        // ensure focus for screen readers
+                        ;(el as HTMLElement).focus()
 
                         // rely on smooth scroll + focus; no temporary highlight
                       }
@@ -343,7 +343,7 @@ export function DashboardHeader({
                           detail: { query: '' },
                         })
                       )
-                    } catch (err) { }
+                    } catch (err) {}
                   }}
                   className="absolute right-10 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 hover:text-gray-700"
                   aria-label="Clear search"
