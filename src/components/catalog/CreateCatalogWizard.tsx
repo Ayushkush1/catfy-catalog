@@ -52,6 +52,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader'
 import { ThemeSelector } from './ThemeSelector'
 import { TemplateThemeWorkflow } from '@/components/ui/template-theme-workflow'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
+import { useProfileQuery, useCreateCatalogueMutation } from '@/hooks/queries'
 
 interface CatalogueData {
   // Catalogue basic info
@@ -120,6 +121,10 @@ interface CreateCatalogWizardProps {
 }
 
 export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
+  // Use React Query for instant cached profile data
+  const { data: profileData, isLoading: profileLoading } = useProfileQuery()
+  const createCatalogueMutation = useCreateCatalogueMutation()
+
   const [currentStep, setCurrentStep] = useState(1)
   const [data, setData] = useState<CatalogueData>({
     // Catalogue basic info
@@ -169,8 +174,8 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
     showProductCodes: false,
   })
 
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const profile = profileData?.profile || null
+  const isLoading = profileLoading
   const [isSaving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
@@ -181,53 +186,35 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   const supabase = createClient()
   const { currentPlan, canCreateCatalogue } = useSubscription()
 
+  // Pre-fill data from profile when it loads
   useEffect(() => {
-    loadUserData()
-  }, [])
+    if (profileData?.profile) {
+      setData(prev => ({
+        ...prev,
+        // Company/profile information
+        companyName: profileData.profile?.companyName || '',
+        companyDescription: profileData.profile?.companyDescription || '',
+        fullName: profileData.profile?.fullName || '',
+        email: profileData.user?.email || '',
+        phone: profileData.profile?.phone || '',
+        website: profileData.profile?.website || '',
+        address: profileData.profile?.address || '',
+        city: profileData.profile?.city || '',
+        state: profileData.profile?.state || '',
+        country: profileData.profile?.country || '',
 
-  const loadUserData = async () => {
-    try {
-      setIsLoading(true)
+        // Media assets
+        logoUrl: profileData.profile?.logoUrl || '',
+        coverImageUrl: profileData.profile?.coverImageUrl || '',
 
-      // Load user profile
-      const profileResponse = await fetch('/api/auth/profile')
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
-        setProfile(profileData.profile)
-
-        // Pre-fill data from profile
-        setData(prev => ({
-          ...prev,
-          // Company/profile information
-          companyName: profileData.profile?.companyName || '',
-          companyDescription: profileData.profile?.companyDescription || '',
-          fullName: profileData.profile?.fullName || '',
-          email: profileData.user?.email || '',
-          phone: profileData.profile?.phone || '',
-          website: profileData.profile?.website || '',
-          address: profileData.profile?.address || '',
-          city: profileData.profile?.city || '',
-          state: profileData.profile?.state || '',
-          country: profileData.profile?.country || '',
-
-          // Media assets
-          logoUrl: profileData.profile?.logoUrl || '',
-          coverImageUrl: profileData.profile?.coverImageUrl || '',
-
-          // Social media
-          facebook: profileData.profile?.facebook || '',
-          twitter: profileData.profile?.twitter || '',
-          instagram: profileData.profile?.instagram || '',
-          linkedin: profileData.profile?.linkedin || '',
-        }))
-      }
-    } catch (err) {
-      toast.error('Failed to load user data')
-      console.error('Load error:', err)
-    } finally {
-      setIsLoading(false)
+        // Social media
+        facebook: profileData.profile?.facebook || '',
+        twitter: profileData.profile?.twitter || '',
+        instagram: profileData.profile?.instagram || '',
+        linkedin: profileData.profile?.linkedin || '',
+      }))
     }
-  }
+  }, [profileData])
 
   const updateData = (field: string, value: any) => {
     setData(prev => ({ ...prev, [field]: value }))
@@ -281,38 +268,25 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
     }
 
     try {
-      const response = await fetch('/api/catalogues', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        toast.success('Catalogue created successfully!')
-        if (onComplete) {
-          onComplete(result.catalogue.id)
-        } else {
-          router.push(`/catalogue/${result.catalogue.id}/edit`)
-        }
+      // Use React Query mutation - handles cache updates automatically
+      const result = await createCatalogueMutation.mutateAsync(data)
+      toast.success('Catalogue created successfully!')
+      if (onComplete) {
+        onComplete(result.catalogue.id)
       } else {
-        const errorData = await response.json()
-        if (response.status === 403) {
-          toast.error(
-            'You have reached the catalogue limit for your current plan.'
-          )
-          setShowUpgradePrompt(true)
-        } else {
-          toast.error(errorData.error || 'Failed to create catalogue')
-        }
-        return
+        router.push(`/catalogue/${result.catalogue.id}/edit`)
       }
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Failed to create catalogue'
-      )
+    } catch (err: any) {
+      if (err.message?.includes('limit')) {
+        toast.error(
+          'You have reached the catalogue limit for your current plan.'
+        )
+        setShowUpgradePrompt(true)
+      } else {
+        toast.error(
+          err instanceof Error ? err.message : 'Failed to create catalogue'
+        )
+      }
     } finally {
       setSaving(false)
     }
@@ -403,7 +377,7 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
               <Card className="rounded-b-2xl bg-white/80 px-32 pb-10 pt-4 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl">
                 <CardContent className="min-h-[600px] p-6">
                   <TemplateThemeWorkflow
-                    userProfile={profile}
+                    userProfile={profile as any}
                     initialTemplateId={data.templateId}
                     onSelectionComplete={templateId => {
                       updateData('templateId', templateId)

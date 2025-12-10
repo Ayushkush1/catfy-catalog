@@ -1,13 +1,14 @@
 'use client'
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
+import {
+  useNotificationsQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+} from '@/hooks/queries'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/hooks/queries'
 
 export interface NotificationItem {
   id: string
@@ -35,6 +36,7 @@ interface NotificationsContextValue {
   loadMore: () => Promise<void>
   hasMore: boolean
   setFilter: (f: 'all' | 'unread') => Promise<void>
+  isLoading: boolean
 }
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(
@@ -44,52 +46,53 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [list, setList] = useState<NotificationItem[]>([])
   const [open, setOpen] = useState(false)
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [hasMore, setHasMore] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
+  const [filter, setFilterState] = useState<'all' | 'unread'>('all')
 
-  const unreadCount = useMemo(() => list.filter(n => !n.read).length, [list])
+  // Use React Query for notifications - automatic polling + caching!
+  const { data, isLoading, refetch } = useNotificationsQuery({
+    unreadOnly: filter === 'unread',
+  })
 
+  const markReadMutation = useMarkAsReadMutation()
+  const markAllReadMutation = useMarkAllAsReadMutation()
+  const queryClient = useQueryClient()
+
+  const list = data?.notifications || []
+  const unreadCount = data?.unreadCount || 0
+
+  // Fetch list - now uses React Query refetch
   const fetchList = async ({ reset = true, filterBy = filter } = {}) => {
-    try {
-      const params = new URLSearchParams()
-      params.set('limit', '20')
-      if (!reset && cursor) params.set('cursor', cursor)
-      if (filterBy === 'unread') params.set('filter', 'unread')
+    await refetch()
+  }
 
-      const res = await fetch(`/api/notifications?${params.toString()}`)
-      if (res.ok) {
-        const data = await res.json()
-        const items: NotificationItem[] = data.items || []
-        if (reset) {
-          setList(items)
-        } else {
-          setList(prev => [...prev, ...items])
-        }
-        setCursor(data.nextCursor || null)
-        setHasMore(Boolean(data.nextCursor))
-      }
-    } catch (e) {
-      // ignore for now
-    }
+  // Mark notification as read - uses optimistic updates
+  const markRead = async (id: string) => {
+    await markReadMutation.mutateAsync(id)
+  }
+
+  // Mark all as read - uses optimistic updates
+  const markAllRead = async () => {
+    await markAllReadMutation.mutateAsync()
+  }
+
+  // Load more - pagination (if needed in future)
+  const loadMore = async () => {
+    // Pagination can be implemented later if needed
+  }
+
+  // Set filter and reload
+  const setFilter = async (f: 'all' | 'unread') => {
+    setFilterState(f)
+    // React Query will automatically refetch with new filter
   }
 
   useEffect(() => {
-    // initial fetch
-    fetchList({ reset: true, filterBy: filter })
-
-    // polling fallback (30s)
-    const id = window.setInterval(() => {
-      fetchList({ reset: true, filterBy: filter })
-    }, 30000)
-
-    // listen to legacy open event for compatibility
+    // Listen to legacy open event for compatibility
     const onOpen = () => setOpen(true)
     window.addEventListener('dashboard:openNotifications', onOpen)
 
-    // realtime subscription using Supabase (if configured)
+    // Realtime subscription using Supabase (if configured)
     let channel: any = null
     try {
       const supabase = createSupabaseClient()
@@ -98,76 +101,36 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'notifications' },
-          payload => {
-            try {
-              const newItem = payload.new as NotificationItem
-              // only add if it's for this user or global
-              if (!newItem) return
-              // fetch profile id from server once if needed
-              // we conservatively add new items; server-side filtering will be applied on next fetch
-              setList(prev => [newItem, ...prev])
-            } catch (e) {
-              /* ignore */
-            }
+          () => {
+            // Invalidate query to refetch with new notification
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.notifications.all,
+            })
           }
         )
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'notifications' },
-          payload => {
-            try {
-              const newItem = payload.new as NotificationItem
-              if (!newItem) return
-              setList(prev =>
-                prev.map(p => (p.id === newItem.id ? newItem : p))
-              )
-            } catch (e) {}
+          () => {
+            // Invalidate query to refetch updated notification
+            queryClient.invalidateQueries({
+              queryKey: queryKeys.notifications.all,
+            })
           }
         )
         .subscribe()
     } catch (e) {
-      // ignore if supabase not configured or errors
+      // Ignore if supabase not configured or errors
     }
 
     return () => {
-      window.clearInterval(id)
       window.removeEventListener('dashboard:openNotifications', onOpen)
       try {
         if (channel && typeof channel.unsubscribe === 'function')
           channel.unsubscribe()
       } catch (e) {}
     }
-  }, [])
-
-  const markRead = async (id: string) => {
-    try {
-      await fetch(`/api/notifications/${id}/mark-read`, { method: 'POST' })
-    } catch (e) {
-      // ignore
-    }
-    setList(prev => prev.map(p => (p.id === id ? { ...p, read: true } : p)))
-  }
-
-  const markAllRead = async () => {
-    try {
-      await fetch(`/api/notifications/mark-all-read`, { method: 'POST' })
-    } catch (e) {
-      // ignore
-    }
-    setList(prev => prev.map(p => ({ ...p, read: true })))
-  }
-
-  const loadMore = async () => {
-    if (!hasMore) return
-    await fetchList({ reset: false, filterBy: filter })
-  }
-
-  const setFilterAndReload = async (f: 'all' | 'unread') => {
-    setFilter(f)
-    setCursor(null)
-    setHasMore(true)
-    await fetchList({ reset: true, filterBy: f })
-  }
+  }, [queryClient])
 
   return (
     <NotificationsContext.Provider
@@ -181,8 +144,9 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         markRead,
         markAllRead,
         loadMore,
-        hasMore,
-        setFilter: setFilterAndReload,
+        hasMore: false, // Pagination to be implemented if needed
+        setFilter,
+        isLoading,
       }}
     >
       {children}
