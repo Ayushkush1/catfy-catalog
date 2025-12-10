@@ -84,8 +84,14 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Profile retrieval error:', error)
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    console.error('Error details:', {
+      errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json(
-      { error: 'Failed to retrieve profile' },
+      { error: 'Failed to retrieve profile', details: errorMessage },
       { status: 500 }
     )
   }
@@ -145,7 +151,17 @@ export async function PUT(request: NextRequest) {
 
     const message =
       error instanceof Error ? error.message : 'Failed to update profile'
-    return NextResponse.json({ error: message }, { status: 500 })
+    console.error('Update error details:', {
+      message,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
+    return NextResponse.json(
+      {
+        error: message,
+        details: error instanceof Error ? error.stack : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
 }
 

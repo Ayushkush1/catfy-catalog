@@ -4,34 +4,45 @@ import { Database } from '@/types/supabase'
 import { getSupabaseConfig } from '@/lib/env'
 
 export async function createServerSupabaseClient() {
-  const cookieStore = await cookies()
-  const { url, anonKey } = getSupabaseConfig()
+  try {
+    const cookieStore = await cookies()
+    const { url, anonKey } = getSupabaseConfig()
 
-  return createServerClient<Database>(url, anonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value
+    if (!url || !anonKey) {
+      throw new Error(
+        'Missing Supabase configuration. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
+      )
+    }
+
+    return createServerClient<Database>(url, anonKey, {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+        remove(name: string, options: CookieOptions) {
+          try {
+            cookieStore.set({ name, value: '', ...options })
+          } catch (error) {
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
       },
-      set(name: string, value: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value, ...options })
-        } catch (error) {
-          // The `set` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: '', ...options })
-        } catch (error) {
-          // The `delete` method was called from a Server Component.
-          // This can be ignored if you have middleware refreshing
-          // user sessions.
-        }
-      },
-    },
-  })
+    })
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error)
+    throw error
+  }
 }
 
 // Service role client for admin operations
