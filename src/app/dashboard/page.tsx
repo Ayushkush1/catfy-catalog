@@ -1674,10 +1674,11 @@ export default function DashboardPage() {
 
                         <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
                           <Badge
-                            className={`rounded-full px-2.5 py-[2.5px] pr-3 text-xs font-medium ${catalogue.isPublic
+                            className={`rounded-full px-2.5 py-[2.5px] pr-3 text-xs font-medium ${
+                              catalogue.isPublic
                                 ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
                                 : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                              }`}
+                            }`}
                           >
                             <div className="mr-1 flex items-center justify-center">
                               ●

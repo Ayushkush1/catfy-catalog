@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
     const { productName, category, tags, price } = body
 
     if (DEBUG) {
-      console.log('AI Description Request:', { productName, category, tags, price })
+      console.log('AI Description Request:', {
+        productName,
+        category,
+        tags,
+        price,
+      })
     }
 
     if (
@@ -80,7 +85,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Description generation error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Failed to generate description'
+    const errorMessage =
+      error instanceof Error ? error.message : 'Failed to generate description'
 
     return NextResponse.json(
       {
