@@ -121,7 +121,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
               setList(prev =>
                 prev.map(p => (p.id === newItem.id ? newItem : p))
               )
-            } catch (e) {}
+            } catch (e) { }
           }
         )
         .subscribe()
@@ -135,7 +135,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         if (channel && typeof channel.unsubscribe === 'function')
           channel.unsubscribe()
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [])
 
