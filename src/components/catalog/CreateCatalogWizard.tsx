@@ -327,12 +327,12 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50 pl-24">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50 pl-20">
       {/* Dashboard Header */}
       <DashboardHeader />
 
       {/* Content */}
-      <div className="container mx-auto px-4 pb-8">
+      <div className=" mx-auto px-8 pb-8">
         {/* Progress Bar inside content for responsiveness */}
         <div className="max-w-8xl w-full rounded-t-2xl bg-gradient-to-r from-[#6366F1] to-[#2D1B69] px-20 pb-2 pt-6">
           <div className="flex items-center justify-between px-20 pt-4">
@@ -672,6 +672,76 @@ export function CreateCatalogWizard({ onComplete }: CreateCatalogWizardProps) {
                         rows={2}
                         className="resize-none border-gray-300 transition-all duration-200 focus:border-[#6366F1] focus:ring-[#6366F1]/20"
                       />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        className="w-fit border-blue-400/20 text-xs text-blue-600"
+                        disabled={isGeneratingDescription || !data.companyName}
+                        onClick={async () => {
+                          const companyName = data.companyName?.trim()
+                          if (!companyName) {
+                            toast.error('Please enter a company name first')
+                            return
+                          }
+
+                          setIsGeneratingDescription(true)
+
+                          try {
+                            const response = await fetch(
+                              '/api/ai/description',
+                              {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  productName: companyName,
+                                  category: 'Company',
+                                }),
+                              }
+                            )
+
+                            if (!response.ok) {
+                              throw new Error(
+                                `Failed to generate description: ${response.status}`
+                              )
+                            }
+
+                            const result = await response.json()
+                            if (result.success && result.description) {
+                              updateData(
+                                'companyDescription',
+                                result.description
+                              )
+                              toast.success(
+                                'AI description generated successfully!'
+                              )
+                            } else {
+                              throw new Error(
+                                result.error || 'Failed to generate description'
+                              )
+                            }
+                          } catch (err) {
+                            toast.error(
+                              err instanceof Error
+                                ? err.message
+                                : 'Failed to generate description'
+                            )
+                          } finally {
+                            setIsGeneratingDescription(false)
+                          }
+                        }}
+                      >
+                        {isGeneratingDescription ? (
+                          <>
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            Generating...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="mr-1 h-3 w-3" /> AI Generate
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
 
