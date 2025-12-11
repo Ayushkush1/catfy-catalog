@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useProfile } from '@/hooks/useProfile'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Card,
@@ -60,6 +59,15 @@ import {
   formatPrice,
   getYearlySavingsPercentage,
 } from '@/lib/subscription'
+import {
+  useProfileQuery,
+  useUpdateProfileMutation,
+  useBillingQuery,
+  useValidateCouponMutation,
+  useCreateCheckoutMutation,
+  useOpenBillingPortalMutation,
+  type CurrentSubscriptionResponse,
+} from '@/hooks/queries'
 
 interface AppSettings {
   notifications: {
@@ -90,26 +98,23 @@ interface UserProfile {
   accountType?: 'INDIVIDUAL' | 'BUSINESS'
 }
 
-type CurrentSubscriptionResponse = {
-  plan: SubscriptionPlan
-  usage: {
-    catalogues: number
-    monthlyExports: number
-  }
-  subscription: {
-    id: string
-    plan: SubscriptionPlan
-    status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
-    currentPeriodStart: string
-    currentPeriodEnd: string
-    cancelAtPeriodEnd: boolean
-    stripeCustomerId: string | null
-    stripeSubscriptionId: string | null
-    stripePriceId: string | null
-  } | null
-}
-
 export default function SettingsPage() {
+  // React Query hooks
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    isFetching: profileFetching,
+  } = useProfileQuery()
+  const {
+    data: billingData,
+    isLoading: billingIsLoading,
+    isFetching: billingFetching,
+  } = useBillingQuery()
+  const updateProfileMutation = useUpdateProfileMutation()
+  const validateCouponMutation = useValidateCouponMutation()
+  const createCheckoutMutation = useCreateCheckoutMutation()
+  const openPortalMutation = useOpenBillingPortalMutation()
+
   const [settings, setSettings] = useState<AppSettings>({
     notifications: {
       email: true,
@@ -138,21 +143,10 @@ export default function SettingsPage() {
     accountType: 'INDIVIDUAL',
   })
   const [loading, setLoading] = useState(true)
-  const {
-    profile: fetchedProfile,
-    userData,
-    loading: profileLoading,
-    saving: profileSaving,
-    updateProfile: saveProfile,
-    fetchProfile,
-  } = useProfile()
   const [saving, setSaving] = useState(false)
   const { toast } = useToast()
 
   // Billing states
-  const [billingData, setBillingData] =
-    useState<CurrentSubscriptionResponse | null>(null)
-  const [billingIsLoading, setBillingIsLoading] = useState(true)
   const [billingIsProcessing, setBillingIsProcessing] = useState(false)
   const [billingError, setBillingError] = useState('')
   const [couponCode, setCouponCode] = useState('')
@@ -161,6 +155,7 @@ export default function SettingsPage() {
     'monthly'
   )
 
+  // Populate profile from React Query cache
   useEffect(() => {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem('appSettings')
@@ -168,11 +163,13 @@ export default function SettingsPage() {
       setSettings(JSON.parse(savedSettings))
     }
 
-    // When the shared useProfile hook finishes fetching, populate the settings profile
-    if (!profileLoading && fetchedProfile) {
+    // Populate profile from React Query data
+    if (!profileLoading && profileData?.profile) {
+      const fetchedProfile = profileData.profile
       setProfile({
         fullName: (fetchedProfile.fullName as string) || '',
-        email: (userData?.email as string) || fetchedProfile.email || '',
+        email:
+          (profileData.user?.email as string) || fetchedProfile.email || '',
         companyName: (fetchedProfile.companyName as string) || '',
         phone: (fetchedProfile.phone as string) || '',
         website: (fetchedProfile.website as string) || '',
@@ -188,9 +185,10 @@ export default function SettingsPage() {
       setLoading(false)
     }
 
-    // If profile fetch is still loading, keep loading indicator
-    if (profileLoading) setLoading(true)
-  }, [profileLoading, fetchedProfile, userData])
+    // Only show loading on initial load without cached data
+    if (profileLoading && !profileData) setLoading(true)
+    else setLoading(false)
+  }, [profileLoading, profileData])
 
   const handleSaveSettings = async (
     section:
@@ -202,7 +200,7 @@ export default function SettingsPage() {
   ) => {
     setSaving(true)
     try {
-      // Profile section should save to DB via useProfile hook
+      // Profile section should save to DB via React Query mutation
       if (section === 'profile') {
         // map our simple profile shape to backend fields
         const updateBody: any = {
@@ -218,8 +216,7 @@ export default function SettingsPage() {
           accountType: profile.accountType,
         }
 
-        const ok = await saveProfile(updateBody)
-        if (!ok) throw new Error('Failed to update profile')
+        await updateProfileMutation.mutateAsync(updateBody)
 
         toast({
           title: 'Profile saved',
@@ -263,59 +260,7 @@ export default function SettingsPage() {
     })
   }
 
-  // Billing functions
-  const loadBillingSubscription = async () => {
-    const CACHE_KEY = 'catfy:billingData'
-    const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
-
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
-          setBillingData(parsed.data)
-          setBillingIsLoading(false)
-          // still revalidate in background
-          ;(async () => {
-            try {
-              const res = await fetch('/api/subscription/current')
-              if (res.ok) {
-                const fresh: CurrentSubscriptionResponse = await res.json()
-                setBillingData(fresh)
-                try {
-                  sessionStorage.setItem(
-                    CACHE_KEY,
-                    JSON.stringify({ _ts: Date.now(), data: fresh })
-                  )
-                } catch (e) {}
-              }
-            } catch {}
-          })()
-          return
-        }
-      }
-
-      setBillingIsLoading(true)
-      const res = await fetch('/api/subscription/current')
-      if (!res.ok) {
-        throw new Error('Failed to load current subscription')
-      }
-      const json: CurrentSubscriptionResponse = await res.json()
-      setBillingData(json)
-      try {
-        sessionStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ _ts: Date.now(), data: json })
-        )
-      } catch (e) {}
-    } catch (err) {
-      console.error('Subscription error:', err)
-      setBillingError('Failed to load subscription')
-    } finally {
-      setBillingIsLoading(false)
-    }
-  }
-
+  // Billing functions (now using React Query)
   const validateBillingCoupon = async () => {
     if (!couponCode.trim()) {
       setCouponDiscount(null)
@@ -327,27 +272,20 @@ export default function SettingsPage() {
         billingCycle === 'monthly'
           ? PLAN_FEATURES[SubscriptionPlan.STANDARD].monthlyPrice
           : PLAN_FEATURES[SubscriptionPlan.STANDARD].yearlyPrice
-      const res = await fetch('/api/coupons/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: couponCode,
-          billingCycle: billingCycle.toUpperCase(),
-          amount,
-        }),
+
+      const result = await validateCouponMutation.mutateAsync({
+        code: couponCode,
+        billingCycle: billingCycle.toUpperCase() as 'MONTHLY' | 'YEARLY',
+        amount,
       })
-      if (!res.ok) {
-        const e = await res.json()
-        sonnerToast.error(e.error || 'Invalid coupon code')
-        setCouponDiscount(null)
-        return
-      }
-      const j = await res.json()
-      setCouponDiscount(j.discountAmount)
-      sonnerToast.success(`Coupon applied! ${j.discountAmount}% discount`)
-    } catch {
+
+      setCouponDiscount(result.discountAmount || null)
+      sonnerToast.success(`Coupon applied! ${result.discountAmount}% discount`)
+    } catch (error) {
       setCouponDiscount(null)
-      sonnerToast.error('Failed to validate coupon')
+      sonnerToast.error(
+        error instanceof Error ? error.message : 'Failed to validate coupon'
+      )
     }
   }
 
@@ -355,29 +293,21 @@ export default function SettingsPage() {
     setBillingIsProcessing(true)
     setBillingError('')
     try {
-      const res = await fetch('/api/checkout/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: cycle,
-          couponCode: couponCode.trim() || undefined,
-        }),
+      const result = await createCheckoutMutation.mutateAsync({
+        plan: cycle,
+        couponCode: couponCode.trim() || undefined,
       })
-      const j = await res.json()
-      if (!res.ok) {
-        throw new Error(j.error || 'Failed to create checkout session')
-      }
+
       // For free after discount, backend may redirect or return success
-      const url = j.redirectUrl || j.url
+      const url = result.redirectUrl || result.url
       if (url) {
         window.location.href = url
       } else {
         sonnerToast.success('Subscription created successfully!')
-        await loadBillingSubscription()
       }
-    } catch (err) {
+    } catch (error) {
       setBillingError(
-        err instanceof Error ? err.message : 'Failed to process payment'
+        error instanceof Error ? error.message : 'Failed to process payment'
       )
     } finally {
       setBillingIsProcessing(false)
@@ -391,11 +321,9 @@ export default function SettingsPage() {
     }
     setBillingIsProcessing(true)
     try {
-      const res = await fetch('/api/billing/portal', { method: 'POST' })
-      if (!res.ok) throw new Error('Failed to open billing portal')
-      const j = await res.json()
-      window.location.href = j.url
-    } catch (err) {
+      const result = await openPortalMutation.mutateAsync()
+      window.location.href = result.url
+    } catch (error) {
       sonnerToast.error('Failed to open billing portal')
     } finally {
       setBillingIsProcessing(false)
@@ -454,9 +382,7 @@ export default function SettingsPage() {
     return null
   }, [billingUsage, billingData?.plan])
 
-  useEffect(() => {
-    loadBillingSubscription()
-  }, [])
+  // No longer need useEffect to load billing - React Query handles it automatically
 
   if (loading) {
     return (

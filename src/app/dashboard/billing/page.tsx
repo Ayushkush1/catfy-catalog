@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -43,29 +43,20 @@ import {
   formatPrice,
   getYearlySavingsPercentage,
 } from '@/lib/subscription'
-
-type CurrentSubscriptionResponse = {
-  plan: SubscriptionPlan
-  usage: {
-    catalogues: number
-    monthlyExports: number
-  }
-  subscription: {
-    id: string
-    plan: SubscriptionPlan
-    status: 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
-    currentPeriodStart: string
-    currentPeriodEnd: string
-    cancelAtPeriodEnd: boolean
-    stripeCustomerId: string | null
-    stripeSubscriptionId: string | null
-    stripePriceId: string | null
-  } | null
-}
+import {
+  useBillingQuery,
+  useValidateCouponMutation,
+  useCreateCheckoutMutation,
+  useOpenBillingPortalMutation,
+  type CurrentSubscriptionResponse,
+} from '@/hooks/queries'
 
 export default function DashboardBillingPage() {
-  const [data, setData] = useState<CurrentSubscriptionResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { data, isLoading, isFetching, error: queryError } = useBillingQuery()
+  const validateCouponMutation = useValidateCouponMutation()
+  const createCheckoutMutation = useCreateCheckoutMutation()
+  const openPortalMutation = useOpenBillingPortalMutation()
+
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState('')
   const [couponCode, setCouponCode] = useState('')
@@ -76,61 +67,7 @@ export default function DashboardBillingPage() {
 
   const router = useRouter()
 
-  useEffect(() => {
-    loadSubscription()
-  }, [])
-
-  const loadSubscription = async () => {
-    const CACHE_KEY = 'catfy:billingData'
-    const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
-
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
-          setData(parsed.data)
-          setIsLoading(false)
-          // still revalidate in background
-          ;(async () => {
-            try {
-              const res = await fetch('/api/subscription/current')
-              if (res.ok) {
-                const fresh: CurrentSubscriptionResponse = await res.json()
-                setData(fresh)
-                try {
-                  sessionStorage.setItem(
-                    CACHE_KEY,
-                    JSON.stringify({ _ts: Date.now(), data: fresh })
-                  )
-                } catch (e) {}
-              }
-            } catch {}
-          })()
-          return
-        }
-      }
-
-      setIsLoading(true)
-      const res = await fetch('/api/subscription/current')
-      if (!res.ok) {
-        throw new Error('Failed to load current subscription')
-      }
-      const json: CurrentSubscriptionResponse = await res.json()
-      setData(json)
-      try {
-        sessionStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({ _ts: Date.now(), data: json })
-        )
-      } catch (e) {}
-    } catch (err) {
-      console.error('Subscription error:', err)
-      setError('Failed to load subscription')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // No longer need loadSubscription - React Query handles it automatically
 
   const validateCoupon = async () => {
     if (!couponCode.trim()) {
@@ -143,27 +80,20 @@ export default function DashboardBillingPage() {
         billingCycle === 'monthly'
           ? PLAN_FEATURES[SubscriptionPlan.STANDARD].monthlyPrice
           : PLAN_FEATURES[SubscriptionPlan.STANDARD].yearlyPrice
-      const res = await fetch('/api/coupons/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: couponCode,
-          billingCycle: billingCycle.toUpperCase(),
-          amount,
-        }),
+
+      const result = await validateCouponMutation.mutateAsync({
+        code: couponCode,
+        billingCycle: billingCycle.toUpperCase() as 'MONTHLY' | 'YEARLY',
+        amount,
       })
-      if (!res.ok) {
-        const e = await res.json()
-        toast.error(e.error || 'Invalid coupon code')
-        setCouponDiscount(null)
-        return
-      }
-      const j = await res.json()
-      setCouponDiscount(j.discountAmount)
-      toast.success(`Coupon applied! ${j.discountAmount}% discount`)
-    } catch {
+
+      setCouponDiscount(result.discountAmount || null)
+      toast.success(`Coupon applied! ${result.discountAmount}% discount`)
+    } catch (error) {
       setCouponDiscount(null)
-      toast.error('Failed to validate coupon')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to validate coupon'
+      )
     }
   }
 
@@ -171,25 +101,17 @@ export default function DashboardBillingPage() {
     setIsProcessing(true)
     setError('')
     try {
-      const res = await fetch('/api/checkout/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: cycle,
-          couponCode: couponCode.trim() || undefined,
-        }),
+      const result = await createCheckoutMutation.mutateAsync({
+        plan: cycle,
+        couponCode: couponCode.trim() || undefined,
       })
-      const j = await res.json()
-      if (!res.ok) {
-        throw new Error(j.error || 'Failed to create checkout session')
-      }
+
       // For free after discount, backend may redirect or return success
-      const url = j.redirectUrl || j.url
+      const url = result.redirectUrl || result.url
       if (url) {
         window.location.href = url
       } else {
         toast.success('Subscription created successfully!')
-        await loadSubscription()
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to process payment')
@@ -205,10 +127,8 @@ export default function DashboardBillingPage() {
     }
     setIsProcessing(true)
     try {
-      const res = await fetch('/api/billing/portal', { method: 'POST' })
-      if (!res.ok) throw new Error('Failed to open billing portal')
-      const j = await res.json()
-      window.location.href = j.url
+      const result = await openPortalMutation.mutateAsync()
+      window.location.href = result.url
     } catch (err) {
       toast.error('Failed to open billing portal')
     } finally {

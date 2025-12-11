@@ -18,10 +18,10 @@ import {
   Paintbrush,
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
 import { getAllTemplates } from '@/templates'
 import { getAllThemes } from '@/themes'
 import { toast } from 'sonner'
+import { useAnalyticsQuery } from '@/hooks/queries'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,73 +30,27 @@ const poppins = Poppins({
 
 export default function AnalyticsPage() {
   const router = useRouter()
-  const [analyticsData, setAnalyticsData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const {
+    data: analyticsData,
+    isLoading: loading,
+    isFetching,
+  } = useAnalyticsQuery()
 
-  useEffect(() => {
-    const CACHE_KEY = 'catfy:analyticsData'
-    const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
+  // Only show loading skeleton if no cached data exists
+  const showLoadingSkeleton = loading && !analyticsData
 
-    const fetchAnalytics = async () => {
-      try {
-        // Try cache first (stale-while-revalidate)
-        try {
-          const raw = sessionStorage.getItem(CACHE_KEY)
-          if (raw) {
-            const parsed = JSON.parse(raw)
-            if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
-              setAnalyticsData(parsed.data)
-              setLoading(false)
-              // revalidate in background
-              ;(async () => {
-                try {
-                  const response = await fetch('/api/analytics')
-                  if (response.ok) {
-                    const fresh = await response.json()
-                    setAnalyticsData(fresh)
-                    try {
-                      sessionStorage.setItem(
-                        CACHE_KEY,
-                        JSON.stringify({ _ts: Date.now(), data: fresh })
-                      )
-                    } catch (e) {}
-                  }
-                } catch (e) {}
-              })()
-              return
-            }
-          }
-        } catch (e) {
-          // ignore cache errors
+  // Add custom animations on mount
+  // Note: Moved this outside useEffect since React Query handles data fetching
+  if (typeof window !== 'undefined') {
+    const styleId = 'analytics-animations'
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style')
+      style.id = styleId
+      style.textContent = `
+        @keyframes float {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-5px) rotate(2deg); }
         }
-
-        const response = await fetch('/api/analytics')
-        if (response.ok) {
-          const data = await response.json()
-          setAnalyticsData(data)
-          try {
-            sessionStorage.setItem(
-              CACHE_KEY,
-              JSON.stringify({ _ts: Date.now(), data })
-            )
-          } catch (e) {}
-        }
-      } catch (error) {
-        console.error('Error fetching analytics:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchAnalytics()
-
-    // Add custom animations
-    const style = document.createElement('style')
-    style.textContent = `
-      @keyframes float {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        50% { transform: translateY(-5px) rotate(2deg); }
-      }
 
       @keyframes shimmer {
         0% { background-position: -200% 0; }
@@ -121,15 +75,10 @@ export default function AnalyticsPage() {
       .animate-pulse-glow {
         animation: pulseGlow 3s ease-in-out infinite;
       }
-    `
-    document.head.appendChild(style)
-
-    return () => {
-      if (document.head.contains(style)) {
-        document.head.removeChild(style)
-      }
+      `
+      document.head.appendChild(style)
     }
-  }, [])
+  }
 
   const stats = analyticsData
     ? [
@@ -186,7 +135,7 @@ export default function AnalyticsPage() {
     _totalCatalogues > 0
       ? Math.round((_publicCount / _totalCatalogues) * 100)
       : 0
-  if (loading) {
+  if (showLoadingSkeleton) {
     return (
       <div
         className={`${poppins.className} relative flex min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50`}

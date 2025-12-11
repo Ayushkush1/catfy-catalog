@@ -10,6 +10,21 @@ const nextConfig = {
       },
     ],
   },
+  // Performance optimizations
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Enable SWC minification for faster builds
+  swcMinify: true,
+  // Optimize imports
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+      skipDefaultConversion: true,
+    },
+  },
+  // Compression
+  compress: true,
 }
 
 module.exports = nextConfig

@@ -1,13 +1,12 @@
 'use client'
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import { createClient as createSupabaseClient } from '@/lib/supabase/client'
+import {
+  useNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+} from '@/hooks/queries'
 
 export interface NotificationItem {
   id: string
@@ -17,6 +16,7 @@ export interface NotificationItem {
   url?: string
   createdAt: string
   read?: boolean
+  isRead?: boolean
   meta?: any
 }
 
@@ -26,15 +26,10 @@ interface NotificationsContextValue {
   open: boolean
   openDrawer: () => void
   closeDrawer: () => void
-  fetchList: (opts?: {
-    reset?: boolean
-    filterBy?: 'all' | 'unread'
-  }) => Promise<void>
-  markRead: (id: string) => Promise<void>
-  markAllRead: () => Promise<void>
-  loadMore: () => Promise<void>
-  hasMore: boolean
-  setFilter: (f: 'all' | 'unread') => Promise<void>
+  markRead: (id: string) => void
+  markAllRead: () => void
+  isLoading: boolean
+  refetch: () => void
 }
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(
@@ -44,52 +39,18 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [list, setList] = useState<NotificationItem[]>([])
   const [open, setOpen] = useState(false)
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [hasMore, setHasMore] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'unread'>('all')
 
-  const unreadCount = useMemo(() => list.filter(n => !n.read).length, [list])
+  // Use React Query hook for notifications with automatic polling
+  const { data, isLoading, refetch } = useNotificationsQuery()
+  const markReadMutation = useMarkNotificationReadMutation()
+  const markAllReadMutation = useMarkAllNotificationsReadMutation()
 
-  const fetchList = async ({ reset = true, filterBy = filter } = {}) => {
-    try {
-      const params = new URLSearchParams()
-      params.set('limit', '20')
-      if (!reset && cursor) params.set('cursor', cursor)
-      if (filterBy === 'unread') params.set('filter', 'unread')
+  const list = data?.notifications || []
+  const unreadCount = data?.unreadCount || 0
 
-      const res = await fetch(`/api/notifications?${params.toString()}`)
-      if (res.ok) {
-        const data = await res.json()
-        const items: NotificationItem[] = data.items || []
-        if (reset) {
-          setList(items)
-        } else {
-          setList(prev => [...prev, ...items])
-        }
-        setCursor(data.nextCursor || null)
-        setHasMore(Boolean(data.nextCursor))
-      }
-    } catch (e) {
-      // ignore for now
-    }
-  }
-
+  // Listen to Supabase realtime updates
   useEffect(() => {
-    // initial fetch
-    fetchList({ reset: true, filterBy: filter })
-
-    // polling fallback (30s)
-    const id = window.setInterval(() => {
-      fetchList({ reset: true, filterBy: filter })
-    }, 30000)
-
-    // listen to legacy open event for compatibility
-    const onOpen = () => setOpen(true)
-    window.addEventListener('dashboard:openNotifications', onOpen)
-
-    // realtime subscription using Supabase (if configured)
     let channel: any = null
     try {
       const supabase = createSupabaseClient()
@@ -98,75 +59,47 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         .on(
           'postgres_changes',
           { event: 'INSERT', schema: 'public', table: 'notifications' },
-          payload => {
-            try {
-              const newItem = payload.new as NotificationItem
-              // only add if it's for this user or global
-              if (!newItem) return
-              // fetch profile id from server once if needed
-              // we conservatively add new items; server-side filtering will be applied on next fetch
-              setList(prev => [newItem, ...prev])
-            } catch (e) {
-              /* ignore */
-            }
+          () => {
+            // Refetch notifications when new notification arrives
+            refetch()
           }
         )
         .on(
           'postgres_changes',
           { event: 'UPDATE', schema: 'public', table: 'notifications' },
-          payload => {
-            try {
-              const newItem = payload.new as NotificationItem
-              if (!newItem) return
-              setList(prev =>
-                prev.map(p => (p.id === newItem.id ? newItem : p))
-              )
-            } catch (e) {}
+          () => {
+            // Refetch when notification is updated
+            refetch()
           }
         )
         .subscribe()
     } catch (e) {
-      // ignore if supabase not configured or errors
+      // Ignore if Supabase not configured
+      console.debug('Supabase realtime not configured:', e)
     }
+
+    // Listen to legacy open event for compatibility
+    const onOpen = () => setOpen(true)
+    window.addEventListener('dashboard:openNotifications', onOpen)
 
     return () => {
-      window.clearInterval(id)
       window.removeEventListener('dashboard:openNotifications', onOpen)
       try {
-        if (channel && typeof channel.unsubscribe === 'function')
+        if (channel && typeof channel.unsubscribe === 'function') {
           channel.unsubscribe()
-      } catch (e) {}
+        }
+      } catch (e) {
+        console.debug('Error unsubscribing from channel:', e)
+      }
     }
-  }, [])
+  }, [refetch])
 
-  const markRead = async (id: string) => {
-    try {
-      await fetch(`/api/notifications/${id}/mark-read`, { method: 'POST' })
-    } catch (e) {
-      // ignore
-    }
-    setList(prev => prev.map(p => (p.id === id ? { ...p, read: true } : p)))
+  const markRead = (id: string) => {
+    markReadMutation.mutate(id)
   }
 
-  const markAllRead = async () => {
-    try {
-      await fetch(`/api/notifications/mark-all-read`, { method: 'POST' })
-    } catch (e) {
-      // ignore
-    }
-    setList(prev => prev.map(p => ({ ...p, read: true })))
-  }
-
-  const loadMore = async () => {
-    if (!hasMore) return
-    await fetchList({ reset: false, filterBy: filter })
-  }
-
-  const setFilterAndReload = async (f: 'all' | 'unread') => {
-    setFilter(f)
-    setCursor(null)
-    setHasMore(true)
-    await fetchList({ reset: true, filterBy: f })
+  const markAllRead = () => {
+    markAllReadMutation.mutate()
   }
 
   return (
@@ -177,12 +110,10 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         open,
         openDrawer: () => setOpen(true),
         closeDrawer: () => setOpen(false),
-        fetchList,
         markRead,
         markAllRead,
-        loadMore,
-        hasMore,
-        setFilter: setFilterAndReload,
+        isLoading,
+        refetch,
       }}
     >
       {children}
@@ -192,9 +123,10 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useNotifications = () => {
   const ctx = useContext(NotificationsContext)
-  if (!ctx)
+  if (!ctx) {
     throw new Error(
       'useNotifications must be used inside NotificationsProvider'
     )
+  }
   return ctx
 }

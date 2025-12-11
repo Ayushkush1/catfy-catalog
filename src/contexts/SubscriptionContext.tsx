@@ -1,9 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext } from 'react'
 import { SubscriptionPlan } from '@prisma/client'
 import { PLAN_FEATURES, getPlanFeatures, hasFeature } from '@/lib/subscription'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useSubscriptionQuery, useRefreshSubscription } from '@/hooks/queries'
 
 interface SubscriptionContextType {
   currentPlan: SubscriptionPlan
@@ -28,7 +28,7 @@ interface SubscriptionContextType {
   showUpgradeModal: (feature: string) => void
 
   // Refresh subscription data
-  refreshSubscription: () => Promise<void>
+  refreshSubscription: () => void
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(
@@ -40,39 +40,13 @@ export function SubscriptionProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [currentPlan, setCurrentPlan] = useState<SubscriptionPlan>(
-    SubscriptionPlan.FREE
-  )
-  const [usage, setUsage] = useState({ catalogues: 0, monthlyExports: 0 })
-  const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClientComponentClient()
+  // Use React Query hook instead of manual fetch
+  const { data: subscriptionData, isLoading } = useSubscriptionQuery()
+  const refreshSubscription = useRefreshSubscription()
 
+  const currentPlan = subscriptionData?.plan || SubscriptionPlan.FREE
+  const usage = subscriptionData?.usage || { catalogues: 0, monthlyExports: 0 }
   const planFeatures = getPlanFeatures(currentPlan)
-
-  // Fetch subscription data
-  const fetchSubscriptionData = async () => {
-    try {
-      setIsLoading(true)
-
-      // Get current user
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-
-      // Fetch user's subscription from your API
-      const response = await fetch('/api/subscription/current')
-      if (response.ok) {
-        const data = await response.json()
-        setCurrentPlan(data.plan || SubscriptionPlan.FREE)
-        setUsage(data.usage || { catalogues: 0, monthlyExports: 0 })
-      }
-    } catch (error) {
-      console.error('Error fetching subscription data:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   // Check if user can create a new catalogue
   const canCreateCatalogue = () => {
@@ -153,15 +127,6 @@ export function SubscriptionProvider({
     console.log(`Upgrade required for: ${feature}`)
     // You can implement a toast notification or modal here
   }
-
-  // Refresh subscription data
-  const refreshSubscription = async () => {
-    await fetchSubscriptionData()
-  }
-
-  useEffect(() => {
-    fetchSubscriptionData()
-  }, [])
 
   const value: SubscriptionContextType = {
     currentPlan,

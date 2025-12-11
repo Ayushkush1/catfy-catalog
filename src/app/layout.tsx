@@ -17,35 +17,57 @@ import { Toaster } from '@/components/ui/toaster'
 import { Toaster as SonnerToaster } from 'sonner'
 import { GlobalSidebar } from '@/components/dashboard/SidebarVisibility'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap', // Optimize font loading
+  preload: true,
+})
 const roboto = Roboto({
   subsets: ['latin'],
   weight: ['300', '400', '500', '700'],
   variable: '--font-roboto',
+  display: 'swap',
+  preload: false, // Only preload most used font
 })
-const openSans = Open_Sans({ subsets: ['latin'], variable: '--font-open-sans' })
+const openSans = Open_Sans({
+  subsets: ['latin'],
+  variable: '--font-open-sans',
+  display: 'swap',
+  preload: false,
+})
 const lato = Lato({
   subsets: ['latin'],
   weight: ['300', '400', '700'],
   variable: '--font-lato',
+  display: 'swap',
+  preload: false,
 })
 const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
+  display: 'swap',
+  preload: false,
 })
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
   variable: '--font-poppins',
+  display: 'swap',
+  preload: false,
 })
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-playfair-display',
+  display: 'swap',
+  preload: false,
 })
 const merriweather = Merriweather({
   subsets: ['latin'],
   weight: ['300', '400', '700'],
   variable: '--font-merriweather',
+  display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {

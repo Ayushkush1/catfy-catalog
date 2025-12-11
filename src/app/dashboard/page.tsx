@@ -30,7 +30,7 @@ import {
   Zap,
   Star,
 } from 'lucide-react'
-import { useState, useEffect, useRef, type MouseEvent } from 'react'
+import { useState, useEffect, useRef, type MouseEvent, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -60,6 +60,13 @@ import { useSubscription } from '@/contexts/SubscriptionContext'
 import { UpgradePrompt } from '@/components/UpgradePrompt'
 import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
 import Head from 'next/head'
+import {
+  useProfileQuery,
+  useCataloguesQuery,
+  useDeleteCatalogueMutation,
+} from '@/hooks/queries'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/hooks/queries/queryKeys'
 
 // Framer Motion variants for hero staggered animations
 const heroContainerVariants = {
@@ -211,12 +218,82 @@ function PreviewIframe({
 }
 
 export default function DashboardPage() {
-  const [catalogues, setCatalogues] = useState<Catalogue[]>([])
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [recentItems, setRecentItems] = useState<RecentItem[]>([])
+  // React Query hooks for data fetching with automatic caching
+  const {
+    data: profileData,
+    isLoading: isLoadingProfile,
+    isFetching: isFetchingProfile,
+  } = useProfileQuery()
+  const {
+    data: cataloguesData,
+    isLoading: isLoadingCatalogues,
+    isFetching: isFetchingCatalogues,
+  } = useCataloguesQuery()
+  const deleteCatalogueMutation = useDeleteCatalogueMutation()
+  const queryClient = useQueryClient()
+
+  // Extract data from React Query responses
+  const profile = profileData?.profile || null
+  const catalogues = cataloguesData?.catalogues || []
+
+  // Prefetch catalogue details on hover
+  const prefetchCatalogue = (catalogueId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.catalogues.detail(catalogueId),
+      queryFn: async () => {
+        const response = await fetch(`/api/catalogues/${catalogueId}`)
+        if (!response.ok) throw new Error('Failed to fetch catalogue')
+        return response.json()
+      },
+      staleTime: 5 * 60 * 1000,
+    })
+  }
+
+  // Calculate stats from catalogues (memoized to avoid recalculation)
+  const stats = useMemo<DashboardStats | null>(() => {
+    if (!catalogues.length) return null
+
+    const totalProducts = catalogues.reduce(
+      (sum: number, cat: Catalogue) => sum + (cat._count?.products || 0),
+      0
+    )
+
+    return {
+      totalCatalogues: catalogues.length,
+      totalProducts,
+      totalViews: 0,
+      totalExports: 0,
+      totalProjects: catalogues.length,
+      activeTools: 2,
+    }
+  }, [catalogues])
+
+  // Calculate recent items (memoized)
+  const recentItems = useMemo<RecentItem[]>(() => {
+    if (!catalogues.length) return []
+
+    return catalogues
+      .sort(
+        (a: Catalogue, b: Catalogue) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      )
+      .slice(0, 6)
+      .map((cat: Catalogue) => ({
+        id: cat.id,
+        type: 'CATALOGUE' as const,
+        name: cat.name,
+        description: cat.description || undefined,
+        updatedAt: cat.updatedAt,
+        productCount: cat._count?.products || 0,
+        theme: cat.theme,
+      }))
+  }, [catalogues])
+
+  // Combine loading states
+  const isLoading = isLoadingProfile || isLoadingCatalogues
+
+  // UI state
   const [toolSearch, setToolSearch] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [error, setError] = useState('')
@@ -245,8 +322,6 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    loadDashboardData()
-
     // Add custom animations
     const style = document.createElement('style')
     style.textContent = `
@@ -409,107 +484,6 @@ export default function DashboardPage() {
     }
   }, [])
 
-  const loadDashboardData = async () => {
-    // Try to read cached dashboard data from sessionStorage to avoid
-    // showing the loader on every client-side tab/navigation change.
-    const CACHE_KEY = 'catfy:dashboardData'
-    const CACHE_TTL = 1000 * 60 * 5 // 5 minutes
-    let profileDataVar: any = null
-
-    try {
-      const raw = sessionStorage.getItem(CACHE_KEY)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed?._ts && Date.now() - parsed._ts < CACHE_TTL) {
-          setProfile(parsed.profile || null)
-          setCatalogues(parsed.catalogues || [])
-          setStats(parsed.stats || null)
-          setRecentItems(parsed.recentItems || [])
-          setIsLoading(false)
-          return
-        }
-      }
-    } catch (err) {
-      // ignore cache read errors and fall back to network
-    }
-
-    try {
-      setIsLoading(true)
-
-      // Load user profile
-      const profileResponse = await fetch('/api/auth/profile')
-      if (profileResponse.ok) {
-        profileDataVar = await profileResponse.json()
-        setProfile(profileDataVar.profile)
-      }
-
-      // Load catalogues
-      const cataloguesResponse = await fetch('/api/catalogues')
-      if (cataloguesResponse.ok) {
-        const cataloguesData = await cataloguesResponse.json()
-        setCatalogues(cataloguesData.catalogues)
-
-        // Calculate basic stats
-        const totalProducts = cataloguesData.catalogues.reduce(
-          (sum: number, cat: Catalogue) => sum + (cat._count?.products || 0),
-          0
-        )
-        setStats({
-          totalCatalogues: cataloguesData.catalogues.length,
-          totalProducts,
-          totalViews: 0, // Would come from analytics
-          totalExports: 0, // Would come from exports table
-          totalProjects: cataloguesData.catalogues.length,
-          activeTools: 2, // Catalogue and PDF Editor
-        })
-
-        // Get recent items (last 6 updated catalogues)
-        const recent = cataloguesData.catalogues
-          .sort(
-            (a: Catalogue, b: Catalogue) =>
-              new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-          )
-          .slice(0, 6)
-          .map((cat: Catalogue) => ({
-            id: cat.id,
-            type: 'CATALOGUE' as const,
-            name: cat.name,
-            description: cat.description,
-            updatedAt: cat.updatedAt,
-            productCount: cat._count?.products || 0,
-            theme: cat.theme,
-          }))
-        setRecentItems(recent)
-        // Cache the dashboard payload in sessionStorage so subsequent
-        // client-side navigations don't re-show the skeleton.
-        try {
-          const payload = {
-            _ts: Date.now(),
-            profile: profileDataVar?.profile || null,
-            catalogues: cataloguesData.catalogues || [],
-            stats: {
-              totalCatalogues: cataloguesData.catalogues.length,
-              totalProducts,
-              totalViews: 0,
-              totalExports: 0,
-              totalProjects: cataloguesData.catalogues.length,
-              activeTools: 2,
-            },
-            recentItems: recent,
-          }
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify(payload))
-        } catch (err) {
-          // ignore cache write errors
-        }
-      }
-    } catch (err) {
-      setError('Failed to load dashboard data')
-      console.error('Dashboard error:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const deleteCatalogue = async (catalogueId: string) => {
     if (
       !confirm(
@@ -520,22 +494,8 @@ export default function DashboardPage() {
     }
 
     try {
-      const response = await fetch(`/api/catalogues/${catalogueId}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        setCatalogues(prev => prev.filter(cat => cat.id !== catalogueId))
-        try {
-          sessionStorage.removeItem('catfy:dashboardData')
-        } catch (err) {
-          // ignore
-        }
-        toast.success('Catalogue deleted successfully')
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to delete catalogue')
-      }
+      await deleteCatalogueMutation.mutateAsync(catalogueId)
+      toast.success('Catalogue deleted successfully')
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Failed to delete catalogue'
@@ -625,7 +585,7 @@ export default function DashboardPage() {
     }
   }
 
-  const filteredCatalogues = catalogues.filter(catalogue => {
+  const filteredCatalogues = catalogues.filter((catalogue: Catalogue) => {
     const matchesSearch =
       catalogue.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       catalogue.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -646,7 +606,11 @@ export default function DashboardPage() {
   const productCount = stats?.totalProducts || 0
   // (kept previous logic: no extra public status variable needed)
 
-  if (isLoading) {
+  // Only show loading skeleton on initial load (no cached data)
+  // This prevents flicker when switching tabs with cached data
+  const showLoadingSkeleton = isLoading && !profileData && !cataloguesData
+
+  if (showLoadingSkeleton) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
         <div className="ml-20 flex-1">
@@ -1587,7 +1551,9 @@ export default function DashboardPage() {
             {recentItems.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {recentItems.slice(0, 8).map(item => {
-                  const catalogue = catalogues.find(c => c.id === item.id)
+                  const catalogue = catalogues.find(
+                    (c: Catalogue) => c.id === item.id
+                  )
                   if (!catalogue) return null
 
                   return (
@@ -1597,6 +1563,7 @@ export default function DashboardPage() {
                       onClick={() =>
                         router.push(`/catalogue/${catalogue.id}/preview`)
                       }
+                      onMouseEnter={() => prefetchCatalogue(catalogue.id)}
                     >
                       <div className="relative h-36 rounded-[2rem] bg-gradient-to-br from-gray-50/30 to-white/50 p-4 md:h-40 lg:h-56">
                         <iframe
