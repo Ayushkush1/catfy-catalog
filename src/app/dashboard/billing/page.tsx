@@ -292,14 +292,23 @@ export default function DashboardBillingPage() {
                             </span>
                           </div>
                           <div className="text-sm font-bold text-white">
-                            {format(
-                              new Date(data.subscription.currentPeriodStart),
-                              'MMM d, yyyy'
-                            )}{' '}
-                            -{' '}
-                            {format(
-                              new Date(data.subscription.currentPeriodEnd),
-                              'MMM d, yyyy'
+                            {data.subscription.currentPeriodStart &&
+                            data.subscription.currentPeriodEnd ? (
+                              <>
+                                {format(
+                                  new Date(
+                                    data.subscription.currentPeriodStart
+                                  ),
+                                  'MMM d, yyyy'
+                                )}{' '}
+                                -{' '}
+                                {format(
+                                  new Date(data.subscription.currentPeriodEnd),
+                                  'MMM d, yyyy'
+                                )}
+                              </>
+                            ) : (
+                              'Not available'
                             )}
                           </div>
                         </div>
@@ -314,10 +323,14 @@ export default function DashboardBillingPage() {
                           <div className="text-sm font-bold text-white">
                             {data.subscription.cancelAtPeriodEnd
                               ? 'Cancels at period end'
-                              : format(
-                                  new Date(data.subscription.currentPeriodEnd),
-                                  'MMM d, yyyy'
-                                )}
+                              : data.subscription.currentPeriodEnd
+                                ? format(
+                                    new Date(
+                                      data.subscription.currentPeriodEnd
+                                    ),
+                                    'MMM d, yyyy'
+                                  )
+                                : 'Not available'}
                           </div>
                         </div>
                       </div>

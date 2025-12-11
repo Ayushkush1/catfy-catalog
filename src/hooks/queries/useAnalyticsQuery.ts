@@ -3,7 +3,12 @@ import { queryKeys } from './queryKeys'
 
 interface AnalyticsData {
   views: number
-  catalogues: number
+  catalogues: Array<{
+    id: string
+    name: string
+    isPublic?: boolean
+    [key: string]: any
+  }>
   templates: number
   themes: number
   overview?: {

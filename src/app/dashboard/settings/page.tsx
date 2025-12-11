@@ -863,18 +863,26 @@ export default function SettingsPage() {
                                   </span>
                                 </div>
                                 <div className="text-sm font-bold text-gray-900">
-                                  {format(
-                                    new Date(
-                                      billingData.subscription.currentPeriodStart
-                                    ),
-                                    'MMM d, yyyy'
-                                  )}{' '}
-                                  -{' '}
-                                  {format(
-                                    new Date(
-                                      billingData.subscription.currentPeriodEnd
-                                    ),
-                                    'MMM d, yyyy'
+                                  {billingData.subscription
+                                    .currentPeriodStart &&
+                                  billingData.subscription.currentPeriodEnd ? (
+                                    <>
+                                      {format(
+                                        new Date(
+                                          billingData.subscription.currentPeriodStart
+                                        ),
+                                        'MMM d, yyyy'
+                                      )}{' '}
+                                      -{' '}
+                                      {format(
+                                        new Date(
+                                          billingData.subscription.currentPeriodEnd
+                                        ),
+                                        'MMM d, yyyy'
+                                      )}
+                                    </>
+                                  ) : (
+                                    'Not available'
                                   )}
                                 </div>
                               </div>
@@ -888,12 +896,14 @@ export default function SettingsPage() {
                                 <div className="text-sm font-bold text-gray-900">
                                   {billingData.subscription.cancelAtPeriodEnd
                                     ? 'Cancels at period end'
-                                    : format(
-                                        new Date(
-                                          billingData.subscription.currentPeriodEnd
-                                        ),
-                                        'MMM d, yyyy'
-                                      )}
+                                    : billingData.subscription.currentPeriodEnd
+                                      ? format(
+                                          new Date(
+                                            billingData.subscription.currentPeriodEnd
+                                          ),
+                                          'MMM d, yyyy'
+                                        )
+                                      : 'Not available'}
                                 </div>
                               </div>
                             </div>
