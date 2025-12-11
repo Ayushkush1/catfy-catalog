@@ -82,47 +82,47 @@ export default function AnalyticsPage() {
 
   const stats = analyticsData
     ? [
-      {
-        title: 'Total Catalogues',
-        value: analyticsData.overview?.totalCatalogues?.toString() || '0',
-        change: `${(analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? '+' : ''}${analyticsData.growth?.catalogueGrowth ?? 0}%`,
-        trend:
-          (analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? 'up' : 'down',
-        icon: FolderOpen,
-        color: 'from-purple-500 to-pink-500',
-        subtitle: `${analyticsData.overview?.publishedCatalogues ?? 0} published`,
-      },
+        {
+          title: 'Total Catalogues',
+          value: analyticsData.overview?.totalCatalogues?.toString() || '0',
+          change: `${(analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? '+' : ''}${analyticsData.growth?.catalogueGrowth ?? 0}%`,
+          trend:
+            (analyticsData.growth?.catalogueGrowth ?? 0) >= 0 ? 'up' : 'down',
+          icon: FolderOpen,
+          color: 'from-purple-500 to-pink-500',
+          subtitle: `${analyticsData.overview?.publishedCatalogues ?? 0} published`,
+        },
 
-      {
-        title: 'Public Views',
-        value: analyticsData.overview?.totalViews?.toString() || '0',
-        change: 'Total views',
-        trend: 'up',
-        icon: Eye,
-        color: 'from-blue-500 to-cyan-500',
-        subtitle: 'From public URLs',
-      },
-      {
-        title: 'Templates Used',
-        value: analyticsData.overview?.userTemplates?.toString() || '0',
-        change: `${analyticsData.overview?.availableTemplates ?? 0} available`,
-        trend: 'up',
-        icon: Paintbrush,
-        color: 'from-orange-500 to-red-500',
-        subtitle: 'Custom templates',
-      },
-    ]
+        {
+          title: 'Public Views',
+          value: analyticsData.overview?.totalViews?.toString() || '0',
+          change: 'Total views',
+          trend: 'up',
+          icon: Eye,
+          color: 'from-blue-500 to-cyan-500',
+          subtitle: 'From public URLs',
+        },
+        {
+          title: 'Templates Used',
+          value: analyticsData.overview?.userTemplates?.toString() || '0',
+          change: `${analyticsData.overview?.availableTemplates ?? 0} available`,
+          trend: 'up',
+          icon: Paintbrush,
+          color: 'from-orange-500 to-red-500',
+          subtitle: 'Custom templates',
+        },
+      ]
     : []
 
   const workspaceProgress = analyticsData?.overview
     ? Math.min(
-      Math.round(
-        ((analyticsData.overview.publishedCatalogues ?? 0) /
-          (analyticsData.overview.totalCatalogues ?? 1)) *
+        Math.round(
+          ((analyticsData.overview.publishedCatalogues ?? 0) /
+            (analyticsData.overview.totalCatalogues ?? 1)) *
+            100
+        ),
         100
-      ),
-      100
-    )
+      )
     : 0
 
   // catalogue visibility counts
@@ -485,12 +485,12 @@ export default function AnalyticsPage() {
                           <span className="text-lg font-bold text-blue-600">
                             {(analyticsData.overview?.totalExports ?? 0) > 0
                               ? Math.round(
-                                ((analyticsData.overview?.completedExports ??
-                                  0) /
-                                  (analyticsData.overview?.totalExports ??
-                                    1)) *
-                                100
-                              )
+                                  ((analyticsData.overview?.completedExports ??
+                                    0) /
+                                    (analyticsData.overview?.totalExports ??
+                                      1)) *
+                                    100
+                                )
                               : 0}
                             %
                           </span>
