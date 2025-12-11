@@ -50,4 +50,7 @@ export const queryKeys = {
     catalogue: (catalogueId: string) =>
       ['analytics', 'catalogue', catalogueId] as const,
   },
+
+  // Templates
+  templates: ['templates'] as const,
 } as const

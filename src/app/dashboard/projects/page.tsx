@@ -47,6 +47,11 @@ import { CataloguesModal } from '@/components/dashboard/CataloguesModal'
 import { ShareDialog } from '@/components/shared/ShareDialog'
 import Head from 'next/head'
 import { SubscriptionPlan } from '@prisma/client'
+import {
+  useProfileQuery,
+  useCataloguesQuery,
+  useTemplatesQuery,
+} from '@/hooks/queries'
 
 interface Catalogue {
   id: string
@@ -99,14 +104,27 @@ interface Template {
 }
 
 export default function ProjectsPage() {
-  const [catalogues, setCatalogues] = useState<Catalogue[]>([])
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [profile, setProfile] = useState<UserProfile | null>(null)
+  // Replace manual state with React Query hooks
+  const { data: profileData, isLoading: profileLoading } = useProfileQuery()
+  const { data: cataloguesData, isLoading: cataloguesLoading } =
+    useCataloguesQuery()
+  const { data: templatesData, isLoading: templatesLoading } =
+    useTemplatesQuery()
+
+  const profile = profileData?.profile || null
+  const catalogues = cataloguesData?.catalogues || []
+  const templates = templatesData || []
+
+  // Only show loading skeleton if NO cached data exists
+  const showLoadingSkeleton =
+    (profileLoading && !profileData) ||
+    (cataloguesLoading && !cataloguesData) ||
+    (templatesLoading && !templatesData)
+
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null
   )
   const [activeTab, setActiveTab] = useState('projects')
-  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [showCataloguesModal, setShowCataloguesModal] = useState(false)
 
@@ -114,8 +132,6 @@ export default function ProjectsPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    loadProjectsData()
-
     // Add custom animations
     const style = document.createElement('style')
     style.textContent = `
@@ -255,6 +271,10 @@ export default function ProjectsPage() {
     return () => {
       if (document.head.contains(style)) document.head.removeChild(style)
     }
+
+    return () => {
+      if (document.head.contains(style)) document.head.removeChild(style)
+    }
   }, [])
 
   const handleCreateCatalogue = async () => {
@@ -281,38 +301,6 @@ export default function ProjectsPage() {
     }
   }
 
-  const loadProjectsData = async () => {
-    try {
-      setIsLoading(true)
-
-      // Load user profile
-      const profileResponse = await fetch('/api/auth/profile')
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
-        setProfile(profileData.profile)
-      }
-
-      // Load catalogues
-      const cataloguesResponse = await fetch('/api/catalogues')
-      if (cataloguesResponse.ok) {
-        const cataloguesData = await cataloguesResponse.json()
-        setCatalogues(cataloguesData.catalogues)
-      }
-
-      // Load templates
-      const templatesResponse = await fetch('/api/templates')
-      if (templatesResponse.ok) {
-        const templatesData = await templatesResponse.json()
-        setTemplates(templatesData.templates)
-      }
-    } catch (err) {
-      setError('Failed to load projects data')
-      console.error('Projects error:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const deleteCatalogue = async (catalogueId: string) => {
     if (
       !confirm(
@@ -328,8 +316,9 @@ export default function ProjectsPage() {
       })
 
       if (response.ok) {
-        setCatalogues(prev => prev.filter(cat => cat.id !== catalogueId))
+        // React Query will automatically refetch and update the cache
         toast.success('Project deleted successfully')
+        window.location.reload() // Refresh to show updated list
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to delete project')
@@ -374,7 +363,7 @@ export default function ProjectsPage() {
   const [shareDialogUrl, setShareDialogUrl] = useState('')
   const [shareDialogName, setShareDialogName] = useState('')
 
-  if (isLoading) {
+  if (showLoadingSkeleton) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-blue-50 via-pink-50 to-blue-50">
         <div className="ml-24 flex-1">
@@ -768,13 +757,13 @@ export default function ProjectsPage() {
             feature="projects"
             currentPlan={(() => {
               // Map the simple profile plan string to the Prisma SubscriptionPlan enum
-              const planStr = profile?.subscription?.plan
+              const planStr = profile?.subscriptionPlan
               switch (planStr) {
-                case 'FREE':
+                case 'free':
                   return SubscriptionPlan.FREE
-                case 'MONTHLY':
+                case 'monthly':
                   return SubscriptionPlan.STANDARD
-                case 'YEARLY':
+                case 'yearly':
                   return SubscriptionPlan.PROFESSIONAL
                 default:
                   return SubscriptionPlan.FREE
