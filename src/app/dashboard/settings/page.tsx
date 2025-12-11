@@ -889,11 +889,11 @@ export default function SettingsPage() {
                                   {billingData.subscription.cancelAtPeriodEnd
                                     ? 'Cancels at period end'
                                     : format(
-                                        new Date(
-                                          billingData.subscription.currentPeriodEnd
-                                        ),
-                                        'MMM d, yyyy'
-                                      )}
+                                      new Date(
+                                        billingData.subscription.currentPeriodEnd
+                                      ),
+                                      'MMM d, yyyy'
+                                    )}
                                 </div>
                               </div>
                             </div>
@@ -1091,13 +1091,12 @@ export default function SettingsPage() {
                           return (
                             <div
                               key={plan}
-                              className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border-2 transition-all hover:shadow-2xl ${
-                                isCurrentPlan
+                              className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border-2 transition-all hover:shadow-2xl ${isCurrentPlan
                                   ? 'border-emerald-500 bg-emerald-50/10 shadow-2xl ring-4 ring-emerald-200'
                                   : isRecommended
                                     ? 'border-purple-500 shadow-lg'
                                     : 'border-gray-200 hover:border-gray-300'
-                              }`}
+                                }`}
                             >
                               {isRecommended && !isCurrentPlan && (
                                 <div className="absolute left-0 right-0 top-0 bg-gradient-to-r from-purple-600 to-pink-600 py-2 text-center text-xs font-bold text-white">
